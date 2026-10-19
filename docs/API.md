@@ -145,9 +145,11 @@ q: string (필수, 공백이면 EMPTY_INPUT); court?: string; caseType?: string;
 // req
 { status: "pending_review"|"conditional"|"approved"|"excluded"; conditions?: { item: string; resolved: boolean }[]; reviewRef: string; reason: string }
 // 200
-{ featureKey, status, conditions, approvedAt? }
+{ featureKey, status, conditions, reviewRef, approvedAt?, unresolved: string[] }
 ```
-규칙: `approved`로 바꾸려면 모든 `conditions.resolved = true`이고 `reviewRef`가 있어야 함(F-013 AC2) → 아니면 `409 INVALID_STATE`. 모든 변경은 `gate_changes`에 기록.
+규칙: `approved`로 바꾸려면 모든 `conditions.resolved = true`이고 `reviewRef`가 있어야 함(F-013 AC2) → 아니면 `409 INVALID_STATE` + `details.unresolved`(미완료 항목, F-013 AC1). 모든 변경은 `gate_changes`에 기록. 승인 요청으로 기존 조건 항목을 지울 수 없다(지운 항목은 미해결로 봄). `reviewRef`를 비워 보내면 기존 값을 유지한다. 모르는 키는 `404`.
+`GET /admin/feature-gates`는 게이트마다 `unresolved`(승인 전에 끝내야 할 항목)를 함께 준다.
+구현: DB 함수 `change_feature_gate`가 상태 변경·`gate_changes`·`audit_logs`를 한 트랜잭션으로 남기고, `feature_gates`는 이 함수 밖에서 수정·삭제할 수 없다(트리거).
 
 ## 5. Phase 2 엔드포인트 `[게이트]`
 PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`proposals`)다. `consult_agent`(F-008, OQ-003 검토 대상)와 `procedure_guide`(F-014)는 같은 `feature_gates` 테이블로 켜고 끄는 **Phase 2 출시 플래그**로 쓴다.
