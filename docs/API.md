@@ -41,6 +41,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | 422 | `PII_CONFIRMATION_REQUIRED` | PII 탐지 후 사용자 확인 전 분석 요청 | F-007 AC1 |
 | 422 | `BRIEF_NEEDS_EDIT` | 간접 식별 위험 | F-011 AC2 |
 | 429 | `RATE_LIMITED` | 호출 한도 초과 | — |
+| 500 | `INTERNAL_ERROR` | 예상하지 못한 서버 오류. 메시지는 고정 문구, 예외 내용은 응답·로그에 넣지 않음 | F-007 |
 | 502 | `SEARCH_UPSTREAM_FAILED` | 검색 저장소·외부 데이터 오류 (결과 없음과 구분) | F-006 AC2 |
 | 502 | `MODEL_FAILED` | LLM 호출 실패 | F-006 AC2 |
 | 504 | `TIMEOUT` | 처리 시간 초과 (재시도 가능 `details.retryable`) | 13 |

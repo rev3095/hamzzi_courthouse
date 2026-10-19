@@ -170,7 +170,7 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 `id, actor_id, actor_role, action, target_table, target_id, at, ip_hash` — append-only, 사건 본문 저장 금지.
 
 ### `deletion_requests` (9.2)
-`id, user_id, requested_at, completed_at, scope jsonb, status`
+`id, user_id, requested_at, completed_at, scope jsonb, status(enum: received/processing/completed)`
 
 ## 5. Phase 2 `[GATE]`
 | 테이블 | 핵심 필드 | PII | F-ID |
@@ -189,6 +189,8 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 `public_briefs`는 `case_summaries`와 **별도 테이블**로 두고, 변호사 역할에는 `public_briefs`만 열린다. 상세 내용은 `disclosures`로 허용된 항목만 제공된다.
 
 ## 6. 접근 권한 (RLS 요약)
+구현: 사용자 테이블은 **읽기 정책만** 두고 쓰기는 서버(service_role)가 한다. 관리자 판별은 `public.is_admin()`(profiles.role). `profiles`도 쓰기 권한을 회수해 role 자가 변경을 막는다. `gate_changes`·`audit_logs`는 트리거로 수정·삭제·TRUNCATE를 막고, 회원 삭제를 막지 않도록 `actor_id`에 외래키를 두지 않는다(탈퇴 후 가명 uuid로 남음). `feature_gates`는 7개 키를 `pending_review`로 시드한다. `expires_at` 값은 OQ-DM-03 전까지 비워 둔다.
+
 | 테이블 | user | lawyer(승인) | admin |
 |---|---|---|---|
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
