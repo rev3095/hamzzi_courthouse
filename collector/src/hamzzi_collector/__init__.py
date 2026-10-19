@@ -38,6 +38,7 @@ def _parser() -> argparse.ArgumentParser:
 def _report(name: str, stats: RunStats) -> None:
     print(
         f"{name}: fetched={stats.fetched} inserted={stats.inserted} updated={stats.updated} "
+        f"skipped={stats.skipped} "
         f"failed={stats.failed} status={stats.status}"
         + (f" errors=[{stats.error_summary}]" if stats.error_summary else "")
     )

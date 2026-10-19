@@ -119,3 +119,26 @@ def test_목록_단계_예외에도_실행_기록을_failed로_닫는다(make_cl
     run = next(iter(repo.runs.values()))
     assert run["status"] == "failed"
     assert run["error_summary"] == "ValueError×1"
+
+
+def test_같은_사건번호_법원의_다른_일련번호는_실패가_아니라_중복_건너뜀(make_client, settings):
+    # 실제 판례 100건 중 2건이 사건번호·법원은 같고 판례일련번호만 달랐다
+    listing = load("prec_list")
+    listing["PrecSearch"]["prec"][1].update(
+        {"데이터출처명": "대법원", "판례일련번호": "621912", "사건번호": "2025다220329"}
+    )
+    twin = load("prec_body")
+    twin["PrecService"]["판례정보일련번호"] = "621912"
+    routes = {
+        ("lawSearch.do", "prec", None): listing,
+        ("lawService.do", "prec", "621911"): "prec_body",
+        ("lawService.do", "prec", "621912"): twin,
+    }
+    repo = InMemoryRepository()
+    stats = ingest_cases(make_client(route(routes)), repo, settings, today=date(2026, 10, 19))
+
+    assert (stats.fetched, stats.inserted, stats.skipped, stats.failed) == (2, 1, 1, 0)
+    assert list(repo.cases) == [("law_open_api", "621911")]
+    run = next(iter(repo.runs.values()))
+    assert run["status"] == "ok"
+    assert run["error_summary"] == "중복 건너뜀×1"

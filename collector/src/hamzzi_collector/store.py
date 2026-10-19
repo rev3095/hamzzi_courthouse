@@ -13,7 +13,8 @@ from typing import Literal, Protocol
 from hamzzi_collector.models import CourtCase, LawVersion, ParsedCase, Statute
 from hamzzi_collector.text import parse_ref
 
-UpsertResult = Literal["inserted", "updated", "unchanged"]
+# duplicate: 같은 (사건번호, 법원)이 다른 원천 ID로 이미 있음 — 실패가 아니라 건너뜀으로 센다
+UpsertResult = Literal["inserted", "updated", "unchanged", "duplicate"]
 
 
 @dataclass
@@ -21,6 +22,7 @@ class RunStats:
     fetched: int = 0
     inserted: int = 0
     updated: int = 0
+    skipped: int = 0
     failed: int = 0
     errors: Counter = field(default_factory=Counter)
 
@@ -29,6 +31,8 @@ class RunStats:
             self.inserted += 1
         elif result == "updated":
             self.updated += 1
+        elif result == "duplicate":
+            self.skipped += 1
 
     def fail(self, exc: BaseException) -> None:
         # 오류 유형 이름만 남긴다. 메시지에는 원문·URL이 섞일 수 있다.
@@ -43,9 +47,11 @@ class RunStats:
 
     @property
     def error_summary(self) -> str | None:
-        if not self.errors:
-            return None
-        return ", ".join(f"{name}×{n}" for name, n in sorted(self.errors.items()))
+        # ingest_runs에 skipped 컬럼이 없어 건너뜀 건수도 여기에 남긴다. 상태(status)에는 반영하지 않는다.
+        parts = [f"{name}×{n}" for name, n in sorted(self.errors.items())]
+        if self.skipped:
+            parts.append(f"중복 건너뜀×{self.skipped}")
+        return ", ".join(parts) or None
 
 
 class Repository(Protocol):
@@ -132,7 +138,7 @@ class InMemoryRepository:
         if old is None and any(
             (c.case_no, c.court) == (case.case_no, case.court) for c in self.cases.values()
         ):
-            raise DuplicateCase(case.case_no)
+            return "duplicate"
         self.cases[key] = case
         self.refs[key] = list(parsed.raw_refs)
         return "inserted" if old is None else "updated"
@@ -155,10 +161,6 @@ class InMemoryRepository:
 
     def link_statute_refs(self) -> int:
         return 0  # 메모리 저장소는 매칭 결과를 보관하지 않는다
-
-
-class DuplicateCase(Exception):
-    """같은 (사건번호, 법원)이 다른 원천 ID로 이미 있음."""
 
 
 class PostgresRepository:  # pragma: no cover - 로컬 Supabase(Docker) 필요
@@ -220,6 +222,14 @@ class PostgresRepository:  # pragma: no cover - 로컬 Supabase(Docker) 필요
             ).fetchone()
             if row and row[1] == c.content_hash:
                 return "unchanged"
+            if (
+                row is None
+                and self._conn.execute(
+                    "select 1 from court_cases where case_no = %s and court = %s",
+                    (c.case_no, c.court),
+                ).fetchone()
+            ):
+                return "duplicate"
             if row:
                 case_id = row[0]
                 self._conn.execute(
