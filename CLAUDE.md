@@ -39,6 +39,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 단위 테스트 | `pnpm test` |
 | 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run -t "F-007 AC1"` |
 | E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`) |
+| 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터, 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외) |
 | 린트 / 타입 | `pnpm lint` / `pnpm typecheck` (`next typegen`으로 라우트 타입을 먼저 만든다) |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |

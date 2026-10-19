@@ -1,0 +1,18 @@
+[
+  {
+    "lawName": "주택임대차보호법",
+    "lawId": "001248",
+    "mst": "276291",
+    "lawType": "법률",
+    "status": "현행",
+    "effectiveDate": "20260102"
+  },
+  {
+    "lawName": "주택임대차보호법 시행령",
+    "lawId": "004950",
+    "mst": "287183",
+    "lawType": "대통령령",
+    "status": "현행",
+    "effectiveDate": "20260701"
+  }
+]
