@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "korean-law": {
+      "command": "node",
+      "args": ["scripts/korean-law-mcp.mjs"]
+    }
+  }
+}

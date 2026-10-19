@@ -20,6 +20,14 @@ pnpm dev
 | `pnpm docs:check` | PRD·설계 문서 교차 검증 |
 | `pnpm collector:test` | Python 수집기 테스트 |
 
+## 개발용 법령·판례 조회 MCP
+
+Claude Code에서 [korean-law-mcp](https://github.com/chrisryugj/korean-law-mcp)(MIT, 4.15.6 고정)를 로컬 stdio로 쓴다. 설정: [.mcp.json](.mcp.json) → [scripts/korean-law-mcp.mjs](scripts/korean-law-mcp.mjs).
+
+- 법제처 OC 키는 `.env.local`의 `LAW_OC`(없으면 수집기와 같은 `OPEN_LAW_API_KEY`)를 쓴다.
+- 법제처 API는 등록된 IP에서만 응답한다(OQ-ARC-05).
+- **개발 보조용이다.** 서비스 런타임(사용자 질문 처리)에서는 쓰지 않는다. 서비스 내 사용 여부는 PRD 16.1 오픈 이슈에서 정한다.
+
 ## 문서
 - 제품 요구사항: [docs/PRD.md](docs/PRD.md)
 - 설계: [ARCHITECTURE](docs/ARCHITECTURE.md) · [DATA_MODEL](docs/DATA_MODEL.md) · [API](docs/API.md)
