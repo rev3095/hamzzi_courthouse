@@ -29,7 +29,7 @@
 | source_url | text | 원문 링크 |
 | collected_at | timestamptz | 수집일 |
 | content_hash | text | 변경 감지 |
-| deid_check | enum(`pending`,`passed`,`flagged`) | 비식별 재검사 상태 — `flagged`는 검색 제외 |
+| deid_check | enum(`pending`,`passed`,`flagged`) | 비식별 재검사 상태 — `passed`만 노출·검색 (`pending`·`flagged` 제외). RLS가 강제하며, RLS를 우회하는 서버(service_role) 검색은 쿼리에서 직접 거른다 |
 
 인덱스: `unique(source, source_id)`, `unique(case_no, court)`, `(decided_at)`, `(case_type)`.
 

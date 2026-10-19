@@ -124,7 +124,7 @@ q: string (필수, 공백이면 EMPTY_INPUT); court?: string; caseType?: string;
 // 200
 { items: (CaseRef & { relevance: number })[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string }
 ```
-개인정보 필드는 반환하지 않는다(F-003 AC1). `deid_check='flagged'` 판례는 제외.
+개인정보 필드는 반환하지 않는다(F-003 AC1). `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외).
 
 ### GET `/cases/{id}`
 `200 { ...CaseRef, caseType, holdingSummary, sections: { section: string; text: string }[], citedStatutes: { raw: string; statute?: StatuteRef }[] }` · 없으면 `404 NOT_FOUND`.
