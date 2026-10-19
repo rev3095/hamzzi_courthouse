@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* 브랜드 토큰: docs/05_브랜드_가이드.md 3절. 하드코딩 색상 대신 이 토큰만 쓴다. */
+:root {
+  --bg: #faf9f6;
+  --white: #ffffff;
+  --ink: #1a2233;
+  --muted: #5a6272;
+  --gold: #a9873c;
+  --cream: #f4eee1;
+  --honey: #fff4de;
+  --line: #e6e2d8;
+  --sage: #6f8a4e;
+  --fur: #e9a94b;
+  --success-text: #3d5a40;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-white: var(--white);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-gold: var(--gold);
+  --color-cream: var(--cream);
+  --color-honey: var(--honey);
+  --color-line: var(--line);
+  --color-sage: var(--sage);
+  --color-fur: var(--fur);
+  --color-success-text: var(--success-text);
+  --font-sans: var(--font-plex-kr);
+  --font-display: var(--font-serif-kr);
+  --font-accent: var(--font-playfair);
+  --radius-panel: 16px;
+  --radius-card: 12px;
+  --radius-button: 8px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
