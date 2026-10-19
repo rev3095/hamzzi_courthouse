@@ -1,6 +1,7 @@
 # 햄찌법원 데이터 모델 (DATA_MODEL)
 
-> 기준: `docs/PRD.md` v1.0, `docs/ARCHITECTURE.md` v0.1 · 버전 v0.1 (2026-10-19)
+> 기준: `docs/PRD.md` v1.3, `docs/ARCHITECTURE.md` v0.3 · 버전 v0.2 (2026-10-19)
+> 데모(DEC-009~011) 때문에 바뀌는 컬럼은 **(데모)**로 표시했다. 아직 마이그레이션에 반영되지 않았다 — 3절 끝 "데모 마이그레이션" 참고.
 > DB: Supabase Postgres + pgvector (확정, DEC-004). 모든 테이블에 `created_at`, `updated_at`(timestamptz)이 있다고 보고 표에서는 생략한다.
 
 ## 1. PII 태그
@@ -88,9 +89,10 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK null | 로그인 사용자. 비로그인이면 null (DEC-005) |
-| anon_session_id | uuid null | 비로그인 1회 질문 추적용 익명 세션(쿠키). 로그인 시 user_id로 이관 |
+| anon_session_id | uuid null | 비로그인 질문(3회, DEC-010) 추적용 익명 세션(쿠키). 로그인 시 user_id로 이관 |
+| parent_inquiry_id | uuid FK null | **(데모)** 이어 묻기의 앞선 inquiry. 같은 소유자만, 분석 완료된 것만 (F-002 AC3, DEC-011) |
 | masked_text | text | 마스킹본 `[PII-M]` — 저장·LLM 전달되는 유일한 입력 텍스트. **원문 컬럼은 두지 않는다** (DEC-006) |
-| pii_findings | jsonb | 탐지 유형·개수만 (값 저장 금지) |
+| pii_findings | jsonb | `{ findings: [{type, count}], confirmedAt }` — 탐지 유형·개수와 사용자 마스킹 확인 시각만 (값 저장 금지) |
 | sensitive_consent_at | timestamptz null | 민감정보 별도 동의(F-007 AC2) |
 | structured | jsonb | `{facts[], inferred[], to_confirm[], issues[], case_type}` `[PII-M]` |
 | user_edited | bool | F-002 AC1 수정 여부 |
@@ -98,15 +100,15 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
 
 인덱스: `(user_id, created_at desc)`, `(anon_session_id)`, `(expires_at)`.
-제약: `user_id`와 `anon_session_id` 중 하나는 반드시 존재. 같은 `anon_session_id`의 분석 완료 inquiry는 1건까지 (DEC-005, 서버에서 검사).
+제약: `user_id`와 `anon_session_id` 중 하나는 반드시 존재. 같은 `anon_session_id`의 분석 완료 inquiry는 3건까지, 이어 묻기 포함 (DEC-010, 서버에서 검사).
 원문 저장이 나중에 필요해지면: 새 결정(DEC) + 별도 동의 + 암호화 컬럼 추가 마이그레이션으로만 도입한다 (DEC-006).
 
-### `anon_sessions` (DEC-005)
+### `anon_sessions` (DEC-005, DEC-010)
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | id | uuid PK | 쿠키 값 |
 | ip_hash | text | 남용 방지용 해시(원본 IP 저장 안 함) |
-| questions_used | int | 0 또는 1 |
+| questions_used | int | 0~3 **(데모)** — 현재 마이그레이션은 0~1 |
 | claimed_by | uuid FK null | 로그인 후 연결된 사용자 |
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
 
@@ -118,7 +120,7 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|
 | id | uuid PK | |
 | inquiry_id | uuid FK | |
-| response | jsonb | 8.3 구조 필드 (요약·사실/미확인·쟁점·판단·법령·차이·추가 확인·다음 단계) `[PII-M]` |
+| response | jsonb | 8.3 구조 필드 (요약·사실/미확인·쟁점·판단·법령·차이·추가 확인·다음 단계) `[PII-M]`. 데모는 API.md `DemoAnalysisResult` (DEC-011) — 판례 본문은 넣지 않고 인용 구절(60자 이내)만 |
 | outcome | enum(`grounded`,`no_result_in_scope`,`ai_suggestion`) | F-006: 유사도 미달이면 `ai_suggestion` |
 | model | text | 예: `claude-opus-5-5` |
 | prompt_version | text | |
@@ -131,10 +133,15 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|
 | result_id | uuid FK | |
 | kind | enum(`case`,`statute`) | |
-| case_id / statute_id | uuid FK null | 검증 성공 시 반드시 값 존재 |
+| case_id / statute_id | uuid FK null | `source = db`이고 검증 성공이면 반드시 값 존재 |
+| source | enum(`db`,`law_api_live`) | **(데모)** 검증 근거 출처. 데모는 `law_api_live` (DEC-009) |
+| source_ref | text null | **(데모)** 실시간 조회 식별자(판례일련번호·법령 ID). `law_api_live`일 때 필수 |
+| quote | text null | **(데모)** 답변이 인용한 원문 구절, 60자 이내 (DEC-007) |
 | claimed_ref | text | LLM이 출력한 표기 |
-| status | enum(`verified`,`removed`,`unverified`) | `removed`는 화면에 표시하지 않음 |
+| status | enum(`verified`,`removed`,`unverified`) | `removed`는 화면에 표시하지 않음. 데모: 출처·재조회 통과 + 구절 일치 = `verified`, 구절만 불일치 = `unverified`("확인 필요"), 출처 없음·재조회 실패 = `removed` (F-005 AC2) |
 | relevance | real null | 검색 유사도 (승소 가능성과 무관 — 8.3) |
+
+**데모 마이그레이션 (DEC-009~011, 아직 적용 안 함)**: `anon_sessions.questions_used` 범위를 0~3으로 · `inquiries.parent_inquiry_id` 추가(자기 참조 FK, `on delete set null`) · `result_citations`에 `source`·`source_ref`·`quote` 추가, `quote` 길이 60자 체크 · `inquiry_status`는 그대로(데모는 `need_info`를 쓰지 않음).
 
 ### `result_feedback`
 `result_id FK, user_id FK null, helpful bool, comment_masked text [PII-M] null`
@@ -211,7 +218,7 @@ PRD 9.2에 따라 항목별 보유 기간을 정의해야 하나 기간 값은 �
 ## OPEN QUESTION
 | ID | 질문 | 영향 | 관련 PRD |
 |---|---|---|---|
-| ~~OQ-DM-01~~ | ✅ 해결: 비로그인 질문 1회, 이후 소셜 로그인 (DEC-005) | inquiries, anon_sessions | 12 |
+| ~~OQ-DM-01~~ | ✅ 해결: 비로그인 질문 3회(이어 묻기 포함), 이후 소셜 로그인 (DEC-005 → DEC-010) | inquiries, anon_sessions | 12 |
 | ~~OQ-DM-02~~ | ✅ 해결: 마스킹본만 저장, 원문 컬럼 없음 (DEC-006) | inquiries | 9.2 |
 | OQ-DM-03 | 항목별 보유 기간(입력·결과·동의 기록·감사 로그·익명 세션) | 파기 배치 | 9.2, OQ-004 |
 | OQ-DM-04 | 암호화 방식(DB 컬럼 암호화 vs 애플리케이션 암호화)과 키 관리 — 대상: 변호사 `[PII]` 필드, Phase 2 사건 요약서 | lawyer_profiles, case_summaries | 13 |
