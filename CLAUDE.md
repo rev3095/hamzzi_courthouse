@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # 햄찌법원 (Hamzzi Court)
 
 자연어로 설명한 법률 문제를 구조화하고 실제 법령·판례를 근거로 보여주는 AI 법률 정보 탐색 서비스. Phase 2에서 동의 기반 비식별 사건 게시로 변호사 상담 제안을 받는다.
@@ -12,7 +16,7 @@
   3. 기간·비용 숫자는 계산 함수나 공식 기준 결과만 쓴다. LLM이 숫자를 만들지 않는다. 조문·판례 원문 구절 안에 있는 숫자는 인용으로 쓸 수 있다.
   4. 개인정보는 프롬프트·로그·에러 메시지에 남기지 않는다 (F-007). 입력 원문은 DB에 저장하지 않고 마스킹본만 저장한다 (DEC-006).
   5. `[게이트]` 기능(F-010~F-012), 모든 과금, 법률문서 생성은 F-013 승인 전 비활성 상태로만 구현한다.
-  6. 모든 AI 결과에 "AI 생성 · 법률 자문 아님"을 표시한다.
+  6. 모든 AI 결과에 "AI 생성 · 법률 자문 아님"을 표시한다. 문구는 직접 쓰지 말고 `AI_NOTICE`(lib/api/respond.ts)를 쓴다.
   7. 비로그인은 질문 3회(이어 묻기 포함)만 허용하고, 그 이후 요청은 서버에서 `LOGIN_REQUIRED`로 막는다 (DEC-005, DEC-010).
 
 ## 문서 지도 (필요할 때만 읽기)
@@ -33,14 +37,17 @@ Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector
 Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 데이터와 API가 다르다).
 
 ## 명령어
+필요 환경: Node 24+, pnpm 10+, Python 3.12 + uv, (로컬 DB) Docker.
+
 | 목적 | 명령 |
 |---|---|
-| 개발 서버 | `pnpm dev` |
-| 단위 테스트 | `pnpm test` |
-| 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run -t "F-007 AC1"` |
-| E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`) |
+| 개발 서버 / 빌드 | `pnpm dev` / `pnpm build` |
+| 단위 테스트 | `pnpm test` — `tests/unit/**`와 `lib/**/*.test.ts`만 수집한다 (vitest.config.mts) |
+| 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run tests/unit/inquiries-api.test.ts` · `pnpm exec vitest run -t "F-007 AC1"` |
+| E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`). 개발 서버는 Playwright가 띄우고, 이미 떠 있으면 재사용한다 |
+| E2E 일부 | `pnpm exec playwright test tests/e2e/home.spec.ts` |
 | 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터, 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외) |
-| 린트 / 타입 | `pnpm lint` / `pnpm typecheck` (`next typegen`으로 라우트 타입을 먼저 만든다) |
+| 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
 | 수집기 테스트 일부 | `cd collector && uv run pytest tests/test_prec.py -k 중복` |
@@ -48,20 +55,22 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 마이그레이션 적용 확인 | `pnpm exec supabase db reset` (Docker 필요 — 없으면 미확인으로 보고) |
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,search,citations,calc,supabase}` 컴포넌트(각 README에 책임) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e}` · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,search,citations,calc,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
 - lib 모듈은 `policy.ts`(순수 규칙, 단위 테스트 대상)와 `store.ts`(server-only, service_role DB 접근)로 나눈다. 라우트 테스트는 store·auth 모듈을 `vi.mock`으로 바꾼다 (`tests/unit/*-api.test.ts`).
 - RLS는 사용자 테이블에 읽기 정책만 두고 쓰기는 서버(service_role)가 한다. 그래서 소유권 검사(`isOwner`)와 판례 `deid_check = 'passed'` 필터는 코드에서 직접 건다.
-- 역할은 토큰이 아니라 서버가 `profiles.role`을 읽어 판단한다 (lib/auth/server.ts). 비로그인은 `hz_anon` 쿠키 = `anon_sessions.id`.
+- Supabase 클라이언트는 두 가지다 (lib/supabase/server.ts). `createUserClient()` = 요청 사용자 세션·RLS 적용, `createServiceClient()` = service_role로 RLS 우회 — 쓰기와 store.ts 전용이고, 검사는 호출 코드가 직접 한다. 브라우저는 lib/supabase/browser.ts.
+- 역할은 토큰이 아니라 서버가 `profiles.role`을 읽어 판단한다 (`getActor`·`requireRole`, lib/auth/server.ts). 비로그인은 `hz_anon` 쿠키 = `anon_sessions.id` (lib/auth/anon.ts).
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 
 ## 환경 주의
 - Windows: Python 스크립트를 heredoc으로 넘기면 한글이 cp949로 깨진다. 파일로 저장해 `python -X utf8`로 실행한다.
 - Docker가 없으면 SQL은 `uv run --no-project --with pglast` 파서로 문법만 확인할 수 있다 (적용 검증 아님).
-- `.env*`는 hook이 편집을, settings.json이 읽기를 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
+- hook (.claude/settings.json): 편집 전 `protect.mjs`가 `.env*`(`.env.example` 제외)·`*.pem`·`*.key`·`secrets/` 편집을 막고, 편집 후 `format.mjs`가 ts·js·css·json에 prettier, ts·js에 `eslint --fix`, collector의 py에 `ruff format`을 자동 실행한다. 손으로 포맷을 맞출 필요는 없고, 편집 뒤 포맷 변경이 diff에 섞일 수 있다.
+- `.env*`는 settings.json이 읽기도 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
 - korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용. ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
 
 ## 스킬·리뷰어

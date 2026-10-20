@@ -15,18 +15,22 @@ pnpm dev
 
 | 명령 | 설명 |
 |---|---|
+| `pnpm build` | 프로덕션 빌드 |
 | `pnpm test` / `pnpm test:e2e` | 단위 / E2E 테스트 |
-| `pnpm lint` / `pnpm typecheck` | 린트 / 타입 검사 |
+| `pnpm test:live` | 법제처 실호출 스모크 테스트 (키·등록 IP 필요, 기본 테스트에서 제외) |
+| `pnpm lint` / `pnpm typecheck` / `pnpm format` | 린트 / 타입 검사 / 포맷 |
 | `pnpm docs:check` | PRD·설계 문서 교차 검증 |
 | `pnpm collector:test` | Python 수집기 테스트 |
 
-## 개발용 법령·판례 조회 MCP
+## 법령·판례 조회: korean-law-mcp
 
-Claude Code에서 [korean-law-mcp](https://github.com/chrisryugj/korean-law-mcp)(MIT, 4.15.6 고정)를 로컬 stdio로 쓴다. 설정: [.mcp.json](.mcp.json) → [scripts/korean-law-mcp.mjs](scripts/korean-law-mcp.mjs).
+[korean-law-mcp](https://github.com/chrisryugj/korean-law-mcp)(MIT, 4.15.6 고정)를 두 가지로 쓴다 (PRD DEC-009).
 
-- 법제처 OC 키는 `.env.local`의 `LAW_OC`(없으면 수집기와 같은 `OPEN_LAW_API_KEY`)를 쓴다.
-- 법제처 API는 등록된 IP에서만 응답한다(OQ-ARC-05).
-- **개발 보조용이다.** 서비스 런타임(사용자 질문 처리)에서는 쓰지 않는다. 서비스 내 사용 여부는 PRD 16.1 오픈 이슈에서 정한다.
+1. **서비스(데모)**: 판례 검색·본문, 법령 조문, 인용 재조회를 서버 코드에서 라이브러리로 직접 호출한다. 호출은 [lib/search](lib/search/)의 어댑터 한 곳을 거친다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
+2. **개발 보조**: Claude Code에서 로컬 stdio MCP 서버로 쓴다. 설정: [.mcp.json](.mcp.json) → [scripts/korean-law-mcp.mjs](scripts/korean-law-mcp.mjs).
+
+- 법제처 OC 키: 서비스 코드는 `OPEN_LAW_API_KEY`를 읽는다. 개발용 MCP는 `.env.local`의 `LAW_OC`를 쓰고, 없으면 `OPEN_LAW_API_KEY`를 쓴다.
+- 법제처 API는 신청 때 등록한 IP에서 호출해야 한다. 배포 서버(예: Vercel)에서도 호출이 되는지는 배포 전에 확인한다 (OQ-ARC-05).
 
 ## 문서
 - 제품 요구사항: [docs/PRD.md](docs/PRD.md)
