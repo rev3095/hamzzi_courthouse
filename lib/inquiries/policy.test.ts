@@ -1,8 +1,14 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import { ApiError } from "@/lib/api/errors";
+import { clientIp, hashIp } from "@/lib/auth/ip";
 import {
+  ANON_QUESTION_LIMIT,
   MAX_INPUT_CHARS,
+  assertAnonQuota,
+  assertConsumed,
+  assertParentAnalyzed,
+  quotaView,
   assertReadyToAnalyze,
   assertSensitiveConsent,
   initialPiiFindings,
@@ -86,5 +92,72 @@ describe("소유권", () => {
     expect(isOwner({ userId: "u1", anonSessionId: "a1" }, anon)).toBe(false);
     expect(isOwner({ userId: null, anonSessionId: "a2" }, anon)).toBe(false);
     expect(isOwner({ userId: null, anonSessionId: "a1" }, null)).toBe(false);
+  });
+});
+
+describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
+  test("F-001 AC3 3회 미만은 통과, 3회부터 LOGIN_REQUIRED", () => {
+    expect(ANON_QUESTION_LIMIT).toBe(3);
+    expect(() => assertAnonQuota(2)).not.toThrow();
+    const err = caught(() => assertAnonQuota(3));
+    expect(err.code).toBe("LOGIN_REQUIRED");
+    expect(err.details).toEqual({ loginProviders: ["google"] });
+  });
+
+  test("F-001 AC3 DB 함수 결과: 세션 초과는 LOGIN_REQUIRED, IP 상한은 RATE_LIMITED", () => {
+    expect(() => assertConsumed("ok")).not.toThrow();
+    expect(caught(() => assertConsumed("session_limit")).code).toBe("LOGIN_REQUIRED");
+    expect(caught(() => assertConsumed("unknown_session")).code).toBe("LOGIN_REQUIRED");
+    const ip = caught(() => assertConsumed("ip_limit"));
+    expect(ip.code).toBe("RATE_LIMITED");
+    expect(ip.details).toEqual({ reason: "anon_ip_daily" });
+  });
+
+  test("F-001 AC3 quota 보기", () => {
+    expect(quotaView(null, 0)).toMatchObject({
+      anonymous: true,
+      remaining: 3,
+      loginRequired: false,
+    });
+    expect(quotaView({ kind: "anon", anonSessionId: "a" }, 5)).toMatchObject({
+      used: 3,
+      remaining: 0,
+      loginRequired: true,
+    });
+    expect(quotaView({ kind: "user", userId: "u" }, 0).anonymous).toBe(false);
+  });
+});
+
+describe("F-002 AC3 이어 묻기", () => {
+  test("F-002 AC3 parentInquiryId는 UUID만 받는다", () => {
+    const id = "99999999-8888-7777-6666-555555555555";
+    expect(parseCreateRequest({ text: "이어서", parentInquiryId: id }).parentInquiryId).toBe(id);
+    expect(parseCreateRequest({ text: "새 질문" }).parentInquiryId).toBeNull();
+    expect(caught(() => parseCreateRequest({ text: "x", parentInquiryId: 1 })).code).toBe(
+      "VALIDATION_ERROR",
+    );
+  });
+
+  test("F-002 AC3 분석이 끝난 질문에만 이어 묻는다", () => {
+    expect(() => assertParentAnalyzed({ status: "analyzed" })).not.toThrow();
+    expect(caught(() => assertParentAnalyzed({ status: "draft" })).code).toBe("INVALID_STATE");
+  });
+});
+
+describe("DEC-010 IP 해시", () => {
+  test("프록시 헤더의 첫 IP를 쓰고, 원본 IP는 해시로만 남긴다", () => {
+    const h = new Headers({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" });
+    expect(clientIp(h)).toBe("203.0.113.7");
+    expect(clientIp(new Headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
+    expect(clientIp(new Headers())).toBeNull();
+    const hash = hashIp("203.0.113.7", "salt")!;
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(hash).not.toContain("203.0.113.7");
+    expect(hashIp("203.0.113.7", "other")).not.toBe(hash);
+  });
+
+  test("salt가 없으면 해시를 만들지 않는다", () => {
+    expect(hashIp("203.0.113.7", undefined)).toBeNull();
+    expect(hashIp(null, "salt")).toBeNull();
   });
 });

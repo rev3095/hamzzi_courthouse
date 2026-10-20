@@ -1,7 +1,7 @@
 # 햄찌법원 데이터 모델 (DATA_MODEL)
 
 > 기준: `docs/PRD.md` v1.3, `docs/ARCHITECTURE.md` v0.3 · 버전 v0.2 (2026-10-19)
-> 데모(DEC-009~011) 때문에 바뀌는 컬럼은 **(데모)**로 표시했다. 아직 마이그레이션에 반영되지 않았다 — 3절 끝 "데모 마이그레이션" 참고.
+> 데모(DEC-009~011) 때문에 바뀌는 컬럼은 **(데모)**로 표시했다. 마이그레이션 `20261020162716_demo_quota_followup.sql`에 반영했다(실제 DB 적용 검증 전) — 3절 끝 "데모 마이그레이션" 참고.
 > DB: Supabase Postgres + pgvector (확정, DEC-004). 모든 테이블에 `created_at`, `updated_at`(timestamptz)이 있다고 보고 표에서는 생략한다.
 
 ## 1. PII 태그
@@ -108,9 +108,21 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|
 | id | uuid PK | 쿠키 값 |
 | ip_hash | text | 남용 방지용 해시(원본 IP 저장 안 함) |
-| questions_used | int | 0~3 **(데모)** — 현재 마이그레이션은 0~1 |
+| questions_used | int | 0~3 **(데모)**. `consume_anon_question`(DB 함수)만 올린다 |
 | claimed_by | uuid FK null | 로그인 후 연결된 사용자 |
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
+
+### `anon_usage` — 비로그인 분석 사용 기록 (DEC-010) **(데모)**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| anon_session_id | uuid FK → anon_sessions | |
+| ip_hash | text null | HMAC-SHA256(IP, `ANON_IP_SALT`). 원본 IP 저장 안 함 |
+| used_at | timestamptz | 분석 성공 시각 |
+
+인덱스: `(ip_hash, used_at desc)`, `(anon_session_id)`. append-only, 서버 전용(정책 없음).
+같은 `ip_hash`의 24시간 분석은 10회까지 — 쿠키 삭제 남용 방지용 느슨한 상한, 3회 제한은 쿠키(세션) 기준 (PRD OQ-009).
+DB 함수 `consume_anon_question(session, ip_hash, 세션 상한, IP 상한, 기간)` → `ok`/`session_limit`/`ip_limit`/`unknown_session`: 세션 행 잠금 + IP 해시 advisory lock으로 원자적으로 확인·증가한다. service_role만 실행.
 
 ### `followup_questions` (F-002 AC2)
 `id, inquiry_id FK, ord(1~3), question text, answer_masked text [PII-M] null, answered_at`
@@ -141,7 +153,7 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | status | enum(`verified`,`removed`,`unverified`) | `removed`는 화면에 표시하지 않음. 데모: 출처·재조회 통과 + 구절 일치 = `verified`, 구절만 불일치 = `unverified`("확인 필요"), 출처 없음·재조회 실패 = `removed` (F-005 AC2) |
 | relevance | real null | 검색 유사도 (승소 가능성과 무관 — 8.3) |
 
-**데모 마이그레이션 (DEC-009~011, 아직 적용 안 함)**: `anon_sessions.questions_used` 범위를 0~3으로 · `inquiries.parent_inquiry_id` 추가(자기 참조 FK, `on delete set null`) · `result_citations`에 `source`·`source_ref`·`quote` 추가, `quote` 길이 60자 체크 · `inquiry_status`는 그대로(데모는 `need_info`를 쓰지 않음).
+**데모 마이그레이션 (DEC-009~011, `20261020162716_demo_quota_followup.sql`, 실제 DB 적용 검증 전)**: 1회 제한용 유일 인덱스(`inquiries_anon_one_analyzed_idx`) 삭제 · `anon_usage`·`consume_anon_question` 추가 · `result_citations`의 "verified면 DB 행" 제약을 `source = 'law_open_api_live'`면 `source_ref` 필수로 완화 · `anon_sessions.questions_used` 범위를 0~3으로 · `inquiries.parent_inquiry_id` 추가(자기 참조 FK, `on delete set null`) · `result_citations`에 `source`·`source_ref`·`quote` 추가, `quote` 길이 60자 체크 · `inquiry_status`는 그대로(데모는 `need_info`를 쓰지 않음).
 
 ### `result_feedback`
 `result_id FK, user_id FK null, helpful bool, comment_masked text [PII-M] null`
@@ -202,7 +214,7 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|---|
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
 | inquiries, followup_questions, analysis_results | 본인 행 (비로그인은 같은 `anon_session_id`만, 서버 경유) | ✗ | 감사 기록 남기고 제한 열람 |
-| anon_sessions | 서버 전용 | ✗ | 읽기 |
+| anon_sessions, anon_usage | 서버 전용 | ✗ | 읽기 |
 | consents, deletion_requests | 본인 행 | ✗ | 처리용 읽기 |
 | case_summaries, agent_turns | 본인 행 | ✗ | 제한 열람 |
 | public_briefs | 본인 행 | `status='posted'` 행 읽기 | 읽기 |

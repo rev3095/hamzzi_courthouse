@@ -5,7 +5,13 @@ import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
 /** 입력 최대 길이 — 임시 값. 확정은 OQ-API-01 */
 export const MAX_INPUT_CHARS = 2000;
 
-export type CreateRequest = { text: string; sensitiveConsent: boolean };
+export type CreateRequest = {
+  text: string;
+  sensitiveConsent: boolean;
+  parentInquiryId: string | null;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** POST /inquiries 본문 검증. 오류에는 필드 이름만 담고 입력 값은 담지 않는다. */
 export function parseCreateRequest(body: unknown): CreateRequest {
@@ -13,6 +19,13 @@ export function parseCreateRequest(body: unknown): CreateRequest {
   if (typeof b.text !== "string") throw new ApiError("VALIDATION_ERROR", { fields: ["text"] });
   if (b.sensitiveConsent !== undefined && typeof b.sensitiveConsent !== "boolean") {
     throw new ApiError("VALIDATION_ERROR", { fields: ["sensitiveConsent"] });
+  }
+  if (
+    b.parentInquiryId !== undefined &&
+    b.parentInquiryId !== null &&
+    (typeof b.parentInquiryId !== "string" || !UUID.test(b.parentInquiryId))
+  ) {
+    throw new ApiError("VALIDATION_ERROR", { fields: ["parentInquiryId"] });
   }
   if (!b.text.trim()) throw new ApiError("EMPTY_INPUT");
   if (b.text.length > MAX_INPUT_CHARS) {
@@ -22,7 +35,67 @@ export function parseCreateRequest(body: unknown): CreateRequest {
       maxChars: MAX_INPUT_CHARS,
     });
   }
-  return { text: b.text, sensitiveConsent: b.sensitiveConsent === true };
+  return {
+    text: b.text,
+    sensitiveConsent: b.sensitiveConsent === true,
+    parentInquiryId: typeof b.parentInquiryId === "string" ? b.parentInquiryId : null,
+  };
+}
+
+// --- 비로그인 질문 횟수 (F-001 AC3, DEC-005, DEC-010) -----------------------------------
+/** 비로그인 질문 횟수 (이어 묻기 포함). 1회 = analyze 성공 1건 */
+export const ANON_QUESTION_LIMIT = 3;
+/** 같은 IP 해시의 24시간 비로그인 분석 상한 — 쿠키 삭제 남용 방지용 느슨한 상한 (PRD OQ-009) */
+export const ANON_IP_DAILY_LIMIT = 10;
+export const ANON_IP_WINDOW = "24 hours";
+/** LOGIN_REQUIRED details.loginProviders (DEC-005 소셜 로그인) */
+export const LOGIN_PROVIDERS = ["google"];
+
+const loginRequired = () => new ApiError("LOGIN_REQUIRED", { loginProviders: LOGIN_PROVIDERS });
+
+/** 질문 접수 전 검사: 이미 3회를 썼으면 저장하지 않고 401 LOGIN_REQUIRED */
+export function assertAnonQuota(questionsUsed: number) {
+  if (questionsUsed >= ANON_QUESTION_LIMIT) throw loginRequired();
+}
+
+export type ConsumeResult = "ok" | "session_limit" | "ip_limit" | "unknown_session";
+
+/** consume_anon_question(DB 함수) 결과 → 에러. analyze 성공 직후 호출한다 (P5) */
+export function assertConsumed(result: ConsumeResult) {
+  if (result === "ok") return;
+  if (result === "ip_limit") throw new ApiError("RATE_LIMITED", { reason: "anon_ip_daily" });
+  throw loginRequired();
+}
+
+export type Quota = {
+  anonymous: boolean;
+  used: number | null;
+  limit: number | null;
+  remaining: number | null;
+  loginRequired: boolean;
+};
+
+/** GET /me/quota. 로그인 사용자 사용량 제한은 아직 정하지 않았다 (PRD 11) */
+export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
+  if (owner?.kind === "user") {
+    return { anonymous: false, used: null, limit: null, remaining: null, loginRequired: false };
+  }
+  const used = Math.min(Math.max(questionsUsed, 0), ANON_QUESTION_LIMIT);
+  return {
+    anonymous: true,
+    used,
+    limit: ANON_QUESTION_LIMIT,
+    remaining: ANON_QUESTION_LIMIT - used,
+    loginRequired: used >= ANON_QUESTION_LIMIT,
+  };
+}
+
+// --- 이어 묻기 (F-002 AC3, DEC-011) -------------------------------------------------
+/** 앞선 질문은 같은 소유자(호출 전 getOwnedInquiry가 403)이고 분석이 끝난 것만 */
+export function assertParentAnalyzed(parent: { status: string }) {
+  if (parent.status !== "analyzed") {
+    throw new ApiError("INVALID_STATE", { field: "parentInquiryId", reason: "not_analyzed" });
+  }
 }
 
 /**

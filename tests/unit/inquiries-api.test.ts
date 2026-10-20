@@ -9,6 +9,7 @@ const store = vi.hoisted(() => ({
   createInquiry: vi.fn(),
   getOwnedInquiry: vi.fn(),
   markPiiConfirmed: vi.fn(),
+  getAnonQuestionsUsed: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
 
@@ -46,6 +47,7 @@ beforeEach(() => {
   logs = [];
   store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1" });
   store.createInquiry.mockResolvedValue({ id: INQ_ID, status: "draft" });
+  store.getAnonQuestionsUsed.mockResolvedValue(0);
 });
 
 describe("POST /inquiries", () => {
@@ -113,6 +115,67 @@ describe("POST /inquiries", () => {
     const body = await res.json();
     expect(res.status).toBe(201);
     expect(body.data).toMatchObject({ piiFindings: [], piiConfirmationRequired: false });
+  });
+});
+
+describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
+  test("F-001 AC3 3회를 쓴 비로그인은 401 LOGIN_REQUIRED이고 저장하지 않는다", async () => {
+    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    const res = await post({ text: "사기를 당했어요" });
+    const body = await res.json();
+    expect(res.status).toBe(401);
+    expect(body.error).toMatchObject({
+      code: "LOGIN_REQUIRED",
+      details: { loginProviders: ["google"] },
+    });
+    expect(store.createInquiry).not.toHaveBeenCalled();
+  });
+
+  test("F-001 AC3 2회까지 쓴 비로그인은 질문을 접수한다", async () => {
+    store.getAnonQuestionsUsed.mockResolvedValue(2);
+    expect((await post({ text: "사기를 당했어요" })).status).toBe(201);
+  });
+
+  test("F-001 AC3 로그인 사용자는 비로그인 횟수를 보지 않는다", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1" });
+    expect((await post({ text: "사기를 당했어요" })).status).toBe(201);
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+  });
+});
+
+describe("F-002 AC3 이어 묻기 (DEC-011)", () => {
+  const PARENT = "99999999-8888-7777-6666-555555555555";
+  const parent = { id: PARENT, user_id: null, anon_session_id: "anon-1", status: "analyzed" };
+
+  test("F-002 AC3 분석이 끝난 내 질문에 이어 물으면 앞 질문과 연결해 저장한다", async () => {
+    store.getOwnedInquiry.mockResolvedValue(parent);
+    const res = await post({ text: "그럼 내용증명은 어떻게 보내요?", parentInquiryId: PARENT });
+    expect(res.status).toBe(201);
+    expect(store.getOwnedInquiry).toHaveBeenCalledWith(PARENT, {
+      kind: "anon",
+      anonSessionId: "anon-1",
+    });
+    expect(store.createInquiry.mock.calls[0][3]).toBe(PARENT);
+  });
+
+  test("F-002 AC3 분석 전 질문에는 이어 물을 수 없다 (409 INVALID_STATE)", async () => {
+    store.getOwnedInquiry.mockResolvedValue({ ...parent, status: "draft" });
+    const res = await post({ text: "이어서", parentInquiryId: PARENT });
+    expect(res.status).toBe(409);
+    expect(store.createInquiry).not.toHaveBeenCalled();
+  });
+
+  test("F-002 AC3 남의 질문에는 이어 물을 수 없다 (403)", async () => {
+    store.getOwnedInquiry.mockRejectedValue(new ApiError("FORBIDDEN"));
+    const res = await post({ text: "이어서", parentInquiryId: PARENT });
+    expect(res.status).toBe(403);
+    expect(store.createInquiry).not.toHaveBeenCalled();
+  });
+
+  test("parentInquiryId 형식이 틀리면 400", async () => {
+    const res = await post({ text: "이어서", parentInquiryId: "abc" });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.details).toEqual({ fields: ["parentInquiryId"] });
   });
 });
 

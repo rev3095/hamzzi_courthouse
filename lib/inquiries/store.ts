@@ -5,13 +5,23 @@ import type { RequestScope } from "@/lib/api/route";
 import { ensureAnonSession, getAnonSessionId } from "@/lib/auth/anon";
 import { getActor } from "@/lib/auth/server";
 import type { InputScan } from "@/lib/pii";
+import { clientIp, hashIp } from "@/lib/auth/ip";
 import { createServiceClient } from "@/lib/supabase/server";
-import { type Owner, type StoredPiiFindings, initialPiiFindings, isOwner } from "./policy";
+import {
+  ANON_IP_DAILY_LIMIT,
+  ANON_IP_WINDOW,
+  ANON_QUESTION_LIMIT,
+  type ConsumeResult,
+  type Owner,
+  type StoredPiiFindings,
+  assertConsumed,
+  initialPiiFindings,
+  isOwner,
+} from "./policy";
 
 export type { Owner } from "./policy";
 
 // service_role로 쓰므로 소유권은 여기서 직접 확인한다 (RLS 우회 — DATA_MODEL 6절).
-
 
 /** 요청자. 로그인 사용자 우선, 아니면 익명 세션. create면 익명 세션을 새로 만든다. */
 export async function resolveOwner(
@@ -35,8 +45,44 @@ export type InquiryRow = {
 
 const SENSITIVE_PURPOSE = "법률 정보 분석을 위한 민감정보 처리";
 
+/** 비로그인 세션이 쓴 질문 수 (F-001 AC3). 세션이 없으면 0 */
+export async function getAnonQuestionsUsed(anonSessionId: string): Promise<number> {
+  const { data, error } = await createServiceClient()
+    .from("anon_sessions")
+    .select("questions_used")
+    .eq("id", anonSessionId)
+    .maybeSingle<{ questions_used: number }>();
+  if (error) throw new Error("anon_sessions 조회 실패");
+  return data?.questions_used ?? 0;
+}
+
+/**
+ * 비로그인 분석 1회 소비 — 세션 3회·IP 해시 24시간 상한을 DB 함수가 원자적으로 확인한다 (DEC-010).
+ * analyze 성공 직후 호출한다. 원본 IP는 여기서 해시로만 바꾸고 버린다.
+ */
+export async function consumeAnonQuestion(anonSessionId: string, headers: Headers) {
+  const salt = process.env.ANON_IP_SALT;
+  if (!salt && process.env.NODE_ENV === "production") {
+    throw new Error("환경변수 ANON_IP_SALT이(가) 없습니다.");
+  }
+  const { data, error } = await createServiceClient().rpc("consume_anon_question", {
+    p_session: anonSessionId,
+    p_ip_hash: hashIp(clientIp(headers), salt),
+    p_session_limit: ANON_QUESTION_LIMIT,
+    p_ip_limit: ANON_IP_DAILY_LIMIT,
+    p_window: ANON_IP_WINDOW,
+  });
+  if (error) throw new Error("consume_anon_question 실패");
+  assertConsumed(data as ConsumeResult);
+}
+
 /** 마스킹본만 저장한다. 원문은 인자로도 받지 않는다 (DEC-006). */
-export async function createInquiry(owner: Owner, scan: InputScan, sensitiveConsent: boolean) {
+export async function createInquiry(
+  owner: Owner,
+  scan: InputScan,
+  sensitiveConsent: boolean,
+  parentInquiryId: string | null = null,
+) {
   const db = createServiceClient();
   const now = new Date();
   const consentAt = scan.sensitive.length && sensitiveConsent ? now.toISOString() : null;
@@ -48,6 +94,7 @@ export async function createInquiry(owner: Owner, scan: InputScan, sensitiveCons
       masked_text: scan.maskedText,
       pii_findings: initialPiiFindings(scan.findings, now),
       sensitive_consent_at: consentAt,
+      parent_inquiry_id: parentInquiryId,
       status: "draft",
     })
     .select("id")

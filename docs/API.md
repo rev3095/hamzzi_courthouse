@@ -93,6 +93,17 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ```
 `acceptMasked: false`는 `400 VALIDATION_ERROR`(`details.reason: "resubmit_with_edits"`) — 내용을 고쳐 새로 제출한다. 분석 전 확인이 없으면 analyze가 `422 PII_CONFIRMATION_REQUIRED`. 민감정보 동의는 POST `/inquiries`에서 받는다.
 
+### GET `/me/quota`
+```ts
+// 200 — 조회만 한다. 쿠키 없는 첫 방문자에게 익명 세션을 만들지 않는다
+{ anonymous: boolean;          // 로그인 사용자면 false
+  used: number | null;         // 비로그인 사용 횟수 0~3 (로그인 사용자 null)
+  limit: number | null;        // 3 (DEC-010)
+  remaining: number | null;
+  loginRequired: boolean }     // 3회를 다 쓴 비로그인
+```
+비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 3회 + 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
+
 ### POST `/inquiries/{id}/analyze`
 ```ts
 // 200 (정보 부족)
