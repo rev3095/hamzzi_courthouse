@@ -52,12 +52,14 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
 | 수집기 테스트 일부 | `cd collector && uv run pytest tests/test_prec.py -k 중복` |
 | DB 마이그레이션 | `pnpm exec supabase migration new <이름>` (add-migration 스킬) |
-| 마이그레이션 적용 확인 | `pnpm exec supabase db reset` (Docker 필요 — 없으면 미확인으로 보고) |
+| 마이그레이션 적용 (개발 DB) | `pnpm db:push --dry-run` 확인 → `pnpm db:push`. `.env.local`의 개발용 Supabase 프로젝트에 적용한다 (Docker 불필요, 운영 DB 금지) |
+| 적용 결과 검증 | `pnpm db:verify` — 테이블·RLS·권한·게이트·비로그인 횟수·인용 제약을 실제 DB에서 검사하고 ROLLBACK. 새 마이그레이션이면 scripts/verify_db.py에 검사를 추가한다 |
+| 로컬 DB 초기화 | `pnpm exec supabase db reset` (Docker 필요) |
 | CI | `.github/workflows/ci.yml` — push·PR에서 lint·typecheck·test·docs:check + 수집기 pytest·ruff check·ruff format --check. prettier·E2E·test:live·DB는 CI에서 돌지 않는다 |
 
 ## 환경변수 (`.env.local`, 값은 사용자가 직접 넣는다)
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
-- `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_ANON_KEY`·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속)
+- `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 `consumeAnonQuestion`이 오류를 낸다
 
 ## 폴더
