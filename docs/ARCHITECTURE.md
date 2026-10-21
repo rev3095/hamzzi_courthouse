@@ -171,6 +171,7 @@ flowchart TB
 | 항목 | 내용 |
 |---|---|
 | 환경 | 로컬 / 스테이징 / 운영 (제안). 스테이징은 실제 사용자 데이터 없음 |
+| 데모 배포 | Vercel(Hobby, GitHub main 자동 배포) `hamzzi-courthouse.vercel.app`, 서버 함수 리전 `icn1`(서울, `vercel.json`) · Supabase 개발 프로젝트 Seoul(ap-northeast-2). 환경변수는 Vercel 프로젝트 설정에 따로 넣는다(`SUPABASE_DB_URL` 제외). 법제처 호출은 도메인 등록 후 가능 (OQ-ARC-05). 운영 호스팅·플랜은 P11 전에 정한다 |
 | 비밀 관리 | API 키는 서버 환경변수만, 클라이언트 노출 금지(PRD 13) |
 | 마이그레이션 | DB 스키마는 마이그레이션 파일로 관리, 운영 반영은 사람 승인 |
 | 관측 | 기능별 장애·지연·LLM 비용·인용 검증 실패율 지표 (PRD 13, 14) |
