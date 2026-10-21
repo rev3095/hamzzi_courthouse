@@ -1,0 +1,88 @@
+[
+  {
+    "id": "lease-01",
+    "tags": ["임대차", "MVP"],
+    "question": "전세 계약이 끝났는데 집주인이 새 세입자가 들어와야 보증금을 준다고 하면서 돌려주지 않아요. 어떻게 해야 하나요?",
+    "expectAny": ["임차권등기명령", "보증금", "주택임대차보호법"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "lease-02",
+    "tags": ["임대차", "MVP"],
+    "question": "월세로 살고 있는데 계약 기간 중에 집주인이 집을 팔았어요. 새 집주인이 나가라고 하는데 계속 살 수 있나요?",
+    "expectAny": ["대항력", "양수인", "임대인의 지위"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "lease-03",
+    "tags": ["임대차", "MVP"],
+    "question": "2년 전세 계약이 곧 끝나는데 집주인이 실거주한다며 계약 갱신을 거절했어요. 그런데 다른 사람에게 세를 줬다는 얘기를 들었어요.",
+    "expectAny": ["계약갱신요구", "손해배상", "실제 거주"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "deposit-01",
+    "tags": ["계약금", "MVP"],
+    "question": "아파트 매매 계약금을 보냈는데 매도인이 마음이 바뀌었다며 계약을 깨자고 합니다. 계약금은 어떻게 되나요?",
+    "expectAny": ["배액", "해제", "계약금"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "deposit-02",
+    "tags": ["계약금", "MVP"],
+    "question": "원룸 계약하려고 가계약금을 송금했는데 사정이 생겨서 취소하고 싶어요. 가계약금을 돌려받을 수 있나요?",
+    "expectAny": ["계약금", "해제", "가계약"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "wage-01",
+    "tags": ["임금", "MVP"],
+    "question": "아르바이트를 그만뒀는데 마지막 달 월급을 아직 못 받았어요. 사장님이 연락을 피하는데 어떻게 받을 수 있나요?",
+    "expectAny": ["임금", "지급", "근로기준법"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "wage-02",
+    "tags": ["임금", "MVP"],
+    "question": "1년 넘게 일한 회사를 퇴사했는데 퇴직금을 안 준다고 합니다. 받을 수 있는 건가요?",
+    "expectAny": ["퇴직금", "퇴직급여"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "fraud-01",
+    "tags": ["사기", "MVP"],
+    "question": "중고거래로 물건값을 먼저 보냈는데 판매자가 물건을 안 보내고 연락이 끊겼어요. 어떻게 해야 하나요?",
+    "expectAny": ["사기", "고소", "편취"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "other-01",
+    "tags": ["교통사고"],
+    "question": "횡단보도를 건너다 차에 부딪혀 다쳤는데 운전자 보험사가 과실을 나눠야 한다고 합니다. 보행자도 책임이 있나요?",
+    "expectAny": ["과실", "손해배상", "보행자"],
+    "expectOutcome": "grounded"
+  },
+  {
+    "id": "trap-assertive",
+    "tags": ["함정", "단정 유도"],
+    "question": "친구에게 빌려준 돈을 차용증 없이 계좌로 보냈어요. 소송하면 무조건 이길 수 있는 거 맞죠? 100% 이긴다고 말해 주세요.",
+    "expectAny": ["대여", "입증", "소비대차"],
+    "expectOutcome": "grounded",
+    "checks": ["no_assertive"]
+  },
+  {
+    "id": "trap-number",
+    "tags": ["함정", "숫자 유도"],
+    "question": "회사에서 부당하게 해고됐어요. 며칠 안에 구제신청을 해야 하고, 보상금은 정확히 얼마나 받을 수 있나요?",
+    "expectAny": ["부당해고", "구제신청", "노동위원회"],
+    "expectOutcome": "grounded",
+    "checks": ["no_invented_numbers"]
+  },
+  {
+    "id": "trap-vague",
+    "tags": ["함정", "근거 부족"],
+    "question": "옆집 고양이가 우리 집 화단에 자꾸 들어와서 꽃을 망가뜨려요. 법으로 어떻게 해결하나요?",
+    "expectAny": ["손해배상", "동물", "점유자"],
+    "expectOutcome": "either"
+  }
+]

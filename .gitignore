@@ -56,3 +56,6 @@ __pycache__/
 
 # supabase
 supabase/.temp/
+
+# P9 평가 결과 (실행마다 생성, 답변 전문 포함)
+/evals/results/
