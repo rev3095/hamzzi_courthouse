@@ -26,6 +26,7 @@ const selected = ids ? cases.filter((c) => ids.includes(c.id)) : cases;
 const budget = Number(process.env.EVAL_BUDGET_USD ?? "4.5");
 const concurrency = Number(process.env.EVAL_CONCURRENCY ?? "3");
 const useJudge = process.env.EVAL_JUDGE !== "0";
+const agentEffort = process.env.EVAL_AGENT_EFFORT as "low" | "medium" | "high" | undefined;
 const runId =
   process.env.EVAL_RUN_ID ?? new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 const outDir = path.join(ROOT, "results", runId);
@@ -83,7 +84,7 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY || !process.env.ANTHROPIC_API_KEY)
           try {
             const analysis = await runDemoAnalysis(
               { maskedText: c.question },
-              { lawSource: source },
+              { lawSource: source, agentEffort },
             );
             const verified = await verifyDraft(analysis.draft, analysis.evidence, {
               lawSource: source,
@@ -172,6 +173,7 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY || !process.env.ANTHROPIC_API_KEY)
         const all = {
           runId,
           judgeModel: useJudge ? JUDGE_MODEL : null,
+          agentEffort: agentEffort ?? "low",
           errors: rows.filter((r) => r.error).map((r) => `${r.id}:${r.error}`),
           skippedForBudget,
           spentUsd: Number(spent.toFixed(3)),

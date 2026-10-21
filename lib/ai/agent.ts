@@ -27,6 +27,8 @@ export async function agentSearch(
     timeLeft: () => number;
     onRound: (r: AgentRound) => void;
     onResponse: (res: ModelMessage) => void;
+    /** 재검색 강도. 기본 low — 평가(P9)에서 비교할 때만 바꾼다 */
+    effort?: "low" | "medium" | "high";
   },
   input: { maskedText: string; context: FollowupTurn[]; intent: Intent },
   evidence: EvidenceSet,
@@ -51,7 +53,7 @@ export async function agentSearch(
         ...OPUS_FALLBACK,
         system: [{ type: "text", text: AGENT_SYSTEM, cache_control: { type: "ephemeral" } }],
         tools: AGENT_TOOLS,
-        output_config: { effort: "low" },
+        output_config: { effort: deps.effort ?? "low" },
         messages,
       },
       budget,

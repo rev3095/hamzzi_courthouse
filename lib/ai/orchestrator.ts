@@ -41,6 +41,8 @@ export type DemoAnalysisDeps = {
   onStep?: (e: StepEvent) => void;
   budgetMs?: number;
   now?: () => number;
+  /** 재검색 강도 (기본 low). 평가 비교용 */
+  agentEffort?: "low" | "medium" | "high";
 };
 
 export type DemoAnalysisOutput = {
@@ -88,6 +90,7 @@ export async function runDemoAnalysis(
     {
       model,
       source,
+      effort: deps.agentEffort,
       timeLeft: () => Math.min(AGENT_ROUND_CAP_MS, remaining() - ANSWER_RESERVE_MS),
       onRound: (r) =>
         step({
