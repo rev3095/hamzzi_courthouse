@@ -1,5 +1,5 @@
 // 실제 법제처 호출 스모크 테스트 (pnpm test:live). 네트워크·등록 IP·인증키가 필요해 기본 pnpm test에서 뺀다.
-// .env.local에서 OPEN_LAW_API_KEY 하나만 읽어 테스트 환경변수로 넘긴다. 값은 출력하지 않는다.
+// .env.local에서 OPEN_LAW_API_KEY·ANTHROPIC_API_KEY만 읽어 테스트 환경변수로 넘긴다. 값은 출력하지 않는다.
 import fs from "node:fs";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -21,7 +21,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/live/**/*.live.test.ts"],
-    env: readKey("OPEN_LAW_API_KEY"),
-    testTimeout: 60_000,
+    env: { ...readKey("OPEN_LAW_API_KEY"), ...readKey("ANTHROPIC_API_KEY") },
+    testTimeout: 90_000,
   },
 });

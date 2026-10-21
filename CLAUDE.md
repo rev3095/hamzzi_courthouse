@@ -46,7 +46,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run tests/unit/inquiries-api.test.ts` · `pnpm exec vitest run -t "F-007 AC1"` |
 | E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`). 개발 서버는 Playwright가 띄우고, 이미 떠 있으면 재사용한다 |
 | E2E 일부 | `pnpm exec playwright test tests/e2e/home.spec.ts` |
-| 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터, 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외) |
+| 법제처·Claude 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터 + lib/ai 데모 분석. 등록 IP·`OPEN_LAW_API_KEY`·`ANTHROPIC_API_KEY` 필요, 질문 1건에 약 0.2~0.3달러 과금 — 기본 테스트에서 제외) |
 | 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
