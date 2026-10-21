@@ -48,6 +48,7 @@ export const ANON_QUESTION_LIMIT = 3;
 /** 같은 IP 해시의 24시간 비로그인 분석 상한 — 쿠키 삭제 남용 방지용 느슨한 상한 (PRD OQ-009) */
 export const ANON_IP_DAILY_LIMIT = 10;
 export const ANON_IP_WINDOW = "24 hours";
+export const ANON_IP_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** LOGIN_REQUIRED details.loginProviders (DEC-005 소셜 로그인) */
 export const LOGIN_PROVIDERS = ["google"];
 
@@ -60,7 +61,7 @@ export function assertAnonQuota(questionsUsed: number) {
 
 export type ConsumeResult = "ok" | "session_limit" | "ip_limit" | "unknown_session";
 
-/** consume_anon_question(DB 함수) 결과 → 에러. analyze 성공 직후 호출한다 (P5) */
+/** consume_anon_question(DB 함수) 결과 → 에러 */
 export function assertConsumed(result: ConsumeResult) {
   if (result === "ok") return;
   if (result === "ip_limit") throw new ApiError("RATE_LIMITED", { reason: "anon_ip_daily" });
@@ -156,4 +157,43 @@ export function parseConfirmation(body: unknown): { acceptMasked: true } {
     });
   }
   return { acceptMasked: true };
+}
+
+// --- 분석 (P5, API.md 4.1 데모) ----------------------------------------------------
+/** 분석할 수 있는 상태: 처음(draft)이나 실패 후 재시도(failed). 이미 분석했으면 다시 하지 않는다 (횟수 이중 차감 방지) */
+export function assertAnalyzable(status: string) {
+  if (status !== "draft" && status !== "failed") {
+    throw new ApiError("INVALID_STATE", { status });
+  }
+}
+
+/** 이어 묻기 맥락으로 넘길 직전 답변 요약 — 저장된 결과의 문단 본문만 이어 붙여 자른다 (F-002 AC3, DEC-011) */
+export function answerSummary(response: unknown, maxChars = 600): string {
+  const points = (response as { answer?: { points?: { text?: unknown }[] } } | null)?.answer
+    ?.points;
+  if (!Array.isArray(points)) return "";
+  const text = points
+    .map((p) => (typeof p?.text === "string" ? p.text : ""))
+    .filter(Boolean)
+    .join(" ");
+  return text.length > maxChars ? `${text.slice(0, maxChars)}…` : text;
+}
+
+/** 진행 단계 스트리밍 요청인가 (API.md 4.1: Accept: text/event-stream) */
+export function wantsEventStream(req: Request): boolean {
+  return (req.headers.get("accept") ?? "").includes("text/event-stream");
+}
+
+export type FinishResult =
+  | { status: "ok"; resultId: string }
+  | { status: "already_analyzed" | "unknown_inquiry" | "not_owner" | Exclude<ConsumeResult, "ok"> };
+
+/** finish_demo_analysis(DB 함수) 결과 → 결과 ID 또는 에러 */
+export function finishedResultId(r: FinishResult): string {
+  if (r.status === "ok") return r.resultId;
+  if (r.status === "already_analyzed") throw new ApiError("INVALID_STATE", { status: "analyzed" });
+  if (r.status === "unknown_inquiry") throw new ApiError("NOT_FOUND");
+  if (r.status === "not_owner") throw new ApiError("FORBIDDEN");
+  assertConsumed(r.status);
+  throw new ApiError("INTERNAL_ERROR");
 }

@@ -124,6 +124,8 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 같은 `ip_hash`의 24시간 분석은 10회까지 — 쿠키 삭제 남용 방지용 느슨한 상한, 3회 제한은 쿠키(세션) 기준 (PRD OQ-009).
 DB 함수 `consume_anon_question(session, ip_hash, 세션 상한, IP 상한, 기간)` → `ok`/`session_limit`/`ip_limit`/`unknown_session`: 세션 행 잠금 + IP 해시 advisory lock으로 원자적으로 확인·증가한다. service_role만 실행.
 
+DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, response, outcome, model, …, citations jsonb)` **(데모, `20261021112604_finish_demo_analysis.sql`)**: inquiries 행 잠금 → 이미 `analyzed`면 `already_analyzed` → 비로그인이면 같은 트랜잭션에서 `consume_anon_question` → `analysis_results`·`result_citations` 저장 → `analyzed`. 같은 질문의 동시 요청은 한 번만 차감되고, 저장이 실패하면 차감도 되돌아간다. 반환 `{status: ok, resultId}` 또는 `already_analyzed`/`unknown_inquiry`/`not_owner`/`session_limit`/`ip_limit`/`unknown_session`. service_role만 실행.
+
 ### `followup_questions` (F-002 AC2)
 `id, inquiry_id FK, ord(1~3), question text, answer_masked text [PII-M] null, answered_at`
 
@@ -146,8 +148,8 @@ DB 함수 `consume_anon_question(session, ip_hash, 세션 상한, IP 상한, 기
 | result_id | uuid FK | |
 | kind | enum(`case`,`statute`) | |
 | case_id / statute_id | uuid FK null | `source = db`이고 검증 성공이면 반드시 값 존재 |
-| source | enum(`db`,`law_api_live`) | **(데모)** 검증 근거 출처. 데모는 `law_api_live` (DEC-009) |
-| source_ref | text null | **(데모)** 실시간 조회 식별자(판례일련번호·법령 ID). `law_api_live`일 때 필수 |
+| source | text check(`db`,`law_open_api_live`) | **(데모)** 검증 근거 출처. 데모는 `law_open_api_live` (DEC-009) |
+| source_ref | text null | **(데모)** 실시간 조회 식별자(판례일련번호·법령 ID). `law_open_api_live`일 때 필수 |
 | quote | text null | **(데모)** 답변이 인용한 원문 구절, 60자 이내 (DEC-007) |
 | claimed_ref | text | LLM이 출력한 표기 |
 | status | enum(`verified`,`removed`,`unverified`) | `removed`는 화면에 표시하지 않음. 데모: 출처·재조회 통과 + 구절 일치 = `verified`, 구절만 불일치 = `unverified`("확인 필요"), 출처 없음·재조회 실패 = `removed` (F-005 AC2) |

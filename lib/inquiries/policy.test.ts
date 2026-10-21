@@ -5,7 +5,10 @@ import { clientIp, hashIp } from "@/lib/auth/ip";
 import {
   ANON_QUESTION_LIMIT,
   MAX_INPUT_CHARS,
+  answerSummary,
+  assertAnalyzable,
   assertAnonQuota,
+  finishedResultId,
   assertConsumed,
   assertParentAnalyzed,
   quotaView,
@@ -15,6 +18,7 @@ import {
   isOwner,
   parseConfirmation,
   parseCreateRequest,
+  wantsEventStream,
 } from "./policy";
 
 const caught = (fn: () => unknown) => {
@@ -159,5 +163,42 @@ describe("DEC-010 IP 해시", () => {
   test("salt가 없으면 해시를 만들지 않는다", () => {
     expect(hashIp("203.0.113.7", undefined)).toBeNull();
     expect(hashIp(null, "salt")).toBeNull();
+  });
+});
+
+describe("P5 분석 규칙", () => {
+  test("draft·failed만 분석할 수 있다", () => {
+    expect(() => assertAnalyzable("draft")).not.toThrow();
+    expect(() => assertAnalyzable("failed")).not.toThrow();
+    expect(() => assertAnalyzable("analyzed")).toThrow(ApiError);
+  });
+
+  test("F-002 AC3 직전 답변 요약은 문단 본문만 이어 붙여 자른다", () => {
+    const response = {
+      answer: { points: [{ text: "가".repeat(400) }, { text: "나".repeat(400) }] },
+    };
+    const s = answerSummary(response);
+    expect(s.length).toBe(601);
+    expect(answerSummary(null)).toBe("");
+    expect(answerSummary({ answer: { points: [{ text: 1 }] } })).toBe("");
+  });
+
+  test("Accept: text/event-stream이면 스트리밍", () => {
+    const req = (accept: string) => new Request("http://x", { headers: { accept } });
+    expect(wantsEventStream(req("text/event-stream"))).toBe(true);
+    expect(wantsEventStream(req("application/json"))).toBe(false);
+  });
+});
+
+describe("DEC-010 분석 마무리 결과 (finish_demo_analysis)", () => {
+  test("ok면 결과 ID, 중복·상한·소유자 불일치는 각각의 오류", () => {
+    expect(finishedResultId({ status: "ok", resultId: "r-1" })).toBe("r-1");
+    expect(caught(() => finishedResultId({ status: "already_analyzed" })).code).toBe(
+      "INVALID_STATE",
+    );
+    expect(caught(() => finishedResultId({ status: "session_limit" })).code).toBe("LOGIN_REQUIRED");
+    expect(caught(() => finishedResultId({ status: "ip_limit" })).code).toBe("RATE_LIMITED");
+    expect(caught(() => finishedResultId({ status: "not_owner" })).code).toBe("FORBIDDEN");
+    expect(caught(() => finishedResultId({ status: "unknown_inquiry" })).code).toBe("NOT_FOUND");
   });
 });

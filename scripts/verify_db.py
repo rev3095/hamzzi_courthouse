@@ -28,6 +28,10 @@ GATE_KEYS = {
 }
 CONSUME = "public.consume_anon_question(uuid, text, int, int, interval)"
 CHANGE_GATE = "public.change_feature_gate(text, public.gate_status, jsonb, text, text, uuid)"
+FINISH = (
+    "public.finish_demo_analysis(uuid, uuid, text, int, int, interval, jsonb, public.analysis_outcome, "
+    "text, text, int, int, int, int, int, jsonb)"
+)
 
 
 def redact(text: str) -> str:
@@ -100,7 +104,7 @@ def schema(conn) -> None:
 
 def grants(conn) -> None:
     print("[2] 권한")
-    for fn in (CONSUME, CHANGE_GATE):
+    for fn in (CONSUME, CHANGE_GATE, FINISH):
         name = fn.split("(")[0]
         for role in ("anon", "authenticated"):
             ok = not scalar(conn, "select has_function_privilege(%s, %s, 'execute')", (role, fn))
@@ -269,6 +273,69 @@ def citations(conn) -> None:
     check(True, "같은 비로그인 세션의 분석 완료 2건 허용 (1회 유일 인덱스 제거, DEC-010)")
 
 
+def finish(conn) -> None:
+    print("[7] 분석 마무리 finish_demo_analysis (P5, DEC-010)")
+    fn = FINISH.split("(")[0]
+    call = (
+        f"select {fn}(%s, %s, %s, 3, 10, interval '24 hours', %s::jsonb, 'grounded', 'verify', 'v0', "
+        "1, 1, 1, %s, 0, %s::jsonb)"
+    )
+    good = json.dumps([{
+        "kind": "statute", "claimed_ref": "민법 제536조", "status": "verified",
+        "source": "law_open_api_live", "source_ref": "law:민법:제536조", "quote": "가" * 30,
+    }])
+    bad = json.dumps([{
+        "kind": "statute", "claimed_ref": "민법 제536조", "status": "verified",
+        "source": "law_open_api_live", "source_ref": "law:민법:제536조", "quote": "가" * 61,
+    }])
+    resp = json.dumps({"outcome": "grounded"})
+
+    def used(session):
+        return scalar(conn, "select questions_used from public.anon_sessions where id = %s", (session,))
+
+    s1 = scalar(conn, "insert into public.anon_sessions default values returning id")
+    i1 = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (s1,))
+    ip = "verify-ip-" + uuid.uuid4().hex
+
+    raises(conn, "인용 저장 실패(구절 61자)", call, (i1, s1, ip, resp, 1, bad), match="result_citations")
+    check(used(s1) == 0, "저장이 실패하면 차감도 되돌아간다")
+    check(scalar(conn, "select count(*) from public.analysis_results where inquiry_id = %s", (i1,)) == 0,
+          "저장 실패 시 결과 행이 남지 않는다")
+
+    r = scalar(conn, call, (i1, s1, ip, resp, 1, good))
+    check(r.get("status") == "ok" and r.get("resultId"), "성공하면 ok와 결과 ID")
+    check(used(s1) == 1, "성공 시 1회 차감")
+    check(scalar(conn, "select status::text from public.inquiries where id = %s", (i1,)) == "analyzed",
+          "질문 상태 analyzed")
+    check(scalar(conn, "select count(*) from public.result_citations where result_id = %s", (r["resultId"],)) == 1,
+          "인용 행 저장")
+    again = scalar(conn, call, (i1, s1, ip, resp, 1, good))
+    check(again == {"status": "already_analyzed"}, "같은 질문을 다시 마무리하면 already_analyzed")
+    check(used(s1) == 1, "중복 마무리는 차감하지 않는다")
+    check(scalar(conn, "select count(*) from public.analysis_results where inquiry_id = %s", (i1,)) == 1,
+          "중복 마무리는 결과 행을 만들지 않는다")
+
+    other = scalar(conn, "insert into public.anon_sessions default values returning id")
+    i2 = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (s1,))
+    check(scalar(conn, call, (i2, other, ip, resp, 1, good)) == {"status": "not_owner"},
+          "다른 익명 세션은 not_owner (차감 없음)")
+    check(used(other) == 0, "not_owner면 차감하지 않는다")
+
+    for _ in range(2):
+        i = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (s1,))
+        scalar(conn, call, (i, s1, ip, resp, 1, good))
+    i4 = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (s1,))
+    check(scalar(conn, call, (i4, s1, ip, resp, 1, good)) == {"status": "session_limit"},
+          "세션 3회를 넘으면 session_limit, 결과 저장 안 함")
+    check(scalar(conn, "select count(*) from public.analysis_results where inquiry_id = %s", (i4,)) == 0,
+          "상한에 걸리면 결과 행 없음")
+
+    u = make_user(conn)
+    iu = scalar(conn, "insert into public.inquiries (user_id, masked_text) values (%s, '[검증]') returning id", (u,))
+    check(scalar(conn, call, (iu, None, None, resp, 1, good)).get("status") == "ok",
+          "로그인 사용자는 차감 없이 저장")
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -279,7 +346,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish):
                         try:
                             with conn.transaction():
                                 step(conn)
