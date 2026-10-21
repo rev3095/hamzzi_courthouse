@@ -2,6 +2,7 @@
 
 import { maskPii } from "@/lib/pii/detect";
 import type { CitationCheck } from "./types";
+import { caseNumbersIn } from "@/lib/citations/patterns";
 
 const BR = /<br\s*\/?>/gi;
 const TAG = /<[^>]+>/g;
@@ -135,7 +136,8 @@ export function parseStatuteVerify(citation: string, text: string): CitationChec
 /** verifyCaseCitations의 결과 줄들에서 사건번호별 실존 여부를 고른다 */
 export function parseCaseVerify(caseNo: string, lines: string[]): CitationCheck {
   const no = caseNo.replace(/\s+/g, "");
-  const line = lines.find((l) => l.replace(/\s+/g, "").includes(no));
+  // 부분 일치("2020다1234"가 "2020다12345" 줄에 맞는 것)를 막으려고 줄에서 사건번호를 뽑아 같은지 본다
+  const line = lines.find((l) => caseNumbersIn(l).includes(no));
   if (!line) return { citation: caseNo, exists: null, note: "재조회 결과 없음" };
   if (line.startsWith("✓")) return { citation: caseNo, exists: true };
   const note = line.replace(/^[✓✗⚠]\s*/, "").slice(0, 120);

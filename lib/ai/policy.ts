@@ -6,6 +6,7 @@
 // - 검증 전 초안 조립. 인용 검증(원문 대조·재조회)은 lib/citations(P4)가 한다
 import { z } from "zod";
 import { AI_NOTICE } from "@/lib/api/respond";
+import { articlesIn, caseNumbersIn, stripCitations } from "@/lib/citations/patterns";
 import { scanInput } from "@/lib/pii";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
@@ -173,14 +174,8 @@ export function isAssertive(text: string): boolean {
   return ASSERTIVE.some((re) => re.test(t));
 }
 
-/** 사건번호: 연도 + 사건부호 + 일련번호 (2020다12345, 2019가합1234, 2021헌바12) */
-const CASE_NO =
-  /(?:19|20)?\d{2}\s*(?:가합|가단|가소|가|나|다|라|마|그|카합|카단|카|머|드|르|므|브|스|느|즈|고합|고단|고정|고약|노|도|로|모|보|오|구합|구단|누|두|무|부|헌가|헌나|헌다|헌라|헌마|헌바|헌사|허|후)\s*\d{2,}/g;
-const ARTICLE_NO = /제\s*\d+\s*조(?:\s*의\s*\d+)?/g;
-/** 조문·사건번호·조문 하위 번호·날짜 속 숫자는 숫자 규칙에서 뺀다 (식별자는 citationsIn이 따로 확인) */
+/** 조문 하위 번호·날짜 속 숫자는 숫자 규칙에서 뺀다. 조문·사건번호는 stripCitations가 빼고 citationsIn이 따로 확인한다 */
 const IDENTIFIERS = [
-  CASE_NO,
-  ARTICLE_NO,
   /제\s*\d+\s*[항호목]/g,
   /(?:19|20)\d{2}\s*[.\-]\s*\d{1,2}\s*[.\-]\s*\d{1,2}\.?/g,
 ];
@@ -197,7 +192,7 @@ const compact = (s: string) => s.replace(/\s+/g, "");
 
 /** 숫자 토큰(단위 포함)과 한글 수사 표현. 식별자 속 숫자는 뺀다 */
 function numberTokens(text: string): { digits: string[]; words: string[] } {
-  let t = norm(text).replace(/(\d),(?=\d{3})/g, "$1");
+  let t = stripCitations(norm(text).replace(/(\d),(?=\d{3})/g, "$1"));
   for (const re of IDENTIFIERS) t = t.replace(re, " ");
   const digits = [...t.matchAll(NUMBER_TOKEN)].map((m) => compact(`${m[1]}${m[2] ?? ""}`));
   const words = (t.match(WORD_NUMBER) ?? []).map(compact);
@@ -206,11 +201,7 @@ function numberTokens(text: string): { digits: string[]; words: string[] } {
 
 /** 본문에 적힌 조문번호·사건번호 */
 export function citationsIn(text: string): { articles: string[]; cases: string[] } {
-  const t = norm(text);
-  return {
-    articles: (t.match(ARTICLE_NO) ?? []).map(compact),
-    cases: (t.match(CASE_NO) ?? []).map(compact),
-  };
+  return { articles: articlesIn(text).map((a) => a.label), cases: caseNumbersIn(text) };
 }
 
 export type DropReason =

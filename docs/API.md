@@ -138,13 +138,13 @@ type DemoAnalysisResult = {
   outcome: "grounded" | "no_result_in_scope";       // 근거 자료가 없으면 no_result_in_scope (F-006)
   aiNotice: "AI 생성 · 법률 자문 아님";              // 고정 문구. LLM이 만들지 않음
   intent: { area: string; goal: string; laws: string[]; lawKeywords: string[] };
-  answer: { points: { text: string; source: string; quote: string;          // quote = 원문 그대로 20~60자
-                      check: "verified" | "quote_mismatch" }[] };           // 출처 없음·재조회 실패 문단은 제외
+  answer: { points: { text: string; source: string; quote: string;          // quote = 원문 그대로 20~60자. quote_mismatch면 "" (원문에 없는 구절은 내보내지 않음)
+                      check: "verified" | "quote_mismatch" }[] };           // 출처 없음·재조회 실패·실존 미확인 문단은 제외
   articles: (StatuteRef & { title: string; used: boolean })[];             // 법령 탭
   cases: (CaseRef & { fromBody: boolean; used: boolean })[];               // 판례 탭. fromBody = 판시사항·요지가 없어 본문 일부를 근거로 씀
   searches: { keyword: string; total: number }[];
   trace: { round: 1|2|3; tool: "law" | "precedent"; query: string; added: string[] }[];   // AI가 더 찾아본 것
-  recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[] }; // verify_citations 결과(검증 탭)
+  recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[] }; // verify_citations 결과(검증 탭). items는 남은 문단이 쓴(실존 확인된) 인용만, ok = 실존 미확인으로 뺀 문단이 없음
   searchScopeNote: string;
 }
 ```
