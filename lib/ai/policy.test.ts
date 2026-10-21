@@ -62,7 +62,7 @@ const intent: Intent = {
   goal: "보증금을 돌려받는 방법",
   laws: ["주택임대차보호법"],
   lawKeywords: ["임대차보증금 반환"],
-  articleRefs: [],
+  precKeywords: ["임대차보증금 반환"],
 };
 
 describe("F-002 AC3 이어 묻기 맥락", () => {

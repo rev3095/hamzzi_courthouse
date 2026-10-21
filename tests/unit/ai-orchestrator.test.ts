@@ -48,7 +48,12 @@ function fakeSource(overrides: Partial<LawSource> = {}): LawSource & { queries: 
     queries,
     searchArticles: vi.fn(async (q: string) => {
       queries.push(q);
-      return q.includes("동시이행") ? [ART2] : [ART];
+      return [ART];
+    }),
+    // 프로토타입 방식 법령 검색: 법률 이름 + 키워드 (DEC-014)
+    findArticles: vi.fn(async (lawName: string, keywords: string[]) => {
+      queries.push(`${lawName}:${keywords.join(",")}`);
+      return lawName === "민법" ? [ART2] : [ART];
     }),
     getArticle: vi.fn(async () => null),
     searchCases: vi.fn(async (q: string) => {
@@ -76,8 +81,8 @@ const INTENT = {
   area: "주택임대차",
   goal: "보증금을 돌려받는 방법",
   laws: ["주택임대차보호법"],
-  lawKeywords: ["임대차보증금 반환"],
-  articleRefs: [],
+  lawKeywords: ["보증금", "임차권등기명령"],
+  precKeywords: ["임대차보증금 반환"],
 };
 
 type Script = {
@@ -118,7 +123,9 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
   test("의도 → 검색 → 재검색 → 답변 순서로 진행 단계를 알리고 초안을 만든다", async () => {
     const model = fakeModel({
       agent: [
-        toolMsg([{ name: "search_law", input: { query: "동시이행 항변권" } }]),
+        toolMsg([
+          { name: "search_law_articles", input: { lawName: "민법", keywords: ["동시이행"] } },
+        ]),
         textMsg("충분합니다"),
       ],
     });
@@ -139,9 +146,10 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     expect(out.draft.answer.points).toHaveLength(1);
     expect(out.draft.cases[0]).toMatchObject({ caseNo: "2020다12345", used: true });
     expect(out.draft.trace).toEqual([
-      { round: 1, tool: "law", query: "동시이행 항변권", added: ["law:민법:제536조"] },
+      { round: 1, tool: "law", query: "민법 · 동시이행", added: ["law:민법:제536조"] },
     ]);
-    expect(out.draft.searches).toEqual([{ keyword: "임대차보증금 반환", total: 2 }]);
+    // 검색어 기록은 판례 검색어 (프로토타입과 같음)
+    expect(out.draft.searches).toEqual([{ keyword: "임대차보증금 반환", total: 1 }]);
     expect(out.evidence.has("law:민법:제536조")).toBe(true);
     expect(out.usage).toEqual({ inputTokens: 40, outputTokens: 20, cacheReadTokens: 8 });
     // 진행 단계 문구에 입력 원문을 넣지 않는다
@@ -180,7 +188,7 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
   test("F-007 개인정보가 섞인 재검색어는 법제처로 보내지 않는다", async () => {
     const source = fakeSource();
     const model = fakeModel({
-      agent: [toolMsg([{ name: "search_precedent", input: { query: "010-1234-5678 보증금" } }])],
+      agent: [toolMsg([{ name: "search_precedents", input: { query: "010-1234-5678 보증금" } }])],
     });
     const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: source });
     expect(source.queries.some((q) => q.includes("010"))).toBe(false);
@@ -208,6 +216,7 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     const model = fakeModel();
     const source = fakeSource({
       searchArticles: vi.fn(async () => []),
+      findArticles: vi.fn(async () => []),
       searchCases: vi.fn(async () => []),
     });
     const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: source });
@@ -221,7 +230,7 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     const fail = vi.fn(async () => {
       throw new ApiError("SEARCH_UPSTREAM_FAILED");
     });
-    const source = fakeSource({ searchArticles: fail, searchCases: fail });
+    const source = fakeSource({ findArticles: fail, searchCases: fail });
     await expect(
       runDemoAnalysis({ maskedText: "질문" }, { model: fakeModel(), lawSource: source }),
     ).rejects.toMatchObject({ code: "SEARCH_UPSTREAM_FAILED" });
@@ -247,14 +256,67 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     });
   });
 
-  test("DEC-013 시간이 모자라면 재검색을 건너뛰고 답변 몫을 남긴다", async () => {
+  test("DEC-014 시간이 모자라면 재검색을 건너뛰고 답변 몫을 남긴다", async () => {
     let t = 0;
     const model = fakeModel();
     await runDemoAnalysis(
       { maskedText: "질문" },
-      { model, lawSource: fakeSource(), budgetMs: 28_000, now: () => (t += 1_000) },
+      { model, lawSource: fakeSource(), budgetMs: 36_000, now: () => (t += 1_000) },
     );
     expect(model.calls.some((c) => c.tools)).toBe(false);
     expect(model.calls.at(-1)?.model).toBe("claude-opus-5-5");
+  });
+});
+
+describe("DEC-014 프로토타입과 같은 검색 과정", () => {
+  test("법률마다 조문 키워드로 찾고, 판례는 검색어마다 찾아 중복 없이 상세 8건까지", async () => {
+    const hit = (n: number) => ({ ...CASE, id: `c${n}`, caseNo: `2020다${1000 + n}` });
+    const source = fakeSource({
+      searchCases: vi.fn(async (q: string) =>
+        q === "판례 가" ? [1, 2, 3, 4, 5, 6].map(hit) : [4, 5, 6, 7, 8, 9].map(hit),
+      ),
+      getCase: vi.fn(async (id: string) => ({
+        ...CASE,
+        id,
+        caseNo: `2020다${1000 + Number(id.slice(1))}`,
+      })),
+    });
+    const model = fakeModel({
+      intent: textMsg(
+        JSON.stringify({
+          ...INTENT,
+          laws: ["주택임대차보호법", "민법", "상법"],
+          precKeywords: ["판례 가", "판례 나"],
+        }),
+      ),
+    });
+    const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: source });
+    // 법률은 최대 2개, 각각 같은 조문 키워드로
+    expect(source.findArticles).toHaveBeenCalledTimes(2);
+    expect(source.findArticles).toHaveBeenCalledWith(
+      "주택임대차보호법",
+      ["보증금", "임차권등기명령"],
+      3,
+    );
+    // 판례 검색어마다 6건, 중복(4·5·6) 제외 후 앞에서 8건 상세
+    expect(source.searchCases).toHaveBeenCalledWith("판례 가", 6);
+    expect(source.getCase).toHaveBeenCalledTimes(8);
+    expect(out.draft.cases.map((c) => c.caseNo)).toHaveLength(8);
+  });
+
+  test("재검색은 시간이 있으면 3라운드까지, 라운드당 도구 3개까지", async () => {
+    const call = (q: string) => ({ name: "search_precedents", input: { query: q } });
+    const model = fakeModel({
+      agent: [
+        toolMsg([call("a1"), call("a2"), call("a3"), call("a4")]),
+        toolMsg([call("b1")]),
+        toolMsg([call("c1")]),
+        toolMsg([call("d1")]),
+      ],
+    });
+    const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: fakeSource() });
+    expect(model.calls.filter((c) => c.tools)).toHaveLength(3);
+    expect(new Set(out.draft.trace.map((t) => t.round))).toEqual(new Set([1, 2, 3]));
+    expect(out.draft.trace.filter((t) => t.round === 1)).toHaveLength(3);
   });
 });

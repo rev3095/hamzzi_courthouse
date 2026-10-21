@@ -47,6 +47,7 @@ function setup() {
 function source(verifyStatutes: LawSource["verifyStatutes"]): LawSource {
   return {
     searchArticles: vi.fn(),
+    findArticles: vi.fn(),
     getArticle: vi.fn(),
     searchCases: vi.fn(),
     getCase: vi.fn(),
@@ -69,6 +70,7 @@ describe("F-005 AC2 인용 재조회", () => {
     expect(out.result.recheck).toEqual({
       ok: true,
       items: [{ citation: "민법 제536조", exists: true }],
+      removed: 0,
     });
   });
 

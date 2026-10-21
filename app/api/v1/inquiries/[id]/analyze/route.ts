@@ -20,8 +20,8 @@ import {
   resolveOwner,
 } from "@/lib/inquiries/store";
 
-/** 데모 응답 기준 p95 ≤ 60초 (DEC-013). 분석 예산은 lib/inquiries/analyze의 ANALYSIS_BUDGET_MS */
-export const maxDuration = 60;
+/** 데모 응답 기준 p95 ≤ 90초 (DEC-014). 분석 예산은 lib/inquiries/analyze의 ANALYSIS_BUDGET_MS. Vercel Hobby 한도 300초 */
+export const maxDuration = 120;
 
 type Ctx = { params: Promise<{ id: string }> };
 

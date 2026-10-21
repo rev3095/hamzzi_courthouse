@@ -19,6 +19,7 @@ import { required } from "@/lib/supabase/env";
 import {
   articleBody,
   articleLabel,
+  articleUnits,
   bodyExcerpt,
   caseUrl,
   findArticleUnit,
@@ -26,6 +27,7 @@ import {
   normalizeArticleNo,
   parseCaseVerify,
   parseStatuteVerify,
+  scoreArticles,
   statuteKey,
   statuteUrl,
   stripHtml,
@@ -35,6 +37,8 @@ import type { ArticleHit, CaseDetail, CaseHit, CitationCheck } from "./types";
 export type LawSource = {
   /** 자연어 → 관련 조문 (지능형 법령정보지식베이스) */
   searchArticles(query: string, limit?: number): Promise<ArticleHit[]>;
+  /** 법령 전문에서 키워드 점수(제목 3·본문 2)로 조문 고르기 (프로토타입 방식, DEC-014). 법령이 없으면 [] */
+  findArticles(lawName: string, keywords: string[], limit?: number): Promise<ArticleHit[]>;
   /** 법령명 + 조문번호로 조문 1개. 없으면 null */
   getArticle(lawName: string, articleNo: string): Promise<ArticleHit | null>;
   searchCases(query: string, limit?: number): Promise<CaseHit[]>;
@@ -125,6 +129,29 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
       return out;
     },
 
+    async findArticles(lawName, keywords, limit = 3) {
+      const words = keywords.map((k) => k.trim()).filter(Boolean);
+      if (!lawName.trim() || words.length === 0) return [];
+      const laws = await call("law", () => findLaws(client, lawName));
+      const law = laws.find((l) => resolvedLawMatches(lawName, l.lawName));
+      if (!law) return [];
+      const raw = await call("law_text", () => client.getLawText({ mst: law.mst }));
+      let json: unknown;
+      try {
+        json = JSON.parse(raw);
+      } catch {
+        throw new ApiError("SEARCH_UPSTREAM_FAILED", { stage: "law_text", reason: "parse" });
+      }
+      const all = articleUnits(json).flatMap((u) => {
+        const no = articleLabel(u["조문번호"], u["조문가지번호"]);
+        const text = articleBody(u);
+        if (!no || !text) return [];
+        const title = typeof u["조문제목"] === "string" ? u["조문제목"] : "";
+        return [toArticle(law.lawName, no, title, text, u["조문시행일자"] ?? law.effectiveDate)];
+      });
+      return scoreArticles(all, words, limit);
+    },
+
     async getArticle(lawName, articleNo) {
       const no = normalizeArticleNo(articleNo);
       if (!no || !lawName.trim()) return null;
@@ -148,7 +175,13 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
 
     async searchCases(query, limit = 5) {
       const res = await call("cases", () =>
-        searchPrecedentsStructured(client, { query, display: Math.min(limit * 2, 50), page: 1 }),
+        // 판례명과 본문을 함께 검색 (프로토타입과 같음, DEC-014)
+        searchPrecedentsStructured(client, {
+          query,
+          search: "both",
+          display: Math.min(limit * 2, 50),
+          page: 1,
+        }),
       );
       return res.hits
         .filter((h) => h.court && h.caseNumber)

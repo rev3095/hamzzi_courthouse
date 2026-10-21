@@ -23,13 +23,13 @@ import {
 } from "./policy";
 import { PROMPT_VERSION } from "./prompts";
 
-/** 데모 응답 기준 p95 ≤ 60초 (DEC-013). 라우트·검증 몫을 빼고 잡는다 */
-export const DEFAULT_BUDGET_MS = 55_000;
+/** 데모 응답 기준 p95 ≤ 90초 (DEC-014). 재검색 3라운드를 돌릴 수 있게 잡고, 라우트·검증 몫은 뺀다 */
+export const DEFAULT_BUDGET_MS = 100_000;
 const INTENT_CAP_MS = 12_000;
-const AGENT_ROUND_CAP_MS = 15_000;
-const ANSWER_CAP_MS = 35_000;
+const AGENT_ROUND_CAP_MS = 20_000;
+const ANSWER_CAP_MS = 40_000;
 /** 답변이 쓸 최소 시간 — 재검색은 이만큼을 남기고 멈춘다 */
-const ANSWER_RESERVE_MS = 25_000;
+const ANSWER_RESERVE_MS = 30_000;
 /** P4 인용 재조회 몫 */
 const VERIFY_RESERVE_MS = 4_000;
 

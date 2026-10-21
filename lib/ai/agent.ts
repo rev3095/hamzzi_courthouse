@@ -35,7 +35,7 @@ export async function agentSearch(
   const intro = [
     userMessage(input.maskedText, input.context),
     `<의도>\n분야: ${input.intent.area}\n알고 싶은 것: ${input.intent.goal}\n</의도>`,
-    `<지금까지_찾은_근거>\n${evidenceDigest(evidence, LIMITS.toolResultChars) || "(없음)"}\n</지금까지_찾은_근거>`,
+    `<지금까지_찾은_근거>\n${evidenceDigest(evidence, { article: LIMITS.toolResultChars, case: LIMITS.toolResultChars }) || "(없음)"}\n</지금까지_찾은_근거>`,
   ].join("\n\n");
   const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: "user", content: intro }];
 

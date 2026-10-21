@@ -82,16 +82,43 @@ export function articleBody(unit: Unit): string {
   return lines.join("\n");
 }
 
-/** 조문 응답(JSON)에서 해당 조문 단위를 찾는다. 장·절 제목(조문여부='전문')은 건너뛴다 */
-export function findArticleUnit(json: unknown, articleNo: string): Unit | null {
+/** 법령 응답(JSON)의 조문 단위 목록. 장·절 제목(조문여부='전문')은 뺀다 */
+export function articleUnits(json: unknown): Unit[] {
   const units = asArray((json as Unit)?.["법령"] && ((json as Unit)["법령"] as Unit)["조문"]);
   const list = units.flatMap((u) => asArray((u as Unit)?.["조문단위"])) as Unit[];
+  return list.filter((u) => u["조문여부"] === "조문");
+}
+
+/** 조문 응답(JSON)에서 해당 조문 단위를 찾는다 */
+export function findArticleUnit(json: unknown, articleNo: string): Unit | null {
   return (
-    list.find(
-      (u) =>
-        u["조문여부"] === "조문" && articleLabel(u["조문번호"], u["조문가지번호"]) === articleNo,
-    ) ?? null
+    articleUnits(json).find((u) => articleLabel(u["조문번호"], u["조문가지번호"]) === articleNo) ??
+    null
   );
+}
+
+/**
+ * 법령 전문에서 키워드가 든 조문을 고른다 (프로토타입 findArticles와 같은 점수, DEC-014):
+ * 키워드가 조문 제목에 있으면 3점, 본문에 있으면 2점. 점수 0은 버리고 높은 순으로 limit개.
+ */
+export function scoreArticles<T extends { title: string; text: string }>(
+  articles: T[],
+  keywords: string[],
+  limit: number,
+): T[] {
+  return articles
+    .map((a, i) => ({
+      a,
+      i,
+      score: keywords.reduce(
+        (n, k) => n + (a.text.includes(k) ? 2 : 0) + (a.title.includes(k) ? 3 : 0),
+        0,
+      ),
+    }))
+    .filter((x) => x.score > 0)
+    .sort((x, y) => y.score - x.score || x.i - y.i)
+    .slice(0, limit)
+    .map((x) => x.a);
 }
 
 const PARTY_HEADER =
@@ -101,7 +128,7 @@ const PARTY_HEADER =
  * 판례 본문 일부 (판시사항·요지가 없을 때만 근거로 씀, API.md 4.1 fromBody).
  * 당사자·대리인·원심 표시 줄을 떼고, 남은 부분도 개인정보를 가린다 (F-007). 반환값은 저장하지 않는다 (DEC-007).
  */
-export function bodyExcerpt(body: unknown, maxChars = 1500): string | null {
+export function bodyExcerpt(body: unknown, maxChars = 1400): string | null {
   const text = stripHtml(body);
   if (!text) return null;
   const lines = text.split("\n");

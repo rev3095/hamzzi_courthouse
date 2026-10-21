@@ -144,7 +144,7 @@ type DemoAnalysisResult = {
   cases: (CaseRef & { fromBody: boolean; used: boolean })[];               // 판례 탭. fromBody = 판시사항·요지가 없어 본문 일부를 근거로 씀
   searches: { keyword: string; total: number }[];
   trace: { round: 1|2|3; tool: "law" | "precedent"; query: string; added: string[] }[];   // AI가 더 찾아본 것
-  recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[] }; // verify_citations 결과(검증 탭). items는 남은 문단이 쓴(실존 확인된) 인용만, ok = 실존 미확인으로 뺀 문단이 없음
+  recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[]; removed: number }; // verify_citations 결과(검증 탭). items는 남은 문단이 쓴(실존 확인된) 인용만, ok = 실존 미확인으로 뺀 문단이 없음, removed = 검증·1차 거르기에서 뺀 문단 수(내용은 내보내지 않음, DEC-014)
   searchScopeNote: string;
 }
 ```
@@ -152,7 +152,7 @@ type DemoAnalysisResult = {
 - 상태: `draft`·`failed`(재시도)만 분석한다. 이미 `analyzed`면 `409 INVALID_STATE`(횟수 이중 차감 방지). 실패하면 `failed`로 바뀐다.
 - 비로그인은 모델을 부르기 전에 세션 3회(`401 LOGIN_REQUIRED`)·IP 해시 24시간 상한(`429 RATE_LIMITED`)을 미리 보고, 최종 차감은 결과 저장과 한 트랜잭션(DB `finish_demo_analysis`)에서 한다.
 - 스트림이 끊겨도 분석은 끝까지 저장되며, 결과는 `GET /inquiries/{id}/result`로 다시 볼 수 있다.
-- 스트림을 연 뒤의 오류는 `error { code, message, details?, requestId }` 이벤트로 보낸다(HTTP 상태는 200). 스트림 전 검사 오류는 일반 JSON 오류다. 함수 실행 한도 60초(`maxDuration`), 분석 예산 52초.
+- 스트림을 연 뒤의 오류는 `error { code, message, details?, requestId }` 이벤트로 보낸다(HTTP 상태는 200). 스트림 전 검사 오류는 일반 JSON 오류다. 함수 실행 한도 120초(`maxDuration`), 분석 예산 100초 (DEC-014, 목표 p95 ≤ 90초).
 - 출처가 그 요청의 자료에 없거나 `verify_citations`에서 실존이 확인되지 않은 문단은 응답에서 뺀다. 원문 구절만 다르면 `quote_mismatch`로 "확인 필요"를 표시한다(F-005 AC2).
 - **스트리밍**: `Accept: text/event-stream`이면 SSE로 진행 단계를 보낸다. 이벤트는 `step { stage: "intent"|"search"|"agent"|"answer"|"verify"; message: string; added?: string[] }`, 마지막에 `result { resultId, result }` 또는 `error { code, message }`. 이벤트에도 입력 원문을 넣지 않는다.
 

@@ -13,8 +13,8 @@ import {
   type Owner,
 } from "./store";
 
-/** 라우트 maxDuration(60초) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-013) */
-export const ANALYSIS_BUDGET_MS = 52_000;
+/** 라우트 maxDuration(120초) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-014, 목표 p95 ≤ 90초) */
+export const ANALYSIS_BUDGET_MS = 100_000;
 
 export async function analyzeInquiry(
   inquiry: InquiryRow,

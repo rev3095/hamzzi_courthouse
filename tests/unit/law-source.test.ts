@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import aiLaw from "@/tests/fixtures/korean-law-mcp/ai-law.json";
 import findLawsFx from "@/tests/fixtures/korean-law-mcp/find-laws.json";
 import lawText from "@/tests/fixtures/korean-law-mcp/law-text-article.json";
+import lawTextFull from "@/tests/fixtures/korean-law-mcp/law-text-full.json";
 import noHolding from "@/tests/fixtures/korean-law-mcp/precedent-record-no-holding.json";
 import record from "@/tests/fixtures/korean-law-mcp/precedent-record.json";
 import precSearch from "@/tests/fixtures/korean-law-mcp/precedent-search.json";
@@ -177,5 +178,47 @@ describe("F-006 AC2 검색 오류 구분", () => {
     delete process.env.OPEN_LAW_API_KEY;
     expect(() => createLawSource()).toThrow("OPEN_LAW_API_KEY");
     if (prev !== undefined) process.env.OPEN_LAW_API_KEY = prev;
+  });
+});
+
+describe("DEC-014 프로토타입 방식 법령 검색 (findArticles)", () => {
+  test("법령 전문에서 키워드 점수(제목 3·본문 2) 순으로 상위 조문만, 장 제목은 뺀다", async () => {
+    klm.findLaws.mockResolvedValue(findLawsFx);
+    klm.getLawText.mockResolvedValue(JSON.stringify(lawTextFull));
+    const hits = await source().findArticles("주택임대차보호법", ["보증금", "임차권등기명령"], 3);
+    // 제3조의3: 제목 임차권등기명령(3)+본문 임차권등기명령(2)+본문 보증금(2)=7, 제4조: 보증금(2), 제7조: 보증금(2)
+    expect(hits.map((h) => h.articleNo)).toEqual(["제3조의3", "제4조", "제7조"]);
+    expect(hits[0]).toMatchObject({
+      id: "law:주택임대차보호법:제3조의3",
+      lawName: "주택임대차보호법",
+      title: "임차권등기명령",
+    });
+    expect(hits[0].text).toContain("임차권등기명령을 신청할 수 있다");
+    // 조문번호 없이 전문을 받는다
+    expect(klm.getLawText).toHaveBeenCalledWith({ mst: "276291" });
+  });
+
+  test("법령을 못 찾거나 키워드가 없으면 빈 목록", async () => {
+    klm.findLaws.mockResolvedValue([]);
+    expect(await source().findArticles("없는법", ["보증금"])).toEqual([]);
+    expect(await source().findArticles("주택임대차보호법", [" "])).toEqual([]);
+    expect(klm.getLawText).not.toHaveBeenCalled();
+  });
+
+  test("F-006 AC2 업스트림 실패는 SEARCH_UPSTREAM_FAILED", async () => {
+    klm.findLaws.mockResolvedValue(findLawsFx);
+    klm.getLawText.mockRejectedValue(new Error("upstream 500 ?OC=secret"));
+    await expect(source().findArticles("주택임대차보호법", ["보증금"])).rejects.toBeInstanceOf(
+      ApiError,
+    );
+  });
+
+  test("판례는 판례명과 본문을 함께 검색한다", async () => {
+    klm.searchPrecedentsStructured.mockResolvedValue(precSearch);
+    await source().searchCases("임대차보증금 반환", 6);
+    expect(klm.searchPrecedentsStructured).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ search: "both", display: 12 }),
+    );
   });
 });

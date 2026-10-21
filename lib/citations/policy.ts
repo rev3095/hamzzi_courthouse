@@ -102,7 +102,12 @@ export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" }
 /** API.md 4.1 DemoAnalysisResult */
 export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   answer: { points: CheckedPoint[] };
-  recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[] };
+  recheck: {
+    ok: boolean;
+    items: { citation: string; exists: boolean; note?: string }[];
+    /** 검증·1차 거르기를 통과하지 못해 뺀 문단 수 (DEC-014). 뺀 문단 내용은 내보내지 않는다 */
+    removed: number;
+  };
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";
@@ -198,7 +203,11 @@ export function assembleResult(input: {
       const key = evidence.findCase(c.caseNo)?.key;
       return { ...c, used: key ? used.has(key) : false };
     }),
-    recheck: { ok: removedBy.not_confirmed === 0, items },
+    recheck: {
+      ok: removedBy.not_confirmed === 0,
+      items,
+      removed: removedBy.not_in_evidence + removedBy.not_confirmed + removedBy.screened,
+    },
   };
   const removed = removedBy.not_in_evidence + removedBy.not_confirmed + removedBy.screened;
   return {

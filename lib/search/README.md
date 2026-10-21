@@ -6,12 +6,12 @@
 
 데모는 수집 DB 대신 법제처를 실시간 조회한다. 서비스 코드에서 korean-law-mcp를 import하는 곳은 `law-source.ts` 하나뿐이다.
 
-| 파일                          | 책임                                                                                                                                                                              |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `law-source.ts` (server-only) | `createLawSource()` → `searchArticles`(지능형 법령정보지식베이스, 자연어 → 조문) · `getArticle`(법령명 + 조문번호) · `searchCases` · `getCase` · `verifyStatutes` · `verifyCases` |
-| `normalize.ts`                | 법제처 응답 → 우리 타입 변환(순수 함수): 날짜, 조문번호, 조문 본문 합치기, 판례 본문 일부, 재조회 결과 해석                                                                       |
-| `evidence.ts`                 | `EvidenceSet` — 한 요청에서 가져온 근거 모음. 인용 검증기(F-005 AC2 ①②)가 "가져온 자료인가"·원문 구절 대조에 쓴다                                                                 |
-| `types.ts`                    | `ArticleHit`·`CaseHit`·`CaseDetail`·`CitationCheck` (API.md `StatuteRef`·`CaseRef`와 필드명 일치)                                                                                 |
+| 파일                          | 책임                                                                                                                                                                                                                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `law-source.ts` (server-only) | `createLawSource()` → `findArticles`(법령 전문에서 키워드 점수 — 제목 3·본문 2, 프로토타입 방식 DEC-014) · `searchArticles`(지능형 법령정보지식베이스, 자연어 → 조문, 보조) · `getArticle`(법령명 + 조문번호) · `searchCases`(판례명+본문 `both` 검색) · `getCase` · `verifyStatutes` · `verifyCases` |
+| `normalize.ts`                | 법제처 응답 → 우리 타입 변환(순수 함수): 날짜, 조문번호, 조문 본문 합치기, 판례 본문 일부, 재조회 결과 해석                                                                                                                                                                                           |
+| `evidence.ts`                 | `EvidenceSet` — 한 요청에서 가져온 근거 모음. 인용 검증기(F-005 AC2 ①②)가 "가져온 자료인가"·원문 구절 대조에 쓴다                                                                                                                                                                                     |
+| `types.ts`                    | `ArticleHit`·`CaseHit`·`CaseDetail`·`CitationCheck` (API.md `StatuteRef`·`CaseRef`와 필드명 일치)                                                                                                                                                                                                     |
 
 - 인증키는 `OPEN_LAW_API_KEY`. 법제처는 **등록된 IP에서만** 응답한다(배포 환경 OQ-ARC-05).
 - 업스트림 실패·시간 초과는 `ApiError("SEARCH_UPSTREAM_FAILED")`. 라이브러리 오류 문구(질의·URL 포함 가능)는 버린다.

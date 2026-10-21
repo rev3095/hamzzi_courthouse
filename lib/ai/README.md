@@ -2,14 +2,16 @@
 
 마스킹본만 LLM에 전달. 숫자 생성·DB 밖 인용·결과 단정 금지.
 
-## 데모 분석 (PRD 8.2 데모 파이프라인, DEC-009·011·013)
+## 데모 분석 (PRD 8.2 데모 파이프라인, DEC-009·011·013·014)
+
+분석 과정·검색 폭은 참고 프로토타입(Lee-Soyeon/legal-precedent-prototype)과 같게 맞췄다 (DEC-014). 절대 규칙 관련 차이(검증 실패 문단 제거·PII 가림·고정 AI 고지·단정/숫자 거르기)는 유지한다.
 
 라우트는 `runDemoAnalysis({ maskedText, context }, { onStep })` 하나만 부른다. 결과는 **검증 전 초안**(`DemoDraft`)과 그 요청의 `EvidenceSet`이다. 원문 구절 대조·`verify_citations` 재조회는 lib/citations(P4)가, 저장·SSE는 analyze 라우트(P5)가 한다. `evidence`는 요청 메모리에서만 쓰고 저장하지 않는다 (DEC-007).
 
 ```
-① 의도 분석   Haiku 5.5 (effort low, 구조화 출력) → 분야·알고 싶은 것·관련 법률·검색어·직접 볼 조문
-② 1차 검색    조문 검색 + 지목 조문 + 판례 검색·상세 (동시, korean-law-mcp)
-③ 재검색      Opus 5.5 (effort low, strict 도구 search_law·get_article·search_precedent, 최대 3라운드)
+① 의도 분석   Haiku 5.5 (effort low, 구조화 출력) → 분야·알고 싶은 것·관련 법률(≤2)·조문 키워드(≤4)·판례 검색어(≤3)
+② 1차 검색    법률마다 전문에서 키워드 점수(제목 3·본문 2) 상위 3개(합계 5) + 판례 검색어마다 6건(판례명+본문) → 상세 8건 (동시)
+③ 재검색      Opus 5.5 (effort low, strict 도구 search_law_articles·search_precedents, 최대 3라운드·라운드당 3회)
 ④ 답변        Opus 5.5 (effort medium, 구조화 출력 — 출처는 근거 키 enum)
 → screenPoints로 1차 거르기 → DemoDraft
 ```
@@ -21,7 +23,7 @@
 | `client.ts` (server-only)                            | SDK 호출 래퍼 `callModel`: 시간 한도, 거절·시간 초과·오류 → `MODEL_FAILED`/`TIMEOUT`(details는 stage·status·reason만). SDK 로그 끔. Opus 호출에 서버 fallback(`fallbacks: "default"`) |
 | `message.ts`                                         | 사용자 메시지 조립 (이전 대화는 맥락으로만)                                                                                                                                           |
 | `intent.ts` · `gather.ts` · `agent.ts` · `answer.ts` | ①·②③ 도구 실행·③·④ 단계                                                                                                                                                               |
-| `orchestrator.ts` (server-only)                      | 전체 흐름·시간 예산(기본 55초: 답변 몫 25초·검증 몫 4초를 남기고 재검색을 줄인다)·진행 단계 `onStep`                                                                                  |
+| `orchestrator.ts` (server-only)                      | 전체 흐름·시간 예산(기본 100초: 답변 몫 30초·검증 몫 4초를 남기고, 모자라면 재검색을 줄인다)·진행 단계 `onStep`                                                                       |
 
 ### 거르기 규칙 (`screenPoints`, 절대 규칙 1·2·3)
 

@@ -2,27 +2,29 @@
 // 사용자 질문은 항상 마스킹본이다. 프롬프트 버전을 바꾸면 PROMPT_VERSION을 올린다 (analysis_results.prompt_version).
 import type Anthropic from "@anthropic-ai/sdk";
 
-export const PROMPT_VERSION = "demo-2026-10-21";
+export const PROMPT_VERSION = "demo-2026-10-22-parity";
 
 const COMMON = `당신은 한국 법률 정보 탐색 서비스 "햄찌법원"의 분석 단계입니다. 법률 자문이 아니라 공식 법령·판례 정보를 찾아 정리합니다.
 사용자 질문은 개인정보를 가린 마스킹본입니다. [이름], [전화번호] 같은 가림 표시를 추측해 채우지 마세요.`;
 
 export const INTENT_SYSTEM = `${COMMON}
 
-할 일: 질문에서 법 분야, 사용자가 알고 싶은 것, 관련될 수 있는 법률, 법령·판례 검색어를 뽑습니다.
-- 검색어는 법률 용어로 2~3개 씁니다 (예: "임대차보증금 반환", "계약금 배액 상환"). 사람 이름·연락처·주소·날짜 같은 개인 정보는 넣지 않습니다.
-- articleRefs에는 질문과 직접 관련된다고 꽤 확신하는 조문만 넣습니다. 확실하지 않으면 비워 둡니다. 여기 넣은 조문은 법제처에서 다시 확인하므로 추측으로 채우지 않습니다.
-- 이전 대화가 주어지면 맥락으로만 참고하고, 이번 질문이 묻는 것을 중심으로 정리합니다.`;
+할 일: 사연에서 다음을 뽑습니다.
+(1) 법 분야, (2) 사용자가 실제로 알고 싶은 것 한 문장,
+(3) 관련 법률 이름 — 정식 명칭, 최대 2개 (예: "주택임대차보호법", "근로기준법"),
+(4) 그 법률에서 찾을 조문 키워드 — 조문 제목에 쓰일 법률 용어 2~4개 (예: "보증금", "대항력", "임차권등기명령"),
+(5) 판례 검색어 — 판결문에 실제로 쓰이는 법률 용어 조합 2~3개, 각 2~4단어 (예: "임대차보증금 반환 동시이행").
+- 판례 검색은 문장이 아니라 키워드로만 찾습니다. 사람 이름·연락처·주소·날짜 같은 개인 정보는 넣지 않습니다.
+- 이전 대화가 주어지면 그 사연에 이어진 질문입니다. 이전 사연을 반영하되 이번 질문이 묻는 것에 맞춰 뽑습니다.`;
 
 export const AGENT_SYSTEM = `${COMMON}
 
-할 일: 지금까지 법제처에서 찾은 근거 목록을 보고, 질문에 답하는 데 필요한 근거가 빠졌으면 도구로 더 찾습니다.
-- search_law: 자연어로 관련 법령 조문을 찾습니다.
-- get_article: 법령 이름과 조문 번호로 조문 하나를 가져옵니다.
-- search_precedent: 판례를 찾아 판시사항·판결요지를 가져옵니다.
-- 이미 충분하면 도구를 쓰지 말고 "충분합니다"라고만 답합니다. 같은 검색을 반복하지 않습니다.
-- 한 번에 도구를 여러 개 함께 불러도 됩니다. 검색어에 개인 정보를 넣지 않습니다.
-- 답변 자체는 다음 단계가 씁니다. 여기서는 근거만 모읍니다.`;
+할 일: 한국 법률 리서치 에이전트로서, 사용자 질문에 답하려면 어떤 법 조문과 판례가 필요한지 따져 보고, 지금까지 찾은 자료에 빠진 근거가 있으면 도구로 더 찾습니다.
+- search_law_articles: 법률 하나에서 키워드가 들어간 조문을 찾습니다 (예: 근로기준법에서 ["임금", "시효"]).
+- search_precedents: 판례를 판례명과 본문에서 찾습니다. 문장이 아니라 판결문에 쓰이는 법률 용어 2~4단어로 찾습니다.
+- 특히 날짜·기간이 걸린 질문은 청구기간·소멸시효·통지기한 조문이 있는지, 절차를 묻는 질문은 절차 조문이 있는지 확인합니다.
+- 이미 찾은 것을 다시 찾지 않습니다. 한 번에 도구는 3개까지 부릅니다. 검색어에 개인 정보를 넣지 않습니다.
+- 근거가 충분하면 도구를 부르지 말고 "충분"이라고만 답합니다. 답변 자체는 다음 단계가 씁니다.`;
 
 export const ANSWER_SYSTEM = `${COMMON}
 
@@ -35,36 +37,31 @@ export const ANSWER_SYSTEM = `${COMMON}
 - 이전 대화가 주어지면 맥락으로만 참고합니다. 근거는 이번 목록만 씁니다.
 - 쉬운 말로, 존댓말로 씁니다.`;
 
-/** 에이전트 재검색 도구 (strict: 입력이 스키마와 정확히 맞게) */
+/** 에이전트 재검색 도구 — 참고 프로토타입과 같은 2개 (DEC-014). strict: 입력이 스키마와 정확히 맞게 */
 export const AGENT_TOOLS: Anthropic.Beta.BetaTool[] = [
   {
-    name: "search_law",
-    description: "자연어 검색어로 관련 현행 법령 조문을 찾는다. 결과는 근거 키와 조문 본문 앞부분.",
-    strict: true,
-    input_schema: {
-      type: "object",
-      properties: { query: { type: "string", description: "법률 용어 검색어" } },
-      required: ["query"],
-      additionalProperties: false,
-    },
-  },
-  {
-    name: "get_article",
-    description: "법령 이름과 조문 번호(예: 제3조의2)로 현행 조문 하나를 가져온다.",
+    name: "search_law_articles",
+    description:
+      '법률 하나에서 키워드가 들어간 조문을 찾는다. 예: 근로기준법에서 ["임금", "시효"]. 결과는 근거 키와 조문 본문 앞부분.',
     strict: true,
     input_schema: {
       type: "object",
       properties: {
-        lawName: { type: "string", description: "법령 이름 (예: 주택임대차보호법)" },
-        articleNo: { type: "string", description: "조문 번호 (예: 제3조의2)" },
+        lawName: { type: "string", description: "법률 정식 명칭" },
+        keywords: {
+          type: "array",
+          items: { type: "string" },
+          description: "조문 제목이나 본문에 쓰이는 법률 용어 1~4개",
+        },
       },
-      required: ["lawName", "articleNo"],
+      required: ["lawName", "keywords"],
       additionalProperties: false,
     },
   },
   {
-    name: "search_precedent",
-    description: "검색어로 판례를 찾아 상위 판례의 판시사항·판결요지를 가져온다.",
+    name: "search_precedents",
+    description:
+      "판례를 판례명과 본문에서 검색해 새 판례의 판시사항·판결요지를 가져온다. 문장이 아니라 판결문에 쓰이는 법률 용어 2~4단어로 찾는다.",
     strict: true,
     input_schema: {
       type: "object",

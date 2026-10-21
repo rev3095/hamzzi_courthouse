@@ -17,18 +17,28 @@ export const MODELS = {
   answer: "claude-opus-5-5",
 } as const;
 
+/** 검색·재검색 폭은 참고 프로토타입과 같게 맞춘다 (DEC-014) */
 export const LIMITS = {
   contextTurns: 3,
   contextChars: 600,
-  keywords: 3,
-  articleRefs: 3,
-  searchPerQuery: 5,
-  caseDetails: 4,
+  /** 의도: 관련 법률 최대 2개, 조문 키워드 최대 4개, 판례 검색어 최대 3개 */
+  laws: 2,
+  lawKeywords: 4,
+  precKeywords: 3,
+  /** 법령: 법률당 점수 상위 3개, 1차 검색 합계 5개 */
+  articlesPerLaw: 3,
+  initialArticles: 5,
+  /** 판례: 검색어당 6건, 중복 제거 후 상세 8건, 재검색 1회에 새 판례 상세 3건 */
+  searchPerQuery: 6,
+  caseDetails: 8,
+  agentNewCases: 3,
   agentRounds: 3,
   toolCallsPerRound: 3,
   points: 6,
   queryChars: 80,
-  digestChars: 1_500,
+  /** 답변 모델에 넘기는 근거 원문 길이 (조문 900자, 판례 1,600자) */
+  articleChars: 900,
+  caseChars: 1_600,
   toolResultChars: 400,
 } as const;
 
@@ -66,7 +76,7 @@ export const IntentZ = z.object({
   goal: z.string().min(1),
   laws: z.array(z.string()),
   lawKeywords: z.array(z.string()),
-  articleRefs: z.array(z.object({ lawName: z.string(), articleNo: z.string() })),
+  precKeywords: z.array(z.string()),
 });
 export type Intent = z.infer<typeof IntentZ>;
 
@@ -76,24 +86,24 @@ export const INTENT_SCHEMA = {
   properties: {
     area: { type: "string", description: "법 분야 (예: 주택임대차, 근로, 교통사고)" },
     goal: { type: "string", description: "사용자가 알고 싶은 것 한 문장" },
-    laws: { type: "array", items: { type: "string" }, description: "관련될 수 있는 법률 이름" },
+    laws: {
+      type: "array",
+      items: { type: "string" },
+      description: "관련 법률의 정식 명칭, 최대 2개 (예: 주택임대차보호법)",
+    },
     lawKeywords: {
       type: "array",
       items: { type: "string" },
-      description: "법령·판례 검색어 2~3개. 법률 용어로, 개인 정보 없이",
+      description: "그 법률에서 찾을 조문 키워드 2~4개 — 조문 제목에 쓰이는 법률 용어",
     },
-    articleRefs: {
+    precKeywords: {
       type: "array",
-      items: {
-        type: "object",
-        properties: { lawName: { type: "string" }, articleNo: { type: "string" } },
-        required: ["lawName", "articleNo"],
-        additionalProperties: false,
-      },
-      description: "직접 확인할 조문 (예: 주택임대차보호법 제3조의2). 확실하지 않으면 비운다",
+      items: { type: "string" },
+      description:
+        "판례 검색어 2~3개 — 판결문에 실제로 쓰이는 법률 용어 조합, 각 2~4단어. 개인 정보 없이",
     },
   },
-  required: ["area", "goal", "laws", "lawKeywords", "articleRefs"],
+  required: ["area", "goal", "laws", "lawKeywords", "precKeywords"],
   additionalProperties: false,
 } as const;
 
@@ -295,14 +305,17 @@ export function describeCase(key: string, c: CaseHit | CaseDetail, maxChars: num
 /** 답변 모델에 넘길 근거 목록. 키·식별정보·원문(잘라서)만 */
 export function evidenceDigest(
   evidence: EvidenceSet,
-  maxChars: number = LIMITS.digestChars,
+  limits: { article: number; case: number } = {
+    article: LIMITS.articleChars,
+    case: LIMITS.caseChars,
+  },
 ): string {
   return evidence
     .list()
     .map((item) =>
       item.kind === "statute"
-        ? describeArticle(item.ref, maxChars)
-        : describeCase(item.key, item.ref, maxChars),
+        ? describeArticle(item.ref, limits.article)
+        : describeCase(item.key, item.ref, limits.case),
     )
     .join("\n\n");
 }
