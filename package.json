@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "test:live": "vitest run --config vitest.live.config.ts",
     "docs:check": "node scripts/docs-check.mjs",
+    "figma:tokens": "node scripts/figma-tokens-diff.mjs",
     "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "db:verify": "uv run --no-project --with \"psycopg[binary]\" --env-file .env.local python -X utf8 scripts/verify_db.py",
     "collector:test": "cd collector && uv run pytest && uv run ruff check .",

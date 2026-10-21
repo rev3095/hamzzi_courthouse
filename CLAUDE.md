@@ -27,6 +27,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/DATA_MODEL.md` | 테이블·마이그레이션·RLS·PII 태그 |
 | `docs/API.md` | 엔드포인트·스키마·에러 코드 |
 | `docs/05_브랜드_가이드.md` | UI 작업(색·글꼴·마스코트 규칙) |
+| `docs/07_Figma_연동.md` | 화면 구현·디자인 반영. 디자인 기준은 Figma 파일이고, 반영은 `figma-sync` 스킬 순서로 |
+| `docs/research/04_화면설계_도구_조사.md` | 화면설계 도구·MCP 선택 근거 |
 | `docs/research/01_데이터_소스.md` | 데이터 수집기 작업 |
 | `docs/research/03_규제_쟁점.md` | 게이트 기능·동의·과금 관련 작업 |
 | `docs/01_AI_Native_개발_파이프라인.md` | 단계별 작업 방식·프롬프트 |
@@ -85,7 +87,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용. ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
 
 ## 스킬·리뷰어
-- `add-crawler` 데이터 소스 추가 · `add-endpoint` API 추가 · `add-migration` DB 변경
+- `add-crawler` 데이터 소스 추가 · `add-endpoint` API 추가 · `add-migration` DB 변경 · `figma-sync` Figma 디자인을 코드에 반영
 - PR 전에 `legal-reviewer` 에이전트로 절대 규칙 위반을 검사한다.
 
 ## 작업 방식
