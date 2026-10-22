@@ -13,6 +13,8 @@ const store = vi.hoisted(() => ({
 vi.mock("@/lib/inquiries/store", () => store);
 const ai = vi.hoisted(() => ({ runDemoAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/orchestrator", () => ai);
+const free = vi.hoisted(() => ({ runFreeAnalysis: vi.fn() }));
+vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
 vi.mock("@/lib/citations/verify", () => cite);
 
@@ -32,6 +34,8 @@ const ANON = { kind: "anon" as const, anonSessionId: "anon-1" };
 const RESULT = { outcome: "grounded" };
 
 beforeEach(() => {
+  // 아래 기존 테스트는 Pro 모드(실제 분석) 경로다. 무료 모드는 맨 아래 describe에서 따로 본다
+  vi.stubEnv("AI_MODE", "pro");
   vi.clearAllMocks();
   calls.length = 0;
   store.loadFollowupContext.mockResolvedValue([{ question: "앞 질문", answer: "앞 답" }]);
@@ -101,6 +105,41 @@ describe("analyzeInquiry", () => {
     await expect(analyzeInquiry(INQ, ANON, new Headers())).rejects.toMatchObject({
       code: "LOGIN_REQUIRED",
     });
+    expect(store.markInquiryFailed).toHaveBeenCalledWith("inq-1");
+  });
+});
+
+describe("DEC-015 무료 모드 (기본)", () => {
+  test("AI_MODE가 없으면 Claude 분석을 부르지 않고 무료 분석 결과를 같은 트랜잭션으로 저장한다", async () => {
+    vi.stubEnv("AI_MODE", "");
+    free.runFreeAnalysis.mockResolvedValue({
+      result: { mode: "search_only", outcome: "grounded" },
+      citations: [],
+      stats: { total: 0, removed: 0 },
+      model: "search_only",
+    });
+    const out = await analyzeInquiry(INQ, ANON, new Headers());
+    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
+    expect(cite.verifyDraft).not.toHaveBeenCalled();
+    expect(free.runFreeAnalysis).toHaveBeenCalledWith("마스킹본", expect.anything());
+    expect(store.finishAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "search_only",
+        usage: { inputTokens: 0, outputTokens: 0 },
+      }),
+      ANON,
+      expect.any(Headers),
+    );
+    expect(out.result).toMatchObject({ mode: "search_only" });
+  });
+
+  test("무료 분석이 실패해도 횟수를 차감하지 않고 failed로 표시한다", async () => {
+    vi.stubEnv("AI_MODE", "");
+    free.runFreeAnalysis.mockRejectedValue(new ApiError("SEARCH_UPSTREAM_FAILED"));
+    await expect(analyzeInquiry(INQ, ANON, new Headers())).rejects.toMatchObject({
+      code: "SEARCH_UPSTREAM_FAILED",
+    });
+    expect(store.finishAnalysis).not.toHaveBeenCalled();
     expect(store.markInquiryFailed).toHaveBeenCalledWith("inq-1");
   });
 });

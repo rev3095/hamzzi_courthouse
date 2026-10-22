@@ -98,7 +98,10 @@ function fakeModel(script: Script = {}): ModelClient & { calls: CreateParams[] }
     calls,
     create: vi.fn(async (params: CreateParams) => {
       calls.push(params);
-      if (params.model === "claude-haiku-5-5")
+      // 모든 단계가 같은 모델(Haiku)이라 구조로 구분한다: 의도 = 의도 스키마, 재검색 = 도구, 나머지 = 답변
+      const schema = params.output_config?.format?.schema as
+        { properties?: Record<string, unknown> } | undefined;
+      if (schema?.properties && "precKeywords" in schema.properties)
         return script.intent ?? textMsg(JSON.stringify(INTENT));
       if (params.tools) return agent.shift() ?? textMsg("충분합니다");
       return (
@@ -156,19 +159,17 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     expect(JSON.stringify(steps)).not.toContain("보증금을 안 돌려줘요");
   });
 
-  test("Opus 호출에만 서버 fallback을 켜고 effort를 명시한다", async () => {
+  test("DEC-015 Pro 모드는 모든 단계가 Haiku 5.5, Haiku에는 서버 fallback을 붙이지 않고 effort를 명시한다", async () => {
     const model = fakeModel();
     await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: fakeSource() });
     const [intent, agent, answer] = model.calls;
-    expect(intent.model).toBe("claude-haiku-5-5");
-    expect(intent).not.toHaveProperty("fallbacks");
-    expect(intent.output_config?.effort).toBe("low");
-    for (const p of [agent, answer]) {
-      expect(p.model).toBe("claude-opus-5-5");
-      expect(p.fallbacks).toBe("default");
-      expect(p.betas).toEqual(["server-side-fallback-2026-07-01"]);
+    for (const p of [intent, agent, answer]) {
+      expect(p.model).toBe("claude-haiku-5-5");
+      expect(p).not.toHaveProperty("fallbacks");
+      expect(p).not.toHaveProperty("betas");
       expect(p.output_config?.effort).toBeDefined();
     }
+    expect(intent.output_config?.effort).toBe("low");
     expect(answer.output_config?.format?.type).toBe("json_schema");
     expect(agent.tools?.every((t) => "strict" in t && t.strict)).toBe(true);
   });
@@ -222,7 +223,9 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: source });
     expect(out.draft.outcome).toBe("no_result_in_scope");
     expect(
-      model.calls.filter((c) => c.output_config?.format && c.model === "claude-opus-5-5"),
+      model.calls.filter(
+        (c) => c.output_config?.format?.schema && !c.tools && c !== model.calls[0],
+      ),
     ).toEqual([]);
   });
 
@@ -264,7 +267,7 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
       { model, lawSource: fakeSource(), budgetMs: 36_000, now: () => (t += 1_000) },
     );
     expect(model.calls.some((c) => c.tools)).toBe(false);
-    expect(model.calls.at(-1)?.model).toBe("claude-opus-5-5");
+    expect(model.calls).toHaveLength(2); // 의도 + 답변
   });
 });
 
@@ -318,5 +321,30 @@ describe("DEC-014 프로토타입과 같은 검색 과정", () => {
     expect(model.calls.filter((c) => c.tools)).toHaveLength(3);
     expect(new Set(out.draft.trace.map((t) => t.round))).toEqual(new Set([1, 2, 3]));
     expect(out.draft.trace.filter((t) => t.round === 1)).toHaveLength(3);
+  });
+});
+
+describe("DEC-015 모드 스위치와 fallback", () => {
+  test("AI_MODE=pro를 명시할 때만 pro, 나머지는 모두 무료 모드", async () => {
+    const { aiMode } = await import("@/lib/ai/mode");
+    expect(aiMode({})).toBe("free");
+    expect(aiMode({ AI_MODE: "live" })).toBe("free");
+    expect(aiMode({ AI_MODE: " PRO " })).toBe("pro");
+  });
+
+  test("서버 fallback은 Opus·Sonnet에만 붙인다", async () => {
+    const { fallbackFor } = await import("@/lib/ai/client");
+    expect(fallbackFor("claude-haiku-5-5")).toEqual({});
+    expect(fallbackFor("claude-opus-5-5")).toEqual({
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+    });
+  });
+
+  test("무료 모드에서는 Claude 클라이언트를 만들지 않는다", async () => {
+    vi.stubEnv("AI_MODE", "");
+    const { createModelClient } = await import("@/lib/ai/client");
+    expect(() => createModelClient()).toThrow(/AI_MODE/);
+    vi.unstubAllEnvs();
   });
 });

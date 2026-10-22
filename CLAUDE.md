@@ -46,7 +46,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run tests/unit/inquiries-api.test.ts` · `pnpm exec vitest run -t "F-007 AC1"` |
 | E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`). 개발 서버는 Playwright가 띄우고, 이미 떠 있으면 재사용한다 |
 | E2E 일부 | `pnpm exec playwright test tests/e2e/home.spec.ts` |
-| 법제처·Claude 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터 + lib/ai 데모 분석. 등록 IP·`OPEN_LAW_API_KEY`·`ANTHROPIC_API_KEY` 필요, 질문 1건에 약 0.2~0.3달러 과금 — 기본 테스트에서 제외) |
+| 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터 + 무료 모드, 무료. 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외). Claude 실호출 테스트는 `ALLOW_PAID_API=1`일 때만 돌고 **별도 과금**되므로 사용자 허락 없이 실행 금지 |
 | 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
@@ -60,10 +60,11 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 환경변수 (`.env.local`, 값은 사용자가 직접 넣는다)
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
 - `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
+- `AI_MODE` 분석 모드 (DEC-015): 없으면 **무료 모드**(Claude 호출 없음, 예시 재생 + 법제처 검색 전용). `pro`일 때만 Claude 분석 — Console API 크레딧이 별도 과금되므로 기본 꺼짐. 유료 버전 보존: 태그 `paid-ai-v1`
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,search,citations,calc,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
@@ -74,6 +75,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 - 비로그인 횟수: POST /inquiries는 3회를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 3회 + 같은 IP 해시 24시간 10회, `anon_usage`). `questions_used`를 직접 update하지 않는다.
+- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free → `runFreeAnalysis`(lib/demo, Claude 없음), pro → `runDemoAnalysis` + `verifyDraft`. `createModelClient`는 free에서 예외를 낸다. **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
 - server-only 모듈을 직접 import하는 테스트는 `vi.mock("server-only", () => ({}))`를 둔다. 외부 응답은 tests/fixtures에 줄여서 녹화하고, 실명은 가상 이름으로 바꾼다.
 

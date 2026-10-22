@@ -1,8 +1,8 @@
-// ④ 근거 기반 답변 (PRD 8.2·8.3, Opus 5.5). 이번 요청의 근거 키 중에서만 출처를 고르게 한다 (구조화 출력 enum).
+// ④ 근거 기반 답변 (PRD 8.2·8.3, Pro 모드 — 모델은 policy.ts MODELS). 이번 요청의 근거 키 중에서만 출처를 고르게 한다 (구조화 출력 enum).
 import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import type { EvidenceSet } from "@/lib/search/evidence";
-import { OPUS_FALLBACK, callModel, textOf, type ModelClient, type ModelMessage } from "./client";
+import { callModel, fallbackFor, textOf, type ModelClient, type ModelMessage } from "./client";
 import { userMessage } from "./message";
 import {
   AnswerZ,
@@ -35,7 +35,7 @@ export async function writeAnswer(
     {
       model: MODELS.answer,
       max_tokens: 16_000,
-      ...OPUS_FALLBACK,
+      ...fallbackFor(MODELS.answer),
       system: [{ type: "text", text: ANSWER_SYSTEM, cache_control: { type: "ephemeral" } }],
       output_config: {
         effort: "medium",

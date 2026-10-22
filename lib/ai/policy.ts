@@ -11,10 +11,14 @@ import { scanInput } from "@/lib/pii";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 
+/**
+ * Pro 모드 모델 (DEC-015: 비용 때문에 재검색·답변도 Haiku 5.5로 낮춤, Pro는 기본 꺼짐).
+ * 이전 유료 버전은 재검색·답변이 Opus 5.5였다 — 태그 paid-ai-v1, docs/reports/2026-10-22_유료_AI_버전_보존.md
+ */
 export const MODELS = {
   intent: "claude-haiku-5-5",
-  agent: "claude-opus-5-5",
-  answer: "claude-opus-5-5",
+  agent: "claude-haiku-5-5",
+  answer: "claude-haiku-5-5",
 } as const;
 
 /** 검색·재검색 폭은 참고 프로토타입과 같게 맞춘다 (DEC-014) */

@@ -18,6 +18,7 @@ ev.addArticle({
 
 function result(texts: string[]): DemoAnalysisResult {
   return {
+    mode: "ai",
     outcome: texts.length ? "grounded" : "no_result_in_scope",
     aiNotice: AI_NOTICE,
     intent: { area: "주택임대차", goal: "보증금 반환", laws: [], lawKeywords: [] },

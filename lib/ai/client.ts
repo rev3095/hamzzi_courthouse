@@ -4,6 +4,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { ApiError } from "@/lib/api/errors";
 import { required } from "@/lib/supabase/env";
+import { aiMode } from "./mode";
 
 export type CreateParams = Anthropic.Beta.MessageCreateParamsNonStreaming;
 export type ModelMessage = Anthropic.Beta.BetaMessage;
@@ -13,15 +14,21 @@ export type ModelClient = {
   create(params: CreateParams, options: { timeoutMs: number }): Promise<ModelMessage>;
 };
 
-/** Opus 5.5 거절 시 서버가 권장 모델로 다시 시도한다. Haiku 5.5에는 서버 쪽 fallback이 없어 붙이지 않는다 */
-export const OPUS_FALLBACK = {
-  betas: ["server-side-fallback-2026-07-01"],
-  fallbacks: "default",
-} satisfies Pick<CreateParams, "betas" | "fallbacks">;
+/**
+ * 거절 시 서버가 권장 모델로 다시 시도하게 한다 (Opus·Sonnet 5.5).
+ * Haiku 5.5에는 서버 쪽 fallback이 없어(붙이면 거절 그대로이거나 400) 붙이지 않는다.
+ */
+export function fallbackFor(model: string): Pick<CreateParams, "betas" | "fallbacks"> {
+  return /^claude-(opus|sonnet)-/.test(model)
+    ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" }
+    : {};
+}
 
 let client: Anthropic | null = null;
 
 export function createModelClient(): ModelClient {
+  // 무료 모드(기본)에서는 Claude 클라이언트를 만들지 않는다 — 별도 과금 차단의 마지막 방어선 (DEC-015)
+  if (aiMode() !== "pro") throw new Error("AI_MODE가 pro가 아니라 Claude를 부르지 않습니다");
   client ??= new Anthropic({
     apiKey: required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY),
     maxRetries: 1,

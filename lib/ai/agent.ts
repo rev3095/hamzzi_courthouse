@@ -1,10 +1,10 @@
-// ③ 에이전트 재검색 (PRD 8.2 데모 파이프라인, Opus 5.5). 모델이 법령·판례 도구로 부족한 근거를 더 찾는다. 최대 3라운드.
+// ③ 에이전트 재검색 (PRD 8.2 데모 파이프라인, Pro 모드 — 모델은 policy.ts MODELS). 모델이 법령·판례 도구로 부족한 근거를 더 찾는다. 최대 3라운드.
 // 응답 content는 thinking 블록까지 그대로 다음 요청에 붙인다 (preserved thinking).
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { LawSource } from "@/lib/search/law-source";
-import { OPUS_FALLBACK, callModel, type ModelClient, type ModelMessage } from "./client";
+import { callModel, fallbackFor, type ModelClient, type ModelMessage } from "./client";
 import { runTool } from "./gather";
 import { userMessage } from "./message";
 import {
@@ -50,7 +50,7 @@ export async function agentSearch(
       {
         model: MODELS.agent,
         max_tokens: 8_000,
-        ...OPUS_FALLBACK,
+        ...fallbackFor(MODELS.agent),
         system: [{ type: "text", text: AGENT_SYSTEM, cache_control: { type: "ephemeral" } }],
         tools: AGENT_TOOLS,
         output_config: { effort: deps.effort ?? "low" },

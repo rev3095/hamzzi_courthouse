@@ -101,6 +101,8 @@ export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" }
 
 /** API.md 4.1 DemoAnalysisResult */
 export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
+  /** ai = 실제 Claude 분석(Pro), replay = 미리 만든 예시 분석 재생, search_only = 법제처 검색 전용 (DEC-015) */
+  mode: "ai" | "replay" | "search_only";
   answer: { points: CheckedPoint[] };
   recheck: {
     ok: boolean;
@@ -203,6 +205,7 @@ export function assembleResult(input: {
       const key = evidence.findCase(c.caseNo)?.key;
       return { ...c, used: key ? used.has(key) : false };
     }),
+    mode: "ai",
     recheck: {
       ok: removedBy.not_confirmed === 0,
       items,

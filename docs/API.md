@@ -135,6 +135,7 @@ type AnalysisResult = {
 { status: "analyzed"; resultId: string; result: DemoAnalysisResult }
 
 type DemoAnalysisResult = {
+  mode: "ai" | "replay" | "search_only";            // DEC-015: ai = Claude 분석(Pro), replay = 예시 질문 재생, search_only = 법제처 검색 전용(answer.points 빈 배열)
   outcome: "grounded" | "no_result_in_scope";       // 근거 자료가 없으면 no_result_in_scope (F-006)
   aiNotice: "AI 생성 · 법률 자문 아님";              // 고정 문구. LLM이 만들지 않음
   intent: { area: string; goal: string; laws: string[]; lawKeywords: string[] };
@@ -148,7 +149,8 @@ type DemoAnalysisResult = {
   searchScopeNote: string;
 }
 ```
-- 이어 묻기면 부모 inquiry 사슬의 최근 3개 질문·답변을 맥락으로만 쓰고, 근거는 다시 검색한다.
+- **무료 모드(기본, DEC-015)**: Claude를 부르지 않는다. 질문이 예시 질문과 같으면 `mode: "replay"`(저장된 검증 결과), 아니면 `mode: "search_only"`(법제처 조문·판례 목록, 답변 문단 없음). 저장·비로그인 차감은 Pro와 같다. `AI_MODE=pro`일 때만 아래 실제 분석을 한다.
+- 이어 묻기면 부모 inquiry 사슬의 최근 3개 질문·답변을 맥락으로만 쓰고, 근거는 다시 검색한다 (Pro 모드).
 - 상태: `draft`·`failed`(재시도)만 분석한다. 이미 `analyzed`면 `409 INVALID_STATE`(횟수 이중 차감 방지). 실패하면 `failed`로 바뀐다.
 - 비로그인은 모델을 부르기 전에 세션 3회(`401 LOGIN_REQUIRED`)·IP 해시 24시간 상한(`429 RATE_LIMITED`)을 미리 보고, 최종 차감은 결과 저장과 한 트랜잭션(DB `finish_demo_analysis`)에서 한다.
 - 스트림이 끊겨도 분석은 끝까지 저장되며, 결과는 `GET /inquiries/{id}/result`로 다시 볼 수 있다.
