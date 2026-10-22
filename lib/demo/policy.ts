@@ -71,12 +71,14 @@ export function replayCitations(result: DemoAnalysisResult): CitationRow[] {
  * 지능형 법령검색은 자연어를 받으므로 LLM 없이 질문 문장을 그대로 쓴다.
  */
 export function searchSentence(maskedText: string, maxChars = 200): string | null {
-  const t = maskedText
+  const full = maskedText
     .normalize("NFKC")
     .replace(/\[[^\]]*\]/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxChars);
+    .trim();
+  // 자르기 전에 전체 문장을 검사한다 — 자른 자리에 걸린 개인정보 조각이 패턴을 피하지 않게
+  if (scanInput(full).findings.length > 0) return null;
+  const t = full.slice(0, maxChars);
   if (t.length < 5) return null;
   return scanInput(t).findings.length > 0 ? null : t;
 }
