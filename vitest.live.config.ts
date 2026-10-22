@@ -21,7 +21,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/live/**/*.live.test.ts"],
-    env: { ...readKey("OPEN_LAW_API_KEY"), ...readKey("ANTHROPIC_API_KEY") },
+    // Claude API는 Pro 구독과 별개로 과금된다(Console API 크레딧). ALLOW_PAID_API=1을 명시할 때만 키를 넘기고,
+    // 아니면 빈 값으로 덮어 Claude 실호출 테스트·평가가 건너뛰어지게 한다 (2026-10-22 사용자 지시: 별도 과금 금지)
+    env: {
+      ...readKey("OPEN_LAW_API_KEY"),
+      ...(process.env.ALLOW_PAID_API === "1" ? readKey("ANTHROPIC_API_KEY") : { ANTHROPIC_API_KEY: "" }),
+    },
     testTimeout: 90_000,
   },
 });
