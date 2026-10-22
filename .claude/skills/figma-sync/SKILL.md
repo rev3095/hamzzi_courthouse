@@ -15,6 +15,9 @@ description: 사용자가 Figma 링크(햄찌법원 디자인 파일)를 주고 
    - 공통 UI는 `components/`, 화면은 `app/` 라우트. `app/api`·`lib`·`supabase`는 바꾸지 않는다
    - Next.js 코드는 AGENTS.md대로 `node_modules/next/dist/docs/`를 먼저 확인한다
    - 마스코트·아이콘: `download_assets`로 SVG → 장식은 `aria-hidden`, 색은 토큰
+   - 인스턴스는 05 Components의 컴포넌트를 따라간다: 컴포넌트 설명(description)의 코드 위치에 한 번만 만들고 재사용한다. 변형 속성(`기기`, `상태` 등)은 props·반응형 스타일로 옮긴다 (docs/07 3.1)
+   - 레이어 이름 `화면 / 영역 / 요소`를 컴포넌트·섹션 이름의 근거로 쓴다
+   - 숨기기로 결정한 기능(변호사·소송·소장·CORE)의 컴포넌트는 구현하지 않는다
 4. **절대 규칙 대조** — 아래와 충돌하면 고치지 말고 목록으로 묻는다:
    - AI 결과에 `AI_NOTICE` 고지, 법제처 출처 표기
    - "반드시·무조건·100%" 금지, 예시 숫자를 실제 값처럼 쓰지 않음
