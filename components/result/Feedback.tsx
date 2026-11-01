@@ -49,7 +49,8 @@ export function Feedback({ resultId }: { resultId: string }) {
           className="mt-3"
         >
           <label className="text-muted flex flex-col text-[13px]">
-            더 알려 주실 내용 (선택, 500자 이내 · 개인정보는 빼고 적어 주세요)
+            더 알려 주실 내용 (선택, 500자 이내 · 개인정보는 빼고 적어 주세요. 건강·범죄경력처럼
+            민감한 내용으로 보이는 의견은 저장하지 않아요)
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}

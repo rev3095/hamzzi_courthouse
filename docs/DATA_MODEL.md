@@ -248,7 +248,7 @@ PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용
 | `consents`·`deletion_requests` | 로그인 사용자용 — 데모에서 쓰지 않음 | OQ-DM-03 |
 
 - DB 함수 `purge_expired_records()`가 위 순서로 지우고 건수를 돌려주며 `audit_logs`에 `retention_purge`를 남긴다. Supabase **pg_cron** 작업 `hz-retention-purge`가 매일 03:17 UTC(12:17 KST)에 실행한다(무료 플랜 사용 가능).
-- 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·IP 해시만)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.
+- 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.
 - 집계 지표만 남기는 별도 테이블은 아직 없다(정식 출시 전 결정).
 
 ---

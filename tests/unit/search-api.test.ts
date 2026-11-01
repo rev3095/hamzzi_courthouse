@@ -186,3 +186,50 @@ test("참조조문 읽기: 법령명이 없는 조문은 앞 법령명을 잇고
   expect(citedStatutesFrom("제3조 참조")).toEqual([]);
   expect(citedStatutesFrom(null)).toEqual([]);
 });
+
+describe("legal-reviewer 지적 반영", () => {
+  test("절대 규칙 1 부칙·구법 조문은 현행 조문으로 잇지 않고 링크 없이 원문 그대로", () => {
+    expect(citedStatutesFrom("민법 제1조, 민법 부칙(1990. 1. 13.) 제2조")).toEqual([
+      { raw: "민법 제1조", id: "민법:제1조" },
+      { raw: "민법 부칙(1990. 1. 13.) 제2조", id: null },
+    ]);
+    const old = citedStatutesFrom(
+      "민법 제1조, 구 민법(1990. 1. 13. 법률 제4199호로 개정되기 전의 것) 제1000조, 제1001조",
+    );
+    expect(old.map((c) => c.id)).toEqual(["민법:제1조", null]);
+    expect(old[1].raw).toContain("구 민법");
+  });
+
+  test("F-004 AC1 미래 날짜·시행 전 조문은 '시행 중이었다'고 하지 않는다", () => {
+    const future = statuteResponse(ART, "2030-01-01", "2026-11-01");
+    expect(future.versionAtDate).toBeNull();
+    expect(future.asOfNote).toContain("앞으로의 날짜");
+    const notYet = statuteResponse(
+      { ...ART, effectiveFrom: "2027-01-01" },
+      "2026-06-01",
+      "2026-11-01",
+    );
+    expect(notYet.versionAtDate).toBeNull();
+    expect(notYet.asOfNote).toContain("시행 전");
+  });
+
+  test("F-007 화면은 POST 본문으로 검색한다 (검색어가 주소에 남지 않음)", async () => {
+    const res = await casesRoute.POST(
+      new Request("http://localhost/api/v1/cases", {
+        method: "POST",
+        body: JSON.stringify({ q: "계약금", limit: 5 }),
+      }),
+      {},
+    );
+    expect(res.status).toBe(200);
+    expect(source.searchCases).toHaveBeenCalledWith("계약금", 5);
+    const bad = await casesRoute.POST(
+      new Request("http://localhost/api/v1/cases", {
+        method: "POST",
+        body: JSON.stringify({ q: "  " }),
+      }),
+      {},
+    );
+    expect(bad.status).toBe(400);
+  });
+});

@@ -374,6 +374,9 @@ def ops(conn) -> None:
           and scalar(conn, "select count(*) from public.audit_logs where action = 'anon_data_deleted' and target_id = %s",
                      (s1,)) == 1,
           "삭제 감사 로그 1건 (행위·세션 ID만)")
+    check(scalar(conn, "select ip_hash is null from public.audit_logs "
+                       "where action = 'anon_data_deleted' and target_id = %s", (s1,)) is True,
+          "삭제 감사 로그에 IP 해시를 남기지 않음")
     check(scalar(conn, f"select {DELETE_ANON.split('(')[0]}(%s, null)", (str(uuid.uuid4()),)) == -1,
           "없는 세션은 -1")
 

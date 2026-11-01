@@ -1,8 +1,7 @@
 "use client";
-// 판례 검색 화면 /search?q= (F-003). 질문 3회와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
+// 판례 검색 화면 /search (F-003). 질문 3회와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { searchCases, type CaseList, type ClientError } from "@/lib/client/api";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
@@ -15,34 +14,19 @@ type State =
   | { kind: "error"; q: string; error: ClientError };
 
 export function SearchView() {
-  const router = useRouter();
-  const q = useSearchParams().get("q")?.trim() ?? "";
-  const [text, setText] = useState(q);
+  const [text, setText] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
 
-  useEffect(() => {
-    if (!q) return;
-    let alive = true;
-    // 검색은 주소(q)가 바뀔 때만 한다 — 뒤로 가기·새로고침에도 같은 결과
-    void Promise.resolve()
-      .then(() => alive && setState({ kind: "loading", q }))
-      .then(() => searchCases(q))
-      .then((r) => {
-        if (!alive || !r) return;
-        setState(r.ok ? { kind: "done", q, data: r.data } : { kind: "error", q, error: r.error });
-      });
-    return () => {
-      alive = false;
-    };
-  }, [q]);
-
-  const submit = () => {
-    const next = text.trim();
-    if (!next) {
+  // 검색어는 주소(?q=)에 두지 않는다 — 브라우저 기록·접속 기록에 남지 않게 (F-007)
+  const submit = async () => {
+    const q = text.trim();
+    if (!q) {
       setState({ kind: "error", q: "", error: { code: "EMPTY_INPUT", message: "" } });
       return;
     }
-    router.push(`/search?${new URLSearchParams({ q: next })}`);
+    setState({ kind: "loading", q });
+    const r = await searchCases(q);
+    setState(r.ok ? { kind: "done", q, data: r.data } : { kind: "error", q, error: r.error });
   };
 
   return (
@@ -55,7 +39,7 @@ export function SearchView() {
         <QuestionBox
           value={text}
           onChange={setText}
-          onSubmit={submit}
+          onSubmit={() => void submit()}
           busy={state.kind === "loading"}
           size="md"
           label="판례 검색어"

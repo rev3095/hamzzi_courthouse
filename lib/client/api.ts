@@ -125,7 +125,7 @@ export type CaseDetailView = CaseRef & {
   holdingSummary: string | null;
   sections: { section: string; text: string }[];
   fromBody: boolean;
-  citedStatutes: { raw: string; id: string }[];
+  citedStatutes: { raw: string; id: string | null }[];
   notice: string;
 };
 export type StatuteView = {
@@ -143,8 +143,9 @@ export type StatuteView = {
   notice: string;
 };
 
+/** 검색어는 본문으로 보낸다 — 주소·접속 기록에 남지 않게 (F-007) */
 export const searchCases = (q: string) =>
-  call<CaseList>(`/api/v1/cases?${new URLSearchParams({ q })}`);
+  call<CaseList>("/api/v1/cases", { method: "POST", body: JSON.stringify({ q }) });
 export const getCaseDetail = (id: string) =>
   call<CaseDetailView>(`/api/v1/cases/${encodeURIComponent(id)}`);
 export const getStatute = (id: string, asOf?: string) =>

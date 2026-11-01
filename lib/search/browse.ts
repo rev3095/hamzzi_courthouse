@@ -56,34 +56,47 @@ export function assertCaseId(id: string) {
   if (!/^\d{1,12}$/.test(id)) throw new ApiError("NOT_FOUND");
 }
 
-const LAW_NAME = /([가-힣][가-힣·ㆍ\s]{0,40}?(?:법률|법|령|규칙|규정))\s*(?=제\s*\d)/g;
-const ARTICLE = /제\s*\d+\s*조(?:\s*의\s*\d+)?/g;
+const ARTICLE_HEAD = /^(.*?)(제\s*\d+\s*조(?:\s*의\s*\d+)?)/;
+const LAW_ONLY = /^[가-힣][가-힣·ㆍ\s]{0,40}(?:법률|법|령|규칙|규정)$/;
+
+export type CitedStatute = { raw: string; id: string | null };
 
 /**
- * 판례의 참조조문 원문("[1] 민법 제565조, 제567조 / [2] …")에서 "법령명 제N조" 목록을 뽑는다.
- * 원문에 적힌 법령명·조문번호만 쓰고, 법령명이 앞에 없는 조문은 바로 앞 법령명을 잇는다. 링크는 조문 화면이
- * 법제처에서 다시 찾아 보여 주므로, 잘못 읽은 항목은 "찾을 수 없음"이 된다
+ * 판례의 참조조문 원문("[1] 민법 제565조, 제567조 / [2] …")에서 조문 목록을 뽑는다. 원문에 적힌 법령명·조문번호만 쓴다.
+ * - "법령명 제N조"는 현행 조문 링크(id)를 단다. 같은 쉼표 목록에서 법령명 없이 이어지는 "제M조"만 앞 법령명을 잇는다.
+ * - "구 법령", 괄호 설명(개정 전 등), "부칙"이 끼면 현행 조문과 다를 수 있어 링크 없이 원문 그대로 보이고, 뒤에 이어지는
+ *   조문에도 법령명을 잇지 않는다 (절대 규칙 1 — 다른 조문으로 잘못 연결하지 않게)
  */
-export function citedStatutesFrom(refs: string | null, max = 20): { raw: string; id: string }[] {
+export function citedStatutesFrom(refs: string | null, max = 20): CitedStatute[] {
   if (!refs) return [];
-  const out: { raw: string; id: string }[] = [];
+  const out: CitedStatute[] = [];
   const seen = new Set<string>();
+  const push = (item: CitedStatute) => {
+    const key = item.id ?? `raw:${item.raw}`;
+    if (seen.has(key) || out.length >= max) return;
+    seen.add(key);
+    out.push(item);
+  };
   for (const part of refs.split(/\[\d+\]|\/|\n/)) {
     let law: string | null = null;
-    const anchors = [...part.matchAll(LAW_NAME)].map((m) => ({
-      index: m.index ?? 0,
-      name: m[1].replace(/\s+/g, " ").trim(),
-    }));
-    for (const m of part.matchAll(ARTICLE)) {
-      const at = m.index ?? 0;
-      for (const a of anchors) if (a.index <= at) law = a.name;
-      const no = normalizeArticleNo(m[0]);
-      if (!law || !no) continue;
-      const id = statuteIdOf(law, no);
-      if (seen.has(id)) continue;
-      seen.add(id);
-      out.push({ raw: `${law} ${no}`, id });
-      if (out.length >= max) return out;
+    for (const clause of part.split(/[,，]/)) {
+      const m = ARTICLE_HEAD.exec(clause.trim());
+      if (!m) continue;
+      const prefix = m[1].replace(/\s+/g, " ").trim();
+      const no = normalizeArticleNo(m[2]);
+      if (!no) continue;
+      if (!prefix) {
+        if (law) push({ raw: `${law} ${no}`, id: statuteIdOf(law, no) });
+        continue;
+      }
+      if (LAW_ONLY.test(prefix) && !/^구\s/.test(prefix)) {
+        law = prefix;
+        push({ raw: `${law} ${no}`, id: statuteIdOf(law, no) });
+      } else {
+        // 구법·괄호·부칙 등 — 원문 그대로, 링크 없음
+        law = null;
+        push({ raw: `${prefix} ${m[2].replace(/\s+/g, "")}`.slice(0, 120), id: null });
+      }
     }
   }
   return out;
@@ -134,8 +147,12 @@ export function parseAsOf(params: URLSearchParams): string | null {
   return v;
 }
 
-export const AS_OF_NOTE =
-  "그 날짜에는 지금과 다른 조문이 시행됐을 수 있어요. 데모는 현행 조문만 보여 드리니, 그때 조문은 법제처 원문의 연혁에서 확인해 주세요.";
+export const AS_OF_NOTES = {
+  before:
+    "그 날짜에는 지금과 다른 조문이 시행됐을 수 있어요. 데모는 법제처의 현행 법령 조문만 가져오니, 그때 조문은 법제처 원문의 연혁에서 확인해 주세요.",
+  future: "앞으로의 날짜는 그 전에 법이 바뀔 수 있어 확인해 드릴 수 없어요.",
+  notYet: "위 조문은 아직 시행 전이에요. 시행일 전 조문은 법제처 원문의 연혁에서 확인해 주세요.",
+} as const;
 
 /**
  * GET /statutes/{id}. 법제처 조문을 그대로 (today = YYYY-MM-DD, 한국 시각). asOf가 현행 시행일 이후면 그 시점에도 같은 조문이 시행 중이었으므로
@@ -149,17 +166,32 @@ export function statuteResponse(a: ArticleHit, asOf: string | null, today: strin
     effectiveFrom: a.effectiveFrom,
     sourceUrl: a.sourceUrl,
   };
-  const sameAtDate = asOf !== null && a.effectiveFrom !== null && asOf >= a.effectiveFrom;
+  const isCurrent = a.effectiveFrom === null || a.effectiveFrom <= today;
+  // 그 날짜에도 이 조문이 시행 중이었다고 말할 수 있는 경우만: 지금 시행 중이고, 시행일 이후이며, 오늘 이전인 날짜
+  const sameAtDate =
+    asOf !== null &&
+    isCurrent &&
+    a.effectiveFrom !== null &&
+    asOf >= a.effectiveFrom &&
+    asOf <= today;
+  const asOfNote =
+    asOf === null || sameAtDate
+      ? null
+      : asOf > today
+        ? AS_OF_NOTES.future
+        : !isCurrent
+          ? AS_OF_NOTES.notYet
+          : AS_OF_NOTES.before;
   return {
     ...ref,
     articleTitle: a.title,
     body: a.text,
     // 시행일이 오늘 이후면 아직 시행 전인 조문이다
-    isCurrent: a.effectiveFrom === null || a.effectiveFrom <= today,
+    isCurrent,
     ...(asOf !== null && {
       asOf,
       versionAtDate: sameAtDate ? ref : null,
-      ...(!sameAtDate && { asOfNote: AS_OF_NOTE }),
+      ...(asOfNote && { asOfNote }),
     }),
     notice: SEARCH_NOTICE,
   };

@@ -2,7 +2,7 @@
 // 판례 상세 /cases/[id] (F-003 AC3) · 조문 /statutes/[id] (F-004). 법제처에서 가져온 내용만 보여 준다.
 // 없으면 "찾을 수 없음" — 대체 내용을 만들지 않는다 (API.md 3절 NOT_FOUND).
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   getCaseDetail,
@@ -85,15 +85,25 @@ export function CaseRoute() {
       {c.citedStatutes.length > 0 && (
         <section className="mt-6">
           <h2 className="font-display text-ink text-lg font-bold">참조조문</h2>
+          <p className="text-muted mt-1 text-[13px]">
+            누르면 법제처 현행 조문과, 선고일에 그 조문이 시행 중이었는지를 함께 보여 드려요.
+            구법·부칙 표기는 현행 조문과 다를 수 있어 링크를 달지 않았어요.
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {c.citedStatutes.map((s) => (
-              <li key={s.id}>
-                <Link
-                  href={`/statutes/${encodeURIComponent(s.id)}`}
-                  className="border-line text-ink hover:border-gold flex min-h-11 items-center rounded-full border bg-white px-4 text-sm"
-                >
-                  {s.raw}
-                </Link>
+              <li key={s.id ?? s.raw}>
+                {s.id ? (
+                  <Link
+                    href={`/statutes/${encodeURIComponent(s.id)}${c.decidedAt ? `?asOf=${c.decidedAt}` : ""}`}
+                    className="border-line text-ink hover:border-gold flex min-h-11 items-center rounded-full border bg-white px-4 text-sm"
+                  >
+                    {s.raw}
+                  </Link>
+                ) : (
+                  <span className="bg-soft text-muted flex min-h-11 items-center rounded-full px-4 text-sm">
+                    {s.raw}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -108,8 +118,10 @@ export function CaseRoute() {
 
 export function StatuteRoute() {
   const { id } = useParams<{ id: string }>();
-  const [asOf, setAsOf] = useState("");
-  const [applied, setApplied] = useState("");
+  // 판례 상세에서 오면 ?asOf=선고일 — 판결 당시 시행 여부를 처음부터 함께 보여 준다 (F-004 AC1)
+  const fromCase = useSearchParams().get("asOf") ?? "";
+  const [asOf, setAsOf] = useState(fromCase);
+  const [applied, setApplied] = useState(fromCase);
   const r = useLoad(`${id}|${applied}`, () =>
     getStatute(decodeURIComponent(id), applied || undefined),
   );

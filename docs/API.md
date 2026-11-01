@@ -172,6 +172,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 // 200
 { items: CaseRef[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string; notice: string }
 ```
+- 같은 검색을 `POST /cases` `{ q, limit? }` 본문으로도 받는다. 화면은 POST를 쓴다 — 검색어가 주소·브라우저 기록·플랫폼 접속 기록에 남지 않게(F-007).
 - 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게). `court`·`caseType`·`from`·`to`·`cursor` 필터는 수집 DB 도입 후.
 - 검색어도 법제처로 보내므로 개인정보로 보이면 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "personal_info"`) (F-007).
 - `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
@@ -179,14 +180,14 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 레이트 리밋: 같은 IP 해시 1시간 60회 → `429 RATE_LIMITED` (`details.reason: "search_hourly"`). 법제처 실패는 `502 SEARCH_UPSTREAM_FAILED`.
 
 ### GET `/cases/{id}`
-`200 { ...CaseRef, holdingSummary: string | null, sections: { section: "판시사항" | "판결요지" | "본문 일부"; text: string }[], fromBody: boolean, citedStatutes: { raw: string; id: string }[], notice }` · 없으면 `404 NOT_FOUND`(대체 내용 생성 안 함, F-003 AC3).
+`200 { ...CaseRef, holdingSummary: string | null, sections: { section: "판시사항" | "판결요지" | "본문 일부"; text: string }[], fromBody: boolean, citedStatutes: { raw: string; id: string | null }[], notice }` · 없으면 `404 NOT_FOUND`(대체 내용 생성 안 함, F-003 AC3).
 - `id` = 법제처 판례일련번호(숫자). 전문은 주지 않는다(DEC-007, OQ-DM-05): 판시사항·판결요지, 둘 다 없을 때만 개인정보를 가린 본문 일부.
-- `citedStatutes`는 참조조문 원문에 적힌 "법령명 제N조"만 뽑는다(법령명이 없는 조문은 바로 앞 법령명을 잇는다). `id`는 `/statutes/{id}` 형식. 상세 1시간 120회(`details.reason: "lookup_hourly"`).
+- `citedStatutes`는 참조조문 원문에 적힌 "법령명 제N조"만 뽑는다. 같은 쉼표 목록에서 법령명 없이 이어지는 조문만 앞 법령명을 잇는다. "구 법령"·괄호 설명·"부칙"이 끼면 현행 조문과 다를 수 있어 `id: null`(링크 없음)로 원문 그대로 준다. `id`는 `/statutes/{id}` 형식이며 화면은 `?asOf=선고일`로 연다. 상세 1시간 120회(`details.reason: "lookup_hourly"`).
 
 ### GET `/statutes/{id}?asOf=YYYY-MM-DD`
 `200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, asOf?, versionAtDate?: StatuteRef | null, asOfNote?, notice }` — `id` = `법령명:제N조(의M)` (법령명 띄어쓰기 없음, URL 인코딩). 없으면 `404`.
 - 데모는 법제처 **현행 법령**의 조문만 가져온다. `isCurrent` = 시행일이 오늘(한국 시각) 이전.
-- `asOf`가 시행일 이후면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 시행일보다 앞이면 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote`(법제처 연혁 확인 안내) (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
+- `asOf`가 시행일 이후이고 오늘 이전이며 조문이 지금 시행 중이면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 그 밖(시행일 이전·미래 날짜·시행 전 조문)은 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote` (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
 
 ### POST `/results/{id}/feedback`
 `req { helpful: boolean; comment?: string (500자 이하) }` → `204`. 결과 소유자만(비로그인은 같은 익명 세션) — 남의 결과 `403`, 없으면 `404`.
@@ -195,7 +196,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 레이트 리밋: IP 해시 1시간 30회(`details.reason: "write_hourly"`).
 
 ### DELETE `/me/data`
-- 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·IP 해시만)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
+- 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
 - 로그인 사용자: `202 { status: "received", deletionRequestId }` — `deletion_requests` 접수, 처리 기한은 OQ-DM-03. 데모는 로그인을 열지 않는다(DEC-016).
 - 레이트 리밋: IP 해시 1시간 30회.
 
