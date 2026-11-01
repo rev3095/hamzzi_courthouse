@@ -20,7 +20,7 @@ EXPECTED_TABLES = {
     "court_cases", "case_chunks", "statutes", "case_statute_refs", "ingest_runs",
     "profiles", "anon_sessions", "inquiries", "followup_questions", "analysis_results",
     "result_citations", "result_feedback", "feature_gates", "gate_changes", "consents",
-    "audit_logs", "deletion_requests", "anon_usage",
+    "audit_logs", "deletion_requests", "anon_usage", "rate_limit_hits",
 }
 GATE_KEYS = {
     "lawyer_verification", "brief_posting", "proposals", "billing",
@@ -28,6 +28,9 @@ GATE_KEYS = {
 }
 CONSUME = "public.consume_anon_question(uuid, text, int, int, interval)"
 CHANGE_GATE = "public.change_feature_gate(text, public.gate_status, jsonb, text, text, uuid)"
+HIT = "public.hit_rate_limit(text, text, int, interval)"
+DELETE_ANON = "public.delete_anon_data(uuid, text)"
+PURGE = "public.purge_expired_records()"
 FINISH = (
     "public.finish_demo_analysis(uuid, uuid, text, int, int, interval, jsonb, public.analysis_outcome, "
     "text, text, int, int, int, int, int, jsonb)"
@@ -104,7 +107,7 @@ def schema(conn) -> None:
 
 def grants(conn) -> None:
     print("[2] 권한")
-    for fn in (CONSUME, CHANGE_GATE, FINISH):
+    for fn in (CONSUME, CHANGE_GATE, FINISH, HIT, DELETE_ANON, PURGE):
         name = fn.split("(")[0]
         for role in ("anon", "authenticated"):
             ok = not scalar(conn, "select has_function_privilege(%s, %s, 'execute')", (role, fn))
@@ -336,6 +339,61 @@ def finish(conn) -> None:
           "로그인 사용자는 차감 없이 저장")
 
 
+def ops(conn) -> None:
+    print("[8] 데모 운영: 레이트 리밋·피드백·내 기록 삭제·보유 기간 (DEC-017, DEC-018 제안)")
+    hit = HIT.split("(")[0]
+    key = "verify-" + uuid.uuid4().hex
+    got = [scalar(conn, f"select {hit}('search', %s, 2, interval '1 hour')", (key,)) for _ in range(3)]
+    check(got == [True, True, False], f"레이트 리밋: 상한 2 → 세 번째 막힘 ({got})")
+    check(scalar(conn, f"select {hit}('feedback', %s, 2, interval '1 hour')", (key,)) is True,
+          "버킷이 다르면 따로 센다 (검색 횟수는 질문 3회와 별개)")
+    raises(conn, "잘못된 상한", f"select {hit}('search', %s, 0, interval '1 hour')", (key,), match="invalid rate limit")
+
+    s1 = scalar(conn, "insert into public.anon_sessions default values returning id")
+    check(scalar(conn, "select expires_at > now() + interval '29 days' from public.anon_sessions where id = %s", (s1,)),
+          "새 익명 세션 보유 기간 30일")
+    i1 = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (s1,))
+    check(scalar(conn, "select expires_at > now() + interval '29 days' from public.inquiries where id = %s", (i1,)),
+          "새 질문 보유 기간 30일")
+    r1 = scalar(conn, "insert into public.analysis_results (inquiry_id, response, outcome, model, prompt_version) "
+                      "values (%s, '{}', 'grounded', 'verify', 'v0') returning id", (i1,))
+    conn.execute("insert into public.result_feedback (result_id, helpful) values (%s, true)", (r1,))
+    raises(conn, "같은 결과에 피드백 2건", "insert into public.result_feedback (result_id, helpful) values (%s, false)", (r1,),
+           match="result_feedback_result_idx")
+
+    fn = CONSUME.split("(")[0]
+    scalar(conn, f"select {fn}(%s, null, 3, 10, interval '24 hours')", (s1,))
+    audit_before = scalar(conn, "select count(*) from public.audit_logs")
+    deleted = scalar(conn, f"select {DELETE_ANON.split('(')[0]}(%s, 'verify-ip')", (s1,))
+    check(deleted == 1, f"내 기록 삭제: 질문 1건 삭제 ({deleted})")
+    check(scalar(conn, "select count(*) from public.analysis_results where id = %s", (r1,)) == 0,
+          "결과·피드백도 함께 삭제")
+    check(scalar(conn, "select questions_used from public.anon_sessions where id = %s", (s1,)) == 1,
+          "삭제해도 질문 횟수는 되살아나지 않음")
+    check(scalar(conn, "select count(*) from public.audit_logs") == audit_before + 1
+          and scalar(conn, "select count(*) from public.audit_logs where action = 'anon_data_deleted' and target_id = %s",
+                     (s1,)) == 1,
+          "삭제 감사 로그 1건 (행위·세션 ID만)")
+    check(scalar(conn, f"select {DELETE_ANON.split('(')[0]}(%s, null)", (str(uuid.uuid4()),)) == -1,
+          "없는 세션은 -1")
+
+    old = scalar(conn, "insert into public.anon_sessions (expires_at) values (now() - interval '1 day') returning id")
+    old_q = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text, expires_at) "
+                         "values (%s, '[검증]', now() - interval '1 day') returning id", (old,))
+    keep = scalar(conn, "insert into public.anon_sessions (expires_at) values (now() - interval '1 day') returning id")
+    keep_q = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (keep,))
+    check(scalar(conn, "select expires_at > now() from public.anon_sessions where id = %s", (keep,)),
+          "새 질문이 생기면 익명 세션 보유 기간이 질문만큼 늘어남")
+    out = scalar(conn, f"select {PURGE.split('(')[0]}()")
+    check(scalar(conn, "select count(*) from public.inquiries where id = %s", (old_q,)) == 0, "기한 지난 질문 파기")
+    check(scalar(conn, "select count(*) from public.anon_sessions where id = %s", (old,)) == 0,
+          "질문이 남지 않은 기한 지난 익명 세션 파기")
+    check(scalar(conn, "select count(*) from public.inquiries where id = %s", (keep_q,)) == 1, "기한 안 된 질문은 남음")
+    check(isinstance(out, dict) and out.get("inquiries", 0) >= 1, f"파기 결과 건수 반환 ({out})")
+    check(scalar(conn, "select count(*) from cron.job where jobname = 'hz-retention-purge'") == 1,
+          "pg_cron 매일 파기 작업 등록")
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -346,7 +404,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops):
                         try:
                             with conn.transaction():
                                 step(conn)

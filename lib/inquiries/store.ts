@@ -5,7 +5,7 @@ import type { RequestScope } from "@/lib/api/route";
 import { ensureAnonSession, getAnonSessionId } from "@/lib/auth/anon";
 import { getActor } from "@/lib/auth/server";
 import type { InputScan } from "@/lib/pii";
-import { clientIp, hashIp } from "@/lib/auth/ip";
+import { requestIpHash } from "@/lib/auth/ip";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   ANON_IP_DAILY_LIMIT,
@@ -62,13 +62,7 @@ export async function getAnonQuestionsUsed(anonSessionId: string): Promise<numbe
 }
 
 /** 비로그인 IP 해시 (원본 IP는 여기서 해시로만 바꾸고 버린다). production에서 솔트가 없으면 오류 */
-function anonIpHash(headers: Headers): string | null {
-  const salt = process.env.ANON_IP_SALT;
-  if (!salt && process.env.NODE_ENV === "production") {
-    throw new Error("환경변수 ANON_IP_SALT이(가) 없습니다.");
-  }
-  return hashIp(clientIp(headers), salt);
-}
+const anonIpHash = (headers: Headers) => requestIpHash(headers);
 
 /**
  * 모델을 부르기 전 IP 해시 24시간 상한 사전 검사 (DEC-010, 비용 남용 방지). 읽기만 한다 —

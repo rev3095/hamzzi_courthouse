@@ -158,7 +158,7 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 **데모 마이그레이션 (DEC-009~011, `20261020162716_demo_quota_followup.sql`, 실제 DB 적용 검증 전)**: 1회 제한용 유일 인덱스(`inquiries_anon_one_analyzed_idx`) 삭제 · `anon_usage`·`consume_anon_question` 추가 · `result_citations`의 "verified면 DB 행" 제약을 `source = 'law_open_api_live'`면 `source_ref` 필수로 완화 · `anon_sessions.questions_used` 범위를 0~3으로 · `inquiries.parent_inquiry_id` 추가(자기 참조 FK, `on delete set null`) · `result_citations`에 `source`·`source_ref`·`quote` 추가, `quote` 길이 60자 체크 · `inquiry_status`는 그대로(데모는 `need_info`를 쓰지 않음).
 
 ### `result_feedback`
-`result_id FK, user_id FK null, helpful bool, comment_masked text [PII-M] null`
+`result_id FK, user_id FK null, helpful bool, comment_masked text [PII-M] null` — **(데모 운영)** 결과마다 1건(`result_feedback_result_idx` 유일, 다시 보내면 덮어씀). 소유자 확인은 서버가 한다.
 
 ## 4. 운영·통제
 ### `feature_gates` (F-013)
@@ -190,6 +190,16 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 ### `audit_logs`
 `id, actor_id, actor_role, action, target_table, target_id, at, ip_hash` — append-only, 사건 본문 저장 금지.
 
+### `rate_limit_hits` — 레이트 리밋 카운터 **(데모 운영)**
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| bucket | text | `search`·`lookup`·`write` 등 (lib/auth/rate-limit.ts) |
+| key_hash | text | HMAC(IP, `ANON_IP_SALT`) 등 해시만. 원본 IP 저장 안 함 |
+| window_start | timestamptz | 고정 창 시작 (`date_bin`) |
+| hits | int | |
+
+PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용(정책 없음). DB 함수 `hit_rate_limit(bucket, key, 상한, 기간)` → 한 번 세고 상한 안이면 true (행 단위 upsert로 원자적). 질문 3회(DEC-010)와 별개 (DEC-017 제안).
+
 ### `deletion_requests` (9.2)
 `id, user_id, requested_at, completed_at, scope jsonb, status(enum: received/processing/completed)`
 
@@ -210,13 +220,13 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 `public_briefs`는 `case_summaries`와 **별도 테이블**로 두고, 변호사 역할에는 `public_briefs`만 열린다. 상세 내용은 `disclosures`로 허용된 항목만 제공된다.
 
 ## 6. 접근 권한 (RLS 요약)
-구현: 사용자 테이블은 **읽기 정책만** 두고 쓰기는 서버(service_role)가 한다. 관리자 판별은 `public.is_admin()`(profiles.role). `profiles`도 쓰기 권한을 회수해 role 자가 변경을 막는다. `gate_changes`·`audit_logs`는 트리거로 수정·삭제·TRUNCATE를 막고, 회원 삭제를 막지 않도록 `actor_id`에 외래키를 두지 않는다(탈퇴 후 가명 uuid로 남음). `feature_gates`는 7개 키를 `pending_review`로 시드한다. `expires_at` 값은 OQ-DM-03 전까지 비워 둔다.
+구현: 사용자 테이블은 **읽기 정책만** 두고 쓰기는 서버(service_role)가 한다. 관리자 판별은 `public.is_admin()`(profiles.role). `profiles`도 쓰기 권한을 회수해 role 자가 변경을 막는다. `gate_changes`·`audit_logs`는 트리거로 수정·삭제·TRUNCATE를 막고, 회원 삭제를 막지 않도록 `actor_id`에 외래키를 두지 않는다(탈퇴 후 가명 uuid로 남음). `feature_gates`는 7개 키를 `pending_review`로 시드한다. `expires_at`은 DEC-018 제안값(30일)으로 채운다(7절).
 
 | 테이블 | user | lawyer(승인) | admin |
 |---|---|---|---|
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
 | inquiries, followup_questions, analysis_results | 본인 행 (비로그인은 같은 `anon_session_id`만, 서버 경유) | ✗ | 감사 기록 남기고 제한 열람 |
-| anon_sessions, anon_usage | 서버 전용 | ✗ | 읽기 |
+| anon_sessions, anon_usage, rate_limit_hits | 서버 전용 | ✗ | 읽기 |
 | consents, deletion_requests | 본인 행 | ✗ | 처리용 읽기 |
 | case_summaries, agent_turns | 본인 행 | ✗ | 제한 열람 |
 | public_briefs | 본인 행 | `status='posted'` 행 읽기 | 읽기 |
@@ -226,7 +236,20 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 | audit_logs | ✗ | ✗ | 읽기만 |
 
 ## 7. 보유·파기
-PRD 9.2에 따라 항목별 보유 기간을 정의해야 하나 기간 값은 미정(OQ-DM-03, PRD OQ-004). `expires_at` 도달 시 원문·마스킹본·결과를 파기하고, 집계 지표(토큰·지연·인용 실패율)만 남긴다(제안).
+**데모 운영 (DEC-018 제안값, 마이그레이션 `20261101032339_demo_ops_retention.sql`)**
+
+| 대상 | 보유 기간 | 파기 |
+|---|---|---|
+| `inquiries` (마스킹본) + `analysis_results`·`result_citations`·`result_feedback`·`followup_questions` | 만든 날 + 30일 (`expires_at` 기본값, 기존 행은 `created_at + 30일`로 채움) | 질문을 지우면 나머지는 연쇄 삭제 |
+| `anon_sessions` | 마지막 질문의 `expires_at`까지 (트리거 `inquiries_extend_anon_expiry`) | 기한이 지나고 남은 질문이 없을 때 |
+| `anon_usage` | 30일 | |
+| `rate_limit_hits` | 1일 | |
+| `audit_logs`·`gate_changes` | 파기하지 않음 (append-only) | 보유 기간은 OQ-DM-03에 남김 |
+| `consents`·`deletion_requests` | 로그인 사용자용 — 데모에서 쓰지 않음 | OQ-DM-03 |
+
+- DB 함수 `purge_expired_records()`가 위 순서로 지우고 건수를 돌려주며 `audit_logs`에 `retention_purge`를 남긴다. Supabase **pg_cron** 작업 `hz-retention-purge`가 매일 03:17 UTC(12:17 KST)에 실행한다(무료 플랜 사용 가능).
+- 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·IP 해시만)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.
+- 집계 지표만 남기는 별도 테이블은 아직 없다(정식 출시 전 결정).
 
 ---
 ## OPEN QUESTION
@@ -234,7 +257,7 @@ PRD 9.2에 따라 항목별 보유 기간을 정의해야 하나 기간 값은 �
 |---|---|---|---|
 | ~~OQ-DM-01~~ | ✅ 해결: 비로그인 질문 3회(이어 묻기 포함), 이후 소셜 로그인 (DEC-005 → DEC-010) | inquiries, anon_sessions | 12 |
 | ~~OQ-DM-02~~ | ✅ 해결: 마스킹본만 저장, 원문 컬럼 없음 (DEC-006) | inquiries | 9.2 |
-| OQ-DM-03 | 항목별 보유 기간(입력·결과·동의 기록·감사 로그·익명 세션) | 파기 배치 | 9.2, OQ-004 |
+| OQ-DM-03 | 항목별 보유 기간(입력·결과·동의 기록·감사 로그·익명 세션) — 데모는 DEC-018 제안값(질문·결과·익명 세션 30일) 적용, 감사 로그·동의 기록·로그인 사용자 기간은 미정 | 파기 배치 | 9.2, OQ-004 |
 | OQ-DM-04 | 암호화 방식(DB 컬럼 암호화 vs 애플리케이션 암호화)과 키 관리 — 대상: 변호사 `[PII]` 필드, Phase 2 사건 요약서 | lawyer_profiles, case_summaries | 13 |
 | OQ-DM-10 | 비로그인 사용자의 질문·결과를 로그인 후 계정으로 옮길지(이관) | anon_sessions.claimed_by | DEC-005 |
 | OQ-DM-05 | 판례 전문을 저장·재게시해도 되는 범위(법제처 상업 재게시 조건) — 안 되면 요지·메타데이터·링크만 | court_cases.full_text | 9.1 |

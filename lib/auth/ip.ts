@@ -13,3 +13,15 @@ export function hashIp(ip: string | null, salt: string | undefined): string | nu
   if (!ip || !salt) return null;
   return createHmac("sha256", salt).update(ip).digest("hex");
 }
+
+/**
+ * 요청 IP의 솔트 해시 (레이트 리밋·남용 방지 공통). 솔트가 없으면 개발에서는 null(상한 끔),
+ * production에서는 오류 — 상한이 조용히 꺼지지 않게 한다 (CLAUDE.md 환경변수 ANON_IP_SALT)
+ */
+export function requestIpHash(headers: Headers, env = process.env): string | null {
+  const salt = env.ANON_IP_SALT;
+  if (!salt && env.NODE_ENV === "production") {
+    throw new Error("환경변수 ANON_IP_SALT이(가) 없습니다.");
+  }
+  return hashIp(clientIp(headers), salt);
+}
