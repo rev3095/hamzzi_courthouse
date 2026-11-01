@@ -7,7 +7,15 @@ import { useState } from "react";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { HamzziBadge } from "../HamzziJudge";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
-import { TRACE_TOOL, dotDate, firstTab, resultTitle, sourceRef, type ResultTab } from "./labels";
+import {
+  TRACE_TOOL,
+  dotDate,
+  statutePath,
+  firstTab,
+  resultTitle,
+  sourceRef,
+  type ResultTab,
+} from "./labels";
 
 export function ResultPanel({
   result,
@@ -200,7 +208,15 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
           {a.effectiveFrom && (
             <p className="text-muted text-[13px]">시행 {dotDate(a.effectiveFrom)}</p>
           )}
-          <OriginalLink url={a.sourceUrl} label="법제처 원문 보기 →" />
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href={statutePath(a)}
+              className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
+            >
+              조문 전체 보기 →
+            </Link>
+            <OriginalLink url={a.sourceUrl} label="법제처 원문 보기 →" />
+          </div>
         </li>
       ))}
     </ul>
@@ -228,7 +244,15 @@ function CasesTab({ result }: { result: DemoAnalysisResult }) {
           <p className="text-muted text-[13px]">
             {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
           </p>
-          <OriginalLink url={c.sourceUrl} label="법제처 원문 보기 →" />
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href={`/cases/${c.id}`}
+              className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
+            >
+              판시사항·요지 보기 →
+            </Link>
+            <OriginalLink url={c.sourceUrl} label="법제처 원문 보기 →" />
+          </div>
         </li>
       ))}
     </ul>

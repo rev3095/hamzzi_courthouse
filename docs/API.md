@@ -11,7 +11,7 @@
 | 방식 | Supabase Auth 세션 토큰 (`Authorization: Bearer <token>` 또는 보안 쿠키) · 소셜 로그인(Google 등) (DEC-004, DEC-005) |
 | 역할 | `anon`(비로그인) · `user` · `lawyer`(F-010 승인 후) · `admin` |
 | 비로그인 | 익명 세션 쿠키 + IP 해시로 **질문 3회**(이어 묻기 포함)까지 허용. 네 번째 질문·추가 질문 답변·사실관계 수정은 `401 LOGIN_REQUIRED` (DEC-005, DEC-010, F-001 AC3) |
-| 레이트 리밋 | 분석 계열에 적용 (값은 OQ-API-02). 초과 시 `429 RATE_LIMITED` |
+| 레이트 리밋 | 분석: 비로그인 세션 3회 + IP 해시 24시간 10회(DEC-010). 판례·조문 검색: IP 해시 1시간 목록 60회·상세 120회(DEC-017 제안). 피드백·기록 삭제: IP 해시 1시간 30회. 초과 시 `429 RATE_LIMITED` (`details.reason`) |
 | 멱등성 | 생성 POST는 `Idempotency-Key` 헤더 지원 (제안, OQ-API-03) |
 
 ## 2. 공통 형식
@@ -59,7 +59,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | POST `/inquiries/{id}/answers` | user 소유자 | 추가 질문 답변 | F-002 AC2 |
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
 | GET `/me/quota` | anon·user | 남은 비로그인 질문 수(0~3), 로그인 필요 여부 | DEC-010 |
-| GET `/cases` | 공개/user | 판례 직접 검색 | F-003 |
+| GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
 | GET `/statutes/{id}` | 공개/user | 조문 + 시행일 | F-004 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
@@ -167,18 +167,25 @@ type DemoAnalysisResult = {
 ### GET `/cases`
 ```ts
 // query
-q: string (필수, 공백이면 EMPTY_INPUT); court?: string; caseType?: string; from?: date; to?: date; cursor?: string; limit?: number (≤ 50)
+q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~20, 기본 10)
 // 200
-{ items: (CaseRef & { relevance: number })[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string }
+{ items: CaseRef[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string; notice: string }
 ```
-개인정보 필드는 반환하지 않는다(F-003 AC1). `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외).
+- 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게). `court`·`caseType`·`from`·`to`·`cursor` 필터는 수집 DB 도입 후.
+- 검색어도 법제처로 보내므로 개인정보로 보이면 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "personal_info"`) (F-007).
+- `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
+- 개인정보 필드는 반환하지 않는다(F-003 AC1). 수집 DB를 쓰게 되면 `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외). 법제처 판례는 법원이 비실명 처리한 공개본이다.
+- 레이트 리밋: 같은 IP 해시 1시간 60회 → `429 RATE_LIMITED` (`details.reason: "search_hourly"`). 법제처 실패는 `502 SEARCH_UPSTREAM_FAILED`.
 
 ### GET `/cases/{id}`
-`200 { ...CaseRef, caseType, holdingSummary, sections: { section: string; text: string }[], citedStatutes: { raw: string; statute?: StatuteRef }[] }` · 없으면 `404 NOT_FOUND`.
-전문 제공 범위는 OQ-DM-05 결과에 따라 `sections`를 요지·링크로 제한할 수 있다.
+`200 { ...CaseRef, holdingSummary: string | null, sections: { section: "판시사항" | "판결요지" | "본문 일부"; text: string }[], fromBody: boolean, citedStatutes: { raw: string; id: string }[], notice }` · 없으면 `404 NOT_FOUND`(대체 내용 생성 안 함, F-003 AC3).
+- `id` = 법제처 판례일련번호(숫자). 전문은 주지 않는다(DEC-007, OQ-DM-05): 판시사항·판결요지, 둘 다 없을 때만 개인정보를 가린 본문 일부.
+- `citedStatutes`는 참조조문 원문에 적힌 "법령명 제N조"만 뽑는다(법령명이 없는 조문은 바로 앞 법령명을 잇는다). `id`는 `/statutes/{id}` 형식. 상세 1시간 120회(`details.reason: "lookup_hourly"`).
 
 ### GET `/statutes/{id}?asOf=YYYY-MM-DD`
-`200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, versionAtDate?: StatuteRef }` — `asOf`가 있으면 그 시점 버전을 함께 반환(F-004).
+`200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, asOf?, versionAtDate?: StatuteRef | null, asOfNote?, notice }` — `id` = `법령명:제N조(의M)` (법령명 띄어쓰기 없음, URL 인코딩). 없으면 `404`.
+- 데모는 법제처 **현행 법령**의 조문만 가져온다. `isCurrent` = 시행일이 오늘(한국 시각) 이전.
+- `asOf`가 시행일 이후면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 시행일보다 앞이면 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote`(법제처 연혁 확인 안내) (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
 
 ### POST `/results/{id}/feedback`
 `req { helpful: boolean; comment?: string }` → `204`. comment는 마스킹 후 저장.
@@ -252,7 +259,7 @@ req { consentId: string; items: string[] }   // 동의한 항목만
 | OQ-API-03 | 멱등 키 지원 범위 | 생성 POST | — |
 | OQ-API-04 | API 버전 관리 정책(`/v1` 유지 기간) | 전체 | — |
 | OQ-API-05 | 변호사 제안 시 공개할 프로필·단가 필드와 광고 표시 방식 | proposals, lawyer_profiles | 10.1 A, OQ-001 |
-| OQ-API-06 | 공개 판례 검색(`GET /cases`)도 비로그인 질문 횟수 제한(3회)에 포함할지, 별도로 열지 | 인증 | DEC-005 |
+| ~~OQ-API-06~~ | ✅ 데모 해결(DEC-017 제안값): 판례 검색은 질문 3회와 별개, IP 해시 1시간 상한 | 인증 | DEC-005, DEC-017 |
 | OQ-API-08 | 비로그인 "가벼운 답변"의 범위: 판례 몇 건까지, 법령 상세·원문 링크 포함 여부, 결과 저장 여부. 데모는 로그인 사용자와 같은 결과를 저장까지 함(DEC-010·011), 데모 뒤 재검토 | analyze 응답 | DEC-005 |
 | OQ-API-09 | Google 외에 지원할 소셜 로그인(카카오·네이버 등) | 인증 | DEC-005 |
 | OQ-API-07 | 관리자 작업(게이트 변경)에 2단계 승인을 둘지 | admin | F-013 |

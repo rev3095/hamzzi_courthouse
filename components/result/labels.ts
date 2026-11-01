@@ -44,3 +44,8 @@ export type ResultTab = "answer" | "articles" | "cases" | "verify";
 export function firstTab(r: Pick<DemoAnalysisResult, "answer">): ResultTab {
   return r.answer.points.length > 0 ? "answer" : "articles";
 }
+
+/** 조문 화면 주소 (/statutes/법령명:제N조, F-004). 법령명 띄어쓰기는 뺀다 — lib/search/browse statuteIdOf와 같은 꼴 */
+export function statutePath(a: { lawName: string; articleNo: string }): string {
+  return `/statutes/${encodeURIComponent(`${a.lawName.replace(/\s+/g, "")}:${a.articleNo}`)}`;
+}

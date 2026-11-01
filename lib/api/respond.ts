@@ -4,6 +4,9 @@ import { ApiError, type ErrorCode, type ErrorDetails } from "./errors";
 /** 모든 AI 결과에 붙이는 고지 (CLAUDE.md 절대 규칙 6, PRD 8.3) */
 export const AI_NOTICE = "AI 생성 · 법률 자문 아님";
 
+/** AI가 만들지 않은 법제처 검색 결과(판례·조문 직접 검색)에 붙이는 고지. AI_NOTICE 대신 쓴다 */
+export const SEARCH_NOTICE = "법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님";
+
 export type Page = { cursor?: string; nextCursor?: string; limit: number };
 export type Meta = { requestId: string; page?: Page };
 

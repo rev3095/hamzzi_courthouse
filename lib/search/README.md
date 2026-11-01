@@ -11,6 +11,7 @@
 | `law-source.ts` (server-only) | `createLawSource()` → `findArticles`(법령 전문에서 키워드 점수 — 제목 3·본문 2, 프로토타입 방식 DEC-014) · `searchArticles`(지능형 법령정보지식베이스, 자연어 → 조문, 보조) · `getArticle`(법령명 + 조문번호) · `searchCases`(판례명+본문 `both` 검색) · `getCase` · `verifyStatutes` · `verifyCases` |
 | `normalize.ts`                | 법제처 응답 → 우리 타입 변환(순수 함수): 날짜, 조문번호, 조문 본문 합치기, 판례 본문 일부, 재조회 결과 해석                                                                                                                                                                                           |
 | `evidence.ts`                 | `EvidenceSet` — 한 요청에서 가져온 근거 모음. 인용 검증기(F-005 AC2 ①②)가 "가져온 자료인가"·원문 구절 대조에 쓴다                                                                                                                                                                                     |
+| `browse.ts`                   | 판례·조문 직접 검색 순수 규칙 (GET /cases · /cases/{id} · /statutes/{id}, DEC-017): 검색어 검사(개인정보면 보내지 않음), 응답 조립(관련도 없음, `SEARCH_NOTICE`), 참조조문 읽기, 조문 ID(`법령명:제N조`), asOf                                                                                        |
 | `types.ts`                    | `ArticleHit`·`CaseHit`·`CaseDetail`·`CitationCheck` (API.md `StatuteRef`·`CaseRef`와 필드명 일치)                                                                                                                                                                                                     |
 
 - 인증키는 `OPEN_LAW_API_KEY`. 법제처는 **등록된 IP에서만** 응답한다(배포 환경 OQ-ARC-05).

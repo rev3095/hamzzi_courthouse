@@ -70,6 +70,52 @@ export const confirmPii = (id: string) =>
 
 export const getResult = (id: string) => call<AnalyzedResult>(`/api/v1/inquiries/${id}/result`);
 
+// --- 판례·조문 직접 검색 (F-003, F-004) ---------------------------------------------------
+export type CaseRef = {
+  id: string;
+  caseNo: string;
+  caseName: string;
+  court: string;
+  decidedAt: string | null;
+  sourceUrl: string;
+};
+export type CaseList = {
+  items: CaseRef[];
+  outcome: "grounded" | "no_result_in_scope";
+  searchScopeNote: string;
+  notice: string;
+};
+export type CaseDetailView = CaseRef & {
+  holdingSummary: string | null;
+  sections: { section: string; text: string }[];
+  fromBody: boolean;
+  citedStatutes: { raw: string; id: string }[];
+  notice: string;
+};
+export type StatuteView = {
+  id: string;
+  lawName: string;
+  articleNo: string;
+  articleTitle: string;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+  body: string;
+  isCurrent: boolean;
+  asOf?: string;
+  versionAtDate?: { effectiveFrom: string | null } | null;
+  asOfNote?: string;
+  notice: string;
+};
+
+export const searchCases = (q: string) =>
+  call<CaseList>(`/api/v1/cases?${new URLSearchParams({ q })}`);
+export const getCaseDetail = (id: string) =>
+  call<CaseDetailView>(`/api/v1/cases/${encodeURIComponent(id)}`);
+export const getStatute = (id: string, asOf?: string) =>
+  call<StatuteView>(
+    `/api/v1/statutes/${encodeURIComponent(id)}${asOf ? `?${new URLSearchParams({ asOf })}` : ""}`,
+  );
+
 /** SSE 한 덩어리("event: …\ndata: …")를 읽는다. 형식이 다르면 null */
 export function parseSseBlock(block: string): { event: string; data: unknown } | null {
   let event = "message";
