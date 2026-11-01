@@ -174,6 +174,7 @@ flowchart TB
 | 데모 배포 | Vercel(Hobby, GitHub main 자동 배포) `hamzzi-courthouse.vercel.app`, 서버 함수 리전 `icn1`(서울, `vercel.json`) · Supabase 개발 프로젝트 Seoul(ap-northeast-2). 환경변수는 Vercel 프로젝트 설정에 따로 넣는다(`SUPABASE_DB_URL` 제외). 법제처 호출은 도메인 등록 후 가능 (OQ-ARC-05). 운영 호스팅·플랜은 P11 전에 정한다 |
 | 비밀 관리 | API 키는 서버 환경변수만, 클라이언트 노출 금지(PRD 13) |
 | 마이그레이션 | DB 스키마는 마이그레이션 파일로 관리, 운영 반영은 사람 승인 |
+| 정기 작업 | 데모: 보유 기간 파기 `purge_expired_records()`를 Supabase **pg_cron**(`hz-retention-purge`, 매일 03:17 UTC)으로 DB 안에서 실행한다 — 무료 플랜 사용 가능, 비밀값·외부 호출 없음 (DEC-018 제안, DATA_MODEL 7절). Vercel Cron은 쓰지 않는다 |
 | 관측 | 기능별 장애·지연·LLM 비용·인용 검증 실패율 지표 (PRD 13, 14) |
 | 성능 목표 | 판례 검색 p95 ≤ 3초, AI 분석 p95 ≤ 15초 (PRD 13). 데모는 AI 분석 p95 ≤ 90초 (DEC-013·014) — 서버 함수 실행 시간 120초(Vercel Hobby 한도 300초) |
 | 백업 | RTO/RPO는 출시 전 정의 (PRD 13) |

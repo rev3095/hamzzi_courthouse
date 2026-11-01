@@ -5,7 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 // 비로그인 질문 추적용 익명 세션 쿠키 (DEC-005). 값은 anon_sessions.id
 export const ANON_COOKIE = "hz_anon";
-/** 쿠키 수명 — 임시 값. 보유 기간 확정은 OQ-DM-03 */
+/** 쿠키 수명 30일 — 익명 세션 보유 기간과 맞춘다 (DEC-018 제안, DATA_MODEL 7절) */
 const ANON_COOKIE_MAX_AGE_S = 60 * 60 * 24 * 30;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
