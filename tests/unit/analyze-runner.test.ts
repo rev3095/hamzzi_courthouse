@@ -17,6 +17,11 @@ const free = vi.hoisted(() => ({ runFreeAnalysis: vi.fn() }));
 vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
 vi.mock("@/lib/citations/verify", () => cite);
+const rate = vi.hoisted(() => ({
+  tryGlobalQuota: vi.fn(async () => true),
+  aiDailyRule: () => ({ bucket: "ai_daily", limit: 200, windowSeconds: 86_400 }),
+}));
+vi.mock("@/lib/auth/rate-limit", () => rate);
 
 const { analyzeInquiry, ANALYSIS_BUDGET_MS } = await import("@/lib/inquiries/analyze");
 
@@ -130,6 +135,23 @@ describe("DEC-015 무료 모드 (기본)", () => {
       ANON,
       expect.any(Headers),
     );
+    expect(out.result).toMatchObject({ mode: "search_only" });
+    // 무료 모드는 하루 Claude 상한 카운터를 올리지 않는다
+    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+  });
+
+  test("DEC-019 Pro라도 하루 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
+    vi.stubEnv("AI_MODE", "pro");
+    rate.tryGlobalQuota.mockResolvedValueOnce(false);
+    free.runFreeAnalysis.mockResolvedValue({
+      result: { mode: "search_only", outcome: "grounded" },
+      citations: [],
+      stats: { total: 0, removed: 0 },
+      model: "search_only",
+    });
+    const out = await analyzeInquiry(INQ, ANON, new Headers());
+    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
+    expect(free.runFreeAnalysis).toHaveBeenCalled();
     expect(out.result).toMatchObject({ mode: "search_only" });
   });
 

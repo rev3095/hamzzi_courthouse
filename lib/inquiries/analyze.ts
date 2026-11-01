@@ -3,6 +3,7 @@
 // 근거 모음(EvidenceSet)은 이 함수 안에서만 쓰고 저장하지 않는다 (DEC-007).
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
+import { aiDailyRule, tryGlobalQuota } from "@/lib/auth/rate-limit";
 import { runDemoAnalysis } from "@/lib/ai/orchestrator";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
@@ -29,8 +30,9 @@ export async function analyzeInquiry(
   const started = Date.now();
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
+    // Pro라도 하루 전체 상한(DEC-019)을 넘으면 그날은 무료 모드로 처리한다 — 운영자 하루 최대 비용 고정.
     // 비로그인 3회 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7)
-    if (aiMode() === "free") {
+    if (aiMode() === "free" || !(await tryGlobalQuota(aiDailyRule()))) {
       const free = await runFreeAnalysis(inquiry.masked_text, { onStep });
       const resultId = await finishAnalysis(
         {

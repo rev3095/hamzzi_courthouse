@@ -12,6 +12,8 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 const law = vi.hoisted(() => ({ getArticle: vi.fn() }));
 vi.mock("@/lib/search/law-source", () => ({ createLawSource: () => law }));
+// 키 점검은 모델 정보 조회(무과금)지만 테스트에서는 네트워크 없이 가짜로 바꾼다
+vi.mock("@/lib/ai/key-check", () => ({ checkAiKey: async () => "missing" }));
 
 const { GET } = await import("@/app/api/v1/health/route");
 
@@ -26,7 +28,9 @@ test("DB·법제처가 모두 닿으면 200 ok, 법제처 확인은 5분 캐시"
   expect(res.status).toBe(200);
   const body = await res.json();
   expect(body.status).toBe("ok");
-  expect(Object.keys(body)).toEqual(["status", "checks", "version", "time"]);
+  expect(Object.keys(body)).toEqual(["status", "checks", "version", "time", "ai"]);
+  // DEC-019: 키 점검은 정보용 — 키 값은 내보내지 않는다
+  expect(body.ai).toEqual({ mode: "free", key: "missing" });
   expect(res.headers.get("cache-control")).toBe("no-store");
   const again = await (await GET(new Request("http://localhost/api/v1/health"), {})).json();
   expect(again.checks.lawApi.cached).toBe(true);

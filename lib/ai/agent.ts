@@ -1,10 +1,17 @@
 // ③ 에이전트 재검색 (PRD 8.2 데모 파이프라인, Pro 모드 — 모델은 policy.ts MODELS). 모델이 법령·판례 도구로 부족한 근거를 더 찾는다. 최대 3라운드.
-// 응답 content는 thinking 블록까지 그대로 다음 요청에 붙인다 (preserved thinking).
+// 응답 content는 그대로 다음 요청에 붙인다. thinking은 비용 예측을 위해 끈다 (DEC-019). 비용 상한에 닿으면 라운드를 멈춘다.
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { LawSource } from "@/lib/search/law-source";
-import { callModel, fallbackFor, type ModelClient, type ModelMessage } from "./client";
+import {
+  CostCapReached,
+  callModel,
+  fallbackFor,
+  type ModelClient,
+  type ModelMessage,
+} from "./client";
+import { ANSWER_RESERVE_USD, STAGE_TOKENS } from "./cost";
 import { runTool } from "./gather";
 import { userMessage } from "./message";
 import {
@@ -44,20 +51,29 @@ export async function agentSearch(
   for (let round = 1 as 1 | 2 | 3; round <= LIMITS.agentRounds; round = (round + 1) as 1 | 2 | 3) {
     const budget = deps.timeLeft();
     if (budget < 5_000) break;
-    const res = await callModel(
-      deps.model,
-      "agent",
-      {
-        model: MODELS.agent,
-        max_tokens: 8_000,
-        ...fallbackFor(MODELS.agent),
-        system: [{ type: "text", text: AGENT_SYSTEM, cache_control: { type: "ephemeral" } }],
-        tools: AGENT_TOOLS,
-        output_config: { effort: deps.effort ?? "low" },
-        messages,
-      },
-      budget,
-    );
+    let res: ModelMessage;
+    try {
+      res = await callModel(
+        deps.model,
+        "agent",
+        {
+          model: MODELS.agent,
+          max_tokens: STAGE_TOKENS.agent.max,
+          ...fallbackFor(MODELS.agent),
+          thinking: { type: "disabled" },
+          system: [{ type: "text", text: AGENT_SYSTEM, cache_control: { type: "ephemeral" } }],
+          tools: AGENT_TOOLS,
+          output_config: { effort: deps.effort ?? "low" },
+          messages,
+        },
+        budget,
+        // 답변 몫을 남기고 재검색한다 (DEC-019). 모자라면 지금까지의 근거로 답변한다
+        { reserveUsd: ANSWER_RESERVE_USD, minOutputTokens: STAGE_TOKENS.agent.min },
+      );
+    } catch (e) {
+      if (e instanceof CostCapReached) break;
+      throw e;
+    }
     deps.onResponse(res);
     const calls = res.content.filter(
       (b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use",

@@ -2,6 +2,7 @@
 import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import { callModel, textOf, type ModelClient, type ModelMessage } from "./client";
+import { STAGE_TOKENS } from "./cost";
 import { INTENT_SCHEMA, IntentZ, MODELS, type FollowupTurn, type Intent } from "./policy";
 import { INTENT_SYSTEM } from "./prompts";
 import { userMessage } from "./message";
@@ -16,12 +17,14 @@ export async function analyzeIntent(
     "intent",
     {
       model: MODELS.intent,
-      max_tokens: 4_000,
+      max_tokens: STAGE_TOKENS.intent.max,
+      thinking: { type: "disabled" },
       system: [{ type: "text", text: INTENT_SYSTEM, cache_control: { type: "ephemeral" } }],
       output_config: { effort: "low", format: { type: "json_schema", schema: INTENT_SCHEMA } },
       messages: [{ role: "user", content: userMessage(input.maskedText, input.context) }],
     },
     timeoutMs,
+    { minOutputTokens: STAGE_TOKENS.intent.min },
   );
   let parsed: unknown;
   try {

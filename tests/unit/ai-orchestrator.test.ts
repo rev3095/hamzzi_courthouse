@@ -154,7 +154,7 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     // 검색어 기록은 판례 검색어 (프로토타입과 같음)
     expect(out.draft.searches).toEqual([{ keyword: "임대차보증금 반환", total: 1 }]);
     expect(out.evidence.has("law:민법:제536조")).toBe(true);
-    expect(out.usage).toEqual({ inputTokens: 40, outputTokens: 20, cacheReadTokens: 8 });
+    expect(out.usage).toMatchObject({ inputTokens: 40, outputTokens: 20, cacheReadTokens: 8 });
     // 진행 단계 문구에 입력 원문을 넣지 않는다
     expect(JSON.stringify(steps)).not.toContain("보증금을 안 돌려줘요");
   });
@@ -172,6 +172,43 @@ describe("데모 분석 오케스트레이터 (PRD 8.2)", () => {
     expect(intent.output_config?.effort).toBe("low");
     expect(answer.output_config?.format?.type).toBe("json_schema");
     expect(agent.tools?.every((t) => "strict" in t && t.strict)).toBe(true);
+  });
+
+  test("DEC-019 모든 호출은 thinking을 끄고 단계별 출력 한도 안이며, 쓴 비용을 돌려준다", async () => {
+    const model = fakeModel();
+    const out = await runDemoAnalysis({ maskedText: "질문" }, { model, lawSource: fakeSource() });
+    const [intent, agent, answer] = model.calls;
+    expect(intent.thinking).toEqual({ type: "disabled" });
+    expect(agent.thinking).toEqual({ type: "disabled" });
+    expect(answer.thinking).toEqual({ type: "disabled" });
+    expect(intent.max_tokens).toBeLessThanOrEqual(1_000);
+    expect(agent.max_tokens).toBeLessThanOrEqual(1_500);
+    expect(answer.max_tokens).toBeLessThanOrEqual(6_000);
+    expect(out.costUsd).toBeGreaterThan(0);
+    expect(out.costUsd).toBeLessThanOrEqual(0.015);
+    expect(out.costCapped).toBe(false);
+  });
+
+  test("DEC-019 상한이 빠듯하면 재검색을 건너뛰고 답변 몫으로 답한다", async () => {
+    const model = Object.assign(fakeModel(), { countTokens: async () => 50_000 });
+    const out = await runDemoAnalysis(
+      { maskedText: "질문" },
+      { model, lawSource: fakeSource(), costCapUsd: 0.009 },
+    );
+    expect(model.calls.some((p) => p.tools)).toBe(false);
+    expect(out.draft.answer.points).toHaveLength(1);
+    expect(out.costCapped).toBe(false);
+  });
+
+  test("DEC-019 답변 몫도 모자라면 답변을 부르지 않고 찾은 근거만 낸다", async () => {
+    const model = Object.assign(fakeModel(), { countTokens: async () => 50_000 });
+    const out = await runDemoAnalysis(
+      { maskedText: "질문" },
+      { model, lawSource: fakeSource(), costCapUsd: 0.006 },
+    );
+    expect(model.calls).toHaveLength(1); // 의도만
+    expect(out.draft.answer.points).toEqual([]);
+    expect(out.costCapped).toBe(true);
   });
 
   test("F-002 AC3 이어 묻기는 최근 3개 맥락만 모델에 보낸다", async () => {

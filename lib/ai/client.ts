@@ -4,15 +4,81 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { ApiError } from "@/lib/api/errors";
 import { required } from "@/lib/supabase/env";
+import { COST_CAP_USD, estimateTokens, planCall, usageCost } from "./cost";
 import { aiMode } from "./mode";
 
 export type CreateParams = Anthropic.Beta.MessageCreateParamsNonStreaming;
 export type ModelMessage = Anthropic.Beta.BetaMessage;
 
-/** 테스트에서 가짜로 바꿀 수 있게 create 하나만 쓴다 */
-export type ModelClient = {
-  create(params: CreateParams, options: { timeoutMs: number }): Promise<ModelMessage>;
+/** 비용 상한 확인용 호출 옵션 (DEC-019). 가짜 모델은 무시해도 된다 */
+export type CallOptions = {
+  timeoutMs: number;
+  /** 이 호출 뒤에도 남겨 둘 금액 (재검색이 답변 몫을 먹지 않게) */
+  reserveUsd?: number;
+  /** 이만큼 출력할 예산이 없으면 부르지 않는다 */
+  minOutputTokens?: number;
 };
+
+/** 테스트에서 가짜로 바꿀 수 있게 create 하나만 쓴다. countTokens(무과금)가 없으면 글자 수로 보수 추정 */
+export type ModelClient = {
+  create(params: CreateParams, options: CallOptions): Promise<ModelMessage>;
+  countTokens?(params: CreateParams): Promise<number>;
+};
+
+/** 질문 1건 비용 상한에 닿아 이 호출을 하지 않았다. 오케스트레이터가 단계를 건너뛰는 신호 */
+export class CostCapReached extends Error {
+  constructor(
+    readonly stage: string,
+    readonly reason: "long_prompt" | "budget",
+  ) {
+    super(`cost cap reached at ${stage}`);
+  }
+}
+
+export type CostTracked = ModelClient & { spentUsd(): number };
+
+/**
+ * 호출마다 (지금까지 쓴 돈 + 이번 입력 정가 + max_tokens 출력)이 상한 안인지 확인하고, 남은 예산에 맞춰 max_tokens를 줄인다.
+ * 응답의 usage로 실제 비용을 누적한다. 상한을 넘을 호출은 보내지 않고 CostCapReached를 던진다.
+ */
+export function withCostCap(inner: ModelClient, capUsd: number = COST_CAP_USD): CostTracked {
+  let spent = 0;
+  return {
+    spentUsd: () => spent,
+    countTokens: inner.countTokens?.bind(inner),
+    async create(params, options) {
+      const stage = typeof params.model === "string" ? params.model : "model";
+      let inputTokens: number;
+      try {
+        inputTokens = inner.countTokens
+          ? await inner.countTokens(params)
+          : estimateTokens(JSON.stringify([params.system, params.messages, params.tools]));
+      } catch {
+        inputTokens = estimateTokens(
+          JSON.stringify([params.system, params.messages, params.tools]),
+        );
+      }
+      const plan = planCall({
+        model: params.model,
+        spentUsd: spent,
+        inputTokens,
+        maxTokens: params.max_tokens,
+        minOutputTokens: options.minOutputTokens ?? 256,
+        capUsd,
+        reserveUsd: options.reserveUsd,
+      });
+      if (!plan.ok) throw new CostCapReached(stage, plan.reason);
+      const res = await inner.create({ ...params, max_tokens: plan.maxTokens }, options);
+      spent += usageCost(params.model, {
+        inputTokens: res.usage.input_tokens ?? 0,
+        outputTokens: res.usage.output_tokens ?? 0,
+        cacheReadTokens: res.usage.cache_read_input_tokens ?? 0,
+        cacheWriteTokens: res.usage.cache_creation_input_tokens ?? 0,
+      });
+      return res;
+    },
+  };
+}
 
 /**
  * 거절 시 서버가 권장 모델로 다시 시도하게 한다 (Opus·Sonnet 5.5).
@@ -39,22 +105,39 @@ export function createModelClient(): ModelClient {
   return {
     create: (params, { timeoutMs }) =>
       sdk.beta.messages.create(params, { timeout: timeoutMs, maxRetries: 1 }),
+    // 토큰 세기는 과금되지 않는다. 비용 상한 확인에만 쓴다 (DEC-019)
+    countTokens: async (params) => {
+      const r = await sdk.beta.messages.countTokens(
+        {
+          model: params.model,
+          system: params.system,
+          messages: params.messages,
+          tools: params.tools,
+          thinking: params.thinking,
+          output_config: params.output_config,
+        },
+        { timeout: 5_000, maxRetries: 0 },
+      );
+      return r.input_tokens;
+    },
   };
 }
 
-/** 모델 호출 1건. 거절·시간 초과·API 오류를 MODEL_FAILED로 바꾼다 (F-006 AC2) */
+/** 모델 호출 1건. 거절·시간 초과·API 오류를 MODEL_FAILED로 바꾼다 (F-006 AC2). 비용 상한은 CostCapReached 그대로 */
 export async function callModel(
   model: ModelClient,
   stage: string,
   params: CreateParams,
   timeoutMs: number,
+  cost: Pick<CallOptions, "reserveUsd" | "minOutputTokens"> = {},
 ): Promise<ModelMessage> {
   if (timeoutMs < 1_000) throw new ApiError("TIMEOUT", { stage });
   let res: ModelMessage;
   try {
-    res = await model.create(params, { timeoutMs });
+    res = await model.create(params, { timeoutMs, ...cost });
   } catch (e) {
     if (e instanceof ApiError) throw e;
+    if (e instanceof CostCapReached) throw new CostCapReached(stage, e.reason);
     if (e instanceof Anthropic.APIConnectionTimeoutError) throw new ApiError("TIMEOUT", { stage });
     const status = e instanceof Anthropic.APIError ? (e.status ?? null) : null;
     throw new ApiError("MODEL_FAILED", { stage, status });
@@ -76,12 +159,18 @@ export function textOf(res: ModelMessage): string {
     .join("");
 }
 
-export type Usage = { inputTokens: number; outputTokens: number; cacheReadTokens: number };
+export type Usage = {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens?: number;
+};
 
 export function addUsage(total: Usage, res: ModelMessage): Usage {
   return {
     inputTokens: total.inputTokens + (res.usage.input_tokens ?? 0),
     outputTokens: total.outputTokens + (res.usage.output_tokens ?? 0),
     cacheReadTokens: total.cacheReadTokens + (res.usage.cache_read_input_tokens ?? 0),
+    cacheWriteTokens: (total.cacheWriteTokens ?? 0) + (res.usage.cache_creation_input_tokens ?? 0),
   };
 }

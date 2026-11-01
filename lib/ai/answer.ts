@@ -3,6 +3,7 @@ import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import { callModel, fallbackFor, textOf, type ModelClient, type ModelMessage } from "./client";
+import { STAGE_TOKENS } from "./cost";
 import { userMessage } from "./message";
 import {
   AnswerZ,
@@ -34,8 +35,10 @@ export async function writeAnswer(
     "answer",
     {
       model: MODELS.answer,
-      max_tokens: 16_000,
+      max_tokens: STAGE_TOKENS.answer.max,
       ...fallbackFor(MODELS.answer),
+      // thinking 토큰도 출력 요금이라 끈다 — 출력 길이를 예측 가능하게 (DEC-019)
+      thinking: { type: "disabled" },
       system: [{ type: "text", text: ANSWER_SYSTEM, cache_control: { type: "ephemeral" } }],
       output_config: {
         effort: "medium",
@@ -44,6 +47,7 @@ export async function writeAnswer(
       messages: [{ role: "user", content }],
     },
     timeoutMs,
+    { minOutputTokens: STAGE_TOKENS.answer.min },
   );
   let parsed: unknown;
   try {

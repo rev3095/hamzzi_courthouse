@@ -6,7 +6,15 @@ import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import { agentSearch } from "./agent";
 import { writeAnswer } from "./answer";
-import { addUsage, createModelClient, type ModelClient, type Usage } from "./client";
+import {
+  CostCapReached,
+  addUsage,
+  createModelClient,
+  withCostCap,
+  type ModelClient,
+  type Usage,
+} from "./client";
+import { COST_CAP_USD } from "./cost";
 import { initialSearch } from "./gather";
 import { analyzeIntent } from "./intent";
 import {
@@ -40,6 +48,8 @@ export type DemoAnalysisDeps = {
   lawSource?: LawSource;
   onStep?: (e: StepEvent) => void;
   budgetMs?: number;
+  /** 질문 1건 Claude 비용 상한(USD). 기본 COST_CAP_USD (DEC-019) */
+  costCapUsd?: number;
   now?: () => number;
   /** 재검색 강도 (기본 low). 평가 비교용 */
   agentEffort?: "low" | "medium" | "high";
@@ -53,6 +63,10 @@ export type DemoAnalysisOutput = {
   usage: Usage;
   model: string;
   promptVersion: string;
+  /** 이번 질문에 쓴 Claude 비용(USD, 단가표 기준 계산값) */
+  costUsd: number;
+  /** 비용 상한 때문에 답변 단계를 건너뛰었다 */
+  costCapped: boolean;
 };
 
 export async function runDemoAnalysis(
@@ -62,11 +76,13 @@ export async function runDemoAnalysis(
   const now = deps.now ?? Date.now;
   const deadline = now() + (deps.budgetMs ?? DEFAULT_BUDGET_MS);
   const remaining = () => deadline - now();
-  const model = deps.model ?? createModelClient();
+  // 질문 1건 비용 상한 (DEC-019): 모든 호출이 이 감싼 클라이언트를 거친다
+  const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? COST_CAP_USD);
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   const step = deps.onStep ?? (() => {});
   const context = input.context ?? [];
   let usage: Usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
+  let costCapped = false;
 
   // ① 의도
   step({ stage: "intent", message: STEP_MESSAGES.intent });
@@ -112,15 +128,21 @@ export async function runDemoAnalysis(
   const keys = citableKeys(evidence);
   if (keys.length > 0) {
     step({ stage: "answer", message: STEP_MESSAGES.answer });
-    const answer = await writeAnswer(
-      model,
-      { maskedText: input.maskedText, context, intent },
-      evidence,
-      keys,
-      Math.min(ANSWER_CAP_MS, remaining() - VERIFY_RESERVE_MS),
-    );
-    usage = addUsage(usage, answer.res);
-    ({ kept: points, dropped } = screenPoints(answer.points, evidence));
+    try {
+      const answer = await writeAnswer(
+        model,
+        { maskedText: input.maskedText, context, intent },
+        evidence,
+        keys,
+        Math.min(ANSWER_CAP_MS, remaining() - VERIFY_RESERVE_MS),
+      );
+      usage = addUsage(usage, answer.res);
+      ({ kept: points, dropped } = screenPoints(answer.points, evidence));
+    } catch (e) {
+      // 비용 상한에 닿으면 답변 문단 없이 찾은 근거만 낸다 (F-006). 다른 오류는 그대로
+      if (!(e instanceof CostCapReached)) throw e;
+      costCapped = true;
+    }
   }
 
   return {
@@ -137,5 +159,7 @@ export async function runDemoAnalysis(
     usage,
     model: MODELS.answer,
     promptVersion: PROMPT_VERSION,
+    costUsd: model.spentUsd(),
+    costCapped,
   };
 }
