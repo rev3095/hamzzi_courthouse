@@ -34,13 +34,19 @@ const AREA_LABEL: Record<string, string> = { 임금: "노동", 이웃분쟁: "�
 
 /** 예시 피드(S-01)에 보일 분야 */
 export function exampleArea(e: Pick<DemoExample, "tags" | "result">): string {
-  const tag = e.tags[0] && e.tags[0] !== "함정" ? e.tags[0] : e.result.intent.area.split(/[\s(·]/)[0];
+  const tag =
+    e.tags[0] && e.tags[0] !== "함정" ? e.tags[0] : e.result.intent.area.split(/[\s(·]/)[0];
   return AREA_LABEL[tag] ?? tag;
 }
 
 /** 화면(P6) 예시 질문 목록 — 직접 작성한 질문이다 (DEC-012) */
 export function demoExamples(): { id: string; tags: string[]; question: string; area: string }[] {
-  return EXAMPLES.map((e) => ({ id: e.id, tags: e.tags, question: e.question, area: exampleArea(e) }));
+  return EXAMPLES.map((e) => ({
+    id: e.id,
+    tags: e.tags,
+    question: e.question,
+    area: exampleArea(e),
+  }));
 }
 
 const normalize = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim();

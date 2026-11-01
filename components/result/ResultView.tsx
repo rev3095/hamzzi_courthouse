@@ -21,13 +21,14 @@ import { PrimaryButton, SecondaryButton } from "../Modal";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
+import { Feedback } from "./Feedback";
 import { ResultPanel } from "./ResultPanel";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 
 type View =
   | { kind: "loading" }
   | { kind: "analyzing"; steps: StepEvent[] }
-  | { kind: "done"; result: DemoAnalysisResult }
+  | { kind: "done"; result: DemoAnalysisResult; resultId: string }
   | { kind: "error"; error: ClientError };
 
 const noSubscribe = () => () => {};
@@ -66,13 +67,14 @@ export function ResultView({ id }: { id: string }) {
     if (!alive.current) return;
     if (r.ok) {
       notifyQuotaChanged();
-      setView({ kind: "done", result: r.data.result });
+      setView({ kind: "done", result: r.data.result, resultId: r.data.resultId });
       return;
     }
     // 다른 창에서 먼저 끝났으면 저장된 결과를 읽는다
     if (r.error.code === "INVALID_STATE") {
       const saved = await getResult(id);
-      if (saved.ok) return setView({ kind: "done", result: saved.data.result });
+      if (saved.ok)
+        return setView({ kind: "done", result: saved.data.result, resultId: saved.data.resultId });
     }
     setView({ kind: "error", error: r.error });
   }, [id]);
@@ -82,7 +84,8 @@ export function ResultView({ id }: { id: string }) {
     void (async () => {
       const saved = await getResult(id);
       if (!alive.current) return;
-      if (saved.ok) return setView({ kind: "done", result: saved.data.result });
+      if (saved.ok)
+        return setView({ kind: "done", result: saved.data.result, resultId: saved.data.resultId });
       if (saved.error.code !== "NOT_FOUND") return setView({ kind: "error", error: saved.error });
       if (started.current) return;
       started.current = true;
@@ -114,7 +117,12 @@ export function ResultView({ id }: { id: string }) {
           <ResultPanel
             result={view.result}
             question={question.text}
-            followUp={<FollowUp parentId={id} />}
+            followUp={
+              <>
+                <FollowUp parentId={id} />
+                <Feedback resultId={view.resultId} />
+              </>
+            }
           />
         ))}
       {view.kind === "error" && (

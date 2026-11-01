@@ -188,7 +188,10 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - `asOf`가 시행일 이후면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 시행일보다 앞이면 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote`(법제처 연혁 확인 안내) (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
 
 ### POST `/results/{id}/feedback`
-`req { helpful: boolean; comment?: string }` → `204`. comment는 마스킹 후 저장.
+`req { helpful: boolean; comment?: string (500자 이하) }` → `204`. 결과 소유자만(비로그인은 같은 익명 세션) — 남의 결과 `403`, 없으면 `404`.
+- 결과마다 1건, 다시 보내면 덮어쓴다(`result_feedback_result_idx`).
+- comment는 `scanInput`으로 마스킹한 뒤 마스킹본만 저장한다. 민감정보(건강·범죄경력)로 보이면 동의 절차가 없으므로 comment는 저장하지 않고 helpful만 저장한다(F-007 AC2).
+- 레이트 리밋: IP 해시 1시간 30회(`details.reason: "write_hourly"`).
 
 ### DELETE `/me/data`
 `202 { requestId, status: "received" }` — 처리 기한은 OQ-DM-03.

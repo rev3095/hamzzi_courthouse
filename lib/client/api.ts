@@ -70,6 +70,26 @@ export const confirmPii = (id: string) =>
 
 export const getResult = (id: string) => call<AnalyzedResult>(`/api/v1/inquiries/${id}/result`);
 
+/** 도움 여부 피드백 (204, 본문 없음) */
+export async function sendFeedback(
+  resultId: string,
+  body: { helpful: boolean; comment?: string },
+): Promise<ApiResult<null>> {
+  try {
+    const res = await fetch(`/api/v1/results/${resultId}/feedback`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+    });
+    if (res.status === 204) return { ok: true, data: null };
+    const b = (await res.json().catch(() => null)) as { error?: ClientError } | null;
+    return { ok: false, error: b?.error ?? NETWORK_ERROR };
+  } catch {
+    return { ok: false, error: NETWORK_ERROR };
+  }
+}
+
 // --- 판례·조문 직접 검색 (F-003, F-004) ---------------------------------------------------
 export type CaseRef = {
   id: string;

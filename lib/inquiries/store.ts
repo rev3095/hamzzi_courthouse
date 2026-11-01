@@ -281,3 +281,44 @@ export async function getLatestResult(
   if (error) throw new Error("analysis_results 조회 실패");
   return data;
 }
+
+/** 분석 결과의 소유자 확인 (피드백). 없으면 404, 남의 것이면 403 */
+export async function getOwnedResultId(resultId: string, owner: Owner | null): Promise<string> {
+  if (!/^[0-9a-f-]{36}$/i.test(resultId)) throw new ApiError("NOT_FOUND");
+  const { data, error } = await createServiceClient()
+    .from("analysis_results")
+    .select("id, inquiries!inner(user_id, anon_session_id)")
+    .eq("id", resultId)
+    .maybeSingle<{
+      id: string;
+      inquiries: { user_id: string | null; anon_session_id: string | null };
+    }>();
+  if (error) throw new Error("analysis_results 조회 실패");
+  if (!data) throw new ApiError("NOT_FOUND");
+  const inq = data.inquiries;
+  if (!isOwner({ userId: inq.user_id, anonSessionId: inq.anon_session_id }, owner)) {
+    throw new ApiError("FORBIDDEN");
+  }
+  return data.id;
+}
+
+/** 결과마다 1건 — 다시 보내면 덮어쓴다 (result_feedback_result_idx). 의견은 마스킹본만 */
+export async function saveFeedback(
+  resultId: string,
+  owner: Owner,
+  helpful: boolean,
+  commentMasked: string | null,
+) {
+  const { error } = await createServiceClient()
+    .from("result_feedback")
+    .upsert(
+      {
+        result_id: resultId,
+        user_id: owner.kind === "user" ? owner.userId : null,
+        helpful,
+        comment_masked: commentMasked,
+      },
+      { onConflict: "result_id" },
+    );
+  if (error) throw new Error("result_feedback 저장 실패");
+}

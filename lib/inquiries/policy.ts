@@ -1,5 +1,6 @@
 // 질문(inquiry) 입력·확인 규칙 (F-001 AC2, F-007). 순수 함수 — DB·인증과 분리해 테스트한다.
 import { ApiError } from "@/lib/api/errors";
+import { scanInput } from "@/lib/pii";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
 
 /** 입력 최대 길이 — 임시 값. 확정은 OQ-API-01 */
@@ -196,4 +197,34 @@ export function finishedResultId(r: FinishResult): string {
   if (r.status === "not_owner") throw new ApiError("FORBIDDEN");
   assertConsumed(r.status);
   throw new ApiError("INTERNAL_ERROR");
+}
+
+// --- 도움 여부 피드백 (PRD 14, API.md POST /results/{id}/feedback) ------------------------
+export const MAX_FEEDBACK_CHARS = 500;
+
+/**
+ * 피드백 본문. 의견은 원문을 저장하지 않고 마스킹본만 남긴다 (DEC-006). 민감정보로 보이는 의견은
+ * 동의 절차가 없으므로 저장하지 않는다(도움 여부만 저장)
+ */
+export function parseFeedbackRequest(body: unknown): {
+  helpful: boolean;
+  commentMasked: string | null;
+} {
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (typeof b.helpful !== "boolean")
+    throw new ApiError("VALIDATION_ERROR", { fields: ["helpful"] });
+  if (b.comment !== undefined && b.comment !== null && typeof b.comment !== "string") {
+    throw new ApiError("VALIDATION_ERROR", { fields: ["comment"] });
+  }
+  const comment = typeof b.comment === "string" ? b.comment.trim() : "";
+  if (comment.length > MAX_FEEDBACK_CHARS) {
+    throw new ApiError("VALIDATION_ERROR", {
+      fields: ["comment"],
+      reason: "too_long",
+      maxChars: MAX_FEEDBACK_CHARS,
+    });
+  }
+  if (!comment) return { helpful: b.helpful, commentMasked: null };
+  const scan = scanInput(comment);
+  return { helpful: b.helpful, commentMasked: scan.sensitive.length > 0 ? null : scan.maskedText };
 }

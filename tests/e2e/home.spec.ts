@@ -230,3 +230,17 @@ test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서
   await page.waitForURL("**/");
   await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
 });
+
+test("PRD 14 도움 여부 피드백: 네 → 의견 보내기", async ({ page }) => {
+  const calls = await mockApi(page);
+  await page.goto(`/inquiries/${INQ}`);
+  await page.getByRole("button", { name: "네", exact: true }).click();
+  await expect(page.getByText("고마워요!", { exact: false })).toBeVisible();
+  await page.getByRole("textbox", { name: /더 알려 주실 내용/ }).fill("예시가 쉬웠어요");
+  await page.getByRole("button", { name: "의견 보내기" }).click();
+  await expect.poll(() => calls.feedback.length).toBe(2);
+  expect(calls.feedback).toEqual([
+    { helpful: true },
+    { helpful: true, comment: "예시가 쉬웠어요" },
+  ]);
+});

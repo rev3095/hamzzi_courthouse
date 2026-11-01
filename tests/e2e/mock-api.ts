@@ -54,7 +54,12 @@ const json = (route: Route, status: number, body: unknown) =>
   route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
 
 export async function mockApi(page: Page, opts: MockOptions = {}) {
-  const calls = { create: [] as Record<string, unknown>[], confirm: 0, analyze: 0 };
+  const calls = {
+    create: [] as Record<string, unknown>[],
+    confirm: 0,
+    analyze: 0,
+    feedback: [] as Record<string, unknown>[],
+  };
   let analyzed = false;
   const used = opts.quota?.used ?? 0;
 
@@ -120,6 +125,11 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
       contentType: "text/event-stream; charset=utf-8",
       body: step + last,
     });
+  });
+
+  await page.route("**/api/v1/results/*/feedback", (route) => {
+    calls.feedback.push(route.request().postDataJSON() as Record<string, unknown>);
+    return route.fulfill({ status: 204 });
   });
 
   return calls;
