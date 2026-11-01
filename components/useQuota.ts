@@ -33,11 +33,22 @@ function subscribe(listener: () => void) {
   };
 }
 
-export function useQuota(): Quota | null {
+/**
+ * 화면 주소가 바뀔 때 서버 값을 다시 읽는다. usePathname은 동적 경로(/inquiries/[id])를 미리 렌더링할 때
+ * 막히는 훅이라(cacheComponents), 이 컴포넌트를 <Suspense>로 감싸 쓴다 — SiteHeader 참고.
+ */
+export function QuotaRouteSync() {
   const pathname = usePathname();
   useEffect(() => {
     void refreshQuota();
   }, [pathname]);
+  return null;
+}
+
+export function useQuota(): Quota | null {
+  useEffect(() => {
+    void refreshQuota();
+  }, []);
   return useSyncExternalStore(
     subscribe,
     () => current,
