@@ -59,6 +59,7 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
     confirm: 0,
     analyze: 0,
     feedback: [] as Record<string, unknown>[],
+    deleted: 0,
   };
   let analyzed = false;
   const used = opts.quota?.used ?? 0;
@@ -125,6 +126,11 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
       contentType: "text/event-stream; charset=utf-8",
       body: step + last,
     });
+  });
+
+  await page.route("**/api/v1/me/data", (route) => {
+    calls.deleted += 1;
+    return json(route, 200, { data: { status: "completed", deletedInquiries: 2 } });
   });
 
   await page.route("**/api/v1/results/*/feedback", (route) => {

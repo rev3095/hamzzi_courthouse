@@ -63,7 +63,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
 | GET `/statutes/{id}` | 공개/user | 조문 + 시행일 | F-004 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
-| DELETE `/me/data` | user | 삭제 요청 | 9.2 |
+| DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
 
 ### POST `/inquiries`
@@ -194,7 +194,9 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 레이트 리밋: IP 해시 1시간 30회(`details.reason: "write_hourly"`).
 
 ### DELETE `/me/data`
-`202 { requestId, status: "received" }` — 처리 기한은 OQ-DM-03.
+- 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·IP 해시만)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
+- 로그인 사용자: `202 { status: "received", deletionRequestId }` — `deletion_requests` 접수, 처리 기한은 OQ-DM-03. 데모는 로그인을 열지 않는다(DEC-016).
+- 레이트 리밋: IP 해시 1시간 30회.
 
 ### PATCH `/admin/feature-gates/{key}`
 ```ts

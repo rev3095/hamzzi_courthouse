@@ -244,3 +244,17 @@ test("PRD 14 도움 여부 피드백: 네 → 의견 보내기", async ({ page }
     { helpful: true, comment: "예시가 쉬웠어요" },
   ]);
 });
+
+test("9.2 내 기록 지우기: 확인 후 삭제, 이 탭의 질문 문장도 지운다", async ({ page }) => {
+  const calls = await mockApi(page);
+  await page.goto("/");
+  await page.evaluate(() => sessionStorage.setItem("hz:q:x", "[이름] 질문"));
+  await page.getByRole("link", { name: "내 기록 지우기" }).click();
+  await page.getByRole("button", { name: "내 기록 지우기" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("남은 질문 수는 그대로예요");
+  await dialog.getByRole("button", { name: "지우기" }).click();
+  await expect(page.getByText("질문 2건과 그 결과를 지웠어요.")).toBeVisible();
+  expect(calls.deleted).toBe(1);
+  expect(await page.evaluate(() => sessionStorage.getItem("hz:q:x"))).toBeNull();
+});

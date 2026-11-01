@@ -322,3 +322,27 @@ export async function saveFeedback(
     );
   if (error) throw new Error("result_feedback 저장 실패");
 }
+
+/**
+ * 비로그인 내 기록 삭제 (PRD 9.2, DEC-018 제안). DB 함수가 질문·결과·인용·피드백을 지우고 감사 로그를 남긴다.
+ * 질문 횟수(anon_sessions·anon_usage)는 남겨 되살아나지 않게 한다. 지운 질문 수를 돌려준다
+ */
+export async function deleteAnonData(anonSessionId: string, headers: Headers): Promise<number> {
+  const { data, error } = await createServiceClient().rpc("delete_anon_data", {
+    p_session: anonSessionId,
+    p_ip_hash: anonIpHash(headers),
+  });
+  if (error || typeof data !== "number") throw new Error("delete_anon_data 실패");
+  return Math.max(data, 0);
+}
+
+/** 로그인 사용자 삭제 요청 접수 (처리는 OQ-DM-03 확정 후). 데모는 로그인을 열지 않는다 (DEC-016) */
+export async function requestUserDeletion(userId: string): Promise<string> {
+  const { data, error } = await createServiceClient()
+    .from("deletion_requests")
+    .insert({ user_id: userId, scope: { all: true } })
+    .select("id")
+    .single<{ id: string }>();
+  if (error || !data) throw new Error("deletion_requests 저장 실패");
+  return data.id;
+}

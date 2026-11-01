@@ -70,6 +70,22 @@ export const confirmPii = (id: string) =>
 
 export const getResult = (id: string) => call<AnalyzedResult>(`/api/v1/inquiries/${id}/result`);
 
+/** 내 기록 삭제 (PRD 9.2). 비로그인은 바로 지우고 지운 질문 수를 돌려준다 */
+export const deleteMyData = () =>
+  call<{ status: "completed" | "received"; deletedInquiries?: number }>("/api/v1/me/data", {
+    method: "DELETE",
+  });
+
+/** 이 탭에 둔 질문 마스킹본을 모두 지운다 (내 기록 삭제 뒤) */
+export function forgetQuestions() {
+  try {
+    for (const k of Object.keys(sessionStorage))
+      if (k.startsWith("hz:")) sessionStorage.removeItem(k);
+  } catch {
+    // 저장소를 못 쓰면 지울 것도 없다
+  }
+}
+
 /** 도움 여부 피드백 (204, 본문 없음) */
 export async function sendFeedback(
   resultId: string,

@@ -1,6 +1,7 @@
 // 개인정보처리방침 초안 (F-007, DEC-006, DEC-010). 실제 처리 방식(코드)과 같게 쓰고, 법무 검토 후 확정한다.
 // AI_MODE=pro를 켜면 마스킹본이 AI 모델 제공자(Anthropic)로 간다 — 켜기 전에 3절을 고친다.
 import type { Metadata } from "next";
+import { DeleteMyData } from "@/components/DeleteMyData";
 import { PolicyPage, Section } from "@/components/PolicyPage";
 
 export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌법원" };
@@ -50,7 +51,15 @@ export default function PrivacyPage() {
         </p>
       </Section>
       <Section title="4. 보관 기간과 삭제">
-        <p>보관 기간과 삭제 요청 방법은 법무 검토 후 이 문서에 적을 예정이에요.</p>
+        <p>
+          질문(가린 문장)과 결과·피드백은 만든 날부터 30일 동안 보관하고, 그 뒤에는 매일 자동으로
+          지워요. 질문 횟수를 세는 기록(쿠키 세션·IP 해시)도 마지막 질문 30일 뒤에 지워요.
+        </p>
+        <p>
+          언제든 아래에서 바로 지울 수 있어요. 지운 사실(언제, 어떤 세션)만 기록으로 남고 내용은
+          남지 않아요. 지워도 남은 질문 수는 되살아나지 않아요.
+        </p>
+        <DeleteMyData />
       </Section>
       <Section title="5. 문의">
         <p>개인정보 보호 책임자와 연락처는 정식 출시 전에 적을 예정이에요.</p>
