@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_KR, Noto_Serif_KR, Playfair_Display } from "next/font/google";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 const plexKr = IBM_Plex_Sans_KR({
@@ -11,7 +13,7 @@ const plexKr = IBM_Plex_Sans_KR({
 
 const serifKr = Noto_Serif_KR({
   variable: "--font-serif-kr",
-  weight: ["700", "900"],
+  weight: ["500", "700", "900"],
   subsets: ["latin"],
   preload: false,
 });
@@ -33,7 +35,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ko"
       className={`${plexKr.variable} ${serifKr.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }

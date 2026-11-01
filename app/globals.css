@@ -13,6 +13,16 @@
   --sage: #6f8a4e;
   --fur: #e9a94b;
   --success-text: #3d5a40;
+  /* D+ 시안(Figma 03)에 변수 없이 쓰인 값. Figma hz tokens에 추가 필요 (docs/07 3절) */
+  --honey-line: #ebd9b4;
+  --gold-line: #e3d6b5;
+  --label: #6b5420;
+  --link: #8a6a24;
+  --soft: #f6f5f1;
+  --note: #fbf7ec;
+  --note-line: #efe6cf;
+  --warn-text: #8a4b1f;
+  --success-bg: #eef3e8;
 }
 
 @theme inline {
@@ -27,6 +37,15 @@
   --color-sage: var(--sage);
   --color-fur: var(--fur);
   --color-success-text: var(--success-text);
+  --color-honey-line: var(--honey-line);
+  --color-gold-line: var(--gold-line);
+  --color-label: var(--label);
+  --color-link: var(--link);
+  --color-soft: var(--soft);
+  --color-note: var(--note);
+  --color-note-line: var(--note-line);
+  --color-warn-text: var(--warn-text);
+  --color-success-bg: var(--success-bg);
   --font-sans: var(--font-plex-kr);
   --font-display: var(--font-serif-kr);
   --font-accent: var(--font-playfair);
@@ -38,6 +57,26 @@
 body {
   background: var(--bg);
   color: var(--ink);
+}
+
+/* 햄찌 판사 방망이 (누르면 한 번 두드림) · 분석 중 두드림 반복 */
+@keyframes hz-knock {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-28deg);
+  }
+  70% {
+    transform: rotate(6deg);
+  }
+}
+.hz-gavel-knock {
+  animation: hz-knock 0.5s ease-out 1;
+}
+.hz-gavel-loop {
+  animation: hz-knock 1.1s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
