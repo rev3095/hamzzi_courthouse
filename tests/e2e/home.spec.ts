@@ -190,3 +190,43 @@ test("F-002 이어 묻기는 앞 질문 id를 함께 보낸다", async ({ page }
     parentInquiryId: INQ,
   });
 });
+
+test("접근성 예시 질문은 키보드로 고를 수 있다 (Tab·방향키·Enter, 포커스 링)", async ({ page }) => {
+  const calls = await mockApi(page);
+  await page.goto("/");
+  const all = page.getByRole("tab", { name: "전체" });
+  await all.focus();
+  await page.keyboard.press("ArrowRight");
+  const second = page.getByRole("tab", { name: "임대차" });
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel").getByRole("button")).toHaveCount(3);
+  await page.keyboard.press("End");
+  await page.keyboard.press("Home");
+  await expect(all).toBeFocused();
+  // 선택된 탭 하나만 Tab 순서에 있고, 다음 Tab은 첫 예시 카드
+  await page.keyboard.press("Tab");
+  const card = page.getByRole("tabpanel").getByRole("button").first();
+  await expect(card).toBeFocused();
+  expect(await card.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
+  await page.keyboard.press("Enter");
+  await page.waitForURL(`**/inquiries/${INQ}`);
+  expect(calls.create[0]).toEqual({ text: demoExamples()[0].question });
+});
+
+test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서버 값과 같다", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/");
+  await expect(page.getByTestId("quota")).toHaveText("남은 질문 3/3");
+  await page
+    .getByRole("button", { name: /예시 질문으로 시작/ })
+    .first()
+    .click();
+  await page.waitForURL(`**/inquiries/${INQ}`);
+  await expect(page.getByText("검증됨").first()).toBeVisible();
+  await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
+  await expect(page.getByText("남은 질문 2/3 · 이어 묻기도 1번으로 세요")).toBeVisible();
+  await page.getByRole("link", { name: "새 질문" }).click();
+  await page.waitForURL("**/");
+  await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
+});

@@ -8,7 +8,10 @@ import { demoExamples, findExample, replayCitations, replayResult } from "@/lib/
 import { ResultPanel } from "@/components/result/ResultPanel";
 import { resultTitle, sourceRef } from "@/components/result/labels";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/",
+}));
 afterEach(cleanup);
 
 const norm = (s: string) => s.replace(/\s+/g, "");

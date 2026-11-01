@@ -59,6 +59,12 @@ body {
   color: var(--ink);
 }
 
+/* 키보드 포커스 링 (브랜드 가이드 접근성: 키보드로 모든 버튼·링크를 고를 수 있게) */
+:where(a, button, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 /* 햄찌 판사 방망이 (누르면 한 번 두드림) · 분석 중 두드림 반복 */
 @keyframes hz-knock {
   0%,
