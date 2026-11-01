@@ -43,7 +43,7 @@ describe.each(demoExamples().map((e) => [e.id, e] as const))("예시 %s", (_id, 
   test("절대 규칙 6 화면에 AI 고지·AI 캐릭터·법제처 출처가 보이고, 관련도 점수는 없다", () => {
     render(<ResultPanel result={result} question={ex.question} followUp={null} />);
     expect(screen.getByText(AI_NOTICE)).toBeDefined();
-    expect(screen.getByText(/AI 캐릭터 · 근거 판례 \d+건 인용/)).toBeDefined();
+    expect(screen.getByText(/AI 캐릭터 · 근거 법령 \d+건 · 판례 \d+건 인용/)).toBeDefined();
     const credit = screen.getByRole("region", { name: "출처" });
     expect(within(credit).getByText(/법제처 국가법령정보센터/)).toBeDefined();
     expect(document.body.textContent).not.toMatch(/유사도|관련도|승소 가능성|undefined/);

@@ -113,7 +113,7 @@ test("F-007 AC2 민감정보는 동의해야 다시 보낸다", async ({ page })
   expect(calls.create.map((c) => c.sensitiveConsent)).toEqual([undefined, true]);
 });
 
-test("DEC-010 4번째 질문은 로그인 안내", async ({ page }) => {
+test("DEC-010 4번째 질문은 데모 한도 안내", async ({ page }) => {
   await mockApi(page, {
     quota: { used: 3, loginRequired: true },
     create: () => ({
@@ -125,11 +125,12 @@ test("DEC-010 4번째 질문은 로그인 안내", async ({ page }) => {
   });
   await page.goto("/");
   await expect(
-    page.getByText("무료 질문 3번을 모두 썼어요. 로그인하면 계속 물어볼 수 있어요."),
+    page.getByText("데모에서는 질문을 3번까지 할 수 있어요", { exact: false }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
   await page.getByRole("button", { name: "물어보기" }).click();
-  await expect(page.getByRole("dialog")).toContainText("무료 질문 3번을 모두 썼어요");
+  await expect(page.getByRole("dialog")).toContainText("질문 3번을 모두 썼어요");
+  await expect(page.getByRole("button", { name: "로그인" })).toHaveCount(0);
 });
 
 test("F-006 AC2 법제처 연결 실패는 결과 없음과 구분하고 예시 질문으로 안내한다", async ({

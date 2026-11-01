@@ -1,6 +1,6 @@
 "use client";
 // 질문 보내기 흐름 (F-001, F-007, DEC-010): 입력 → POST /inquiries → (민감정보 동의 S-02b) → (가린 문장 확인 S-02a)
-// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 3회를 다 쓰면 로그인 안내(S-06).
+// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 3회를 다 쓰면 데모 한도 안내(S-06 자리).
 // 원문은 입력란에만 있고 브라우저에 저장하지 않는다. 저장하는 것은 서버가 돌려준 마스킹본뿐 (DEC-006).
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import type { PiiFinding } from "@/lib/pii";
-import { LoginNotice } from "../LoginNotice";
+import { LimitNotice } from "../LimitNotice";
 import { Modal, PrimaryButton, SecondaryButton } from "../Modal";
 
 type Pending =
@@ -40,7 +40,7 @@ export function askErrorText(err: ClientError): string {
   if (err.code === "EMPTY_INPUT") return "내용을 적어 주세요.";
   if (err.code === "VALIDATION_ERROR") return "질문은 2,000자까지 적을 수 있어요.";
   if (err.code === "RATE_LIMITED")
-    return "오늘은 이 네트워크에서 질문을 많이 했어요. 내일 다시 오시거나 로그인해 주세요.";
+    return "이 네트워크에서 질문을 많이 했어요. 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.";
   return `${err.message}${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
 }
 
@@ -109,7 +109,7 @@ export function useAsk(opts: { parentInquiryId?: string } = {}) {
 
   const modals =
     pending.kind === "login" ? (
-      <LoginNotice reason="quota" onClose={close} />
+      <LimitNotice onClose={close} />
     ) : pending.kind === "consent" ? (
       <ConsentModal
         categories={pending.categories}
@@ -149,7 +149,7 @@ export function useAsk(opts: { parentInquiryId?: string } = {}) {
       </Modal>
     ) : null;
 
-  return { busy, error, setError, send, modals, needLogin: () => setPending({ kind: "login" }) };
+  return { busy, error, setError, send, modals, showLimit: () => setPending({ kind: "login" }) };
 }
 
 function ConsentModal({
@@ -169,7 +169,8 @@ function ConsentModal({
     <Modal title="민감한 정보가 들어 있을 수 있어요" onClose={onClose}>
       <p className="text-muted text-[15px] leading-relaxed">
         {names ? `${names} 같은 ` : "건강이나 범죄경력 같은 "}정보는 따로 동의를 받은 뒤에만
-        처리하고 저장해요. 동의하지 않으면 아무것도 저장하지 않아요.
+        처리하고 저장해요. 동의하면 가린 문장으로 법제처 법령·판례 검색도 해요. 동의하지 않으면
+        아무것도 저장하지 않아요.
       </p>
       <label className="text-ink mt-4 flex min-h-11 items-center gap-2.5 text-[15px]">
         <input

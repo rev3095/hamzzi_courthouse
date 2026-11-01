@@ -16,7 +16,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import { HamzziJudge } from "../HamzziJudge";
-import { LoginNotice } from "../LoginNotice";
+import { DEMO_LIMIT_TEXT } from "../LimitNotice";
 import { PrimaryButton, SecondaryButton } from "../Modal";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -251,12 +251,12 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
   },
   TIMEOUT: { title: "시간이 너무 오래 걸렸어요", body: "잠시 후 다시 시도해 주세요." },
   RATE_LIMITED: {
-    title: "오늘은 이 네트워크에서 질문을 많이 했어요",
-    body: "같은 네트워크에서는 하루에 분석할 수 있는 횟수가 정해져 있어요. 내일 다시 오시거나 로그인해 주세요.",
+    title: "이 네트워크에서 질문을 많이 했어요",
+    body: "같은 네트워크에서는 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.",
   },
   LOGIN_REQUIRED: {
-    title: "무료 질문 3번을 모두 썼어요",
-    body: "로그인하면 계속 물어볼 수 있어요.",
+    title: "질문 3번을 모두 썼어요",
+    body: DEMO_LIMIT_TEXT,
   },
   NOT_FOUND: {
     title: "결과를 찾을 수 없어요",
@@ -285,7 +285,6 @@ function Problem({
   onRetry: () => void;
   onConfirmPii: () => void;
 }) {
-  const [login, setLogin] = useState(error.code === "LOGIN_REQUIRED");
   // INTERNAL_ERROR 등은 고정 문구만 (예외 내용 표시 금지)
   const text = PROBLEM_TEXT[error.code] ?? {
     title: "일시적인 오류가 발생했어요",
@@ -327,9 +326,6 @@ function Problem({
         {error.code === "PII_CONFIRMATION_REQUIRED" && (
           <PrimaryButton onClick={onConfirmPii}>가린 문장으로 분석하기</PrimaryButton>
         )}
-        {(error.code === "LOGIN_REQUIRED" || error.code === "RATE_LIMITED") && (
-          <SecondaryButton onClick={() => setLogin(true)}>로그인</SecondaryButton>
-        )}
         <Link
           href="/"
           className="rounded-button border-line text-ink flex min-h-11 items-center border bg-white px-5 text-[15px]"
@@ -345,7 +341,6 @@ function Problem({
       {error.requestId && (
         <p className="text-muted mt-1 text-center text-xs">오류 번호 {error.requestId}</p>
       )}
-      {login && <LoginNotice reason="quota" onClose={() => setLogin(false)} />}
     </section>
   );
 }
@@ -353,7 +348,7 @@ function Problem({
 function FollowUp({ parentId }: { parentId: string }) {
   const [text, setText] = useState("");
   const quota = useQuota();
-  const { busy, error, send, modals, needLogin } = useAsk({ parentInquiryId: parentId });
+  const { busy, error, send, modals, showLimit } = useAsk({ parentInquiryId: parentId });
   const blocked = quota?.loginRequired === true;
   return (
     <section aria-labelledby="follow-title" className="mt-8">
@@ -364,7 +359,7 @@ function FollowUp({ parentId }: { parentId: string }) {
         <QuestionBox
           value={text}
           onChange={setText}
-          onSubmit={() => (blocked ? needLogin() : void send(text))}
+          onSubmit={() => (blocked ? showLimit() : void send(text))}
           busy={busy}
           size="md"
           label="이어서 물어보기"

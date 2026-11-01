@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function InquiryPage() {
   return (
-    <main className="flex flex-1 flex-col bg-bg">
+    <main className="bg-bg flex flex-1 flex-col">
       <Suspense>
         <ResultRoute />
       </Suspense>

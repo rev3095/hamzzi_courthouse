@@ -3,7 +3,10 @@ import type { DemoAnalysisResult } from "@/lib/citations/policy";
 
 export type SourceRef = { label: string; url: string | null };
 
-/** 근거 키("law:민법:제565조" / "case:2024다321973") → 화면 이름과 법제처 원문 주소. 응답에 없는 근거면 키를 그대로 */
+// 응답 목록에 없는 근거 키는 이름을 지어 보이지 않는다 (서버가 이미 걸러 실제로는 생기지 않음)
+const UNKNOWN_SOURCE: SourceRef = { label: "출처 확인 필요", url: null };
+
+/** 근거 키("law:민법:제565조" / "case:2024다321973") → 화면 이름과 법제처 원문 주소. 응답에 없는 근거면 "출처 확인 필요" */
 export function sourceRef(
   key: string,
   r: Pick<DemoAnalysisResult, "articles" | "cases">,
@@ -12,11 +15,11 @@ export function sourceRef(
     // 답변 근거 키는 사건번호, 재검색 키는 판례 일련번호일 수 있다
     const ref = key.slice("case:".length);
     const c = r.cases.find((x) => x.caseNo === ref || x.id === ref);
-    return c ? { label: `${c.court} ${c.caseNo}`, url: c.sourceUrl } : { label: ref, url: null };
+    return c ? { label: `${c.court} ${c.caseNo}`, url: c.sourceUrl } : UNKNOWN_SOURCE;
   }
   const a = r.articles.find((x) => x.id === key);
   if (a) return { label: `${a.lawName} ${a.articleNo}`, url: a.sourceUrl };
-  return { label: key.replace(/^law:/, "").replace(/:/g, " "), url: null };
+  return UNKNOWN_SOURCE;
 }
 
 /** "2026-06-24" → "2026.06.24". 형식이 다르면 그대로 */

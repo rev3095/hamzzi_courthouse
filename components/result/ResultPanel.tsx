@@ -20,6 +20,7 @@ export function ResultPanel({
 }) {
   const [tab, setTab] = useState<ResultTab>(firstTab(result));
   const searchOnly = result.mode === "search_only";
+  const usedArticles = result.articles.filter((a) => a.used).length;
   const usedCases = result.cases.filter((c) => c.used).length;
   const tabs: { key: ResultTab; label: string }[] = [
     { key: "answer", label: "답변" },
@@ -38,7 +39,10 @@ export function ResultPanel({
         <div>
           <p className="text-ink text-[15px] font-bold">햄찌 판사의 정리</p>
           <p className="text-muted text-[13px]">
-            AI 캐릭터 · {searchOnly ? "AI 답변 없이 검색 결과만" : `근거 판례 ${usedCases}건 인용`}
+            AI 캐릭터 ·{" "}
+            {searchOnly
+              ? "AI 답변 없이 검색 결과만"
+              : `근거 법령 ${usedArticles}건 · 판례 ${usedCases}건 인용`}
           </p>
         </div>
       </div>
@@ -145,7 +149,7 @@ function AnswerTab({ result }: { result: DemoAnalysisResult }) {
             <p className="text-ink text-base leading-[1.75]">{p.text}</p>
             <div className="border-gold-line mt-3 border-l-2 pl-3">
               <p className="text-muted text-[13px]">출처 · {ref.label}</p>
-              <p className="text-ink mt-1 text-sm leading-relaxed">“{p.quote}”</p>
+              {p.quote && <p className="text-ink mt-1 text-sm leading-relaxed">“{p.quote}”</p>}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <span
@@ -194,7 +198,7 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
             {a.title && ` (${a.title})`}
           </p>
           {a.effectiveFrom && (
-            <p className="text-muted text-[13px]">시행 {dotDate(a.effectiveFrom)} · 현행</p>
+            <p className="text-muted text-[13px]">시행 {dotDate(a.effectiveFrom)}</p>
           )}
           <OriginalLink url={a.sourceUrl} label="법제처 원문 보기 →" />
         </li>
@@ -246,11 +250,13 @@ function VerifyTab({ result }: { result: DemoAnalysisResult }) {
   return (
     <div>
       <p className="text-ink text-[15px] font-semibold">
-        인용 {recheck.items.length}건을 법제처에서 다시 조회했어요
+        {result.mode === "replay"
+          ? `예시를 만들 때 인용 ${recheck.items.length}건을 법제처에서 다시 조회했어요`
+          : `인용 ${recheck.items.length}건을 법제처에서 다시 조회했어요`}
       </p>
       <p className="text-muted mt-1 text-sm leading-relaxed">
-        두 단계로 확인해요. ① 인용 구절이 원문과 글자 그대로 같은지 ② 조문·사건번호가 법제처에
-        실제로 있는지.
+        두 단계로 확인해요. ① 인용 구절이 그때 가져온 원문과 글자 그대로 같은지 ② 조문·사건번호가
+        법제처에 실제로 있는지(재조회).
       </p>
       <ul className="mt-4 flex flex-col gap-2">
         {recheck.items.map((it) => (
