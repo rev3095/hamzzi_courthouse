@@ -367,6 +367,7 @@ describe("DEC-015 모드 스위치와 fallback", () => {
     expect(aiMode({})).toBe("free");
     expect(aiMode({ AI_MODE: "live" })).toBe("free");
     expect(aiMode({ AI_MODE: " PRO " })).toBe("pro");
+    expect(aiMode({ AI_MODE: "pro-full" })).toBe("pro-full");
   });
 
   test("서버 fallback은 Opus·Sonnet에만 붙인다", async () => {

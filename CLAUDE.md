@@ -18,6 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   5. `[게이트]` 기능(F-010~F-012), 모든 과금, 법률문서 생성은 F-013 승인 전 비활성 상태로만 구현한다.
   6. 모든 AI 결과에 "AI 생성 · 법률 자문 아님"을 표시한다. 문구는 직접 쓰지 말고 `AI_NOTICE`(lib/api/respond.ts)를 쓴다.
   7. 비로그인은 질문 3회(이어 묻기 포함)만 허용하고, 그 이후 요청은 서버에서 `LOGIN_REQUIRED`로 막는다 (DEC-005, DEC-010).
+  8. **유료 API 테스트·QA를 반복하지 않는다 (사용자 절대 규칙, 2026-11-15).** Claude 생성 호출(messages)이 들어가는 확인은 정말 필요할 때만 1~2번, 그때마다 예상 금액을 먼저 말하고 허락을 받는다. 검증은 가짜 모델 단위 테스트와 무과금 토큰 세기(count_tokens)·모델 정보 조회로 한다.
 
 ## 문서 지도 (필요할 때만 읽기)
 | 문서 | 언제 |
@@ -63,7 +64,8 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
 - `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
 - `AI_MODE` 분석 모드 (DEC-015): 없으면 **무료 모드**(Claude 호출 없음, 예시 재생 + 법제처 검색 전용). `pro`일 때만 Claude 분석 — Console API 크레딧이 별도 과금되므로 기본 꺼짐. 유료 버전 보존: 태그 `paid-ai-v1`. Pro는 모든 단계 Haiku 5.5, 질문 1건 $0.015 상한을 코드로 강제(DEC-019, lib/ai/cost.ts)
-- `AI_DAILY_LIMIT` Pro 분석 하루 전체 건수 상한 (기본 200). 넘으면 그날은 무료 모드
+- `AI_MODE=pro`는 **라이트 답변**(DEC-020): 무료 법제처 검색 + Haiku 답변 1회, 질문 1건 **$0.001** 상한(추후 $0.0015 예정). 전체 파이프라인($0.015, DEC-019)은 `AI_MODE=pro-full`로만 켜진다. 유료 모드라도 예시 질문은 재생(비용 0)
+- `AI_DAILY_LIMIT` 유료 분석 하루 전체 건수 상한 (기본 100). 넘으면 그날은 무료 모드
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더

@@ -11,6 +11,13 @@ export const PRICES: Record<string, Price> = {
 
 /** 질문 1건 상한 (사용자 결정: Claude Console 기준 $0.01~0.015 안팎) */
 export const COST_CAP_USD = 0.015;
+/**
+ * 라이트 모드(AI_MODE=pro, DEC-020) 질문 1건 상한 — 사용자 결정 $0.001.
+ * 배분: 입력 6,000토큰($0.0006) + 출력 800토큰($0.0004). 입력은 호출 전에 무과금 토큰 세기로 확인한다.
+ */
+export const LITE_COST_CAP_USD = 0.001;
+export const LITE_ANSWER_TOKENS = { max: 800, min: 500 } as const;
+
 /** 재검색이 답변 몫을 먹지 않게 남겨 두는 금액 */
 export const ANSWER_RESERVE_USD = 0.005;
 /** 이 이상이면 비싼 장문 구간 단가가 붙으므로 요청하지 않는다 */

@@ -17,14 +17,14 @@ export const LOOKUP_RATE: RateRule = { bucket: "lookup", limit: 120, windowSecon
 export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds: 3600 };
 
 /**
- * Pro(Claude) 분석 하루 전체 상한 (DEC-019). 질문 1건 상한 $0.015 × 건수 = 하루 최대 비용.
- * 기본 200건(하루 최대 약 $3). AI_DAILY_LIMIT 환경변수로 바꾼다.
+ * 유료(Claude) 분석 하루 전체 상한 (DEC-019·020). 질문 1건 상한 × 건수 = 하루 최대 비용.
+ * 기본 100건 — 라이트($0.001)면 하루 최대 약 $0.10, pro-full($0.015)이면 약 $1.5. AI_DAILY_LIMIT로 바꾼다.
  */
 export function aiDailyRule(env: Record<string, string | undefined> = process.env): RateRule {
   const n = Number.parseInt(env.AI_DAILY_LIMIT ?? "", 10);
   return {
     bucket: "ai_daily",
-    limit: Number.isFinite(n) && n >= 0 ? n : 200,
+    limit: Number.isFinite(n) && n >= 0 ? n : 100,
     windowSeconds: 86_400,
   };
 }

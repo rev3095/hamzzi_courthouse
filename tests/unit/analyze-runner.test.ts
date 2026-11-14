@@ -13,6 +13,8 @@ const store = vi.hoisted(() => ({
 vi.mock("@/lib/inquiries/store", () => store);
 const ai = vi.hoisted(() => ({ runDemoAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/orchestrator", () => ai);
+const lite = vi.hoisted(() => ({ runLiteAnalysis: vi.fn() }));
+vi.mock("@/lib/ai/lite", () => lite);
 const free = vi.hoisted(() => ({ runFreeAnalysis: vi.fn() }));
 vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
@@ -39,8 +41,8 @@ const ANON = { kind: "anon" as const, anonSessionId: "anon-1" };
 const RESULT = { outcome: "grounded" };
 
 beforeEach(() => {
-  // 아래 기존 테스트는 Pro 모드(실제 분석) 경로다. 무료 모드는 맨 아래 describe에서 따로 본다
-  vi.stubEnv("AI_MODE", "pro");
+  // 아래 기존 테스트는 전체 파이프라인(pro-full) 경로다. 라이트(pro)·무료 모드는 아래 describe에서 따로 본다
+  vi.stubEnv("AI_MODE", "pro-full");
   vi.clearAllMocks();
   calls.length = 0;
   store.loadFollowupContext.mockResolvedValue([{ question: "앞 질문", answer: "앞 답" }]);
@@ -141,7 +143,7 @@ describe("DEC-015 무료 모드 (기본)", () => {
   });
 
   test("DEC-019 Pro라도 하루 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
-    vi.stubEnv("AI_MODE", "pro");
+    vi.stubEnv("AI_MODE", "pro-full");
     rate.tryGlobalQuota.mockResolvedValueOnce(false);
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "search_only", outcome: "grounded" },
@@ -163,5 +165,46 @@ describe("DEC-015 무료 모드 (기본)", () => {
     });
     expect(store.finishAnalysis).not.toHaveBeenCalled();
     expect(store.markInquiryFailed).toHaveBeenCalledWith("inq-1");
+  });
+});
+
+describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
+  const LITE_OUT = {
+    draft: { answer: { points: [] } },
+    evidence: {},
+    dropped: [],
+    usage: { inputTokens: 5_000, outputTokens: 500, cacheReadTokens: 0 },
+    model: "claude-haiku-5-5",
+    promptVersion: "lite",
+    costUsd: 0.00075,
+    costCapped: false,
+  };
+
+  test("AI_MODE=pro는 전체 파이프라인이 아니라 라이트 답변을 부른다", async () => {
+    vi.stubEnv("AI_MODE", "pro");
+    lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
+    await analyzeInquiry(INQ, ANON, new Headers());
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      { maskedText: "마스킹본", context: expect.anything() },
+      expect.anything(),
+    );
+    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
+    expect(cite.verifyDraft).toHaveBeenCalled();
+    expect(store.finishAnalysis).toHaveBeenCalled();
+  });
+
+  test("유료 모드라도 예시 질문은 미리 만든 분석을 재생하고 하루 상한을 쓰지 않는다 (비용 0)", async () => {
+    vi.stubEnv("AI_MODE", "pro");
+    const { demoExamples } = await import("@/lib/demo/policy");
+    free.runFreeAnalysis.mockResolvedValue({
+      result: { mode: "replay", outcome: "grounded" },
+      citations: [],
+      stats: { total: 1, removed: 0 },
+      model: "replay",
+    });
+    await analyzeInquiry({ ...INQ, masked_text: demoExamples()[0].question }, ANON, new Headers());
+    expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
+    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+    expect(free.runFreeAnalysis).toHaveBeenCalled();
   });
 });

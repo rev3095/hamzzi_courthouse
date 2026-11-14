@@ -4,7 +4,7 @@ import type { StepEvent } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import type { CitationRow, DemoAnalysisResult } from "@/lib/citations/policy";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
-import type { CaseHit } from "@/lib/search/types";
+import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import {
   FREE_STEP_MESSAGES,
   caseQueriesFrom,
@@ -43,6 +43,26 @@ export async function runFreeAnalysis(
     };
   }
 
+  const { articles, cases, searches } = await freeSearch(maskedText, deps);
+  return {
+    result: searchOnlyResult({ articles, cases, searches }),
+    citations: [],
+    stats: { total: 0, removed: 0 },
+    model: "search_only",
+  };
+}
+
+export type FreeSearch = {
+  articles: ArticleHit[];
+  cases: (CaseHit | CaseDetail)[];
+  searches: { keyword: string; total: number }[];
+};
+
+/** LLM 없이 법제처만으로 근거를 찾는다 (무료). 무료 모드와 라이트 답변(DEC-020)이 같이 쓴다 */
+export async function freeSearch(
+  maskedText: string,
+  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void } = {},
+): Promise<FreeSearch> {
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   deps.onStep?.({ stage: "search", message: FREE_STEP_MESSAGES.search });
 
@@ -93,11 +113,5 @@ export async function runFreeAnalysis(
     message: FREE_STEP_MESSAGES.search,
     added: [...articles.map((a) => a.id), ...cases.map((c) => `case:${c.caseNo}`)],
   });
-
-  return {
-    result: searchOnlyResult({ articles, cases, searches }),
-    citations: [],
-    stats: { total: 0, removed: 0 },
-    model: "search_only",
-  };
+  return { articles, cases, searches };
 }

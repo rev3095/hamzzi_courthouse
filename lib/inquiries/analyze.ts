@@ -4,11 +4,12 @@
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
 import { aiDailyRule, tryGlobalQuota } from "@/lib/auth/rate-limit";
+import { runLiteAnalysis } from "@/lib/ai/lite";
 import { runDemoAnalysis } from "@/lib/ai/orchestrator";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
-import { FREE_PROMPT_VERSION } from "@/lib/demo/policy";
+import { FREE_PROMPT_VERSION, findExample } from "@/lib/demo/policy";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import {
   finishAnalysis,
@@ -30,9 +31,15 @@ export async function analyzeInquiry(
   const started = Date.now();
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
-    // Pro라도 하루 전체 상한(DEC-019)을 넘으면 그날은 무료 모드로 처리한다 — 운영자 하루 최대 비용 고정.
+    // 유료 모드라도 예시 질문은 미리 만든 분석을 재생한다(비용 0). 하루 전체 상한(DEC-019·020)을 넘으면
+    // 그날은 무료 모드로 처리한다 — 운영자 하루 최대 비용 고정.
     // 비로그인 3회 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7)
-    if (aiMode() === "free" || !(await tryGlobalQuota(aiDailyRule()))) {
+    const mode = aiMode();
+    if (
+      mode === "free" ||
+      findExample(inquiry.masked_text) !== null ||
+      !(await tryGlobalQuota(aiDailyRule()))
+    ) {
       const free = await runFreeAnalysis(inquiry.masked_text, { onStep });
       const resultId = await finishAnalysis(
         {
@@ -52,10 +59,14 @@ export async function analyzeInquiry(
     }
 
     const context = await loadFollowupContext(inquiry.parent_inquiry_id, owner);
-    const analysis = await runDemoAnalysis(
-      { maskedText: inquiry.masked_text, context },
-      { onStep, budgetMs: ANALYSIS_BUDGET_MS },
-    );
+    // pro = 라이트 Haiku 답변 1회, 질문 1건 $0.001 (DEC-020) / pro-full = 전체 파이프라인 $0.015 (DEC-019)
+    const analysis =
+      mode === "pro-full"
+        ? await runDemoAnalysis(
+            { maskedText: inquiry.masked_text, context },
+            { onStep, budgetMs: ANALYSIS_BUDGET_MS },
+          )
+        : await runLiteAnalysis({ maskedText: inquiry.masked_text, context }, { onStep });
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep,
       screened: analysis.dropped.length,

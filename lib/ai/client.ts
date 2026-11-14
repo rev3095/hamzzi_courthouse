@@ -94,17 +94,18 @@ let client: Anthropic | null = null;
 
 export function createModelClient(): ModelClient {
   // 무료 모드(기본)에서는 Claude 클라이언트를 만들지 않는다 — 별도 과금 차단의 마지막 방어선 (DEC-015)
-  if (aiMode() !== "pro") throw new Error("AI_MODE가 pro가 아니라 Claude를 부르지 않습니다");
+  if (aiMode() === "free") throw new Error("AI_MODE가 pro가 아니라 Claude를 부르지 않습니다");
   client ??= new Anthropic({
     apiKey: required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY),
-    maxRetries: 1,
+    // 재시도 없음 (DEC-020): 실패한 요청도 과금될 수 있어 같은 요청을 두 번 보내지 않는다
+    maxRetries: 0,
     // ANTHROPIC_LOG=debug면 요청 본문(마스킹본·근거)이 콘솔에 찍힌다. 코드에서 고정한다 (F-007)
     logLevel: "off",
   });
   const sdk = client;
   return {
     create: (params, { timeoutMs }) =>
-      sdk.beta.messages.create(params, { timeout: timeoutMs, maxRetries: 1 }),
+      sdk.beta.messages.create(params, { timeout: timeoutMs, maxRetries: 0 }),
     // 토큰 세기는 과금되지 않는다. 비용 상한 확인에만 쓴다 (DEC-019)
     countTokens: async (params) => {
       const r = await sdk.beta.messages.countTokens(
