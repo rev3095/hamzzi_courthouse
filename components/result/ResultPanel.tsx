@@ -12,6 +12,7 @@ import {
   difficultyLabel,
   evidenceSummary,
   procedurePlan,
+  shortcutOf,
   recommendText,
   type ProcedurePlan,
 } from "@/lib/procedure/policy";
@@ -88,6 +89,8 @@ export function ResultPanel({
       {plan.kind === "timeline" ? (
         <>
           <ProcedureTimeline
+            section={plan.section}
+            title={plan.title}
             steps={plan.steps}
             recommendedKey={plan.recommended.key}
             onAskStep={onAskStep}
@@ -214,18 +217,18 @@ function Details({ result }: { result: DemoAnalysisResult }) {
   );
 }
 
-/** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 게이트 안내 화면으로 간다 */
+/** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 게이트 안내 화면, 그 밖에는 그 단계의 공식 창구로 간다 */
 function NextSteps({ plan, onDeepAsk }: { plan: ProcedurePlan; onDeepAsk?: () => void }) {
-  const doc = plan.kind === "timeline" ? plan.recommended.document : undefined;
+  const go = plan.kind === "timeline" ? shortcutOf(plan.recommended) : null;
+  const cardClass =
+    "rounded-card bg-ink flex min-h-[72px] items-center justify-between gap-3 px-5 py-4 text-white";
+  const title = plan.kind === "timeline" ? `${plan.recommended.label} 바로 가기` : "";
   return (
     <section aria-label="다음 단계" className="mt-4 grid gap-3 lg:grid-cols-2">
-      {plan.kind === "timeline" && doc && (
-        <Link
-          href={`/documents/${doc}`}
-          className="rounded-card bg-ink flex min-h-[72px] items-center justify-between gap-3 px-5 py-4 text-white"
-        >
+      {go?.kind === "document" && (
+        <Link href={go.href} className={cardClass}>
           <span>
-            <span className="block text-base font-bold">{plan.recommended.label} 바로 가기</span>
+            <span className="block text-base font-bold">{title}</span>
             <span className="mt-0.5 block text-[13px] text-white/75">
               작성 요령 · 공식 양식 안내 (문서 자동 작성은 법률 검토 후 열려요)
             </span>
@@ -234,6 +237,19 @@ function NextSteps({ plan, onDeepAsk }: { plan: ProcedurePlan; onDeepAsk?: () =>
             →
           </span>
         </Link>
+      )}
+      {go?.kind === "official" && (
+        <a href={go.href} target="_blank" rel="noopener noreferrer" className={cardClass}>
+          <span>
+            <span className="block text-base font-bold">{title}</span>
+            <span className="mt-0.5 block text-[13px] text-white/75">
+              {go.label} 공식 사이트로 이동 (새 창)
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-xl">
+            ↗
+          </span>
+        </a>
       )}
       <button
         type="button"

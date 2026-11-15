@@ -25,10 +25,16 @@ const DOT: Record<Difficulty, string> = {
 type Open = { index: number; pinned: boolean } | null;
 
 export function ProcedureTimeline({
+  section,
+  title,
   steps,
   recommendedKey,
   onAskStep,
 }: {
+  /** 홈 예시 질문 섹션 이름 (예: 임대차) */
+  section: string;
+  /** 타임라인 이름 (예: 보증금 반환) */
+  title: string;
   steps: ProcedureStep[];
   recommendedKey: string;
   onAskStep?: (question: string) => void;
@@ -66,6 +72,9 @@ export function ProcedureTimeline({
         <h2 id={`${baseId}-title`} className="font-display text-ink text-[19px] font-bold">
           절차 타임라인
         </h2>
+        <span className="rounded-button border-gold-line text-ink border bg-white px-2.5 py-0.5 text-[13px] font-semibold">
+          {section} · {title}
+        </span>
         <span className="bg-cream text-label rounded-[6px] px-2 py-0.5 text-xs font-semibold">
           {PROCEDURE_NOTICE}
         </span>
@@ -74,7 +83,7 @@ export function ProcedureTimeline({
         단계에 마우스를 올리거나 눌러 보면 준비할 것과 주의할 점이 나와요.
       </p>
 
-      <ol ref={listRef} className="relative mt-5 flex" aria-label="민사 절차 단계">
+      <ol ref={listRef} className="relative mt-5 flex" aria-label="절차 단계">
         {steps.map((s, i) => {
           const isOpen = open?.index === i;
           const recommended = s.key === recommendedKey;

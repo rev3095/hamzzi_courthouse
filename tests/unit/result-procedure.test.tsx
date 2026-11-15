@@ -51,7 +51,7 @@ describe("F-014 결과 요약형 레이아웃", () => {
 
   test("DEC-021 타임라인은 참고용 표시와 단계별 난이도 라벨을 단다", () => {
     renderLease();
-    const list = screen.getByRole("list", { name: "민사 절차 단계" });
+    const list = screen.getByRole("list", { name: "절차 단계" });
     expect(within(list).getAllByRole("button", { expanded: false }).length).toBeGreaterThanOrEqual(
       6,
     );
@@ -72,19 +72,26 @@ describe("F-014 결과 요약형 레이아웃", () => {
     expect(within(details).getByRole("tab", { name: "답변" })).toBeDefined();
   });
 
-  test("노동 문제는 타임라인 대신 유형 안내와 공식 링크", () => {
+  test("DEC-021 노동(임금·퇴직금)은 고용노동부 진정 타임라인, 바로 가기는 공식 창구(새 창)", () => {
     render(
       <ResultPanel result={resultOf(wage.question)} question={wage.question} followUp={null} />,
     );
-    expect(screen.queryByRole("list", { name: "민사 절차 단계" })).toBeNull();
-    expect(screen.getByText(/임금·퇴직금·해고 문제는 절차가 따로 있어요/)).toBeDefined();
-    expect(screen.queryByText(/바로 가기/)).toBeNull();
+    const list = screen.getByRole("list", { name: "절차 단계" });
+    expect(within(list).getByRole("button", { name: /고용노동부 진정/ })).toBeDefined();
+    expect(screen.getByText("노동 · 임금·퇴직금 체불")).toBeDefined();
+    expect(
+      screen.getByText("현재 위 내용을 기반으로 먼저 고용노동부 진정을 추천드립니다"),
+    ).toBeDefined();
+    const go = screen.getByRole("link", { name: /고용노동부 진정 바로 가기/ });
+    expect(go.getAttribute("href")).toBe("https://www.moel.go.kr");
+    expect(go.getAttribute("target")).toBe("_blank");
+    expect(within(list).queryByRole("button", { name: /내용증명/ })).toBeNull();
   });
 });
 
 describe("F-014 마일스톤 팝업 접근성", () => {
   const node = (name: RegExp) =>
-    within(screen.getByRole("list", { name: "민사 절차 단계" })).getByRole("button", { name });
+    within(screen.getByRole("list", { name: "절차 단계" })).getByRole("button", { name });
 
   test("키보드 포커스로 열리고 aria-describedby로 팝업을 가리키며 Esc로 닫힌다", () => {
     renderLease();

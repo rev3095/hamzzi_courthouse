@@ -1,9 +1,17 @@
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { demoExamples, findExample, replayResult } from "@/lib/demo/policy";
-import { classifyCase, evidenceSummary, josaEulReul, procedurePlan, recommendText } from "./policy";
+import {
+  classifyCase,
+  evidenceSummary,
+  josaEulReul,
+  NOTICE_TEXTS,
+  procedurePlan,
+  recommendText,
+  shortcutOf,
+} from "./policy";
 import { DOCUMENT_SPECS } from "@/lib/documents/policy";
-import { ALL_STEPS, DIFFICULTY_LABEL, OFFICIAL, PROCEDURE_NOTICE } from "./steps";
+import { ALL_STEPS, DIFFICULTY_LABEL, OFFICIAL, PROCEDURE_NOTICE, TRACKS } from "./steps";
 
 const example = (id: string) => {
   const e = demoExamples().find((x) => x.id === id)!;
@@ -33,12 +41,15 @@ function allFixedTexts(): string[] {
     procedurePlan(bare(["민법", "형법"]), "중고거래로 보낸 돈을 못 받았어요"),
     procedurePlan(bare(["주택임대차보호법"]), "전세 보증금을 돌려받지 못했어요"),
     procedurePlan(bare(["근로기준법"]), null),
+    procedurePlan(bare(["근로기준법"]), "해고됐어요"),
     procedurePlan(bare(["형법"]), "처벌할 수 있나요"),
     procedurePlan(bare(["민법"]), "소장을 받았어요"),
     procedurePlan(bare(["민법"]), null),
   ];
   return [
     ...ALL_STEPS.flatMap((s) => [s.label, s.question, ...s.prepare, ...s.cautions]),
+    ...Object.values(TRACKS).flatMap((t) => [t.section, t.title, t.reason, t.note ?? ""]),
+    ...NOTICE_TEXTS,
     ...plans.flatMap((p) =>
       p.kind === "timeline"
         ? [p.reason, p.note ?? "", recommendText(p.recommended)]
@@ -83,42 +94,87 @@ describe("F-014 절차 단계 상수 (DEC-021)", () => {
 
   test("공식 안내 링크는 정부·법원·공공기관 https 주소만", () => {
     for (const l of Object.values(OFFICIAL))
-      expect(l.url).toMatch(/^https:\/\/[a-z.-]+\.(go|or)\.kr$/);
+      expect(l.url).toMatch(/^https:\/\/([a-z-]+\.)+(go\.kr|or\.kr|gov\.kr)$/);
   });
 });
 
-describe("F-014 사건 유형 분류 (규칙)", () => {
-  test("보증금 반환 질문은 주택 임대차 타임라인, 첫 추천은 내용증명", () => {
-    const { question, result } = example("lease-01");
+describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
+  // 홈 예시 질문 섹션마다 절차가 다르다 (DEC-021): 예시 10개가 각자 맞는 타임라인으로 간다
+  test.each([
+    ["lease-01", "lease_deposit", "임대차", "notice"],
+    ["lease-02", "lease_residence", "임대차", "facts"],
+    ["lease-03", "lease_residence", "임대차", "facts"],
+    ["deposit-01", "contract_deposit", "계약금", "notice"],
+    ["deposit-02", "contract_deposit", "계약금", "notice"],
+    ["wage-02", "wage", "노동", "complaint"],
+    ["trap-number", "dismissal", "노동", "remedy"],
+    ["fraud-01", "fraud", "사기", "report"],
+    ["other-01", "traffic", "교통사고", "records"],
+    ["trap-vague", "neighbor", "이웃 분쟁", "talk"],
+  ])("예시 %s → %s 타임라인 (섹션 %s, 먼저 %s)", (id, track, section, first) => {
+    const { question, result } = example(id);
     const plan = procedurePlan(result, question);
     expect(plan.kind).toBe("timeline");
     if (plan.kind !== "timeline") return;
-    expect(plan.caseType).toBe("lease_deposit");
-    expect(plan.steps.map((s) => s.key)).toContain("lease_registration");
-    expect(plan.recommended.key).toBe("notice");
+    expect(plan.caseType).toBe(track);
+    expect(plan.section).toBe(section);
+    expect(plan.recommended.key).toBe(first);
   });
 
-  test("계약금 반환 질문은 민사 금전 타임라인", () => {
-    for (const id of ["deposit-01", "deposit-02"]) {
-      const { question, result } = example(id);
-      expect(classifyCase(result, question), id).toBe("money");
+  test("섹션 예시 분야(홈 피드 칩)와 타임라인 섹션 이름이 같다", () => {
+    for (const e of demoExamples()) {
+      const plan = procedurePlan(replayResult(findExample(e.question)!), e.question);
+      if (plan.kind === "timeline") expect(plan.section, e.id).toBe(e.area);
     }
   });
 
-  test("임금·퇴직금·해고는 타임라인 대신 유형 안내", () => {
-    for (const id of ["wage-02", "trap-number"]) {
-      const { question, result } = example(id);
-      const plan = procedurePlan(result, question);
-      expect(plan.kind, id).toBe("notice");
-      if (plan.kind === "notice") expect(plan.caseType).toBe("labor");
+  test("타임라인마다 단계 구성이 서로 다르다", () => {
+    const shapes = Object.values(TRACKS).map((t) => t.steps.map((s) => s.label).join(">"));
+    expect(new Set(shapes).size).toBe(shapes.length);
+  });
+
+  test("임차권등기명령은 주택 보증금 타임라인에만 있다", () => {
+    const { question, result } = example("lease-01");
+    const plan = procedurePlan(result, question);
+    if (plan.kind === "timeline") {
+      expect(plan.steps.map((s) => s.key)).toContain("lease_registration");
+    }
+    for (const t of Object.values(TRACKS).filter((t) => t.key !== "lease_deposit")) {
+      expect(t.steps.map((s) => s.key)).not.toContain("lease_registration");
     }
   });
 
-  test("형사·민사가 겹친 사기 질문은 민사 타임라인 + 형사 고소 별도 안내", () => {
+  test("질문 문장이 없어도 결과의 법령 이름으로 섹션을 고른다", () => {
+    expect(classifyCase(bare(["근로자퇴직급여 보장법"]), null)).toBe("wage");
+    expect(classifyCase(bare(["자동차손해배상 보장법", "민법"]), null)).toBe("traffic");
+    expect(classifyCase(bare(["동물보호법", "민법"]), null)).toBe("neighbor");
+  });
+
+  test("바로 가기: 내용증명은 게이트 안내 화면, 그 밖에는 그 단계의 공식 창구", () => {
+    expect(shortcutOf(TRACKS.lease_deposit.steps.find((s) => s.key === "notice")!)).toEqual({
+      kind: "document",
+      href: "/documents/demand-letter",
+    });
+    const wage = shortcutOf(TRACKS.wage.steps.find((s) => s.key === "complaint")!);
+    expect(wage).toEqual({
+      kind: "official",
+      href: "https://www.moel.go.kr",
+      label: "고용노동부 (임금체불 진정 안내)",
+    });
+    // 단계 이름과 어긋나는 곳으로 보내지 않는다: 정해 둔 창구가 없으면 바로 가기 카드 없음
+    expect(shortcutOf(TRACKS.neighbor.steps.find((s) => s.key === "talk")!)).toBeNull();
+    expect(shortcutOf(TRACKS.traffic.steps.find((s) => s.key === "records")!)).toBeNull();
+  });
+
+  test("형사·민사가 겹친 사기는 배상명령·민사 청구 단계와 별도 안내가 있다", () => {
     const { question, result } = example("fraud-01");
     const plan = procedurePlan(result, question);
     expect(plan.kind).toBe("timeline");
-    if (plan.kind === "timeline") expect(plan.note).toMatch(/고소/);
+    if (plan.kind !== "timeline") return;
+    expect(plan.steps.map((s) => s.key)).toEqual(
+      expect.arrayContaining(["report", "compensation_order", "civil"]),
+    );
+    expect(plan.note).toMatch(/배상명령|민사/);
   });
 
   test("형법만 찾은 질문은 형사 안내", () => {
@@ -141,13 +197,102 @@ describe("F-014 사건 유형 분류 (규칙)", () => {
     }
   });
 
+  test("갚거나 돌려줘야 하는 쪽(빌린 쪽·임대인·사업주·계약금을 받은 쪽)에게 반대쪽 절차를 보이지 않는다", () => {
+    for (const q of [
+      "친구한테 빌린 돈을 못 갚았는데 이자도 내야 하나요",
+      "세입자에게 보증금을 언제 돌려줘야 하나요",
+      "세입자가 안 나가요, 나가라고 했는데",
+      "직원이 퇴직금 달라는데 줘야 하나요",
+      "직원을 해고하려는데 어떻게 하나요",
+      "계약금을 돌려줘야 하나요",
+    ]) {
+      expect(classifyCase(bare(["민법"]), q), q).toBe("defendant");
+    }
+  });
+
+  test("상대방이 주어인 '돌려줘야 하나요'는 요구하는 쪽 질문으로 본다", () => {
+    expect(
+      classifyCase(
+        bare(["주택임대차보호법"]),
+        "계약이 끝났는데 집주인이 보증금을 언제까지 돌려줘야 하나요",
+      ),
+    ).toBe("lease_deposit");
+  });
+
+  test("고소·신고를 당했거나 사고를 낸 쪽은 피해자 타임라인 대신 수사 대응 안내", () => {
+    for (const q of ["교통사고를 냈는데 형사처벌 받나요", "사기로 신고당했어요", "고소당했어요"]) {
+      const plan = procedurePlan(bare(["형법", "민법"]), q);
+      expect(plan.kind, q).toBe("notice");
+      if (plan.kind === "notice") expect(plan.caseType, q).toBe("accused");
+    }
+  });
+
+  test("전세사기는 중고거래 사기가 아니라 보증금 타임라인 + 고소 별도 안내", () => {
+    for (const q of [
+      "전세사기를 당한 것 같아요 보증금을 못 받았어요",
+      "집주인이 연락이 끊겼어요 보증금은요",
+    ]) {
+      const plan = procedurePlan(bare(["주택임대차보호법"]), q);
+      expect(plan.kind, q).toBe("timeline");
+      if (plan.kind !== "timeline") continue;
+      expect(plan.caseType, q).toBe("lease_deposit");
+      expect(plan.note, q).toMatch(/고소/);
+    }
+  });
+
+  test("빌려준 돈은 연락이 끊겨도 대여금 절차 + 고소 별도 안내", () => {
+    const plan = procedurePlan(
+      bare(["민법"]),
+      "돈 빌려간 친구가 연락이 끊겼어요 빌려준 돈 받고 싶어요",
+    );
+    expect(plan.kind === "timeline" && plan.caseType).toBe("money");
+    if (plan.kind === "timeline") expect(plan.note).toMatch(/고소/);
+  });
+
+  test("해고 낱말만으로 부당해고로 보내지 않는다 (피해구제신청·해고예고수당·퇴직금)", () => {
+    expect(classifyCase(bare(["민법"]), "소비자원에 피해구제신청 했는데 환불을 안 해줘요")).toBe(
+      "money",
+    );
+    expect(classifyCase(bare(["근로기준법"]), "해고예고수당을 못 받았어요")).toBe("wage");
+    const plan = procedurePlan(bare(["근로기준법"]), "해고됐는데 퇴직금도 못 받았어요");
+    expect(plan.kind === "timeline" && plan.caseType).toBe("wage");
+    if (plan.kind === "timeline") expect(plan.note).toMatch(/구제신청/);
+  });
+
+  test("집이 팔린 뒤 보증금을 안 돌려주면 보증금 타임라인", () => {
+    expect(
+      classifyCase(
+        bare(["주택임대차보호법"]),
+        "집주인이 집을 팔았는데 새 집주인이 보증금을 안 돌려줘요",
+      ),
+    ).toBe("lease_deposit");
+  });
+
+  test("'중개가'·반려동물 낱말만으로 이웃 분쟁으로 보내지 않는다", () => {
+    expect(
+      classifyCase(bare(["주택임대차보호법"]), "중개가 잘못돼서 전세 보증금을 못 받았어요"),
+    ).toBe("lease_deposit");
+    expect(classifyCase(bare(["주택임대차보호법"]), "고양이 키운다고 집주인이 나가래요")).toBe(
+      "lease_residence",
+    );
+  });
+
+  test("DEC-021 자유 질문에서는 모델이 쓴 분야·목표 문장을 분류에 쓰지 않는다", () => {
+    const r = {
+      ...bare(["민법"]),
+      intent: { area: "근로자 퇴직금", goal: "", laws: ["민법"], lawKeywords: [] },
+    };
+    expect(classifyCase({ ...r, mode: "ai" }, null)).toBe("other");
+    expect(classifyCase({ ...r, mode: "replay" }, null)).toBe("wage");
+  });
+
   test("받는 쪽인지 갚는 쪽인지 알 수 없으면 타임라인을 숨긴다", () => {
     expect(
       classifyCase(bare(["민법"]), "빌려준 돈을 달라고 했더니 오히려 저보고 물어내라고 해요"),
     ).toBe("other");
   });
 
-  test("상가 임대차 보증금은 주택용 임차권등기명령 단계 없이 일반 금전 절차", () => {
+  test("상가 임대차 보증금은 주택용 단계 없이 일반 금전 절차", () => {
     expect(
       classifyCase(bare(["상가건물임대차보호법", "민법"]), "상가 월세 보증금을 못 받았어요"),
     ).toBe("money");

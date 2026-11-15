@@ -15,7 +15,7 @@ test("F-014 절차 타임라인: 호버·포커스로 팝업, Esc로 닫고 '이
     page.getByText("현재 위 내용을 기반으로 먼저 내용증명을 추천드립니다"),
   ).toBeVisible();
   await expect(page.getByText(/추천 첫 단계 · 내용증명 · 혼자 가능/)).toBeVisible();
-  const steps = page.getByRole("list", { name: "민사 절차 단계" });
+  const steps = page.getByRole("list", { name: "절차 단계" });
 
   // 마우스 호버
   const order = steps.getByRole("button", { name: /지급명령 신청/ });
@@ -74,7 +74,7 @@ test("모바일 375px에서 타임라인이 화면 밖으로 넘치지 않고 �
   await page.setViewportSize({ width: 375, height: 812 });
   await mockApi(page, { analyze: { result: replayOf(lease.question) } });
   await page.goto(`/inquiries/${INQ}`);
-  const steps = page.getByRole("list", { name: "민사 절차 단계" });
+  const steps = page.getByRole("list", { name: "절차 단계" });
   await expect(steps).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
