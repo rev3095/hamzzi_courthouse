@@ -69,7 +69,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.

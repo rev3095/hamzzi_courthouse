@@ -25,6 +25,8 @@ test("DEC-012·DEC-015 예시 질문을 누르면 재생 결과가 보인다 (AI
   await expect(page.getByText(AI_NOTICE, { exact: true })).toBeVisible();
   await expect(page.getByText(`“${ex.question}”`)).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("문제로 보여요");
+  // 기존 답변·법령·판례·검증 탭은 '세부 내용'에 접혀 있다 (DEC-021 답변 요약형)
+  await page.getByText("세부 내용", { exact: true }).click();
   await expect(page.getByText("검증됨").first()).toBeVisible();
   await expect(page.getByText("출처: 법제처 국가법령정보센터")).toBeVisible();
   expect(calls.create[0]).toEqual({ text: ex.question });
@@ -181,7 +183,7 @@ test("F-002 이어 묻기는 앞 질문 id를 함께 보낸다", async ({ page }
   const calls = await mockApi(page);
   await page.goto(`/inquiries/${INQ}`);
   await page
-    .getByRole("textbox", { name: "이어서 물어보기" })
+    .getByRole("textbox", { name: "심층 질문하기" })
     .fill("차용증이 없어도 받을 수 있나요?");
   await page.getByRole("button", { name: "물어보기" }).click();
   await expect.poll(() => calls.create.length).toBe(1);
@@ -223,9 +225,9 @@ test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서
     .first()
     .click();
   await page.waitForURL(`**/inquiries/${INQ}`);
-  await expect(page.getByText("검증됨").first()).toBeVisible();
+  await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
   await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
-  await expect(page.getByText("남은 질문 2/3 · 이어 묻기도 1번으로 세요")).toBeVisible();
+  await expect(page.getByText("남은 질문 2/3 · 심층 질문도 1번으로 세요")).toBeVisible();
   await page.getByRole("link", { name: "새 질문" }).click();
   await page.waitForURL("**/");
   await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");

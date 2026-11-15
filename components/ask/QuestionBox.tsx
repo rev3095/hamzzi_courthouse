@@ -1,7 +1,7 @@
 "use client";
 // 질문창 (Figma 05 "질문창", S-01): 질문 입력란 · 물어보기 버튼. F-001 → POST /api/v1/inquiries.
 // D+의 모드 전환 버튼(AI 질문 / 판례 검색)은 데모 범위 밖이라 뺐다.
-import { useId } from "react";
+import { useId, type Ref } from "react";
 
 export const MAX_QUESTION_CHARS = 2000; // lib/inquiries/policy MAX_INPUT_CHARS와 같다
 
@@ -13,6 +13,7 @@ export function QuestionBox({
   placeholder = "무슨 일이 있었는지 적어 주세요",
   label = "질문",
   size = "lg",
+  inputRef,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -21,6 +22,8 @@ export function QuestionBox({
   placeholder?: string;
   label?: string;
   size?: "lg" | "md";
+  /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "심층 질문하기") */
+  inputRef?: Ref<HTMLTextAreaElement>;
 }) {
   const id = useId();
   return (
@@ -36,6 +39,7 @@ export function QuestionBox({
           {label}
         </label>
         <textarea
+          ref={inputRef}
           id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}

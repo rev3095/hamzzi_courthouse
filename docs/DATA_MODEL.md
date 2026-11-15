@@ -264,4 +264,4 @@ PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용
 | OQ-DM-06 | 상담 데이터를 모델 개선·평가셋에 쓸지(`consents.model_improvement`) | consents | 9.2 |
 | OQ-DM-07 | 변호사 검증 방식과 보관할 증빙 범위 | lawyer_verifications | OQ-006 |
 | OQ-DM-08 | 게시판 공개 필드 목록 확정(`public_briefs` 컬럼) | public_briefs | OQ-004 |
-| OQ-DM-09 | 절차 템플릿의 기간·난이도 값 출처와 검수자(법률 전문가 검수 필요 여부) | procedure_templates | F-014, OQ-007 |
+| OQ-DM-09 | 절차 템플릿의 기간·난이도 값 출처와 검수자(법률 전문가 검수 필요 여부). 데모 축소판(DEC-021)은 `lib/procedure/steps.ts` 상수로 단계·준비물·난이도만 두고 기간·비용 숫자는 없음 — 법원 안내 등 공식 기준 출처를 정하면 숫자를 붙인다 | procedure_templates | F-014, OQ-007 |
