@@ -65,23 +65,23 @@ body {
   outline-offset: 2px;
 }
 
-/* 햄찌 판사 방망이 (누르면 한 번 두드림) · 분석 중 두드림 반복 */
+/* 햄찌 판사 (누르면 한 번 두드리듯 흔듦) · 분석 중 반복. 그림 한 장이라 몸 전체를 발 기준으로 움직인다 */
 @keyframes hz-knock {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: rotate(0deg) translateY(0);
   }
-  40% {
-    transform: rotate(-28deg);
+  35% {
+    transform: rotate(-5deg) translateY(-6px);
   }
-  70% {
-    transform: rotate(6deg);
+  65% {
+    transform: rotate(3deg) translateY(0);
   }
 }
-.hz-gavel-knock {
+.hz-judge-knock {
   animation: hz-knock 0.5s ease-out 1;
 }
-.hz-gavel-loop {
+.hz-judge-loop {
   animation: hz-knock 1.1s ease-in-out infinite;
 }
 
