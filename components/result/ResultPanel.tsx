@@ -137,8 +137,10 @@ function AnswerTab({ result }: { result: DemoAnalysisResult }) {
       <div className="rounded-card border-note-line bg-note border px-5 py-4">
         <p className="text-ink text-[15px] font-semibold">AI 답변 없이 검색 결과만 보여 드려요</p>
         <p className="text-muted mt-1 text-sm leading-relaxed">
-          무료 모드에서는 질문 문장으로 법제처를 검색한 결과만 보여 드려요. 법령·판례 탭에서 항목을
-          열어 원문을 확인해 주세요. 미리 분석해 둔 답변은{" "}
+          {result.mode === "search_only"
+            ? "무료 모드에서는 질문 문장으로 법제처를 검색한 결과만 보여 드려요."
+            : "이번 질문은 비용 한도 안에서 근거를 확인한 AI 답변을 만들지 못해 검색 결과만 보여 드려요."}{" "}
+          법령·판례 탭에서 항목을 열어 원문을 확인해 주세요. 미리 분석해 둔 답변은{" "}
           <Link href="/#examples" className="text-link underline">
             예시 질문
           </Link>

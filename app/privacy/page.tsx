@@ -1,12 +1,15 @@
 // 개인정보처리방침 초안 (F-007, DEC-006, DEC-010). 실제 처리 방식(코드)과 같게 쓰고, 법무 검토 후 확정한다.
-// AI_MODE=pro를 켜면 마스킹본이 AI 모델 제공자(Anthropic)로 간다 — 켜기 전에 3절을 고친다.
+// 3절은 분석 모드(AI_MODE, DEC-015·020)에 따라 바뀐다 — pro·pro-full이면 마스킹본이 AI 모델 제공자(Anthropic)로 간다.
+// 환경변수는 빌드 때 읽으므로 AI_MODE를 바꾸면 재배포해야 이 문서도 바뀐다.
 import type { Metadata } from "next";
 import { DeleteMyData } from "@/components/DeleteMyData";
 import { PolicyPage, Section } from "@/components/PolicyPage";
+import { aiMode } from "@/lib/ai/mode";
 
 export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌법원" };
 
 export default function PrivacyPage() {
+  const sendsToAi = aiMode() !== "free";
   return (
     <PolicyPage current="/privacy" title="개인정보처리방침">
       <Section title="1. 처리하는 정보">
@@ -58,10 +61,17 @@ export default function PrivacyPage() {
           판례 검색에 적으신 검색어도 법제처로 보내요. 이름·전화번호 같은 개인정보나 민감한 내용으로
           보이는 검색어는 보내지 않고 다시 적어 달라고 안내해요.
         </p>
-        <p>
-          서비스는 Vercel(웹 서버)과 Supabase(데이터베이스)에서 운영해요. 데모 기본 모드에서는 AI
-          모델 제공자에게 질문을 보내지 않아요.
-        </p>
+        {sendsToAi ? (
+          <p>
+            예시 질문이 아닌 질문에 답변 문단을 만들기 위해, 가린 문장과 법제처에서 찾은 조문·판례
+            일부를 AI 모델 제공자(Anthropic)에게 보내요. 적으신 원문은 보내지 않아요. 예시 질문은
+            미리 분석해 둔 결과를 보여 드려서 보내지 않아요. (국외 이전·처리 위탁 여부와 고지 문구는
+            법무 검토 중이에요.)
+          </p>
+        ) : (
+          <p>지금은 AI 모델 제공자에게 질문을 보내지 않아요.</p>
+        )}
+        <p>서비스는 Vercel(웹 서버)과 Supabase(데이터베이스)에서 운영해요.</p>
       </Section>
       <Section title="4. 보관 기간과 삭제">
         <p>
