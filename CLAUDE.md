@@ -8,11 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 제품 요구사항
 - PRD: `docs/PRD.md` — 구현 전에 해당 **F-ID 절만** 읽는다. 전체를 읽지 않는다.
-- 현재 단계: **Phase 1** (F-001~F-007, F-013). Phase 2 기능은 지시가 있을 때만 작업한다. 진행 상황은 `git log`와 PRD 0절을 본다.
+- 현재 단계: **Phase 1** (F-001~F-007, F-013) + F-014 절차 안내 데모판(DEC-021) + 문서 작성 `[게이트]`(DEC-022). 그 밖의 Phase 2 기능은 지시가 있을 때만 작업한다. 진행 상황은 `git log`와 PRD 0절을 본다.
 - 지금은 **데모**를 먼저 만든다 (DEC-009~013): 판례·법령은 korean-law-mcp 실시간 조회, 결과 형식은 참고 프로토타입과 같게, 비로그인 3회.
 - 절대 규칙 (PRD 3·8·10장 요약):
   1. 검증 근거에 없는 판례·조문·사건번호는 출력하지 않는다. 렌더링 전에 대조한다 (F-005). 데모의 검증 근거는 그 요청에서 법제처로부터 가져온 자료이고, 인용 구절 원문 일치와 `verify_citations` 재조회를 통과해야 한다 (DEC-009).
-  2. 승소·처벌·해결 가능성을 확정 표현하지 않는다. "반드시", "무조건", "100%" 금지 (N1).
+  2. 승소·처벌·해결 가능성을 확정 표현하지 않는다. "반드시", "무조건", "100%" 금지 (N1). **승률·성공 확률·유불리를 판단하는 기능·숫자·문구·게이지는 만들지 않는다** — 자리표시로도 넣지 않는다(사용자 재확인 2026-11-15). 허용: 단계별 "혼자 가능 / 전문가 권장" 라벨(DEC-002)과 "근거 판례 n건 · 관련 조문 n개" 같은 사실 표시.
   3. 기간·비용 숫자는 계산 함수나 공식 기준 결과만 쓴다. LLM이 숫자를 만들지 않는다. 조문·판례 원문 구절 안에 있는 숫자는 인용으로 쓸 수 있다.
   4. 개인정보는 프롬프트·로그·에러 메시지에 남기지 않는다 (F-007). 입력 원문은 DB에 저장하지 않고 마스킹본만 저장한다 (DEC-006).
   5. `[게이트]` 기능(F-010~F-012), 모든 과금, 법률문서 생성은 F-013 승인 전 비활성 상태로만 구현한다.
@@ -36,7 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
 ## 기술 스택 (확정, DEC-004)
-Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API (후보: 메인 `claude-opus-5-5`, 분류·추출 `claude-haiku-5-5` — 모델은 PoC 후 확정)
+Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 서비스 모델은 **`claude-haiku-5-5`로 확정**(DEC-019·020, 단가표 lib/ai/cost.ts)
 Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 데이터와 API가 다르다).
 
 ## 명령어
@@ -44,7 +44,9 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 
 | 목적 | 명령 |
 |---|---|
-| 개발 서버 / 빌드 | `pnpm dev` / `pnpm build` |
+| 개발 서버 / 빌드 | `pnpm dev` / `pnpm build` — **푸시 전 `pnpm build` 필수** (아래 코드 구조의 cacheComponents 참고, CI는 빌드를 돌리지 않는다) |
+| 개발 전용 편집기 | `pnpm studio` → `http://127.0.0.1:3000/studio` (마스코트 상태 그림 교체·발표 자료 디자인). production에서는 404 |
+| Figma 토큰 비교 | `pnpm figma:tokens` (globals.css ↔ Figma 변수, `figma-sync` 스킬) |
 | 단위 테스트 | `pnpm test` — `tests/unit/**`와 `lib/**/*.test.ts`만 수집한다 (vitest.config.mts) |
 | 단위 테스트 일부 | `pnpm exec vitest run lib/pii` · `pnpm exec vitest run tests/unit/inquiries-api.test.ts` · `pnpm exec vitest run -t "F-007 AC1"` |
 | E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`). 개발 서버는 Playwright가 띄우고, 이미 떠 있으면 재사용한다 |
@@ -52,6 +54,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터 + 무료 모드, 무료. 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외). Claude 실호출 테스트는 `ALLOW_PAID_API=1`일 때만 돌고 **별도 과금**되므로 사용자 허락 없이 실행 금지 |
 | 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
+| AI 평가 | `pnpm eval:demo` — **유료**(Claude 생성 호출). 절대 규칙 8에 따라 사용자 허락 없이 실행 금지 |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
 | 수집기 테스트 일부 | `cd collector && uv run pytest tests/test_prec.py -k 중복` |
 | DB 마이그레이션 | `pnpm exec supabase migration new <이름>` (add-migration 스킬) |
@@ -63,13 +66,16 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 환경변수 (`.env.local`, 값은 사용자가 직접 넣는다)
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
 - `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
-- `AI_MODE` 분석 모드 (DEC-015): 없으면 **무료 모드**(Claude 호출 없음, 예시 재생 + 법제처 검색 전용). `pro`일 때만 Claude 분석 — Console API 크레딧이 별도 과금되므로 기본 꺼짐. 유료 버전 보존: 태그 `paid-ai-v1`. Pro는 모든 단계 Haiku 5.5, 질문 1건 $0.015 상한을 코드로 강제(DEC-019, lib/ai/cost.ts)
-- `AI_MODE=pro`는 **라이트 답변**(DEC-020): 무료 법제처 검색 + Haiku 답변 1회, 질문 1건 **$0.001** 상한(추후 $0.0015 예정). 전체 파이프라인($0.015, DEC-019)은 `AI_MODE=pro-full`로만 켜진다. 유료 모드라도 예시 질문은 재생(비용 0)
+- `AI_MODE` 분석 모드 (DEC-015·019·020). Console API 크레딧이 별도 과금되므로 코드 기본값은 무료:
+  - 없음/그 밖의 값 = **free**: Claude 호출 없음. 예시 질문은 저장된 답변 재생, 그 밖은 법제처 검색 결과만
+  - `pro` = **라이트 답변**(DEC-020): 무료 법제처 검색 + Haiku 답변 1회, 질문 1건 **$0.001** 상한(추후 $0.0015 예정)
+  - `pro-full` = 전체 파이프라인(의도·재검색·답변, DEC-019), 질문 1건 $0.015 상한. 명시할 때만
+  - 유료 모드라도 예시 질문은 재생(비용 0). 유료 버전 보존 태그 `paid-ai-v1`
 - `AI_DAILY_LIMIT` 유료 분석 하루 전체 건수 상한 (기본 100). 넘으면 그날은 무료 모드
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,supabase}` 컴포넌트(README가 있는 모듈은 README에 책임. `auth`·`inquiries`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(result·ask·search·documents·studio) · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,mascot,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
@@ -80,8 +86,13 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 - 비로그인 횟수: POST /inquiries는 3회를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 3회 + 같은 IP 해시 24시간 10회, `anon_usage`). `questions_used`를 직접 update하지 않는다.
-- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free → `runFreeAnalysis`(lib/demo, Claude 없음), pro → `runDemoAnalysis` + `verifyDraft`. `createModelClient`는 free에서 예외를 낸다. **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
+- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 하루 상한(`AI_DAILY_LIMIT`) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). `pro` → `runLiteAnalysis`(lib/ai/lite.ts: `freeSearch` + Haiku 1회) + `verifyDraft`. `pro-full` → `runDemoAnalysis` + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지).
+- 비용 상한: 모든 Claude 호출은 `withCostCap`(lib/ai/client.ts)을 거친다. 호출 전 무과금 `countTokens`로 입력을 재고 `planCall`(lib/ai/cost.ts)이 (쓴 비용 + 입력 + max_tokens 출력)이 상한 안일 때만 보낸다. 넘으면 `CostCapReached` — 라이트는 근거를 하나씩 빼고 다시 재고, 못 맞추면 AI 문단 없이 근거만 낸다. 키 점검은 `/api/v1/health`의 `ai.key`(모델 정보 조회, 무과금). **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
+- `cacheComponents: true`(next.config.ts): `usePathname`·`useParams`·`useSearchParams` 같은 클라이언트 훅은 `<Suspense>` 안에서만 쓴다. 밖에서 쓰면 로컬 `pnpm dev`·CI는 통과해도 **Vercel 빌드가 프리렌더에서 실패**한다(예: 헤더 남은 질문 `QuotaRouteSync`).
+- 절차 타임라인(lib/procedure, DEC-021)은 LLM 없는 규칙 기반이다. 단계 문구에 숫자·단정 표현이 들어가면 `policy.test.ts`가 막는다. 결과(승패)를 판정하지 않는다.
+- 문서 작성(lib/documents, DEC-022)은 `legal_documents` 게이트 뒤에 있다: API 맨 앞 `requireFeature`, 화면은 게이트가 꺼져 있으면 안내·공식 양식 링크만. 사용자 입력을 칸에 넣기만 하고(LLM 없음) 저장·로그하지 않는다. AI 생성물이 아니라 `AI_NOTICE` 대신 `DOCUMENT_NOTICE`.
+- 브라우저 쪽 API 호출과 남은 질문 수는 lib/client/api.ts·components/useQuota.ts 한 저장소로 공유한다(헤더·홈·이어 묻기가 같은 값을 본다).
 - server-only 모듈을 직접 import하는 테스트는 `vi.mock("server-only", () => ({}))`를 둔다. 외부 응답은 tests/fixtures에 줄여서 녹화하고, 실명은 가상 이름으로 바꾼다.
 
 ## 환경 주의
