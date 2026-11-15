@@ -1,0 +1,122 @@
+// S-04 답변 요약형 결과 (F-014 데모 축소판, DEC-021): 사실 요약 → 절차 타임라인 → 첫 단계 추천 → 세부 내용 → 다음 단계.
+// 팝업 접근성(호버·포커스·Esc), 게이트 문서는 안내 화면으로만 연결 (DEC-022), 확률·기간 숫자 없음 (절대 규칙 2·3).
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { ResultPanel } from "@/components/result/ResultPanel";
+import { demoExamples, findExample, replayResult } from "@/lib/demo/policy";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => "/",
+}));
+afterEach(cleanup);
+
+const lease = demoExamples().find((e) => e.id === "lease-01")!;
+const wage = demoExamples().find((e) => e.id === "wage-02")!;
+const resultOf = (q: string) => replayResult(findExample(q)!);
+
+function renderLease(extra: Partial<Parameters<typeof ResultPanel>[0]> = {}) {
+  return render(
+    <ResultPanel
+      result={resultOf(lease.question)}
+      question={lease.question}
+      followUp={<textarea aria-label="심층 질문하기" />}
+      {...extra}
+    />,
+  );
+}
+
+describe("F-014 결과 요약형 레이아웃", () => {
+  test("사실 요약·타임라인·첫 단계 추천·세부 내용·다음 단계가 이 순서로 보인다", () => {
+    const { container } = renderLease();
+    const text = container.textContent ?? "";
+    const order = [
+      "근거 판례",
+      "절차 타임라인",
+      "현재 위 내용을 기반으로 먼저 내용증명을 추천드립니다",
+      "세부 내용",
+      "내용증명 바로 가기",
+      "심층 질문하기",
+    ].map((t) => text.indexOf(t));
+    for (const i of order) expect(i).toBeGreaterThanOrEqual(0);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(screen.getByText(/추천 첫 단계 · 내용증명 · 혼자 가능/)).toBeDefined();
+  });
+
+  test("N1·절대 규칙 3 확률·승소 가능성·예상 기간 숫자가 없다", () => {
+    const { container } = renderLease();
+    const text = container.textContent ?? "";
+    expect(text).not.toMatch(/%|확률|승소 가능성|이길 수|개월|예상 기간|예상 비용/);
+  });
+
+  test("DEC-021 타임라인은 참고용 표시와 단계별 난이도 라벨을 단다", () => {
+    renderLease();
+    const list = screen.getByRole("list", { name: "민사 절차 단계" });
+    expect(within(list).getAllByRole("button", { expanded: false }).length).toBeGreaterThanOrEqual(
+      6,
+    );
+    expect(screen.getByText("참고용 · 법률 검토 전")).toBeDefined();
+    expect(within(list).getAllByText("전문가 권장").length).toBeGreaterThan(0);
+  });
+
+  test("DEC-022 '바로 가기'는 게이트 안내 화면(/documents/demand-letter)으로만 간다", () => {
+    renderLease();
+    const link = screen.getByRole("link", { name: /내용증명 바로 가기/ });
+    expect(link.getAttribute("href")).toBe("/documents/demand-letter");
+  });
+
+  test("세부 내용(기존 답변·법령·판례·검증 탭)은 접혀 있다", () => {
+    const { container } = renderLease();
+    const details = container.querySelector("details")!;
+    expect(details.open).toBe(false);
+    expect(within(details).getByRole("tab", { name: "답변" })).toBeDefined();
+  });
+
+  test("노동 문제는 타임라인 대신 유형 안내와 공식 링크", () => {
+    render(
+      <ResultPanel result={resultOf(wage.question)} question={wage.question} followUp={null} />,
+    );
+    expect(screen.queryByRole("list", { name: "민사 절차 단계" })).toBeNull();
+    expect(screen.getByText(/임금·퇴직금·해고 문제는 절차가 따로 있어요/)).toBeDefined();
+    expect(screen.queryByText(/바로 가기/)).toBeNull();
+  });
+});
+
+describe("F-014 마일스톤 팝업 접근성", () => {
+  const node = (name: RegExp) =>
+    within(screen.getByRole("list", { name: "민사 절차 단계" })).getByRole("button", { name });
+
+  test("키보드 포커스로 열리고 aria-describedby로 팝업을 가리키며 Esc로 닫힌다", () => {
+    renderLease();
+    const btn = node(/내용증명/);
+    fireEvent.focus(btn);
+    expect(btn.getAttribute("aria-expanded")).toBe("true");
+    const pop = document.getElementById(btn.getAttribute("aria-describedby")!)!;
+    expect(pop.hidden).toBe(false);
+    expect(within(pop).getByText("준비할 것")).toBeDefined();
+    expect(within(pop).getByText(/강제력은 없어요/)).toBeDefined();
+    fireEvent.keyDown(btn, { key: "Escape" });
+    expect(btn.getAttribute("aria-expanded")).toBe("false");
+    expect(pop.hidden).toBe(true);
+  });
+
+  test("마우스를 올리면 열리고 내리면 닫힌다", () => {
+    renderLease();
+    const btn = node(/강제집행/);
+    const li = btn.closest("li")!;
+    fireEvent.pointerEnter(li, { pointerType: "mouse" });
+    expect(btn.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.pointerLeave(li, { pointerType: "mouse" });
+    expect(btn.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  test("'이 단계 질문하기'는 질문 문장만 넘긴다 (보내기는 사용자가 누른다)", () => {
+    const onAskStep = vi.fn();
+    renderLease({ onAskStep });
+    fireEvent.click(node(/지급명령 신청/));
+    fireEvent.click(screen.getByRole("button", { name: "이 단계 질문하기" }));
+    expect(onAskStep).toHaveBeenCalledWith(
+      "지급명령은 어떻게 신청하고, 상대방이 이의를 내면 어떻게 되나요?",
+    );
+  });
+});

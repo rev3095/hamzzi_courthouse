@@ -115,15 +115,11 @@ export function ResultView({ id }: { id: string }) {
         (view.result.outcome === "no_result_in_scope" ? (
           <NoResult result={view.result} question={question.text} />
         ) : (
-          <ResultPanel
+          <DoneView
             result={view.result}
+            resultId={view.resultId}
             question={question.text}
-            followUp={
-              <>
-                <FollowUp parentId={id} />
-                <Feedback resultId={view.resultId} />
-              </>
-            }
+            parentId={id}
           />
         ))}
       {view.kind === "error" && (
@@ -363,16 +359,63 @@ export function Problem({
   );
 }
 
-function FollowUp({ parentId }: { parentId: string }) {
+/** 결과 + 심층 질문(이어 묻기). 타임라인의 "이 단계 질문하기"는 입력란에 문장만 넣는다 — 보내기는 사용자가 누른다 */
+function DoneView({
+  result,
+  resultId,
+  question,
+  parentId,
+}: {
+  result: DemoAnalysisResult;
+  resultId: string;
+  question: string | null;
+  parentId: string;
+}) {
   const [text, setText] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const focusBox = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  };
+  return (
+    <ResultPanel
+      result={result}
+      question={question}
+      onAskStep={(q) => {
+        setText(q);
+        focusBox();
+      }}
+      onDeepAsk={focusBox}
+      followUp={<FollowUp parentId={parentId} text={text} setText={setText} inputRef={inputRef} />}
+      footer={<Feedback resultId={resultId} />}
+    />
+  );
+}
+
+function FollowUp({
+  parentId,
+  text,
+  setText,
+  inputRef,
+}: {
+  parentId: string;
+  text: string;
+  setText: (v: string) => void;
+  inputRef: React.Ref<HTMLTextAreaElement>;
+}) {
   const quota = useQuota();
   const { busy, error, send, modals, showLimit } = useAsk({ parentInquiryId: parentId });
   const blocked = quota?.loginRequired === true;
   return (
     <section aria-labelledby="follow-title" className="mt-8">
       <h2 id="follow-title" className="font-display text-ink text-[19px] font-bold">
-        이어서 물어보기
+        심층 질문하기
       </h2>
+      <p className="text-muted mt-1 text-[13px]">
+        타임라인의 &lsquo;이 단계 질문하기&rsquo;를 누르면 질문 문장이 여기에 들어가요.
+      </p>
       <div className="mt-3">
         <QuestionBox
           value={text}
@@ -380,8 +423,9 @@ function FollowUp({ parentId }: { parentId: string }) {
           onSubmit={() => (blocked ? showLimit() : void send(text))}
           busy={busy}
           size="md"
-          label="이어서 물어보기"
+          label="심층 질문하기"
           placeholder="이 사건에 대해 더 물어보세요"
+          inputRef={inputRef}
         />
       </div>
       {error ? (
@@ -391,8 +435,8 @@ function FollowUp({ parentId }: { parentId: string }) {
       ) : (
         <p className="text-muted mt-2 text-[13px]">
           {quota?.anonymous && quota.remaining !== null
-            ? `남은 질문 ${quota.remaining}/${quota.limit} · 이어 묻기도 1번으로 세요`
-            : "이어 묻기도 질문 1번으로 세요"}
+            ? `남은 질문 ${quota.remaining}/${quota.limit} · 심층 질문도 1번으로 세요`
+            : "심층 질문도 질문 1번으로 세요"}
         </p>
       )}
       {modals}

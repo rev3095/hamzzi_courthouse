@@ -220,6 +220,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 | 메서드 · 경로 | 인증 | 설명 | 게이트 키 | F-ID |
 |---|---|---|---|---|
 | GET `/procedures?caseType=` | user | 절차 단계·기간·난이도 라벨 | `procedure_guide` | F-014 |
+| POST `/documents/{kind}` (`demand-letter`·`complaint`) | anon·user | 내용증명·소장 양식 채우기(템플릿, LLM 없음, 저장 안 함) | `legal_documents` | F-013 (DEC-022) |
 | POST `/inquiries/{id}/agent/messages` | 소유자 | 방향 제안·동의/비동의 대화 | `consult_agent` | F-008 |
 | POST `/inquiries/{id}/summary` | 소유자 | 사건 요약서 생성 | `consult_agent` | F-008 AC2 |
 | POST `/summaries/{id}/confirm` | 소유자 | 내용 확인 | `brief_posting` | F-009 AC1 |
@@ -235,6 +236,10 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 
 핵심 스키마:
 ```ts
+// POST /documents/{kind} (DEC-022) — 게이트 검사가 맨 앞. 승인 전이면 403 FEATURE_GATED(details.featureKey = "legal_documents")
+// req: 문서마다 정해진 문자열 필드(lib/documents/policy DOCUMENT_SPECS). 빈 칸·길이 초과·한 줄 필드의 줄바꿈 → 400 VALIDATION_ERROR(details.fields, 값은 넣지 않음). 모르는 kind → 404
+{ data: { kind: "demand-letter"|"complaint"; title: string; text: string; filename: string; notice: string } }  // Cache-Control: no-store, 입력·결과 저장·로그 없음
+
 // GET /procedures (F-014)
 { caseType: string; steps: { ord: number; label: string; duration: { min: number; max: number; unit: "day"|"week"|"month" }; difficulty: "self"|"depends"|"expert"; source: string }[]; aiNotice: string }
 

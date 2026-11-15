@@ -1,12 +1,24 @@
 "use client";
-// 결과 패널 (S-04 답변·법령·판례·검증 탭, F-003~F-006). 고정 순서(02 layout-spec):
-// AI 고지 → 질문 → 판사 → 의도 요약 → 탭 → 더 찾아본 과정 → 법제처 출처 → 이어 묻기.
-// D+의 예상 기간·비용·절차 타임라인·다음 단계(변호사/혼자 진행)는 데모 응답에 없어 넣지 않는다 (절대 규칙 3·5).
+// 결과 패널 (S-04, F-003~F-006, F-014 데모 축소판 DEC-021). 답변 요약형 순서:
+// AI 고지 → 질문 → 판사 → 제목 → 사실 요약(근거 개수·추천 첫 단계 난이도) → 절차 타임라인(또는 유형 안내)
+// → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·답변·법령·판례·검증 탭·더 찾아본 과정)
+// → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·심층 질문하기) → 의견 → 법제처 출처.
+// 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
+// 문서 작성은 legal_documents 게이트 뒤라 '바로 가기'는 안내 화면으로 간다 (절대 규칙 5, DEC-022).
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
+import {
+  difficultyLabel,
+  evidenceSummary,
+  procedurePlan,
+  recommendText,
+  type ProcedurePlan,
+} from "@/lib/procedure/policy";
+import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { HamzziBadge } from "../HamzziJudge";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
+import { ProcedureTimeline } from "./ProcedureTimeline";
 import {
   TRACE_TOOL,
   dotDate,
@@ -21,21 +33,25 @@ export function ResultPanel({
   result,
   question,
   followUp,
+  footer,
+  onAskStep,
+  onDeepAsk,
 }: {
   result: DemoAnalysisResult;
   question: string | null;
+  /** 심층 질문(이어 묻기) 입력란 */
   followUp: React.ReactNode;
+  /** 의견 보내기 등 */
+  footer?: React.ReactNode;
+  /** 타임라인 단계의 "이 단계 질문하기" — 이어 묻기 입력란에 문장을 넣는다 */
+  onAskStep?: (question: string) => void;
+  /** "심층 질문하기" — 이어 묻기 입력란으로 이동 */
+  onDeepAsk?: () => void;
 }) {
-  const [tab, setTab] = useState<ResultTab>(firstTab(result));
   const searchOnly = result.mode === "search_only";
   const usedArticles = result.articles.filter((a) => a.used).length;
   const usedCases = result.cases.filter((c) => c.used).length;
-  const tabs: { key: ResultTab; label: string }[] = [
-    { key: "answer", label: "답변" },
-    { key: "articles", label: `법령 ${result.articles.length}` },
-    { key: "cases", label: `판례 ${result.cases.length}` },
-    { key: "verify", label: "검증" },
-  ];
+  const plan = procedurePlan(result, question);
 
   return (
     <article className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
@@ -67,15 +83,107 @@ export function ResultPanel({
         </Link>
       </div>
 
+      <SummaryStrip result={result} plan={plan} />
+
+      {plan.kind === "timeline" ? (
+        <>
+          <ProcedureTimeline
+            steps={plan.steps}
+            recommendedKey={plan.recommended.key}
+            onAskStep={onAskStep}
+          />
+          {plan.note && <p className="text-muted mt-4 text-[13px] leading-relaxed">{plan.note}</p>}
+          <div className="rounded-card border-honey-line bg-honey mt-6 px-5 py-4">
+            <p className="font-display text-ink text-[17px] leading-snug font-bold">
+              {recommendText(plan.recommended)}
+            </p>
+            <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
+            <p className="text-muted mt-1 text-[13px]">
+              {PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.
+            </p>
+          </div>
+        </>
+      ) : (
+        <TypeNotice plan={plan} />
+      )}
+
+      <Details result={result} />
+
+      <div id="deep-question">{followUp}</div>
+      <NextSteps plan={plan} onDeepAsk={onDeepAsk} />
+      {footer}
+      <SourceCredit note={result.searchScopeNote} />
+    </article>
+  );
+}
+
+/** 결과 머리 사실 요약: 근거 개수 + 추천 첫 단계의 난이도. 확률·가능성은 쓰지 않는다 */
+function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: ProcedurePlan }) {
+  return (
+    <ul aria-label="요약" className="mt-4 flex flex-wrap gap-2">
+      <li className="rounded-button bg-soft text-ink px-3 py-1.5 text-sm">
+        {evidenceSummary(result)}
+      </li>
+      {plan.kind === "timeline" && (
+        <li className="rounded-button bg-cream text-label px-3 py-1.5 text-sm font-semibold">
+          추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
+        </li>
+      )}
+    </ul>
+  );
+}
+
+function TypeNotice({ plan }: { plan: Extract<ProcedurePlan, { kind: "notice" }> }) {
+  return (
+    <section className="rounded-card border-note-line bg-note mt-7 border px-5 py-4">
+      <h2 className="text-ink text-[15px] font-semibold">{plan.title}</h2>
+      <p className="text-muted mt-1 text-sm leading-relaxed">{plan.body}</p>
+      <div className="mt-2 flex flex-wrap gap-x-4">
+        {plan.links.map((l) => (
+          <a
+            key={l.url}
+            href={l.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
+          >
+            {l.label} →
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** 세부 내용 (접힘). 기존 의도 요약·탭·검색 과정을 그대로 쓴다. 검색 전용은 답변이 없어 펼쳐 둔다 */
+function Details({ result }: { result: DemoAnalysisResult }) {
+  const [tab, setTab] = useState<ResultTab>(firstTab(result));
+  const searchOnly = result.mode === "search_only";
+  const tabs: { key: ResultTab; label: string }[] = [
+    { key: "answer", label: "답변" },
+    { key: "articles", label: `법령 ${result.articles.length}` },
+    { key: "cases", label: `판례 ${result.cases.length}` },
+    { key: "verify", label: "검증" },
+  ];
+  return (
+    <details open={searchOnly || undefined} className="group border-line mt-8 border-t pt-2">
+      <summary className="text-ink flex min-h-11 cursor-pointer items-center justify-between text-[17px] font-bold">
+        <span className="font-display">세부 내용</span>
+        <span className="text-muted text-sm font-normal">
+          <span className="group-open:hidden">펼치기 ▾</span>
+          <span className="hidden group-open:inline">접기 ▴</span>
+        </span>
+      </summary>
+
       {!searchOnly && (
-        <dl className="mt-4 grid gap-2 lg:grid-cols-3">
+        <dl className="mt-3 grid gap-2 lg:grid-cols-3">
           <IntentCell term="분야" desc={result.intent.area} />
           <IntentCell term="알고 싶은 것" desc={result.intent.goal} />
           <IntentCell term="관련 법률" desc={result.intent.laws.join(" · ")} />
         </dl>
       )}
 
-      <div role="tablist" aria-label="결과" className="border-line mt-7 flex gap-1 border-b">
+      <div role="tablist" aria-label="결과" className="border-line mt-5 flex gap-1 border-b">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -102,9 +210,47 @@ export function ResultPanel({
       </div>
 
       <Trace result={result} />
-      <SourceCredit note={result.searchScopeNote} />
-      {followUp}
-    </article>
+    </details>
+  );
+}
+
+/** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 게이트 안내 화면으로 간다 */
+function NextSteps({ plan, onDeepAsk }: { plan: ProcedurePlan; onDeepAsk?: () => void }) {
+  const doc = plan.kind === "timeline" ? plan.recommended.document : undefined;
+  return (
+    <section aria-label="다음 단계" className="mt-4 grid gap-3 lg:grid-cols-2">
+      {plan.kind === "timeline" && doc && (
+        <Link
+          href={`/documents/${doc}`}
+          className="rounded-card bg-ink flex min-h-[72px] items-center justify-between gap-3 px-5 py-4 text-white"
+        >
+          <span>
+            <span className="block text-base font-bold">{plan.recommended.label} 바로 가기</span>
+            <span className="mt-0.5 block text-[13px] text-white/75">
+              작성 요령 · 공식 양식 안내 (문서 자동 작성은 법률 검토 후 열려요)
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-xl">
+            →
+          </span>
+        </Link>
+      )}
+      <button
+        type="button"
+        onClick={onDeepAsk}
+        className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4 text-left"
+      >
+        <span>
+          <span className="block text-base font-bold">심층 질문하기</span>
+          <span className="text-muted mt-0.5 block text-[13px]">
+            위 입력란에 이 사건을 더 물어보세요 · 질문 1번으로 세요
+          </span>
+        </span>
+        <span aria-hidden="true" className="text-xl">
+          →
+        </span>
+      </button>
+    </section>
   );
 }
 
