@@ -11,7 +11,7 @@ export function LimitNotice({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="질문 3번을 모두 썼어요" onClose={onClose}>
       <div className="flex justify-center">
-        <HamzziJudge size={120} interactive={false} />
+        <HamzziJudge size={120} interactive={false} mood="sorry" />
       </div>
       <p className="text-muted mt-3 text-[15px] leading-relaxed">{DEMO_LIMIT_TEXT}</p>
       <div className="mt-5 flex flex-col gap-2">

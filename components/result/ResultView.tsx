@@ -15,6 +15,7 @@ import {
   recallQuestion,
   type ClientError,
 } from "@/lib/client/api";
+import { moodForError } from "@/lib/mascot/moods";
 import { HamzziJudge } from "../HamzziJudge";
 import { DEMO_LIMIT_TEXT } from "../LimitNotice";
 import { PrimaryButton, SecondaryButton } from "../Modal";
@@ -141,7 +142,8 @@ export function ResultView({ id }: { id: string }) {
   );
 }
 
-function Analyzing({ question, steps }: { question: string | null; steps: StepEvent[] }) {
+/** 분석 진행 패널 (편집기 미리보기에서도 쓴다) */
+export function Analyzing({ question, steps }: { question: string | null; steps: StepEvent[] }) {
   return (
     <section
       aria-live="polite"
@@ -150,7 +152,7 @@ function Analyzing({ question, steps }: { question: string | null; steps: StepEv
     >
       <QuestionQuote text={question} />
       <div className="mt-6 flex flex-col items-center text-center">
-        <HamzziJudge size={160} interactive={false} knocking />
+        <HamzziJudge size={160} interactive={false} mood="thinking" knocking />
         <p className="font-display text-ink mt-4 text-xl font-bold">
           햄찌 판사가 판례 서고를 뒤지는 중이에요…
         </p>
@@ -204,7 +206,14 @@ function StepRow({
   );
 }
 
-function NoResult({ result, question }: { result: DemoAnalysisResult; question: string | null }) {
+/** 결과 없음 카드 (편집기 미리보기에서도 쓴다) */
+export function NoResult({
+  result,
+  question,
+}: {
+  result: Pick<DemoAnalysisResult, "aiNotice" | "searchScopeNote" | "searches">;
+  question: string | null;
+}) {
   return (
     <section className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
       <AiNotice notice={result.aiNotice} />
@@ -282,7 +291,8 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
 
 const RETRYABLE = new Set(["SEARCH_UPSTREAM_FAILED", "MODEL_FAILED", "TIMEOUT", "INTERNAL_ERROR"]);
 
-function Problem({
+/** 오류·안내 카드. 코드에 따라 마스코트 상태가 달라진다 (편집기 미리보기에서도 쓴다) */
+export function Problem({
   error,
   question,
   onRetry,
@@ -305,7 +315,7 @@ function Problem({
     >
       <QuestionQuote text={question} />
       <div className="mt-6 flex flex-col items-center text-center">
-        <HamzziJudge size={140} interactive={false} mood="sorry" />
+        <HamzziJudge size={140} interactive={false} mood={moodForError(error.code)} />
         <h1 className="font-display text-ink mt-4 text-xl font-bold">{text.title}</h1>
         <p className="text-muted mt-2 max-w-[520px] text-[15px] leading-relaxed">{text.body}</p>
       </div>

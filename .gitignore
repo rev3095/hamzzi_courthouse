@@ -59,3 +59,6 @@ supabase/.temp/
 
 # P9 평가 결과 (실행마다 생성, 답변 전문 포함)
 /evals/results/
+
+# 햄찌법원 편집기(/studio) 되돌리기 기록 (이 컴퓨터에만)
+/.studio/
