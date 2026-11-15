@@ -1,3 +1,13 @@
 {
-  "files": {}
+  "files": {
+    "thinking": "thinking-8c805b60.webp",
+    "done": "done-b4aad7cd.webp",
+    "ask": "ask-ce9f8b2a.webp",
+    "curious": "curious-ce9f8b2a.webp",
+    "sorry": "sorry-d44af546.webp",
+    "error": "error-d44af546.webp"
+  },
+  "faces": {
+    "done": "face-57c348cf.webp"
+  }
 }

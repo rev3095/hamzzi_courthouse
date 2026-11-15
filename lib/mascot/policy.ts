@@ -113,7 +113,7 @@ function withFile(m: MascotManifest, mood: MascotMood, file: string | null): Mas
   const files = { ...m.files };
   if (file) files[mood] = file;
   else delete files[mood];
-  return { files };
+  return { ...m, files };
 }
 
 function pushHistory(h: MascotHistory, mood: MascotMood, entry: HistoryEntry) {

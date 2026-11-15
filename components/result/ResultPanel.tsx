@@ -43,7 +43,7 @@ export function ResultPanel({
       <QuestionQuote text={question} />
 
       <div className="mt-4 flex items-center gap-3">
-        <HamzziBadge size={52} />
+        <HamzziBadge size={52} mood="done" />
         <div>
           <p className="text-ink text-[15px] font-bold">햄찌 판사의 정리</p>
           <p className="text-muted text-[13px]">

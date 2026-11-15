@@ -20,6 +20,8 @@ export type MascotMood = (typeof MASCOT_MOODS)[number];
 export const MASCOT_SIZE = { width: 480, height: 635 } as const;
 
 export const DEFAULT_MASCOT_SRC = "/mascot/hamzzi-judge.webp";
+/** 얼굴(머리 아이콘) 기본 그림. 상태별 얼굴은 manifest.faces */
+export const DEFAULT_FACE_SRC = "/mascot/hamzzi-face.webp";
 export const MOOD_DIR = "/mascot/moods";
 
 export type MoodInfo = {
@@ -52,7 +54,7 @@ export const MOOD_INFO: Record<MascotMood, MoodInfo> = {
   done: {
     label: "기쁨",
     when: "정리가 끝났을 때, 저장이 끝났을 때",
-    usedIn: [],
+    usedIn: ["결과 화면 · 정리 머리 아이콘(얼굴)"],
     line: "정리 끝! 아래에서 확인해 보세요.",
     // 정리가 끝났다는 안내일 뿐 — 결과가 유리하다는 뜻으로 보이면 안 된다 (절대 규칙 2, 승패 판단 없음)
     art: "가볍게 웃는 표정. 정리 끝 안내용 — 결과가 유리하다는 뜻으로 보이지 않게",
@@ -93,7 +95,11 @@ export const MOOD_INFO: Record<MascotMood, MoodInfo> = {
   },
 };
 
-export type MascotManifest = { files: Partial<Record<MascotMood, string>> };
+export type MascotManifest = {
+  files: Partial<Record<MascotMood, string>>;
+  /** 머리 아이콘(얼굴, 160×160)이 따로 있는 상태. 없으면 기본 얼굴 */
+  faces?: Partial<Record<MascotMood, string>>;
+};
 
 export function isMood(v: unknown): v is MascotMood {
   return typeof v === "string" && (MASCOT_MOODS as readonly string[]).includes(v);
@@ -103,6 +109,12 @@ export function isMood(v: unknown): v is MascotMood {
 export function mascotSrc(mood: MascotMood, m: MascotManifest = manifest): string {
   const file = m.files[mood] ?? m.files.default;
   return file ? `${MOOD_DIR}/${file}` : DEFAULT_MASCOT_SRC;
+}
+
+/** 상태 얼굴(머리 아이콘) 주소. 그 상태 얼굴이 없으면 기본 얼굴 */
+export function mascotFaceSrc(mood: MascotMood, m: MascotManifest = manifest): string {
+  const file = m.faces?.[mood];
+  return file ? `${MOOD_DIR}/${file}` : DEFAULT_FACE_SRC;
 }
 
 /** 결과 화면 오류 코드 → 마스코트 상태. 연결·서버 문제는 error, 한도·범위 문제는 sorry, 확인 요청은 ask */

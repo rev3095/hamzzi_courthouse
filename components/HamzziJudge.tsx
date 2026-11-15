@@ -5,7 +5,13 @@
 // 얼굴: hamzzi-face.webp (160×160)
 import Image from "next/image";
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { DEFAULT_MASCOT_SRC, MASCOT_SIZE, mascotSrc, type MascotMood } from "@/lib/mascot/moods";
+import {
+  DEFAULT_MASCOT_SRC,
+  MASCOT_SIZE,
+  mascotFaceSrc,
+  mascotSrc,
+  type MascotMood,
+} from "@/lib/mascot/moods";
 
 /** 편집기 미리보기용: 상태별 그림 주소를 저장 전 그림으로 바꿔 보여 준다. 일반 화면에서는 쓰지 않는다 */
 const MascotPreview = createContext<Partial<Record<MascotMood, string>> | null>(null);
@@ -49,7 +55,9 @@ export function HamzziJudge({
       aria-hidden="true"
       width={size}
       height={Math.round((size * MASCOT_SIZE.height) / MASCOT_SIZE.width)}
-      priority={interactive}
+      // 카드·히어로의 주 그림이라 바로 불러온다 (Next 16: priority 대신 loading·fetchPriority)
+      loading="eager"
+      fetchPriority={interactive ? "high" : undefined}
       unoptimized={!src.startsWith("/mascot/")}
       draggable={false}
       onError={() => src !== DEFAULT_MASCOT_SRC && setFailed(wanted)}
@@ -73,11 +81,11 @@ export function HamzziJudge({
   );
 }
 
-/** 로고 · 햄찌 얼굴 (헤더·결과·약속 배너의 아이콘 틀 안) */
-export function HamzziFace({ size = 36 }: { size?: number }) {
+/** 로고 · 햄찌 얼굴 (헤더·결과·약속 배너의 아이콘 틀 안). mood 얼굴이 없으면 기본 얼굴 */
+export function HamzziFace({ size = 36, mood = "default" }: { size?: number; mood?: MascotMood }) {
   return (
     <Image
-      src="/mascot/hamzzi-face.webp"
+      src={mascotFaceSrc(mood)}
       alt=""
       aria-hidden="true"
       width={size}
@@ -92,9 +100,11 @@ export function HamzziFace({ size = 36 }: { size?: number }) {
 export function HamzziBadge({
   size = 52,
   rounded = "full",
+  mood = "default",
 }: {
   size?: number;
   rounded?: "full" | "card";
+  mood?: MascotMood;
 }) {
   return (
     <span
@@ -103,7 +113,7 @@ export function HamzziBadge({
       }`}
       style={{ width: size, height: size }}
     >
-      <HamzziFace size={Math.round(size * 0.9)} />
+      <HamzziFace size={Math.round(size * 0.9)} mood={mood} />
     </span>
   );
 }

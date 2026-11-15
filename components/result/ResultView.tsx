@@ -152,7 +152,7 @@ export function Analyzing({ question, steps }: { question: string | null; steps:
     >
       <QuestionQuote text={question} />
       <div className="mt-6 flex flex-col items-center text-center">
-        <HamzziJudge size={160} interactive={false} mood="thinking" knocking />
+        <HamzziJudge size={104} interactive={false} mood="thinking" knocking />
         <p className="font-display text-ink mt-4 text-xl font-bold">
           햄찌 판사가 판례 서고를 뒤지는 중이에요…
         </p>
@@ -219,7 +219,7 @@ export function NoResult({
       <AiNotice notice={result.aiNotice} />
       <QuestionQuote text={question} />
       <div className="mt-6 flex flex-col items-center text-center">
-        <HamzziJudge size={140} interactive={false} mood="sorry" />
+        <HamzziJudge size={96} interactive={false} mood="sorry" />
         <h1 className="font-display text-ink mt-4 text-xl font-bold">
           현재 검색 범위에서 비슷한 판례를 찾지 못했어요
         </h1>
@@ -315,7 +315,7 @@ export function Problem({
     >
       <QuestionQuote text={question} />
       <div className="mt-6 flex flex-col items-center text-center">
-        <HamzziJudge size={140} interactive={false} mood={moodForError(error.code)} />
+        <HamzziJudge size={96} interactive={false} mood={moodForError(error.code)} />
         <h1 className="font-display text-ink mt-4 text-xl font-bold">{text.title}</h1>
         <p className="text-muted mt-2 max-w-[520px] text-[15px] leading-relaxed">{text.body}</p>
       </div>

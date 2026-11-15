@@ -362,6 +362,23 @@ export function MascotStudio() {
               <dd className="text-ink">
                 {MOOD_INFO[mood].line ?? <span className="text-muted">없음</span>}
               </dd>
+              <dt className="text-muted">머리 아이콘</dt>
+              <dd className="text-ink flex items-center gap-2">
+                {current?.faceSrc && (
+                  <Image
+                    src={current.faceSrc}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="border-honey-line bg-honey rounded-full border"
+                  />
+                )}
+                <span className="text-muted text-[12px]">
+                  {current?.faceSrc && !current.faceSrc.endsWith("hamzzi-face.webp")
+                    ? "상태 전용 얼굴 · manifest.faces"
+                    : "기본 얼굴"}
+                </span>
+              </dd>
             </dl>
           </div>
 

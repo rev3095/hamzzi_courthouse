@@ -81,8 +81,18 @@ body {
 .hz-judge-knock {
   animation: hz-knock 0.5s ease-out 1;
 }
+/* 분석 중: 눈에 덜 띄게 잔잔히 숨쉬듯 움직인다 */
+@keyframes hz-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
 .hz-judge-loop {
-  animation: hz-knock 1.1s ease-in-out infinite;
+  animation: hz-breathe 2.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

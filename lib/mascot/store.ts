@@ -41,15 +41,19 @@ export async function loadStudio(): Promise<StudioState> {
   const rawHistory = await readJsonFile<MascotHistory>(p.historyLog, {});
   // 파일에서 읽은 이름도 형식을 다시 확인한다 (../ 같은 이름으로 프로젝트 밖 파일을 옮기거나 지우지 않게)
   const files: MascotManifest["files"] = {};
+  const faces: NonNullable<MascotManifest["faces"]> = {};
   const history: MascotHistory = {};
   for (const mood of MASCOT_MOODS) {
     const f = manifest.files?.[mood];
     if (f && isMoodFileName(f)) files[mood] = f;
+    // 얼굴은 편집기가 바꾸지 않지만 manifest를 다시 쓸 때 지우지 않게 그대로 둔다
+    const face = manifest.faces?.[mood];
+    if (face && isMoodFileName(face)) faces[mood] = face;
     const list = rawHistory[mood];
     if (Array.isArray(list))
       history[mood] = list.filter((e) => e && (e.file === null || isMoodFileName(e.file)));
   }
-  return { manifest: { files }, history };
+  return { manifest: { files, ...(Object.keys(faces).length > 0 && { faces }) }, history };
 }
 
 /** 지금 그림·기록에서 아직 쓰는 파일 이름 */
