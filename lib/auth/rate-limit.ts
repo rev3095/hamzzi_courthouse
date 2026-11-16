@@ -15,10 +15,12 @@ export const SEARCH_RATE: RateRule = { bucket: "search", limit: 60, windowSecond
 export const LOOKUP_RATE: RateRule = { bucket: "lookup", limit: 120, windowSeconds: 3600 };
 /** 피드백·기록 삭제: 같은 네트워크 1시간 30회 */
 export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds: 3600 };
+/** 문서 초안 도우미(DEC-023): 같은 네트워크 1시간 10회 (유료 호출이라 따로 센다) */
+export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
 
 /**
  * 유료(Claude) 분석 하루 전체 상한 (DEC-019·020). 질문 1건 상한 × 건수 = 하루 최대 비용.
- * 기본 100건 — 라이트($0.001)면 하루 최대 약 $0.10, pro-full($0.015)이면 약 $1.5. AI_DAILY_LIMIT로 바꾼다.
+ * 기본 100건(분석과 문서 초안을 함께 센다) — 라이트($0.0015)면 하루 최대 약 $0.15, pro-full($0.015)이면 약 $1.5. AI_DAILY_LIMIT로 바꾼다.
  */
 export function aiDailyRule(env: Record<string, string | undefined> = process.env): RateRule {
   const n = Number.parseInt(env.AI_DAILY_LIMIT ?? "", 10);

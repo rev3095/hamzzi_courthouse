@@ -1,4 +1,4 @@
-// DEC-020 라이트 Haiku 답변 (AI_MODE=pro, 질문 1건 $0.001). 모델·법제처를 가짜로 바꿔 흐름과 비용 상한만 확인한다.
+// DEC-020 라이트 Haiku 답변 (AI_MODE=pro, 질문 1건 $0.0015). 모델·법제처를 가짜로 바꿔 흐름과 비용 상한만 확인한다.
 // Claude 실호출 없음 (절대 규칙: 유료 테스트 반복 금지).
 import { describe, expect, test, vi } from "vitest";
 
@@ -76,7 +76,7 @@ function fakeModel(opts: { tokens?: (p: CreateParams) => number; fail?: unknown 
 }
 
 describe("DEC-020 라이트 답변", () => {
-  test("의도 분석·재검색 없이 Haiku 답변 1회, thinking 끔, 출력 800토큰 이하", async () => {
+  test("의도 분석·재검색 없이 Haiku 답변 1회, thinking 끔, 출력 1,200토큰 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -87,24 +87,24 @@ describe("DEC-020 라이트 답변", () => {
     expect(p.model).toBe("claude-haiku-5-5");
     expect(p.thinking).toEqual({ type: "disabled" });
     expect(p.tools).toBeUndefined();
-    expect(p.max_tokens).toBeLessThanOrEqual(800);
+    expect(p.max_tokens).toBeLessThanOrEqual(1_200);
     expect(out.draft.answer.points).toHaveLength(1);
     expect(out.costCapped).toBe(false);
   });
 
-  test("질문 1건 비용은 $0.001 이하 (입력 5,000 + 출력 400 토큰 = $0.0007)", async () => {
+  test("질문 1건 비용은 $0.0015 이하 (입력 5,000 + 출력 400 토큰 = $0.0007)", async () => {
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
       { model: fakeModel(), lawSource: fakeSource() },
     );
     expect(out.costUsd).toBeCloseTo(0.0007, 6);
-    expect(out.costUsd).toBeLessThanOrEqual(0.001);
+    expect(out.costUsd).toBeLessThanOrEqual(0.0015);
   });
 
   test("입력이 예산을 넘으면 근거를 빼고 다시 잰다 — 생성 호출은 예산 안에서 1번만", async () => {
-    // 근거 2개(조문+판례)일 때 9,000토큰(예산 초과), 1개면 5,000토큰
+    // 판례가 들어가면 13,000토큰(예산 초과: 입력 $0.0013 + 최소 출력 700토큰 > $0.0015), 빼면 5,000토큰
     const model = fakeModel({
-      tokens: (p) => (JSON.stringify(p.messages).includes("2020다12345") ? 9_000 : 5_000),
+      tokens: (p) => (JSON.stringify(p.messages).includes("2020다12345") ? 13_000 : 5_000),
     });
     const out = await runLiteAnalysis({ maskedText: "보증금을 못 받았어요" }, { model, lawSource: fakeSource() });
     expect(model.calls).toHaveLength(1);

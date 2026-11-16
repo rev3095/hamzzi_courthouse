@@ -1,4 +1,4 @@
-// 라이트 Haiku 답변 (AI_MODE=pro, DEC-020). 질문 1건 Claude 비용 $0.001 상한.
+// 라이트 Haiku 답변 (AI_MODE=pro, DEC-020). 질문 1건 Claude 비용 $0.0015 상한.
 // ① 무료 법제처 검색(lib/demo freeSearch, LLM 없음) → ② 근거를 예산에 맞게 줄여 Haiku 답변 1회 → (라우트가) 무료 인용 검증.
 // 의도 분석·재검색은 하지 않는다. 입력이 예산을 넘으면 근거를 하나씩 빼며 다시 잰다(토큰 세기는 무과금).
 // 예산 안에 못 맞추거나 답변이 출력 한도를 넘으면 AI 문단 없이 찾은 근거만 낸다 — 오류로 끝내지 않는다.
@@ -37,14 +37,14 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-15";
+export const LITE_PROMPT_VERSION = "lite-2026-11-16";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
-const LITE_ARTICLE_CHARS = 450;
-const LITE_CASE_CHARS = 600;
+const LITE_ARTICLE_CHARS = 600;
+const LITE_CASE_CHARS = 800;
 /** 처음 넣어 볼 근거 수. 예산을 넘으면 뒤에서부터 뺀다 */
-const LITE_MAX_ARTICLES = 3;
-const LITE_MAX_CASES = 2;
+const LITE_MAX_ARTICLES = 4;
+const LITE_MAX_CASES = 3;
 const ANSWER_TIMEOUT_MS = 25_000;
 
 export type LiteAnalysisOutput = {

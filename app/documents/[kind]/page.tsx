@@ -1,6 +1,7 @@
 // 문서 작성 안내 (내용증명·소장, DEC-022). 결과 화면의 '○○ 바로 가기'가 여기로 온다.
 // 작성 요령·공식 양식 링크는 미리 렌더링하고, 작성 폼은 legal_documents 게이트가 승인됐을 때만 보인다 (절대 규칙 5).
 // 게이트 확인은 요청 때 서버에서 한다 — 클라이언트 플래그로 열지 않는다. 조회에 실패하면 닫힌 것으로 본다.
+// 결과 화면에서 ?from=<질문 번호>로 오면 초안 도우미(DEC-023)로 칸을 채울 수 있다.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,7 +23,10 @@ export function generateStaticParams() {
   return DOCUMENT_KINDS.map((kind) => ({ kind }));
 }
 
-export default async function DocumentPage({ params }: PageProps<"/documents/[kind]">) {
+export default async function DocumentPage({
+  params,
+  searchParams,
+}: PageProps<"/documents/[kind]">) {
   const { kind } = await params;
   if (!isDocumentKind(kind)) notFound();
   const spec = DOCUMENT_SPECS[kind];
@@ -45,7 +49,7 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[ki
           <p className="text-muted mt-2 text-[15px] leading-relaxed">{spec.intro}</p>
 
           <Suspense fallback={<GatedNotice />}>
-            <GateArea kind={kind} />
+            <GateArea kind={kind} searchParams={searchParams} />
           </Suspense>
 
           <section aria-labelledby="tips-title" className="mt-8">
@@ -91,12 +95,22 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[ki
   );
 }
 
-async function GateArea({ kind }: { kind: DocumentKind }) {
+/** 결과 화면에서 온 질문 번호 (?from=). 초안 도우미(DEC-023)가 서버에서 소유권을 다시 확인한다 */
+async function GateArea({
+  kind,
+  searchParams,
+}: {
+  kind: DocumentKind;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await connection();
   const open = await getGate("legal_documents")
     .then(isOpen)
     .catch(() => false);
-  return open ? <DocumentForm spec={DOCUMENT_SPECS[kind]} /> : <GatedNotice />;
+  if (!open) return <GatedNotice />;
+  const from = (await searchParams).from;
+  const inquiryId = typeof from === "string" && /^[0-9a-f-]{36}$/i.test(from) ? from : null;
+  return <DocumentForm spec={DOCUMENT_SPECS[kind]} inquiryId={inquiryId} />;
 }
 
 function GatedNotice() {

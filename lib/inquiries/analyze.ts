@@ -59,7 +59,7 @@ export async function analyzeInquiry(
     }
 
     const context = await loadFollowupContext(inquiry.parent_inquiry_id, owner);
-    // pro = 라이트 Haiku 답변 1회, 질문 1건 $0.001 (DEC-020) / pro-full = 전체 파이프라인 $0.015 (DEC-019)
+    // pro = 라이트 Haiku 답변 1회, 질문 1건 $0.0015 (DEC-020) / pro-full = 전체 파이프라인 $0.015 (DEC-019)
     const analysis =
       mode === "pro-full"
         ? await runDemoAnalysis(

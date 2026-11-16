@@ -220,7 +220,8 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 | 메서드 · 경로 | 인증 | 설명 | 게이트 키 | F-ID |
 |---|---|---|---|---|
 | GET `/procedures?caseType=` | user | 절차 단계·기간·난이도 라벨 | `procedure_guide` | F-014 |
-| POST `/documents/{kind}` (`demand-letter`·`complaint`) | anon·user | 내용증명·소장 양식 채우기(템플릿, LLM 없음, 저장 안 함) | `legal_documents` | F-013 (DEC-022) |
+| POST `/documents/{kind}` (`demand-letter`·`complaint`) | anon·user | 내용증명·소장 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행해 이 API를 쓰지 않는다 | `legal_documents` | F-013 (DEC-022) |
+| POST `/documents/{kind}/draft` | 질문 소유자 | 초안 도우미: 질문 마스킹본으로 규칙 칸 + Haiku 사실관계 초안(1건 $0.0015, 저장 안 함) | `legal_documents` | F-013 (DEC-023) |
 | POST `/inquiries/{id}/agent/messages` | 소유자 | 방향 제안·동의/비동의 대화 | `consult_agent` | F-008 |
 | POST `/inquiries/{id}/summary` | 소유자 | 사건 요약서 생성 | `consult_agent` | F-008 AC2 |
 | POST `/summaries/{id}/confirm` | 소유자 | 내용 확인 | `brief_posting` | F-009 AC1 |
@@ -239,6 +240,16 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 // POST /documents/{kind} (DEC-022) — 게이트 검사가 맨 앞. 승인 전이면 403 FEATURE_GATED(details.featureKey = "legal_documents")
 // req: 문서마다 정해진 문자열 필드(lib/documents/policy DOCUMENT_SPECS). 빈 칸·길이 초과·한 줄 필드의 줄바꿈 → 400 VALIDATION_ERROR(details.fields, 값은 넣지 않음). 모르는 kind → 404
 { data: { kind: "demand-letter"|"complaint"; title: string; text: string; filename: string; notice: string } }  // Cache-Control: no-store, 입력·결과 저장·로그 없음
+
+// POST /documents/{kind}/draft (DEC-023) — 게이트 검사가 맨 앞(403 FEATURE_GATED). 이름·주소·금액은 받지 않는다
+// req: { inquiryId: string }  없으면 400 VALIDATION_ERROR(fields: ["inquiryId"]) · 남의 질문 403 · 없는 질문 404 · 분석 전 409 INVALID_STATE · 1시간 10회 넘으면 429
+{ data: {
+    kind: "demand-letter"|"complaint";
+    suggestions: Record<string, string>;   // 채울 칸 키 → 값. 소장 caseName·evidence·claimCause, 내용증명 subject·facts. 없는 칸은 빠진다
+    missing: string[];                       // 더 적으면 좋은 사실(숫자 없는 짧은 질문, 최대 4개)
+    ai: { used: true } | { used: false; reason: "free_mode"|"daily_limit"|"cost_cap"|"model_failed"|"no_facts" };
+    notice: string | null;                   // AI 문장이 들어가면 AI_NOTICE
+} }  // Cache-Control: no-store, 저장·로그 없음
 
 // GET /procedures (F-014)
 { caseType: string; steps: { ord: number; label: string; duration: { min: number; max: number; unit: "day"|"week"|"month" }; difficulty: "self"|"depends"|"expert"; source: string }[]; aiNotice: string }

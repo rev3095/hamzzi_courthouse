@@ -37,6 +37,7 @@ export function ResultPanel({
   footer,
   onAskStep,
   onDeepAsk,
+  inquiryId,
 }: {
   result: DemoAnalysisResult;
   question: string | null;
@@ -48,6 +49,8 @@ export function ResultPanel({
   onAskStep?: (question: string) => void;
   /** "심층 질문하기" — 이어 묻기 입력란으로 이동 */
   onDeepAsk?: () => void;
+  /** 이 결과의 질문 번호 — 문서 작성 안내에 ?from=으로 넘겨 초안 도우미(DEC-023)가 쓴다 */
+  inquiryId?: string;
 }) {
   const searchOnly = result.mode === "search_only";
   const usedArticles = result.articles.filter((a) => a.used).length;
@@ -113,7 +116,7 @@ export function ResultPanel({
       <Details result={result} />
 
       <div id="deep-question">{followUp}</div>
-      <NextSteps plan={plan} onDeepAsk={onDeepAsk} />
+      <NextSteps plan={plan} onDeepAsk={onDeepAsk} inquiryId={inquiryId} />
       {footer}
       <SourceCredit note={result.searchScopeNote} />
     </article>
@@ -218,15 +221,29 @@ function Details({ result }: { result: DemoAnalysisResult }) {
 }
 
 /** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 게이트 안내 화면, 그 밖에는 그 단계의 공식 창구로 간다 */
-function NextSteps({ plan, onDeepAsk }: { plan: ProcedurePlan; onDeepAsk?: () => void }) {
+function NextSteps({
+  plan,
+  onDeepAsk,
+  inquiryId,
+}: {
+  plan: ProcedurePlan;
+  onDeepAsk?: () => void;
+  inquiryId?: string;
+}) {
   const go = plan.kind === "timeline" ? shortcutOf(plan.recommended) : null;
+  const from = inquiryId ? `?from=${encodeURIComponent(inquiryId)}` : "";
+  // 먼저 추천한 단계가 소장이 아니어도, 그 타임라인에 소송 단계가 있으면 소장 작성 안내를 함께 보인다
+  const complaint =
+    plan.kind === "timeline" && plan.recommended.document !== "complaint"
+      ? plan.steps.find((s) => s.document === "complaint")
+      : undefined;
   const cardClass =
     "rounded-card bg-ink flex min-h-[72px] items-center justify-between gap-3 px-5 py-4 text-white";
   const title = plan.kind === "timeline" ? `${plan.recommended.label} 바로 가기` : "";
   return (
     <section aria-label="다음 단계" className="mt-4 grid gap-3 lg:grid-cols-2">
       {go?.kind === "document" && (
-        <Link href={go.href} className={cardClass}>
+        <Link href={`${go.href}${from}`} className={cardClass}>
           <span>
             <span className="block text-base font-bold">{title}</span>
             <span className="mt-0.5 block text-[13px] text-white/75">
@@ -250,6 +267,22 @@ function NextSteps({ plan, onDeepAsk }: { plan: ProcedurePlan; onDeepAsk?: () =>
             ↗
           </span>
         </a>
+      )}
+      {complaint && (
+        <Link
+          href={`/documents/complaint${from}`}
+          className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4"
+        >
+          <span>
+            <span className="block text-base font-bold">소장 작성 안내</span>
+            <span className="text-muted mt-0.5 block text-[13px]">
+              작성 요령 · 공식 양식 (초안 도우미는 법률 검토 후 열려요)
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-xl">
+            →
+          </span>
+        </Link>
       )}
       <button
         type="button"

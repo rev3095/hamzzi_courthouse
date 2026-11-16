@@ -35,12 +35,16 @@
 
 ### 라이트 답변 (AI_MODE=pro, DEC-020)
 
-`lite.ts` `runLiteAnalysis`: 무료 법제처 검색(`lib/demo` `freeSearch`) → 근거를 조문 3·판례 2건, 450·600자로 줄여 Haiku 답변 1회(`LITE_ANSWER_SYSTEM`, 출력 800토큰, thinking 끔, effort low) → 라우트가 무료 인용 검증. 질문 1건 **$0.001** 상한(`LITE_COST_CAP_USD`).
+`lite.ts` `runLiteAnalysis`: 무료 법제처 검색(`lib/demo` `freeSearch`) → 근거를 조문 4·판례 3건, 600·800자로 줄여 Haiku 답변 1회(`LITE_ANSWER_SYSTEM`, 문단 3~4개, 출력 1,200토큰, thinking 끔, effort low) → 라우트가 무료 인용 검증. 질문 1건 **$0.0015** 상한(`LITE_COST_CAP_USD`, 2026-11-16 $0.001에서 올림).
 
 - 호출 전 무과금 토큰 세기로 입력을 재고, 넘으면 근거를 뒤에서부터 하나씩 빼고 다시 잰다. 하나도 못 넣으면 Claude를 부르지 않는다.
 - 출력 한도 초과·형식 오류는 오류로 끝내지 않고 AI 문단 없이 근거만 낸다(`costCapped`). SDK 재시도 0.
-- 실측(2026-11-15, count_tokens): 한국어 1글자 ≈ 1토큰, 답변 지시문 약 1,500토큰. 예산: 입력 6,000($0.0006) + 출력 800($0.0004).
+- 실측(2026-11-15, count_tokens): 한국어 1글자 ≈ 1토큰, 답변 지시문 약 1,500토큰. 예산: 입력 약 9,000($0.0009) + 출력 1,200($0.0006). 출력 최소 700토큰을 못 남기면 근거를 뺀다.
 - 테스트: `tests/unit/ai-lite.test.ts` (가짜 모델). 유료 확인은 필요할 때 1~2번만 (CLAUDE.md 절대 규칙 8).
+
+### 문서 초안 도우미 (DEC-023, legal_documents 게이트 뒤)
+
+`doc-draft.ts` `draftFacts`: 질문 마스킹본만 받아 Haiku 1회로 "있었던 일" 문장(최대 8개)과 더 적을 내용(최대 4개)을 JSON으로 받는다. 1건 **$0.0015** 상한(`DOC_DRAFT_COST_CAP_USD`, 출력 900토큰). 문장 거르기는 `lib/documents/draft.ts` `screenFacts`(사연에 없는 숫자·가림 표시, 단정 표현, 법률 판단 낱말, 법령·판례 언급이면 뺌). 예산 초과·모델 실패·남은 문장 없음은 오류가 아니라 `ok: false`로 끝내고 재시도하지 않는다. 테스트: `tests/unit/doc-draft.test.ts`.
 
 ### 비용 상한 — 전체 파이프라인 (AI_MODE=pro-full, DEC-019)
 

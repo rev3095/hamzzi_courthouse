@@ -65,6 +65,17 @@ describe("F-014 결과 요약형 레이아웃", () => {
     expect(link.getAttribute("href")).toBe("/documents/demand-letter");
   });
 
+  test("DEC-023 질문 번호를 ?from=으로 넘기고, 소송 단계가 있으면 소장 작성 안내도 보인다", () => {
+    const id = "11111111-2222-3333-4444-555555555555";
+    renderLease({ inquiryId: id });
+    expect(screen.getByRole("link", { name: /내용증명 바로 가기/ }).getAttribute("href")).toBe(
+      `/documents/demand-letter?from=${id}`,
+    );
+    expect(screen.getByRole("link", { name: /소장 작성 안내/ }).getAttribute("href")).toBe(
+      `/documents/complaint?from=${id}`,
+    );
+  });
+
   test("세부 내용(기존 답변·법령·판례·검증 탭)은 접혀 있다", () => {
     const { container } = renderLease();
     const details = container.querySelector("details")!;

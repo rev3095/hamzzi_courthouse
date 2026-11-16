@@ -388,6 +388,7 @@ function DoneView({
         focusBox();
       }}
       onDeepAsk={focusBox}
+      inquiryId={parentId}
       followUp={<FollowUp parentId={parentId} text={text} setText={setText} inputRef={inputRef} />}
       footer={<Feedback resultId={resultId} />}
     />
