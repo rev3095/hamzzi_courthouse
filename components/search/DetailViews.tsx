@@ -3,7 +3,7 @@
 // 없으면 "찾을 수 없음" — 대체 내용을 만들지 않는다 (API.md 3절 NOT_FOUND).
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   getCaseDetail,
   getStatute,
@@ -12,7 +12,20 @@ import {
   type StatuteView,
 } from "@/lib/client/api";
 import { dotDate } from "../result/labels";
-import { OriginalLink, SearchCredit, SearchNotice, searchErrorText } from "./parts";
+import { highlightTerms } from "@/lib/search/highlight";
+import {
+  Highlighted,
+  OriginalLink,
+  SearchCredit,
+  SearchNotice,
+  recallSearch,
+  searchErrorText,
+} from "./parts";
+
+const noSubscribe = () => () => {};
+
+/** 판시사항·판결요지는 강조 영역으로 (글자 크기는 그대로, 바탕·왼쪽 선만) */
+const KEY_SECTIONS = new Set(["판시사항", "판결요지"]);
 
 function useLoad<T>(key: string, load: () => Promise<ApiResult<T>>) {
   const [state, setState] = useState<{ key: string; r: ApiResult<T> } | null>(null);
@@ -45,6 +58,11 @@ function Shell({ children }: { children: React.ReactNode }) {
 export function CaseRoute() {
   const { id } = useParams<{ id: string }>();
   const r = useLoad(id, () => getCaseDetail(id));
+  // 판례 검색에서 왔으면 그 검색어 낱말을 하이라이트한다 (검색어는 이 기기에만)
+  // 주소에는 검색어가 아니라 ?from=search 표시만 둔다 (F-007)
+  const fromSearch = useSearchParams().get("from") === "search";
+  const query = useSyncExternalStore(noSubscribe, recallSearch, () => null);
+  const terms = fromSearch ? highlightTerms(query) : [];
   if (!r)
     return (
       <Shell>
@@ -66,9 +84,9 @@ export function CaseRoute() {
     <Shell>
       <SearchNotice notice={c.notice} />
       <h1 className="font-display text-ink mt-4 text-[24px] leading-snug font-bold">
-        {c.caseName || c.caseNo}
+        <Highlighted text={c.caseName || c.caseNo} terms={terms} />
       </h1>
-      <p className="text-muted mt-1 text-sm">
+      <p className="bg-cream text-label mt-2 w-fit rounded-[6px] px-2 py-0.5 text-sm">
         {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
       </p>
       {c.fromBody && (
@@ -76,12 +94,32 @@ export function CaseRoute() {
           판시사항·요지가 없어 개인정보를 가린 본문 일부를 보여 드려요
         </p>
       )}
-      {c.sections.map((s) => (
-        <section key={s.section} className="mt-6">
-          <h2 className="font-display text-ink text-lg font-bold">{s.section}</h2>
-          <p className="text-ink mt-2 text-[15px] leading-[1.8] whitespace-pre-line">{s.text}</p>
-        </section>
-      ))}
+      {terms.length > 0 && (
+        <p className="text-muted mt-3 text-[13px]">
+          <mark className="bg-honey-line text-ink rounded-[3px] px-1">검색어</mark> 표시는 판례
+          검색에서 적은 낱말이에요.
+        </p>
+      )}
+      {c.sections.map((s) =>
+        KEY_SECTIONS.has(s.section) ? (
+          <section
+            key={s.section}
+            className="rounded-card border-honey-line bg-honey border-l-gold mt-6 border border-l-4 px-5 py-4"
+          >
+            <h2 className="font-display text-ink text-lg font-bold">{s.section}</h2>
+            <p className="text-ink mt-2 text-[15px] leading-[1.8] whitespace-pre-line">
+              <Highlighted text={s.text} terms={terms} />
+            </p>
+          </section>
+        ) : (
+          <section key={s.section} className="mt-6">
+            <h2 className="font-display text-ink text-lg font-bold">{s.section}</h2>
+            <p className="text-ink mt-2 text-[15px] leading-[1.8] whitespace-pre-line">
+              <Highlighted text={s.text} terms={terms} />
+            </p>
+          </section>
+        ),
+      )}
       {c.citedStatutes.length > 0 && (
         <section className="mt-6">
           <h2 className="font-display text-ink text-lg font-bold">참조조문</h2>

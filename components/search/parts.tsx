@@ -1,6 +1,7 @@
 // 판례·조문 직접 검색 화면 공통 조각. AI가 만든 내용이 없으므로 AI_NOTICE 대신 SEARCH_NOTICE를 쓴다 (절대 규칙 6 취지).
 import type { ClientError } from "@/lib/client/api";
 import { SEARCH_NOTICE } from "@/lib/api/respond";
+import { highlightParts } from "@/lib/search/highlight";
 
 export function SearchNotice({ notice = SEARCH_NOTICE }: { notice?: string }) {
   return (
@@ -58,4 +59,44 @@ export function searchErrorText(err: ClientError): string {
     return "법제처에서 결과를 불러오지 못했어요. 결과가 없는 게 아니라 연결 문제예요. 잠시 후 다시 시도해 주세요.";
   if (err.code === "NOT_FOUND") return "법제처에서 찾을 수 없어요. 주소가 맞는지 확인해 주세요.";
   return `일시적인 오류가 발생했어요.${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
+}
+
+/**
+ * 검색어 낱말 하이라이트. 글자 크기는 그대로 두고 조금 어두운 바탕(honey-line)으로만 표시한다.
+ * 새 색 토큰 없이 브랜드 토큰을 쓴다 (docs/05 3.1, docs/07 3절).
+ */
+export function Highlighted({ text, terms }: { text: string; terms: string[] }) {
+  return (
+    <>
+      {highlightParts(text, terms).map((p, i) =>
+        p.hit ? (
+          <mark
+            key={i}
+            className="bg-honey-line text-ink rounded-[3px] [box-decoration-break:clone] px-0.5"
+          >
+            {p.text}
+          </mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        ),
+      )}
+    </>
+  );
+}
+
+/** 마지막 판례 검색어 — 이 기기(sessionStorage)에만 둔다. 주소(?q=)·서버 기록에 남기지 않는다 (F-007) */
+const SEARCH_KEY = "hz:sq";
+export function rememberSearch(q: string) {
+  try {
+    sessionStorage.setItem(SEARCH_KEY, q);
+  } catch {
+    // 저장소를 못 쓰면 상세 화면 하이라이트만 빠진다
+  }
+}
+export function recallSearch(): string | null {
+  try {
+    return sessionStorage.getItem(SEARCH_KEY);
+  } catch {
+    return null;
+  }
 }

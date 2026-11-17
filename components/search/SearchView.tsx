@@ -5,7 +5,15 @@ import { useState } from "react";
 import { searchCases, type CaseList, type ClientError } from "@/lib/client/api";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
-import { OriginalLink, SearchCredit, SearchNotice, searchErrorText } from "./parts";
+import { highlightTerms } from "@/lib/search/highlight";
+import {
+  Highlighted,
+  OriginalLink,
+  SearchCredit,
+  SearchNotice,
+  rememberSearch,
+  searchErrorText,
+} from "./parts";
 
 type State =
   | { kind: "idle" }
@@ -26,8 +34,13 @@ export function SearchView() {
     }
     setState({ kind: "loading", q });
     const r = await searchCases(q);
+    // 서버가 받아 준 검색어만 이 기기에 남긴다 (개인정보로 막힌 검색어는 남기지 않음) — 상세 화면 하이라이트용
+    if (r.ok) rememberSearch(q);
     setState(r.ok ? { kind: "done", q, data: r.data } : { kind: "error", q, error: r.error });
   };
+
+  // 검색 결과에서 검색어 낱말을 하이라이트한다 (F-003)
+  const terms = state.kind === "done" ? highlightTerms(state.q) : [];
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
@@ -76,17 +89,18 @@ export function SearchView() {
                   className="rounded-card border-line flex flex-col gap-1.5 border bg-white p-5"
                 >
                   <Link
-                    href={`/cases/${c.id}`}
+                    href={`/cases/${c.id}?from=search`}
                     className="font-display text-ink text-base leading-snug font-bold underline-offset-2 hover:underline"
                   >
-                    {c.caseName || c.caseNo}
+                    <Highlighted text={c.caseName || c.caseNo} terms={terms} />
                   </Link>
-                  <p className="text-muted text-[13px]">
+                  {/* 사건 정보 띠: 법원·선고일·사건번호를 한눈에 (글자 크기는 그대로) */}
+                  <p className="bg-cream text-label w-fit rounded-[6px] px-2 py-0.5 text-[13px]">
                     {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Link
-                      href={`/cases/${c.id}`}
+                      href={`/cases/${c.id}?from=search`}
                       className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
                     >
                       판시사항·요지 보기 →
