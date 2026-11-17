@@ -14,7 +14,7 @@ import {
   type ClientError,
   type DecisionDomain,
 } from "@/lib/client/api";
-import { directTarget } from "@/lib/search/explore";
+import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
@@ -32,10 +32,11 @@ type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
 
 const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "cases", label: "판례", placeholder: "예: 임대차 보증금 반환, 민법 750조, 2023다12345" },
-  { kind: "interpretation", label: "법령해석례", placeholder: "예: 임대차, 공공임대주택" },
-  { kind: "constitutional", label: "헌재 결정례", placeholder: "예: 임대차보호법, 재산권" },
-  { kind: "tax_tribunal", label: "조세심판 재결례", placeholder: "예: 양도소득세, 증여" },
-  // 관세청 해석(customs)은 법제처 인증키에 대상 승인이 없어 결과가 오지 않는다(2026-11-18 확인). 승인 뒤 탭을 다시 연다 — API는 그대로 둔다
+  ...DECISION_TABS.map((d) => ({
+    kind: d.domain as Kind,
+    label: d.label,
+    placeholder: d.placeholder,
+  })),
   { kind: "ordinances", label: "자치법규", placeholder: "예: 출산장려금, 주차장 설치" },
   { kind: "admin_rules", label: "행정규칙", placeholder: "예: 임대차, 최저임금 고시" },
 ];
@@ -134,9 +135,10 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
       ...r.data,
       items: r.data.items.map((d) => ({
         key: d.id,
-        href: `/decisions/${d.domain}/${d.id}?from=search`,
+        // 법제처가 본문 조회를 주지 않는 종류(국세청 해석)는 목록만
+        href: d.hasDetail ? `/decisions/${d.domain}/${d.id}?from=search` : null,
         title: d.title,
-        tags: tags(d.agency, dotDate(d.decidedAt), d.refNo),
+        tags: tags(d.agency, d.decidedAt && `${d.dateLabel} ${dotDate(d.decidedAt)}`, d.refNo),
         sourceUrl: d.sourceUrl,
       })),
     },

@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import { SEARCH_NOTICE } from "@/lib/api/respond";
 import { caseNumbersIn } from "@/lib/citations/patterns";
 import { scanInput } from "@/lib/pii";
+import { maskPii } from "@/lib/pii/detect";
 import { MAX_QUERY_CHARS, statuteIdOf } from "./browse";
 import { bodyExcerpt, isoDate, normalizeArticleNo, stripHtml } from "./normalize";
 import type {
@@ -33,30 +34,94 @@ type DomainSpec = {
   label: string;
   /** 법제처 Open API target */
   target: string;
+  placeholder: string;
+  /** 목록·상세 응답에서 읽을 필드 이름 (앞에서부터 처음 있는 값) */
+  id: string[];
+  title: string[];
+  refNo: string[];
+  agency: string[];
+  /** 응답에 기관 필드가 없을 때 쓰는 고정 기관명 */
+  agencyName?: string;
+  date: string[];
+  /** 날짜가 뜻하는 것 (회신·종국·의결·등록 …) */
+  dateLabel: string;
   /** 상세에서 보여 줄 항목 (라벨, 응답 필드). 이유·전문은 넣지 않는다 */
   sections: [string, string][];
   /** 요지가 모두 비었을 때만 가린 일부를 보여 줄 본문 필드 */
   bodyField: string | null;
+  /** 법제처가 상세 조회를 제공하지 않는 종류는 false (목록만) */
+  hasDetail: boolean;
   /** 국가법령정보센터 공개 주소. 확인된 종류만 */
   url: ((id: string) => string) | null;
   note: string;
 };
 
+const SPECIAL_APPEAL = {
+  id: ["특별행정심판재결례일련번호"],
+  title: ["사건명"],
+  refNo: ["청구번호", "사건번호"],
+  agency: ["재결청"],
+  date: ["의결일자"],
+  dateLabel: "의결",
+  bodyField: null,
+  hasDetail: true,
+  url: null,
+};
+const COMMITTEE = {
+  id: ["결정문일련번호"],
+  refNo: ["사건번호", "결정번호", "안건번호", "의안번호"],
+  agency: ["기관명"],
+  bodyField: null,
+  hasDetail: true,
+  url: null,
+};
+
+/** 목록만 주는 규정류 (학칙·공사공단·공공기관 규정). 본문은 법제처 원문에서 본다 */
+const INSTITUTION_RULE = {
+  id: ["행정규칙일련번호"],
+  title: ["행정규칙명"],
+  refNo: ["행정규칙종류"],
+  agency: ["소관부처명"],
+  date: ["시행일자", "발령일자"],
+  dateLabel: "시행",
+  sections: [] as [string, string][],
+  bodyField: null,
+  hasDetail: false,
+  url: (id: string) => `${LAW_GO}/LSW/admRulInfoP.do?admRulSeq=${encodeURIComponent(id)}`,
+};
+
+/** lexdiff README의 "판례·해석례 통합"과 같은 범위: 법제처 Open API가 주는 결정문 종류 (판례는 /cases) */
 export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
   interpretation: {
     label: "법령해석례",
     target: "expc",
+    placeholder: "예: 임대차, 공공임대주택",
+    id: ["법령해석례일련번호"],
+    title: ["안건명"],
+    refNo: ["법령해석례번호", "안건번호"],
+    agency: ["해석기관명"],
+    date: ["회신일자", "해석일자"],
+    dateLabel: "회신",
     sections: [
       ["질의요지", "질의요지"],
       ["회답", "회답"],
     ],
     bodyField: "이유",
+    hasDetail: true,
     url: (id) => `${LAW_GO}/LSW/expcInfoP.do?expcSeq=${encodeURIComponent(id)}`,
     note: "법제처 법령해석례를 안건명으로 찾은 결과예요.",
   },
   constitutional: {
     label: "헌재 결정례",
     target: "detc",
+    placeholder: "예: 임대차보호법, 재산권",
+    id: ["헌재결정례일련번호"],
+    title: ["사건명"],
+    refNo: ["사건번호"],
+    agency: [],
+    agencyName: "헌법재판소",
+    date: ["종국일자"],
+    dateLabel: "종국",
     sections: [
       ["판시사항", "판시사항"],
       ["결정요지", "결정요지"],
@@ -64,33 +129,229 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["참조조문", "참조조문"],
     ],
     bodyField: "전문",
+    hasDetail: true,
     url: (id) => `${LAW_GO}/LSW/detcInfoP.do?detcSeq=${encodeURIComponent(id)}`,
     note: "헌법재판소 결정례를 사건명으로 찾은 결과예요.",
   },
+  admin_appeal: {
+    label: "행정심판 재결례",
+    target: "decc",
+    placeholder: "예: 영업정지, 과징금",
+    id: ["행정심판재결례일련번호", "행정심판례일련번호"],
+    title: ["사건명"],
+    refNo: ["사건번호"],
+    agency: ["재결청"],
+    date: ["의결일자"],
+    dateLabel: "의결",
+    sections: [
+      ["주문", "주문"],
+      ["청구취지", "청구취지"],
+      ["재결요지", "재결요지"],
+    ],
+    bodyField: null,
+    hasDetail: true,
+    url: null,
+    note: "행정심판 재결례를 사건명으로 찾은 결과예요.",
+  },
   tax_tribunal: {
+    ...SPECIAL_APPEAL,
     label: "조세심판 재결례",
     target: "ttSpecialDecc",
+    placeholder: "예: 양도소득세, 증여",
     sections: [
       ["주문", "주문"],
       ["재결요지", "재결요지"],
       ["관련법령", "관련법령"],
     ],
-    bodyField: null,
-    url: null,
     note: "조세심판원 재결례를 사건명으로 찾은 결과예요.",
+  },
+  appeal_review: {
+    ...SPECIAL_APPEAL,
+    label: "소청심사 재결례",
+    target: "adapSpecialDecc",
+    placeholder: "예: 징계, 감봉",
+    refNo: ["사건번호", "청구번호"],
+    sections: [
+      ["주문", "주문"],
+      ["처분요지", "처분요지"],
+      ["재결요지", "재결요지"],
+    ],
+    note: "소청심사위원회 재결례를 사건명으로 찾은 결과예요.",
+  },
+  acr_special: {
+    ...SPECIAL_APPEAL,
+    label: "권익위 특별행정심판",
+    target: "acrSpecialDecc",
+    placeholder: "예: 감경, 처분 취소",
+    refNo: ["사건번호", "청구번호"],
+    sections: [
+      ["주문", "주문"],
+      ["청구취지", "청구취지"],
+      ["재결요지", "재결요지"],
+      ["관계법령", "관계법령"],
+    ],
+    note: "국민권익위원회 특별행정심판 재결례를 사건명으로 찾은 결과예요.",
   },
   customs: {
     label: "관세청 해석",
     target: "kcsCgmExpc",
+    placeholder: "예: 과세가격, 원산지",
+    id: ["법령해석일련번호"],
+    title: ["안건명"],
+    refNo: ["안건번호"],
+    agency: ["해석기관명"],
+    date: ["해석일자"],
+    dateLabel: "해석",
     sections: [
       ["질의요지", "질의요지"],
       ["회답", "회답"],
+      ["관련법령", "관련법령"],
     ],
     bodyField: null,
+    hasDetail: true,
     url: null,
     note: "관세청 법령해석을 안건명으로 찾은 결과예요.",
   },
+  nts: {
+    label: "국세청 해석",
+    target: "ntsCgmExpc",
+    placeholder: "예: 양도, 부가가치세",
+    id: ["법령해석일련번호"],
+    title: ["안건명"],
+    refNo: ["안건번호"],
+    agency: ["해석기관명"],
+    date: ["해석일자"],
+    dateLabel: "해석",
+    sections: [],
+    bodyField: null,
+    hasDetail: false,
+    url: null,
+    note: "국세청 법령해석을 안건명으로 찾은 결과예요. 법제처가 본문 조회를 제공하지 않아 목록만 보여 드려요.",
+  },
+  ftc: {
+    ...COMMITTEE,
+    label: "공정위 결정문",
+    target: "ftc",
+    placeholder: "예: 과징금, 불공정거래",
+    title: ["사건명"],
+    agencyName: "공정거래위원회",
+    date: ["결정일자", "의결일자"],
+    dateLabel: "결정",
+    sections: [
+      ["주문", "주문"],
+      ["결정요지", "결정요지"],
+    ],
+    note: "공정거래위원회 결정문을 사건명으로 찾은 결과예요.",
+  },
+  pipc: {
+    ...COMMITTEE,
+    label: "개인정보위 결정문",
+    target: "ppc",
+    placeholder: "예: 개인정보 유출, 동의",
+    title: ["안건명"],
+    agencyName: "개인정보보호위원회",
+    date: ["의결일", "의결일자", "의결연월일"],
+    dateLabel: "의결",
+    sections: [
+      ["주문", "주문"],
+      ["결정요지", "결정요지"],
+    ],
+    note: "개인정보보호위원회 결정문을 안건명으로 찾은 결과예요.",
+  },
+  nlrc: {
+    ...COMMITTEE,
+    label: "노동위 결정문",
+    target: "nlrc",
+    placeholder: "예: 부당해고, 부당노동행위",
+    title: ["제목"],
+    agencyName: "노동위원회",
+    date: ["등록일"],
+    dateLabel: "등록",
+    sections: [
+      ["판정사항", "판정사항"],
+      ["판정요지", "판정요지"],
+      ["판정결과", "판정결과"],
+    ],
+    note: "노동위원회 결정문을 제목으로 찾은 결과예요.",
+  },
+  acr: {
+    ...COMMITTEE,
+    label: "권익위 결정문",
+    target: "acr",
+    placeholder: "예: 보상, 고충민원",
+    title: ["제목"],
+    refNo: ["의안번호"],
+    agencyName: "국민권익위원회",
+    date: ["의결일", "의결일자"],
+    dateLabel: "의결",
+    sections: [
+      ["주문", "주문"],
+      ["결정요지", "결정요지"],
+    ],
+    note: "국민권익위원회 결정문을 제목으로 찾은 결과예요.",
+  },
+  treaty: {
+    label: "조약",
+    target: "trty",
+    placeholder: "예: 투자, 범죄인 인도",
+    id: ["조약일련번호"],
+    title: ["조약명"],
+    refNo: ["조약구분명"],
+    agency: [],
+    date: ["발효일자"],
+    dateLabel: "발효",
+    sections: [],
+    bodyField: null,
+    hasDetail: false,
+    url: null,
+    note: "조약을 이름으로 찾은 결과예요. 목록만 보여 드려요.",
+  },
+  school: {
+    ...INSTITUTION_RULE,
+    label: "학칙",
+    target: "school",
+    placeholder: "예: 학칙, 장학금",
+    note: "대학 등의 학칙을 이름으로 찾은 결과예요. 목록만 보여 드려요.",
+  },
+  public_corp: {
+    ...INSTITUTION_RULE,
+    label: "공사·공단 규정",
+    target: "public",
+    placeholder: "예: 인사 규정, 계약",
+    note: "지방공사·공단 규정을 이름으로 찾은 결과예요. 목록만 보여 드려요.",
+  },
+  public_inst: {
+    ...INSTITUTION_RULE,
+    label: "공공기관 규정",
+    target: "pi",
+    placeholder: "예: 인사규정, 보수",
+    note: "공공기관 규정을 이름으로 찾은 결과예요. 목록만 보여 드려요.",
+  },
+  english_law: {
+    label: "영문 법령",
+    target: "elaw",
+    placeholder: "예: civil, lease (영어로)",
+    id: ["법령일련번호"],
+    title: ["법령명영문"],
+    refNo: ["법령명한글"],
+    agency: ["소관부처명"],
+    date: ["시행일자"],
+    dateLabel: "시행",
+    sections: [],
+    bodyField: null,
+    hasDetail: false,
+    url: null,
+    note: "영문으로 번역된 법령을 영문 이름으로 찾은 결과예요. 목록만 보여 드려요.",
+  },
 };
+
+/** 화면 탭 순서 */
+export const DECISION_TABS = (Object.keys(DECISION_DOMAINS) as DecisionDomain[]).map((domain) => ({
+  domain,
+  label: DECISION_DOMAINS[domain].label,
+  placeholder: DECISION_DOMAINS[domain].placeholder,
+  dateLabel: DECISION_DOMAINS[domain].dateLabel,
+}));
 
 export const isDecisionDomain = (v: unknown): v is DecisionDomain =>
   typeof v === "string" && Object.hasOwn(DECISION_DOMAINS, v);
@@ -122,62 +383,86 @@ export function parseSearchText(value: unknown, field = "q"): string {
 const str = (v: unknown): string | null => {
   if (typeof v === "string") return v.trim() || null;
   if (v && typeof v === "object" && typeof (v as { content?: unknown }).content === "string")
-    return ((v as { content: string }).content.trim() || null) as string | null;
+    return (v as { content: string }).content.trim() || null;
   return typeof v === "number" ? String(v) : null;
 };
 
-/** 목록 응답의 행(라이브러리 파서 결과) → DecisionHit. 제목·번호가 없으면 버린다 */
+/** "2011.2.22." · "2019.04.22" · "20240923" → "2011-02-22". 한 자리 월·일도 받는다 */
+export function looseDate(value: unknown): string | null {
+  const s = str(value);
+  if (!s) return null;
+  const m = /^(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})/.exec(s);
+  return m ? isoDate(`${m[1]}${m[2].padStart(2, "0")}${m[3].padStart(2, "0")}`) : isoDate(s);
+}
+
+/** 목록·상세 응답의 한 행 → DecisionHit. 제목·번호가 없으면 버린다. 상세링크(인증키 포함)는 쓰지 않는다 */
 export function decisionHit(
   domain: DecisionDomain,
   row: Record<string, unknown>,
 ): DecisionHit | null {
-  const pick = (...keys: string[]) => {
+  const spec = DECISION_DOMAINS[domain];
+  const pick = (keys: string[]) => {
     for (const k of keys) {
       const v = stripHtml(str(row[k]));
       if (v) return v;
     }
     return null;
   };
-  const id = pick(
-    "법령해석례일련번호",
-    "헌재결정례일련번호",
-    "특별행정심판재결례일련번호",
-    "관세행정해석례일련번호",
-  );
-  const title = pick("안건명", "사건명");
+  const id = pick(spec.id);
+  const title = pick(spec.title);
   if (!id || !/^\d+$/.test(id) || !title) return null;
+  let decidedAt: string | null = null;
+  for (const k of spec.date) decidedAt ??= looseDate(row[k]);
   return {
     domain,
     id,
     title,
-    refNo: pick("법령해석례번호", "안건번호", "사건번호", "청구번호"),
-    agency: pick("해석기관명", "재결청", "처리부서"),
-    decidedAt: isoDate(pick("회신일자", "해석일자", "종국일자", "의결일자")),
-    sourceUrl: DECISION_DOMAINS[domain].url?.(id) ?? null,
+    refNo: pick(spec.refNo)?.replace(/\s+/g, " ") ?? null,
+    agency: pick(spec.agency) ?? spec.agencyName ?? null,
+    decidedAt,
+    dateLabel: spec.dateLabel,
+    hasDetail: spec.hasDetail,
+    sourceUrl: spec.url?.(id) ?? null,
   };
 }
 
-/** 상세 응답(JSON) → DecisionDetail. 법제처가 준 항목만 싣는다. 없으면 null */
+/** 목록 응답(XML)의 `<항목 id="n">…</항목>` 행들. 종류마다 항목 이름이 달라 이름을 가리지 않는다 */
+export function decisionRows(xml: string): Record<string, string>[] {
+  const out: Record<string, string>[] = [];
+  for (const m of xml.matchAll(/<([A-Za-z]+)\s+id="\d+"\s*>([\s\S]*?)<\/\1>/g)) {
+    const row: Record<string, string> = {};
+    for (const f of m[2].matchAll(/<([^\s/>!?]+)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/g)) {
+      row[f[1]] = decode(f[2]);
+    }
+    out.push(row);
+  }
+  return out;
+}
+
+/**
+ * 상세 응답(JSON) → DecisionDetail. 법제처가 준 요지 항목만 싣고 개인정보로 보이는 표현은 가린다 (F-007).
+ * 위원회 결정문은 `의결서` 안에 항목이 들어 있다. 없으면 null
+ */
 export function decisionDetail(
   domain: DecisionDomain,
   id: string,
   json: unknown,
 ): DecisionDetail | null {
+  const spec = DECISION_DOMAINS[domain];
+  if (!spec.hasDetail) return null;
   const root = json && typeof json === "object" ? Object.values(json as object)[0] : null;
   if (!root || typeof root !== "object" || Array.isArray(root)) return null;
-  const row = root as Record<string, unknown>;
-  const spec = DECISION_DOMAINS[domain];
-  const hit = decisionHit(domain, {
-    ...row,
-    법령해석례일련번호: id,
-    헌재결정례일련번호: id,
-    특별행정심판재결례일련번호: id,
-    관세행정해석례일련번호: id,
-  });
+  const outer = root as Record<string, unknown>;
+  const inner = outer["의결서"];
+  const row =
+    inner && typeof inner === "object" && !Array.isArray(inner)
+      ? { ...outer, ...(inner as Record<string, unknown>) }
+      : outer;
+  const hit = decisionHit(domain, { ...row, [spec.id[0]]: id });
   if (!hit) return null;
   const sections = spec.sections.flatMap(([section, key]) => {
     const text = stripHtml(str(row[key]));
-    return text ? [{ section, text }] : [];
+    return text ? [{ section, text: maskPii(text).maskedText }] : [];
   });
   const fromBody = sections.length === 0 && spec.bodyField !== null;
   const excerpt = fromBody ? bodyExcerpt(str(row[spec.bodyField!])) : null;
@@ -224,14 +509,15 @@ export function directTarget(input: string): DirectTarget | null {
 
 // --- XML 읽기 ----------------------------------------------------------------------------
 
-const decode = (s: string) =>
-  s
+function decode(s: string): string {
+  return s
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, "&")
     .trim();
+}
 
 /** `<item …><필드>값</필드>…</item>` 반복을 필드 맵 목록으로. 중첩 없는 단순 목록 응답 전용 */
 export function xmlItems(xml: string, itemTag: string): Record<string, string>[] {
@@ -600,7 +886,14 @@ export function ordinanceLinks(xml: string): OrdinanceLink[] {
 
 // --- 법령 도구 경로 ------------------------------------------------------------------------
 
-export const LAW_VIEWS = ["three-tier", "old-new", "history", "annexes", "impact"] as const;
+export const LAW_VIEWS = [
+  "articles",
+  "three-tier",
+  "old-new",
+  "history",
+  "annexes",
+  "impact",
+] as const;
 export type LawView = (typeof LAW_VIEWS)[number];
 
 export function parseLawName(raw: string): string {

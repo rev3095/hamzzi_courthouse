@@ -210,13 +210,14 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 `200 { items: CaseRef[], outcome, searchScopeNote, notice }` — 판결 본문에 "법령명 제N조"가 나오는 판례(법제처 본문 검색, 최대 6건). 관련도 점수 없음, 느슨한 대체 검색 없음. 상세 상한(`lookup_hourly`)에 함께 센다.
 
 ### GET·POST `/decisions` · GET `/decisions/{domain}/{id}` (DEC-029 제안)
-- `domain` = `interpretation`(법령해석례) · `constitutional`(헌재 결정례) · `tax_tribunal`(조세심판 재결례) · `customs`(관세청 해석). 그 밖이면 `404`.
-- 검색 `?domain=&q=&limit=`(POST 본문 `{ domain, q, limit? }`, 화면은 POST — F-007) → `200 { domain, items: DecisionRef[], outcome, searchScopeNote, notice }`. `DecisionRef` = `{ domain, id, title, refNo, agency, decidedAt, sourceUrl: string | null }`. 검색어 규칙·상한은 `/cases`와 같다(`search_hourly`).
-- 상세 → `200 { ...DecisionRef, sections: [{ section, text }], fromBody, notice }`. **요지 항목만** 준다(질의요지·회답 / 판시사항·결정요지·심판대상조문·참조조문 / 주문·재결요지·관련법령). 이유·전문은 주지 않고, 요지가 모두 없을 때만 개인정보를 가린 본문 일부(`fromBody`)를 준다(DEC-007과 같은 원칙). 법제처에 없으면 `404`.
+- `domain` = 결정문 12종 `interpretation`(법령해석례) · `constitutional`(헌재 결정례) · `admin_appeal`(행정심판 재결례) · `tax_tribunal`(조세심판 재결례) · `appeal_review`(소청심사 재결례) · `acr_special`(권익위 특별행정심판) · `customs`(관세청 해석) · `nts`(국세청 해석) · `ftc`(공정위) · `pipc`(개인정보위) · `nlrc`(노동위) · `acr`(권익위), 목록만 주는 5종 `treaty`(조약) · `school`(학칙) · `public_corp`(공사·공단 규정) · `public_inst`(공공기관 규정) · `english_law`(영문 법령). 그 밖이면 `404`.
+- 검색 `?domain=&q=&limit=`(POST 본문 `{ domain, q, limit? }`, 화면은 POST — F-007) → `200 { domain, items: DecisionRef[], outcome, searchScopeNote, notice }`. `DecisionRef` = `{ domain, id, title, refNo, agency, decidedAt, dateLabel, hasDetail, sourceUrl: string | null }` — `dateLabel`은 날짜가 뜻하는 것(회신·종국·의결·등록·시행 등), `hasDetail: false`인 종류(국세청 해석과 목록만 주는 5종)는 상세가 `404`. 검색어 규칙·상한은 `/cases`와 같다(`search_hourly`).
+- 상세 → `200 { ...DecisionRef, sections: [{ section, text }], fromBody, notice }`. **요지 항목만** 준다(질의요지·회답 / 판시사항·결정요지·심판대상조문·참조조문 / 주문·청구취지·재결요지·처분요지·관련법령 / 판정사항·판정요지·판정결과). 위원회 결정문은 `의결서` 안의 주문·결정요지만 읽고, 모든 항목은 개인정보로 보이는 표현을 가려서 준다(F-007). 이유·전문은 주지 않고, 요지가 모두 없을 때만 개인정보를 가린 본문 일부(`fromBody`)를 준다(DEC-007과 같은 원칙). 법제처에 없으면 `404`.
 - AI 생성물이 없으므로 `notice` = `SEARCH_NOTICE`.
 
 ### GET `/laws/{name}/{view}` (DEC-029 제안)
-`name` = 법령명(약칭 가능, URL 인코딩), `view` = `three-tier` · `old-new` · `history` · `annexes` · `impact`. 법령을 못 찾거나 없는 `view`면 `404`. 모든 응답에 `lawName`(정식 이름)·`sourceUrl`·`notice`. 상세 상한에 함께 센다.
+`name` = 법령명(약칭 가능, URL 인코딩), `view` = `articles` · `three-tier` · `old-new` · `history` · `annexes` · `impact`. 법령을 못 찾거나 없는 `view`면 `404`. 모든 응답에 `lawName`(정식 이름)·`sourceUrl`·`notice`. 상세 상한에 함께 센다.
+- `articles` → `{ articles: [{ articleNo, title, text, effectiveFrom }] }` — 현행 법령 전문(조문 단위). 화면은 보고 있는 조문을 따라 `GET /statutes/{id}/cases`로 판례 패널을 갱신한다.
 - `three-tier` → `{ rows: [{ articleNo, title, text, delegations: [{ type, lawName, articleNo, title, text }] }] }` — 법제처 3단비교(위임조문).
 - `old-new?mst=` → `{ old, new: LawVersion | null, oldRows, newRows: [{ no, text, changed: string[] }] }` — 법제처 신구법 대조표. `mst` 없으면 현행과 직전, 있으면 그 버전과 직전. 다른 법령의 `mst`면 `404`. `changed`는 법제처가 표시한 바뀐 부분.
 - `history` → `{ versions: LawVersion[] }` — 시행일 내림차순.

@@ -3,7 +3,15 @@
 // 법제처에 등록된 대조표·관계만 보여 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { getLawView, type LawVersionView, type LawViews, type OldNewRow } from "@/lib/client/api";
+import { useEffect, useRef, useState } from "react";
+import {
+  getLawView,
+  getStatuteCases,
+  type CaseRef,
+  type LawVersionView,
+  type LawViews,
+  type OldNewRow,
+} from "@/lib/client/api";
 import { statuteIdOf } from "@/lib/search/browse";
 import { LAW_VIEWS, type LawView } from "@/lib/search/explore";
 import { dotDate } from "../result/labels";
@@ -11,6 +19,7 @@ import { H1, H2, Pending, Shell, useLoad } from "./DetailViews";
 import { OriginalLink, SearchNotice } from "./parts";
 
 const LABELS: Record<LawView, string> = {
+  articles: "법령 전문·판례",
   "three-tier": "3단 비교",
   "old-new": "신구조문 대조",
   history: "개정 연혁",
@@ -41,6 +50,124 @@ function ArticleLink({ lawName, articleNo }: { lawName: string; articleNo: strin
     >
       {articleNo}
     </Link>
+  );
+}
+
+type LiveCases = { status: "loading" } | { status: "error" } | { status: "done"; items: CaseRef[] };
+
+/**
+ * 법령 전문 + 라이브 판례 패널. 화면에서 보고 있는 조문이 바뀌면 그 조문이 본문에 나오는 판례를 법제처에서 찾아 옆에 보여 준다.
+ * 스크롤이 멈춘 뒤에만 조회하고(상세 상한에 함께 센다) 한 번 찾은 조문은 다시 조회하지 않는다. 관련도 점수는 없다.
+ */
+function LawText({ d }: { d: LawViews["articles"] }) {
+  const [active, setActive] = useState<string | null>(d.articles[0]?.articleNo ?? null);
+  const [cases, setCases] = useState<Record<string, LiveCases>>({});
+  const asked = useRef(new Set<string>());
+  const list = useRef<HTMLDivElement>(null);
+
+  // 화면 위쪽에 걸친 조문을 '지금 보는 조문'으로 삼는다
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined" || !list.current) return;
+    const visible = new Set<string>();
+    const order = d.articles.map((a) => a.articleNo);
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const no = (e.target as HTMLElement).dataset.article!;
+          if (e.isIntersecting) visible.add(no);
+          else visible.delete(no);
+        }
+        const first = order.find((no) => visible.has(no));
+        if (first) setActive(first);
+      },
+      { rootMargin: "-90px 0px -55% 0px" },
+    );
+    list.current.querySelectorAll("[data-article]").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [d.articles]);
+
+  // 스크롤이 멈춘 뒤 조회 (빠르게 지나친 조문은 조회하지 않는다)
+  useEffect(() => {
+    if (!active || asked.current.has(active)) return;
+    const timer = setTimeout(() => {
+      asked.current.add(active);
+      setCases((c) => ({ ...c, [active]: { status: "loading" } }));
+      void getStatuteCases(statuteIdOf(d.lawName, active)).then((r) =>
+        setCases((c) => ({
+          ...c,
+          [active]: r.ok ? { status: "done", items: r.data.items ?? [] } : { status: "error" },
+        })),
+      );
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [active, d.lawName]);
+
+  if (d.articles.length === 0)
+    return <p className="text-muted mt-4 text-[15px]">법제처에서 조문을 찾지 못했어요.</p>;
+  const now = active ? cases[active] : undefined;
+  const current = d.articles.find((a) => a.articleNo === active);
+  return (
+    <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div ref={list} className="grid gap-5">
+        {d.articles.map((a) => (
+          <section
+            key={a.articleNo}
+            data-article={a.articleNo}
+            className={`scroll-mt-24 border-l-4 py-1 pl-4 ${
+              a.articleNo === active ? "border-l-gold" : "border-l-transparent"
+            }`}
+          >
+            <h2 className="text-ink text-[15px] font-bold">
+              <ArticleLink lawName={d.lawName} articleNo={a.articleNo} />
+              {a.title && ` (${a.title})`}
+            </h2>
+            <p className="text-ink mt-1 text-[15px] leading-[1.8] whitespace-pre-line">{a.text}</p>
+          </section>
+        ))}
+      </div>
+      <aside
+        aria-label="지금 보는 조문의 판례"
+        aria-live="polite"
+        className="border-honey-line bg-honey rounded-card h-fit border p-4 lg:sticky lg:top-[86px]"
+      >
+        <p className="text-gold text-xs font-bold tracking-wide">지금 보는 조문의 판례</p>
+        <p className="text-ink mt-1 text-[15px] font-bold">
+          {current ? `${current.articleNo}${current.title ? ` (${current.title})` : ""}` : "조문"}
+        </p>
+        <p className="text-muted mt-1 text-[12px] leading-relaxed">
+          조문을 따라 내려가면 그 조문이 판결 본문에 나오는 판례로 바뀌어요. 관련이 적은 판례가 섞일
+          수 있어요.
+        </p>
+        {(!now || now.status === "loading") && (
+          <p className="text-muted mt-3 text-sm">법제처에서 판례를 찾고 있어요…</p>
+        )}
+        {now?.status === "error" && (
+          <p className="text-warn-text mt-3 text-sm">
+            판례를 불러오지 못했어요. 잠시 뒤 다른 조문으로 옮겼다가 다시 와 주세요.
+          </p>
+        )}
+        {now?.status === "done" && now.items.length === 0 && (
+          <p className="text-muted mt-3 text-sm">찾은 판례가 없어요.</p>
+        )}
+        {now?.status === "done" && now.items.length > 0 && (
+          <ul className="mt-3 grid gap-2">
+            {now.items.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/cases/${c.id}`}
+                  className="border-line hover:border-gold flex min-h-11 flex-col justify-center rounded-[8px] border bg-white px-3 py-2"
+                >
+                  <span className="text-ink text-sm font-semibold">{c.caseName || c.caseNo}</span>
+                  <span className="text-muted text-[12px]">
+                    {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </aside>
+    </div>
   );
 }
 
@@ -343,8 +470,8 @@ export function LawRoute() {
   const lawName = decodeURIComponent(params.name);
   const query = useSearchParams();
   const router = useRouter();
-  const raw = query.get("tab") ?? "three-tier";
-  const tab = ((LAW_VIEWS as readonly string[]).includes(raw) ? raw : "three-tier") as LawView;
+  const raw = query.get("tab") ?? "articles";
+  const tab = ((LAW_VIEWS as readonly string[]).includes(raw) ? raw : "articles") as LawView;
   const mst = query.get("mst") ?? undefined;
   const go = (next: LawView, nextMst?: string) =>
     router.push(
@@ -371,6 +498,11 @@ export function LawRoute() {
           </button>
         ))}
       </div>
+      {tab === "articles" && (
+        <View lawName={lawName} view="articles">
+          {(d) => <LawText d={d} />}
+        </View>
+      )}
       {tab === "three-tier" && (
         <View lawName={lawName} view="three-tier">
           {(d) => <ThreeTier d={d} />}

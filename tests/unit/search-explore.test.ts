@@ -384,3 +384,94 @@ describe("별표 · 자치법규 · 연계", () => {
     expect(rate.assertRateLimit).toHaveBeenCalledTimes(3);
   });
 });
+
+describe("결정문 종류 전체 (lexdiff '판례·해석례 통합' 범위)", () => {
+  test("판례 밖 16종(결정문 12 + 조약·규정·영문 법령)을 모두 다룬다", async () => {
+    const { DECISION_TABS } = await import("@/lib/search/explore");
+    expect(DECISION_TABS.map((t) => t.domain).sort()).toEqual(
+      [
+        "treaty",
+        "school",
+        "public_corp",
+        "public_inst",
+        "english_law",
+        "acr",
+        "acr_special",
+        "admin_appeal",
+        "appeal_review",
+        "constitutional",
+        "customs",
+        "ftc",
+        "interpretation",
+        "nlrc",
+        "nts",
+        "pipc",
+        "tax_tribunal",
+      ].sort(),
+    );
+  });
+
+  test("종류마다 다른 항목 이름·필드 이름·날짜 표기를 읽는다", async () => {
+    const { decisionRows, looseDate } = await import("@/lib/search/explore");
+    const xml = `<Ftc><totalCnt>1</totalCnt><ftc id="1"><결정문일련번호>8111</결정문일련번호><사건명><![CDATA[건설사 과징금 납부기한 연장 건]]></사건명><결정번호>의 결 제 2011 - 012호</결정번호><결정일자>2011.2.22.</결정일자><결정문상세링크>/DRF/lawService.do?OC=SECRET&amp;target=ftc</결정문상세링크></ftc></Ftc>`;
+    const [row] = decisionRows(xml);
+    const hit = decisionHit("ftc", row);
+    expect(hit).toMatchObject({
+      id: "8111",
+      agency: "공정거래위원회",
+      decidedAt: "2011-02-22",
+      dateLabel: "결정",
+      hasDetail: true,
+    });
+    expect(JSON.stringify(hit)).not.toContain("SECRET");
+    expect(looseDate("2019.04.22")).toBe("2019-04-22");
+    // 관세청 해석: 일련번호 필드 이름이 다르다 (예전에는 이 때문에 0건으로 읽혔다)
+    const customs = decisionRows(
+      `<CgmExpc><cgmExpc id="1"><법령해석일련번호>24764</법령해석일련번호><안건명>과세가격 결정방법 의견 조회</안건명><해석기관명>관세청</해석기관명><해석일자>2017.06.14</해석일자></cgmExpc></CgmExpc>`,
+    );
+    expect(decisionHit("customs", customs[0])).toMatchObject({
+      id: "24764",
+      agency: "관세청",
+      decidedAt: "2017-06-14",
+    });
+  });
+
+  test("위원회 결정문은 의결서 안의 요지만 싣고, 본문 조회가 없는 종류는 상세를 만들지 않는다", () => {
+    const d = decisionDetail("pipc", "10551", {
+      PpcService: {
+        의결서: {
+          안건명: "조사 업무 관련 심의",
+          의결일자: "2026.5.13.",
+          주문: "피심인에 대하여 시정을 명한다. 연락처 010-1234-5678",
+          결정요지: "요지 문장",
+          이유: "긴 이유 본문",
+          신청인: "아무개",
+        },
+      },
+    });
+    expect(d?.sections.map((s) => s.section)).toEqual(["주문", "결정요지"]);
+    expect(JSON.stringify(d)).not.toMatch(/긴 이유 본문|아무개|010-1234-5678/);
+    expect(decisionHit("nts", { 법령해석일련번호: "1", 안건명: "양도 관련" })?.hasDetail).toBe(
+      false,
+    );
+    expect(decisionDetail("nts", "1", { X: { 안건명: "양도 관련" } })).toBeNull();
+  });
+});
+
+describe("법령 전문 보기 (라이브 판례 패널의 바탕)", () => {
+  test("articles 보기는 조문 단위 전문을 준다", async () => {
+    source.getLawArticles.mockResolvedValue({ lawName: "주택임대차보호법", articles: [ART] });
+    const res = await lawRoute.GET(get("/x"), {
+      params: Promise.resolve({ name: encodeURIComponent("주택임대차법"), view: "articles" }),
+    });
+    const { data } = await json(res);
+    expect(data.lawName).toBe("주택임대차보호법");
+    expect(data.articles[0]).toEqual({
+      articleNo: "제3조",
+      title: "대항력 등",
+      text: ART.text,
+      effectiveFrom: "2023-04-18",
+    });
+    expect(data.notice).toBe(SEARCH_NOTICE);
+  });
+});

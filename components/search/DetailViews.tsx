@@ -290,6 +290,7 @@ export function DiffText({ parts }: { parts: DiffPart[] }) {
 }
 
 const LAW_TOOLS: [string, string][] = [
+  ["articles", "법령 전문·판례"],
   ["three-tier", "3단 비교"],
   ["old-new", "신구조문 대조"],
   ["history", "개정 연혁"],

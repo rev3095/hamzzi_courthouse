@@ -159,7 +159,7 @@ export const getStatute = (id: string, asOf?: string) =>
   );
 
 // --- 탐색 확장 (DEC-029 제안): 결정문·시점 조문·법령 도구·자치법규 ---------------------------
-export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
+export type DecisionDomain = import("@/lib/search/types").DecisionDomain;
 export type DecisionRef = {
   domain: DecisionDomain;
   id: string;
@@ -167,6 +167,8 @@ export type DecisionRef = {
   refNo: string | null;
   agency: string | null;
   decidedAt: string | null;
+  dateLabel: string;
+  hasDetail: boolean;
   sourceUrl: string | null;
 };
 export type Listed<T> = {
@@ -297,6 +299,9 @@ export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 
 export type LawViews = {
+  articles: LawBase & {
+    articles: { articleNo: string; title: string; text: string; effectiveFrom: string | null }[];
+  };
   "three-tier": ThreeTierView;
   "old-new": OldNewView;
   history: HistoryView;
