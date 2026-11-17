@@ -62,7 +62,12 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
 | GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
-| GET `/statutes/{id}` | 공개/user | 조문 + 시행일 | F-004 |
+| GET `/statutes/{id}` | 공개/user | 조문 + 시행일 + 그 날짜의 조문 | F-004, DEC-026 |
+| GET `/statutes/{id}/cases` | 공개 | 이 조문이 나오는 판례 | F-003, DEC-026 |
+| GET·POST `/decisions` · GET `/decisions/{domain}/{id}` | 공개 | 법령해석례·헌재 결정례·조세심판 재결례·관세청 해석 검색·상세 | F-003, DEC-026 |
+| GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 점검 | F-004, DEC-026 |
+| GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-026 |
+| GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-026 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
@@ -195,8 +200,31 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 
 ### GET `/statutes/{id}?asOf=YYYY-MM-DD`
 `200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, asOf?, versionAtDate?: StatuteRef | null, asOfNote?, notice }` — `id` = `법령명:제N조(의M)` (법령명 띄어쓰기 없음, URL 인코딩). 없으면 `404`.
-- 데모는 법제처 **현행 법령**의 조문만 가져온다. `isCurrent` = 시행일이 오늘(한국 시각) 이전.
+- `isCurrent` = 시행일이 오늘(한국 시각) 이전.
+- **그 날짜의 조문 (DEC-026 제안)**: `asOf`가 현행 시행일보다 앞선 과거 날짜면 법제처 연혁에서 그날 시행 중이던 버전의 같은 번호 조문을 가져와 `atDate: { lawName, articleNo, articleTitle, body, effectiveFrom, version: LawVersion, sameAsCurrent, diff: [{ type: "same"|"removed"|"added", text }] }`로 준다(`LawVersion` = `{ mst, lawName, effectiveFrom, promulgatedAt, promulgationNo, revisionType }`, `diff`는 그날 조문 → 현행 조문 줄 단위 비교). 그날 시행 버전이 없거나(제정 전·폐지 후) 같은 번호 조문이 없거나 법제처 조회에 실패하면 만들지 않고 `atDate: null` + `asOfNote`. 조문 번호가 바뀐 경우는 따라가지 않는다.
 - `asOf`가 시행일 이후이고 오늘 이전이며 조문이 지금 시행 중이면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 그 밖(시행일 이전·미래 날짜·시행 전 조문)은 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote` (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
+
+### GET `/statutes/{id}/cases` (DEC-026 제안)
+`200 { items: CaseRef[], outcome, searchScopeNote, notice }` — 판결 본문에 "법령명 제N조"가 나오는 판례(법제처 본문 검색, 최대 6건). 관련도 점수 없음, 느슨한 대체 검색 없음. 상세 상한(`lookup_hourly`)에 함께 센다.
+
+### GET·POST `/decisions` · GET `/decisions/{domain}/{id}` (DEC-026 제안)
+- `domain` = `interpretation`(법령해석례) · `constitutional`(헌재 결정례) · `tax_tribunal`(조세심판 재결례) · `customs`(관세청 해석). 그 밖이면 `404`.
+- 검색 `?domain=&q=&limit=`(POST 본문 `{ domain, q, limit? }`, 화면은 POST — F-007) → `200 { domain, items: DecisionRef[], outcome, searchScopeNote, notice }`. `DecisionRef` = `{ domain, id, title, refNo, agency, decidedAt, sourceUrl: string | null }`. 검색어 규칙·상한은 `/cases`와 같다(`search_hourly`).
+- 상세 → `200 { ...DecisionRef, sections: [{ section, text }], fromBody, notice }`. **요지 항목만** 준다(질의요지·회답 / 판시사항·결정요지·심판대상조문·참조조문 / 주문·재결요지·관련법령). 이유·전문은 주지 않고, 요지가 모두 없을 때만 개인정보를 가린 본문 일부(`fromBody`)를 준다(DEC-007과 같은 원칙). 법제처에 없으면 `404`.
+- AI 생성물이 없으므로 `notice` = `SEARCH_NOTICE`.
+
+### GET `/laws/{name}/{view}` (DEC-026 제안)
+`name` = 법령명(약칭 가능, URL 인코딩), `view` = `three-tier` · `old-new` · `history` · `annexes` · `impact`. 법령을 못 찾거나 없는 `view`면 `404`. 모든 응답에 `lawName`(정식 이름)·`sourceUrl`·`notice`. 상세 상한에 함께 센다.
+- `three-tier` → `{ rows: [{ articleNo, title, text, delegations: [{ type, lawName, articleNo, title, text }] }] }` — 법제처 3단비교(위임조문).
+- `old-new?mst=` → `{ old, new: LawVersion | null, oldRows, newRows: [{ no, text, changed: string[] }] }` — 법제처 신구법 대조표. `mst` 없으면 현행과 직전, 있으면 그 버전과 직전. 다른 법령의 `mst`면 `404`. `changed`는 법제처가 표시한 바뀐 부분.
+- `history` → `{ versions: LawVersion[] }` — 시행일 내림차순.
+- `annexes` → `{ items: [{ no, title, kind, fileUrl, pdfUrl }] }` — 별표·서식 목록과 법제처 파일 주소(인증키가 든 주소는 주지 않음).
+- `impact` → `{ articleCount, lower: [{ articleNo, title, delegations }], ordinances: [{ lawName, lawArticleNo, ordinanceId, ordinanceName, ordinanceArticleNo }], checks: [{ articleNo, title, phrase, linked }], impactNote, delegationNote }` — 법제처 3단비교·법령-자치법규 연계에 등록된 관계와, 조문의 위임 문구("대통령령으로 정한다" 등) 대비 연결 수. **영향 크기·중요도·입법 공백 여부는 판정하지 않는다**(절대 규칙 2).
+
+### GET·POST `/ordinances` · GET `/ordinances/{id}` · GET·POST `/admin-rules` (DEC-026 제안)
+- 자치법규 검색 → `{ items: [{ id, name, region, kind, effectiveFrom, promulgatedAt, sourceUrl }], outcome, searchScopeNote, notice }`, 상세 → `{ ...위 항목, articles: [{ articleNo, title, text }], notice }`. `id` = 법제처 자치법규일련번호.
+- 행정규칙 검색 → `{ items: [{ id, name, kind, agency, issuedAt, effectiveFrom, sourceUrl }], … }` — 현행만, 본문은 법제처 원문 링크로.
+- 검색어 규칙·상한은 `/cases`와 같다.
 
 ### POST `/results/{id}/feedback`
 `req { helpful: boolean; comment?: string (500자 이하) }` → `204`. 결과 소유자만(비로그인은 같은 익명 세션) — 남의 결과 `403`, 없으면 `404`.

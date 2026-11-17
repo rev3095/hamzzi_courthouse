@@ -8,13 +8,23 @@ import "server-only";
 
 import { LawApiClient } from "korean-law-mcp/lib/api-client";
 import { verifyCaseCitations } from "korean-law-mcp/lib/case-citation";
+import { fetchLawVersions, versionInForce } from "korean-law-mcp/lib/law-lineage";
 import { buildJO } from "korean-law-mcp/lib/law-parser";
 import { findLaws, resolvedLawMatches } from "korean-law-mcp/lib/law-search";
+import { parseThreeTierDelegation } from "korean-law-mcp/lib/three-tier-parser";
+import {
+  parseConstitutionalXML,
+  parseCustomsXML,
+  parseInterpretationXML,
+  parseTaxTribunalXML,
+} from "korean-law-mcp/lib/xml-parser";
+import { collectAnnexList } from "korean-law-mcp/tools/annex-list";
 import { searchAiLawStructured } from "korean-law-mcp/tools/life-law";
 import { searchPrecedentsStructured } from "korean-law-mcp/tools/precedent-search-core";
 import { getPrecedentRecord } from "korean-law-mcp/tools/precedents";
 import { verifyCitations } from "korean-law-mcp/tools/verify-citations";
 import { ApiError } from "@/lib/api/errors";
+import { caseNumbersIn } from "@/lib/citations/patterns";
 import { required } from "@/lib/supabase/env";
 import {
   articleBody,
@@ -32,7 +42,38 @@ import {
   statuteUrl,
   stripHtml,
 } from "./normalize";
-import type { ArticleHit, CaseDetail, CaseHit, CitationCheck } from "./types";
+import {
+  DECISION_DOMAINS,
+  adminRuleHits,
+  annexRefs,
+  decisionDetail,
+  decisionHit,
+  lawNameByAbbreviation,
+  lawVersion,
+  ordinanceDetail,
+  ordinanceHits,
+  ordinanceLinks,
+  parseOldNew,
+  threeTier,
+} from "./explore";
+import type {
+  AdminRuleHit,
+  AnnexRef,
+  ArticleAtDate,
+  ArticleHit,
+  CaseDetail,
+  CaseHit,
+  CitationCheck,
+  DecisionDetail,
+  DecisionDomain,
+  DecisionHit,
+  LawVersion,
+  OldNewCompare,
+  OrdinanceDetail,
+  OrdinanceHit,
+  OrdinanceLink,
+  ThreeTier,
+} from "./types";
 
 export type LawSource = {
   /** 자연어 → 관련 조문 (지능형 법령정보지식베이스) */
@@ -50,6 +91,30 @@ export type LawSource = {
   verifyCases(caseNos: string[]): Promise<CitationCheck[]>;
 };
 
+/** 탐색 확장 (DEC-026 제안). 모두 법제처 실시간 조회이고 저장하지 않는다 */
+export type LawExplorer = {
+  /** 조문을 본문에서 언급한 판례 ("법령명 제N조" 본문 검색). 느슨한 대체 검색은 하지 않는다 */
+  casesCiting(lawName: string, articleNo: string, limit?: number): Promise<CaseHit[]>;
+  searchDecisions(domain: DecisionDomain, query: string, limit?: number): Promise<DecisionHit[]>;
+  getDecision(domain: DecisionDomain, id: string): Promise<DecisionDetail | null>;
+  /** 법령의 시행 버전 목록 (시행일 내림차순). 법령이 없으면 null */
+  listVersions(lawName: string): Promise<{ lawName: string; versions: LawVersion[] } | null>;
+  /** 그 날짜(YYYY-MM-DD)에 시행 중이던 조문. 법령이 없으면 null */
+  getArticleAt(lawName: string, articleNo: string, asOf: string): Promise<ArticleAtDate | null>;
+  /** 신구조문 대조. mst를 주면 그 버전과 직전 버전, 없으면 현행과 직전. 법령이 없거나 다른 법령의 mst면 null */
+  compareOldNew(lawName: string, mst?: string): Promise<OldNewCompare | null>;
+  /** 법률 → 시행령 → 시행규칙 위임조문 3단비교 */
+  getThreeTier(lawName: string): Promise<ThreeTier | null>;
+  listAnnexes(lawName: string): Promise<{ lawName: string; items: AnnexRef[] } | null>;
+  /** 법령 전체 조문 (위임 문구 점검용) */
+  getLawArticles(lawName: string): Promise<{ lawName: string; articles: ArticleHit[] } | null>;
+  /** 이 법령과 그 시행령·시행규칙 조문에 연계된 자치법규 조문 */
+  linkedOrdinances(lawName: string, limit?: number): Promise<OrdinanceLink[]>;
+  searchOrdinances(query: string, limit?: number): Promise<OrdinanceHit[]>;
+  getOrdinance(id: string): Promise<OrdinanceDetail | null>;
+  searchAdminRules(query: string, limit?: number): Promise<AdminRuleHit[]>;
+};
+
 export type LawSourceOptions = {
   apiKey?: string;
   /** 호출 1건 시간 한도. 데모 분석 전체 p95 ≤ 60초(DEC-013) 안에 들도록 짧게 둔다 */
@@ -60,7 +125,7 @@ export type LawSourceOptions = {
 
 const MAX_VERIFY = 20;
 
-export function createLawSource(options: LawSourceOptions = {}): LawSource {
+export function createLawSource(options: LawSourceOptions = {}): LawSource & LawExplorer {
   const apiKey = options.apiKey ?? required("OPEN_LAW_API_KEY", process.env.OPEN_LAW_API_KEY);
   const timeoutMs = options.timeoutMs ?? 15_000;
   const concurrency = options.concurrency ?? 3;
@@ -114,7 +179,212 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
     sourceUrl: statuteUrl(lawName, articleNo),
   });
 
+  const parse = (stage: string, raw: string): unknown => {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      throw new ApiError("SEARCH_UPSTREAM_FAILED", { stage, reason: "parse" });
+    }
+  };
+
+  async function resolveLaw(lawName: string) {
+    if (!lawName.trim()) return null;
+    const laws = await call("law", () => findLaws(client, lawName));
+    const byName = laws.find((l) => resolvedLawMatches(lawName, l.lawName));
+    if (byName || laws.length === 0) return byName ?? null;
+    // 법제처 공식 약칭("주택임대차법")은 검색에는 걸리지만 이름 대조에서 빠진다 — 검색 응답의 약칭과 같을 때만 받는다
+    const xml = await call("law", () => client.searchLaw(lawName, undefined, 20));
+    const official = lawNameByAbbreviation(xml, lawName);
+    return (official && laws.find((l) => l.lawName === official)) || null;
+  }
+
+  const unitsToArticles = (json: unknown, lawName: string, fallbackDate: unknown): ArticleHit[] =>
+    articleUnits(json).flatMap((u) => {
+      const no = articleLabel(u["조문번호"], u["조문가지번호"]);
+      const text = articleBody(u);
+      if (!no || !text) return [];
+      const title = typeof u["조문제목"] === "string" ? u["조문제목"] : "";
+      return [toArticle(lawName, no, title, text, u["조문시행일자"] ?? fallbackDate)];
+    });
+
+  const DECISION_PARSERS: Record<DecisionDomain, (xml: string) => { items: object[] }> = {
+    interpretation: parseInterpretationXML,
+    constitutional: parseConstitutionalXML,
+    tax_tribunal: parseTaxTribunalXML,
+    customs: parseCustomsXML,
+  };
+
+  const toCaseHits = (
+    hits: { id: string; title: string; caseNumber?: string; court?: string; date?: string }[],
+    limit: number,
+  ): CaseHit[] =>
+    hits
+      .filter((h) => h.court && h.caseNumber)
+      .slice(0, limit)
+      .map((h) => ({
+        id: h.id,
+        caseNo: h.caseNumber!,
+        caseName: h.title,
+        court: h.court!,
+        decidedAt: isoDate(h.date),
+        sourceUrl: caseUrl(h.id),
+      }));
+
   return {
+    async casesCiting(lawName, articleNo, limit = 6) {
+      const no = normalizeArticleNo(articleNo);
+      if (!no || !lawName.trim()) return [];
+      const res = await call("cases", () =>
+        searchPrecedentsStructured(
+          client,
+          { query: `${lawName} ${no}`, search: 2, display: Math.min(limit * 2, 50), page: 1 },
+          { fallbackPolicy: "none" },
+        ),
+      );
+      return toCaseHits(res.hits, limit);
+    },
+
+    async searchDecisions(domain, query, limit = 10) {
+      const xml = await call("decisions", () =>
+        client.fetchApi({
+          endpoint: "lawSearch.do",
+          target: DECISION_DOMAINS[domain].target,
+          extraParams: { query, display: String(Math.min(limit, 50)), page: "1" },
+        }),
+      );
+      return DECISION_PARSERS[domain](xml)
+        .items.flatMap((row) => decisionHit(domain, row as Record<string, unknown>) ?? [])
+        .slice(0, limit);
+    },
+
+    async getDecision(domain, id) {
+      const raw = await call("decision", () =>
+        client.fetchApi({
+          endpoint: "lawService.do",
+          target: DECISION_DOMAINS[domain].target,
+          type: "JSON",
+          extraParams: { ID: id },
+        }),
+      );
+      return decisionDetail(domain, id, parse("decision", raw));
+    },
+
+    async listVersions(lawName) {
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const res = await call("versions", () =>
+        fetchLawVersions(client, law.lawName, undefined, law.lawId),
+      );
+      return {
+        lawName: law.lawName,
+        versions: res.versions.filter((v) => !v.priorLaw).map(lawVersion),
+      };
+    },
+
+    async getArticleAt(lawName, articleNo, asOf) {
+      const no = normalizeArticleNo(articleNo);
+      const ymd = asOf.replace(/\D/g, "");
+      if (!no || ymd.length !== 8) return null;
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const res = await call("versions", () =>
+        fetchLawVersions(client, law.lawName, undefined, law.lawId, ymd),
+      );
+      const v = versionInForce(res.versions, ymd);
+      if (!v) return { status: "not_in_force" };
+      const version = lawVersion(v);
+      const raw = await call("article_at", () =>
+        client.getLawText({ mst: v.mst, jo: buildJO(no), efYd: v.efYd }),
+      );
+      const unit = findArticleUnit(parse("article_at", raw), no);
+      const text = unit ? articleBody(unit) : "";
+      if (!unit || !text) return { status: "no_article", version };
+      const title = typeof unit["조문제목"] === "string" ? unit["조문제목"] : "";
+      return {
+        status: "found",
+        version,
+        article: toArticle(
+          version.lawName || law.lawName,
+          no,
+          title,
+          text,
+          unit["조문시행일자"] ?? v.efYd,
+        ),
+      };
+    },
+
+    async compareOldNew(lawName, mst) {
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const xml = await call("old_new", () => client.compareOldNew({ mst: mst ?? law.mst }));
+      // 다른 법령의 일련번호를 넣어도 그 법령의 대조표가 오므로 법령ID로 막는다
+      const ids = [...xml.matchAll(/<법령ID>\s*(\d+)\s*<\/법령ID>/g)].map((m) => m[1]);
+      if (ids.length > 0 && !ids.includes(law.lawId)) return null;
+      return parseOldNew(xml, law.lawName);
+    },
+
+    async getThreeTier(lawName) {
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const raw = await call("three_tier", () => client.getThreeTier({ mst: law.mst, knd: "2" }));
+      return threeTier(parseThreeTierDelegation(parse("three_tier", raw)), law.lawName);
+    },
+
+    async listAnnexes(lawName) {
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const res = await call("annexes", () => collectAnnexList(client, { lawName: law.lawName }));
+      return {
+        lawName: law.lawName,
+        items: annexRefs(res.list as Record<string, unknown>[], law.lawName),
+      };
+    },
+
+    async getLawArticles(lawName) {
+      const law = await resolveLaw(lawName);
+      if (!law) return null;
+      const raw = await call("law_text", () => client.getLawText({ mst: law.mst }));
+      return {
+        lawName: law.lawName,
+        articles: unitsToArticles(parse("law_text", raw), law.lawName, law.effectiveDate),
+      };
+    },
+
+    async linkedOrdinances(lawName, limit = 50) {
+      const xml = await call("linkage", () =>
+        client.fetchApi({
+          endpoint: "lawSearch.do",
+          target: "lnkLsOrdJo",
+          extraParams: { query: lawName, display: String(Math.min(limit, 100)), page: "1" },
+        }),
+      );
+      const base = lawName.replace(/\s+/g, "");
+      // 법제처는 이름 부분 일치로 찾으므로 이 법령과 그 시행령·시행규칙만 남긴다
+      return ordinanceLinks(xml).filter((l) => {
+        const n = l.lawName.replace(/\s+/g, "");
+        return n === base || n === `${base}시행령` || n === `${base}시행규칙`;
+      });
+    },
+
+    async searchOrdinances(query, limit = 20) {
+      const xml = await call("ordinances", () =>
+        client.searchOrdinance({ query, display: Math.min(limit, 100) }),
+      );
+      return ordinanceHits(xml).slice(0, limit);
+    },
+
+    async getOrdinance(id) {
+      const raw = await call("ordinance", () => client.getOrdinance(id));
+      return ordinanceDetail(id, parse("ordinance", raw));
+    },
+
+    async searchAdminRules(query, limit = 20) {
+      const xml = await call("admin_rules", () =>
+        client.searchAdminRule({ query, display: Math.min(limit * 2, 100), page: 1 }),
+      );
+      return adminRuleHits(xml).slice(0, limit);
+    },
+
     async searchArticles(query, limit = 5) {
       const res = await call("articles", () =>
         searchAiLawStructured(client, { query, search: "0", display: limit, page: 1 }),
@@ -132,8 +402,7 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
     async findArticles(lawName, keywords, limit = 3) {
       const words = keywords.map((k) => k.trim()).filter(Boolean);
       if (!lawName.trim() || words.length === 0) return [];
-      const laws = await call("law", () => findLaws(client, lawName));
-      const law = laws.find((l) => resolvedLawMatches(lawName, l.lawName));
+      const law = await resolveLaw(lawName);
       if (!law) return [];
       const raw = await call("law_text", () => client.getLawText({ mst: law.mst }));
       let json: unknown;
@@ -155,8 +424,7 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
     async getArticle(lawName, articleNo) {
       const no = normalizeArticleNo(articleNo);
       if (!no || !lawName.trim()) return null;
-      const laws = await call("law", () => findLaws(client, lawName));
-      const law = laws.find((l) => resolvedLawMatches(lawName, l.lawName));
+      const law = await resolveLaw(lawName);
       if (!law) return null;
       const raw = await call("article", () => client.getLawText({ mst: law.mst, jo: buildJO(no) }));
       let json: unknown;
@@ -174,26 +442,19 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource {
     },
 
     async searchCases(query, limit = 5) {
+      // 사건번호만 적었으면 사건번호로 찾는다 (바로 가기)
+      const nos = caseNumbersIn(query);
+      const byNo = nos.length === 1 && nos[0] === query.replace(/\s+/g, "");
       const res = await call("cases", () =>
         // 판례명과 본문을 함께 검색 (프로토타입과 같음, DEC-014)
-        searchPrecedentsStructured(client, {
-          query,
-          search: "both",
-          display: Math.min(limit * 2, 50),
-          page: 1,
-        }),
+        searchPrecedentsStructured(
+          client,
+          byNo
+            ? { caseNumber: nos[0], display: 20, page: 1 }
+            : { query, search: "both", display: Math.min(limit * 2, 50), page: 1 },
+        ),
       );
-      return res.hits
-        .filter((h) => h.court && h.caseNumber)
-        .slice(0, limit)
-        .map((h) => ({
-          id: h.id,
-          caseNo: h.caseNumber!,
-          caseName: h.title,
-          court: h.court!,
-          decidedAt: isoDate(h.date),
-          sourceUrl: caseUrl(h.id),
-        }));
+      return toCaseHits(res.hits, limit);
     },
 
     async getCase(id) {

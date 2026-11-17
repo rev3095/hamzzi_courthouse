@@ -12,8 +12,11 @@
 | `normalize.ts`                | 법제처 응답 → 우리 타입 변환(순수 함수): 날짜, 조문번호, 조문 본문 합치기, 판례 본문 일부, 재조회 결과 해석                                                                                                                                                                                           |
 | `evidence.ts`                 | `EvidenceSet` — 한 요청에서 가져온 근거 모음. 인용 검증기(F-005 AC2 ①②)가 "가져온 자료인가"·원문 구절 대조에 쓴다                                                                                                                                                                                     |
 | `browse.ts`                   | 판례·조문 직접 검색 순수 규칙 (GET /cases · /cases/{id} · /statutes/{id}, DEC-017): 검색어 검사(개인정보면 보내지 않음), 응답 조립(관련도 없음, `SEARCH_NOTICE`), 참조조문 읽기, 조문 ID(`법령명:제N조`), asOf                                                                                        |
+| `explore.ts`                  | 탐색 확장 순수 규칙 (DEC-026 제안): 결정문 종류·응답 조립(요지 항목만), 바로 가기(`directTarget`), 약칭 대조, 시점 조문 줄 단위 비교(`diffLines`), 신구 대조표·자치법규·연계 XML 읽기, 3단 비교 정리, 위임 문구 대조(`delegationChecks` — 판정 없음), 법령 도구 경로 검사                             |
 | `types.ts`                    | `ArticleHit`·`CaseHit`·`CaseDetail`·`CitationCheck` (API.md `StatuteRef`·`CaseRef`와 필드명 일치)                                                                                                                                                                                                     |
 
+- `createLawSource()`는 `LawSource`(분석·검증용)와 `LawExplorer`(탐색 확장: `casesCiting`·`searchDecisions`·`getDecision`·`listVersions`·`getArticleAt`·`compareOldNew`·`getThreeTier`·`listAnnexes`·`getLawArticles`·`linkedOrdinances`·`searchOrdinances`·`getOrdinance`·`searchAdminRules`)를 함께 돌려준다. 법령명은 `resolveLaw`가 정식 이름으로 푼다(이름 대조 → 법제처 검색 응답의 공식 약칭이 입력과 같을 때만).
+- 응답의 상세링크·파일 주소 중 인증키(`OC=`)가 든 `/DRF/` 주소는 쓰지 않고 공개 주소만 만든다.
 - 인증키는 `OPEN_LAW_API_KEY`. 법제처는 **등록된 IP에서만** 응답한다(배포 환경 OQ-ARC-05).
 - 업스트림 실패·시간 초과는 `ApiError("SEARCH_UPSTREAM_FAILED")`. 라이브러리 오류 문구(질의·URL 포함 가능)는 버린다.
 - 판례는 판시사항·판결요지만 쓴다. 둘 다 없을 때만 당사자·대리인 머리 블록을 떼고 개인정보를 가린 본문 일부를 `fromBody`로 쓴다. 판례 전문은 반환·저장하지 않는다(DEC-007, F-007).

@@ -45,6 +45,11 @@ export default function PrivacyPage() {
           결과 화면 맨 위에 질문을 다시 보여 드리기 위해 가린 문장을 이 브라우저 탭의 임시
           저장소(sessionStorage)에 둬요. 탭을 닫으면 지워져요.
         </p>
+        <p>
+          검색 화면의 &lsquo;최근 본 자료&rsquo;는 열어 본 판례·조문·자치법규의 제목과 주소만 이
+          브라우저의 저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
+          &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
+        </p>
       </Section>
       <Section title="2. 이용 목적">
         <p>질문에 맞는 법령·판례를 찾아 정리해 보여 드리고, 남용을 막고, 오류를 고치는 데 써요.</p>

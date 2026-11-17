@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SearchView } from "@/components/search/SearchView";
 
-export const metadata: Metadata = { title: "판례 검색 · 햄찌법원" };
+export const metadata: Metadata = { title: "판례·법령 검색 · 햄찌법원" };
 
 export default function SearchPage() {
   return (

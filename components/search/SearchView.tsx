@@ -2,8 +2,8 @@
 // 검색 화면 /search (F-003, DEC-026 제안). 질문 3회와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
 // 종류 탭: 판례 · 법령해석례 · 헌재 결정례 · 조세심판 재결례 · 관세청 해석 · 자치법규 · 행정규칙.
 // "민법 750조"·사건번호처럼 대상이 분명한 입력은 목록 대신 그 조문·판례로 바로 간다.
+// 검색 패널(출처·자주 찾는 검색어·검색 요령)과 결과 카드(건수·칩·19px 제목·자리표시)는 F-003 가독성 개편(e08a9e2) 구성을 따른다.
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   searchAdminRules,
@@ -31,18 +31,38 @@ const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "admin_rules", label: "행정규칙", placeholder: "예: 임대차, 최저임금 고시" },
 ];
 
+/** 판례 탭의 자주 찾는 검색어. 누르면 바로 검색한다 */
+export const QUICK_QUERIES = [
+  "임대차 보증금 반환",
+  "계약금 해제",
+  "임금 체불",
+  "부당해고",
+  "전세 사기",
+  "교통사고 손해배상",
+  "층간소음",
+  "대여금 반환",
+] as const;
+
+const TIPS = [
+  "사건의 핵심 낱말 두세 개로 찾아보세요. 예: 임대차 보증금 반환",
+  "‘민법 750조’처럼 법령 이름(약칭도 돼요)과 조문 번호, 또는 사건번호를 적으면 바로 열어요.",
+  "이름·전화번호 같은 개인정보는 검색어에 넣지 말아 주세요.",
+];
+
 type Item = {
   key: string;
   href: string | null;
   title: string;
-  sub: string;
+  /** 첫 항목은 칩(법원·기관), 나머지는 날짜·번호 */
+  tags: string[];
   sourceUrl: string | null;
   /** 자치법규만: 나란히 비교에 쓰는 번호 */
   compareId?: string;
 };
 type Result = { items: Item[]; notice: string; searchScopeNote: string };
 
-const join = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(" · ");
+const tags = (...parts: (string | null | undefined | false)[]) =>
+  parts.filter((p): p is string => !!p);
 
 async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
   if (kind === "cases") {
@@ -56,7 +76,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           key: c.id,
           href: `/cases/${c.id}`,
           title: c.caseName || c.caseNo,
-          sub: join(c.court, dotDate(c.decidedAt), c.caseNo),
+          tags: tags(c.court, c.decidedAt && `선고 ${dotDate(c.decidedAt)}`, c.caseNo),
           sourceUrl: c.sourceUrl,
         })),
       },
@@ -73,7 +93,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           key: o.id,
           href: `/ordinances/${o.id}`,
           title: o.name,
-          sub: join(o.region, o.kind, o.effectiveFrom && `시행 ${dotDate(o.effectiveFrom)}`),
+          tags: tags(o.region, o.kind, o.effectiveFrom && `시행 ${dotDate(o.effectiveFrom)}`),
           sourceUrl: o.sourceUrl,
           compareId: o.id,
         })),
@@ -91,7 +111,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           key: a.id,
           href: null,
           title: a.name,
-          sub: join(a.agency, a.kind, a.effectiveFrom && `시행 ${dotDate(a.effectiveFrom)}`),
+          tags: tags(a.agency, a.kind, a.effectiveFrom && `시행 ${dotDate(a.effectiveFrom)}`),
           sourceUrl: a.sourceUrl,
         })),
       },
@@ -107,7 +127,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
         key: d.id,
         href: `/decisions/${d.domain}/${d.id}`,
         title: d.title,
-        sub: join(d.agency, dotDate(d.decidedAt), d.refNo),
+        tags: tags(d.agency, dotDate(d.decidedAt), d.refNo),
         sourceUrl: d.sourceUrl,
       })),
     },
@@ -120,8 +140,27 @@ type State =
   | { kind: "done"; q: string; data: Result }
   | { kind: "error"; error: ClientError };
 
+const go = (href: string) => window.location.assign(href);
+
+function QuickButtons({ onPick }: { onPick: (q: string) => void }) {
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {QUICK_QUERIES.map((q) => (
+        <li key={q}>
+          <button
+            type="button"
+            onClick={() => onPick(q)}
+            className="border-line text-ink hover:border-gold flex min-h-11 items-center rounded-full border bg-white px-4 text-sm"
+          >
+            {q}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function SearchView() {
-  const router = useRouter();
   const [tab, setTab] = useState<Kind>("cases");
   const [text, setText] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
@@ -129,30 +168,37 @@ export function SearchView() {
   const spec = KINDS.find((k) => k.kind === tab)!;
 
   // 검색어는 주소(?q=)에 두지 않는다 — 브라우저 기록·접속 기록에 남지 않게 (F-007)
-  const submit = async (kind: Kind = tab) => {
-    const q = text.trim();
+  const submit = async (kind: Kind = tab, input: string = text) => {
+    const q = input.trim();
     if (!q) {
       setState({ kind: "error", error: { code: "EMPTY_INPUT", message: "" } });
       return;
     }
     const direct = directTarget(q);
     if (direct?.kind === "statute") {
-      router.push(`/statutes/${encodeURIComponent(direct.id)}`);
+      go(`/statutes/${encodeURIComponent(direct.id)}`);
       return;
     }
+    const target = direct?.kind === "case" ? "cases" : kind;
+    if (target !== tab) setTab(target);
     setPicked([]);
     setState({ kind: "loading" });
-    const r = await run(direct?.kind === "case" ? "cases" : kind, q);
+    const r = await run(target, q);
     if (!r.ok) {
       setState({ kind: "error", error: r.error });
       return;
     }
     // 사건번호로 한 건만 나오면 그 판례로 바로 간다
     if (direct?.kind === "case" && r.data.items.length === 1 && r.data.items[0].href) {
-      router.push(r.data.items[0].href);
+      go(r.data.items[0].href);
       return;
     }
     setState({ kind: "done", q, data: r.data });
+  };
+
+  const quick = (q: string) => {
+    setText(q);
+    void submit("cases", q);
   };
 
   const toggle = (id: string) =>
@@ -160,51 +206,62 @@ export function SearchView() {
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
-      <h1 className="font-display text-ink text-[28px] font-bold">판례·법령 검색</h1>
-      <p className="text-muted mt-2 text-[15px] leading-relaxed">
-        국가법령정보센터(법제처)에서 판례·해석례·재결례·자치법규를 바로 찾아요. 검색은 질문 3번과
-        따로 세요.
-      </p>
-      <div
-        role="tablist"
-        aria-label="검색 종류"
-        className="mt-6 flex gap-2 overflow-x-auto pb-1 whitespace-nowrap"
-      >
-        {KINDS.map((k) => (
-          <button
-            key={k.kind}
-            type="button"
-            role="tab"
-            aria-selected={tab === k.kind}
-            onClick={() => {
-              setTab(k.kind);
-              if (text.trim() && state.kind !== "idle") void submit(k.kind);
-            }}
-            className={`flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold ${
-              tab === k.kind
-                ? "border-gold bg-cream text-ink"
-                : "border-line text-muted hover:border-gold bg-white"
-            }`}
-          >
-            {k.label}
-          </button>
-        ))}
-      </div>
-      <div className="mt-4 max-w-[820px]">
-        <QuestionBox
-          value={text}
-          onChange={setText}
-          onSubmit={() => void submit()}
-          busy={state.kind === "loading"}
-          size="md"
-          label={`${spec.label} 검색어`}
-          placeholder={spec.placeholder}
-        />
-        <p className="text-muted mt-2 text-[13px] leading-relaxed">
-          &lsquo;민법 750조&rsquo;처럼 법령 이름(약칭도 돼요)과 조문 번호를 적거나 사건번호를 적으면
-          바로 열어요. 이름·전화번호 같은 개인정보는 검색어에 넣지 말아 주세요.
+      <section className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
+        <p className="bg-soft text-muted w-fit rounded-[6px] px-2.5 py-1 text-xs font-semibold">
+          출처 · 법제처 국가법령정보센터
         </p>
-      </div>
+        <h1 className="font-display text-ink mt-3 text-[28px] font-bold">판례·법령 검색</h1>
+        <p className="text-muted mt-2 text-[15px] leading-relaxed">
+          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 3번과 따로 세요.
+        </p>
+        <div
+          role="tablist"
+          aria-label="검색 종류"
+          className="mt-5 flex gap-2 overflow-x-auto pb-1 whitespace-nowrap"
+        >
+          {KINDS.map((k) => (
+            <button
+              key={k.kind}
+              type="button"
+              role="tab"
+              aria-selected={tab === k.kind}
+              onClick={() => {
+                setTab(k.kind);
+                if (text.trim() && state.kind !== "idle") void submit(k.kind);
+              }}
+              className={`flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold ${
+                tab === k.kind
+                  ? "border-gold bg-cream text-ink"
+                  : "border-line text-muted hover:border-gold bg-white"
+              }`}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 max-w-[820px]">
+          <QuestionBox
+            value={text}
+            onChange={setText}
+            onSubmit={() => void submit()}
+            busy={state.kind === "loading"}
+            size="md"
+            label={`${spec.label} 검색어`}
+            placeholder={spec.placeholder}
+          />
+        </div>
+        {tab === "cases" && (
+          <div className="mt-4">
+            <p className="text-muted mb-2 text-[13px] font-semibold">자주 찾는 검색어</p>
+            <QuickButtons onPick={quick} />
+          </div>
+        )}
+        <ul className="text-muted mt-4 grid gap-1 text-[13px] leading-relaxed">
+          {TIPS.map((t) => (
+            <li key={t}>· {t}</li>
+          ))}
+        </ul>
+      </section>
 
       {state.kind === "idle" && <RecentList />}
       {state.kind === "error" && (
@@ -213,14 +270,34 @@ export function SearchView() {
         </p>
       )}
       {state.kind === "loading" && (
-        <p aria-live="polite" className="text-muted mt-6 text-[15px]">
-          법제처에서 찾고 있어요…
-        </p>
+        <div aria-live="polite" className="mt-8">
+          <p className="text-muted text-[15px]">법제처에서 찾고 있어요…</p>
+          <ul aria-hidden="true" className="mt-4 grid gap-3 lg:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <li
+                key={i}
+                className="rounded-card border-line bg-soft h-[132px] animate-pulse border"
+              />
+            ))}
+          </ul>
+        </div>
       )}
       {state.kind === "done" && (
         <section aria-label="검색 결과" className="mt-8">
-          <SearchNotice notice={state.data.notice} />
-          <p className="text-muted mt-3 text-sm leading-relaxed">{state.data.searchScopeNote}</p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="font-display text-ink text-xl font-bold">
+              &lsquo;{state.q}&rsquo; 검색 결과
+            </h2>
+            <span data-testid="result-count" className="text-gold text-base font-bold">
+              {state.data.items.length}건
+            </span>
+          </div>
+          <div className="mt-2">
+            <SearchNotice notice={state.data.notice} />
+          </div>
+          {state.data.searchScopeNote && (
+            <p className="text-muted mt-3 text-sm leading-relaxed">{state.data.searchScopeNote}</p>
+          )}
           {tab === "ordinances" && state.data.items.length > 1 && (
             <div className="rounded-card bg-soft mt-4 flex flex-wrap items-center gap-3 p-4">
               <p className="text-muted text-sm">
@@ -237,36 +314,56 @@ export function SearchView() {
             </div>
           )}
           {state.data.items.length === 0 ? (
-            <p className="text-ink mt-6 text-[15px]">
-              &lsquo;{state.q}&rsquo;로 찾은 결과가 없어요. 다른 말로 바꿔 검색해 보세요.
-            </p>
+            <div className="mt-6">
+              <p className="text-ink text-[15px]">
+                &lsquo;{state.q}&rsquo;로 찾은 {tab === "cases" ? "판례가" : "결과가"} 없어요. 다른
+                말로 바꿔 검색해 보세요.
+              </p>
+              {tab === "cases" && (
+                <div className="mt-4">
+                  <QuickButtons onPick={quick} />
+                </div>
+              )}
+            </div>
           ) : (
             <ul className="mt-4 grid gap-3 lg:grid-cols-2">
               {state.data.items.map((c) => (
                 <li
                   key={c.key}
-                  className="rounded-card border-line flex flex-col gap-1.5 border bg-white p-5"
+                  className="rounded-card border-line flex flex-col gap-2 border bg-white p-5"
                 >
+                  {c.tags.length > 0 && (
+                    <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px]">
+                      <span className="bg-cream text-ink rounded-full px-2.5 py-0.5 font-semibold">
+                        {c.tags[0]}
+                      </span>
+                      {c.tags.slice(1).map((t) => (
+                        <span key={t} className="text-muted">
+                          {t}
+                        </span>
+                      ))}
+                    </p>
+                  )}
                   {c.href ? (
                     <Link
                       href={c.href}
-                      className="font-display text-ink text-base leading-snug font-bold underline-offset-2 hover:underline"
+                      className="font-display text-ink text-[19px] leading-snug font-bold underline-offset-2 hover:underline"
                     >
                       {c.title}
                     </Link>
                   ) : (
-                    <p className="font-display text-ink text-base leading-snug font-bold">
+                    <p className="font-display text-ink text-[19px] leading-snug font-bold">
                       {c.title}
                     </p>
                   )}
-                  {c.sub && <p className="text-muted text-[13px]">{c.sub}</p>}
                   <div className="flex flex-wrap items-center gap-4">
                     {c.href && (
                       <Link
                         href={c.href}
+                        aria-label={tab === "cases" ? "판시사항·요지 보기" : "내용 보기"}
                         className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
                       >
-                        요지·조문 보기 →
+                        {tab === "cases" ? "판시사항·요지 보기 →" : "내용 보기 →"}
                       </Link>
                     )}
                     {c.sourceUrl && <OriginalLink url={c.sourceUrl} />}

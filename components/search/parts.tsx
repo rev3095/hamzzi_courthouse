@@ -1,6 +1,9 @@
+"use client";
 // 판례·조문 직접 검색 화면 공통 조각. AI가 만든 내용이 없으므로 AI_NOTICE 대신 SEARCH_NOTICE를 쓴다 (절대 규칙 6 취지).
+import Link from "next/link";
 import type { ClientError } from "@/lib/client/api";
 import { SEARCH_NOTICE } from "@/lib/api/respond";
+import { clearRecent, useRecent } from "./recent";
 
 export function SearchNotice({ notice = SEARCH_NOTICE }: { notice?: string }) {
   return (
@@ -58,4 +61,40 @@ export function searchErrorText(err: ClientError): string {
     return "법제처에서 결과를 불러오지 못했어요. 결과가 없는 게 아니라 연결 문제예요. 잠시 후 다시 시도해 주세요.";
   if (err.code === "NOT_FOUND") return "법제처에서 찾을 수 없어요. 주소가 맞는지 확인해 주세요.";
   return `일시적인 오류가 발생했어요.${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
+}
+
+/** 조회 이력 (DEC-026 제안). 이 기기에만 있고 서버로 보내지 않는다 */
+export function RecentList({ compact = false }: { compact?: boolean }) {
+  const items = useRecent();
+  if (items.length === 0) return null;
+  return (
+    <section aria-label="최근 본 자료" className={compact ? "" : "mt-8"}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-ink text-lg font-bold">최근 본 자료</h2>
+        <button
+          type="button"
+          onClick={clearRecent}
+          className="text-muted min-h-11 px-2 text-[13px] underline-offset-2 hover:underline"
+        >
+          지우기
+        </button>
+      </div>
+      <p className="text-muted text-[13px]">이 기기에만 저장돼요. 검색어는 저장하지 않아요.</p>
+      <ul className={`mt-3 grid gap-2 ${compact ? "" : "lg:grid-cols-2"}`}>
+        {items.slice(0, compact ? 8 : 12).map((r) => (
+          <li key={r.href}>
+            <Link
+              href={r.href}
+              className="rounded-card border-line hover:border-gold flex min-h-11 flex-col justify-center border bg-white px-4 py-2.5"
+            >
+              <span className="text-ink text-sm font-semibold">{r.title}</span>
+              <span className="text-muted text-[12px]">
+                {[r.kind, r.sub].filter(Boolean).join(" · ")}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }

@@ -27,6 +27,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("korean-law-mcp/lib/api-client", () => ({
   LawApiClient: class {
     getLawText = klm.getLawText;
+    // 약칭 보조 검색: 이름이 맞는 법령이 없을 때만 부른다. 약칭이 같은 행이 없으면 그대로 null
+    searchLaw = async () => "<LawSearch></LawSearch>";
   },
 }));
 vi.mock("korean-law-mcp/tools/life-law", () => ({

@@ -35,3 +35,105 @@ export type CaseDetail = CaseHit & {
 
 /** 인용 실존 재조회 결과 (F-005 AC2 ③). exists=null은 판정 불가(확인 필요) */
 export type CitationCheck = { citation: string; exists: boolean | null; note?: string };
+
+// --- 탐색 확장 (DEC-026 제안): 결정문·시점 조문·신구 대조·3단 비교·자치법규 ---------------------
+
+/** 판례 밖 결정문 종류. 법제처 Open API 대상: expc · detc · ttSpecialDecc · kcsCgmExpc */
+export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
+
+/** 결정문 목록 항목. id = 법제처 일련번호. sourceUrl은 공개 주소를 아는 종류만 */
+export type DecisionHit = {
+  domain: DecisionDomain;
+  id: string;
+  title: string;
+  refNo: string | null; // 안건번호·사건번호·청구번호
+  agency: string | null;
+  decidedAt: string | null;
+  sourceUrl: string | null;
+};
+
+/** 결정문 상세. 요지 항목만 담고 이유·전문은 담지 않는다 (DEC-007과 같은 원칙) */
+export type DecisionDetail = DecisionHit & {
+  sections: { section: string; text: string }[];
+  fromBody: boolean;
+};
+
+/** 법령 한 버전 (시행 단위) */
+export type LawVersion = {
+  mst: string;
+  lawName: string;
+  effectiveFrom: string | null;
+  promulgatedAt: string | null;
+  promulgationNo: string | null;
+  revisionType: string | null; // 일부개정·전부개정·타법개정 …
+};
+
+/** 특정 날짜의 조문 조회 결과 */
+export type ArticleAtDate =
+  | { status: "found"; article: ArticleHit; version: LawVersion }
+  | { status: "not_in_force" } // 그날 시행 중인 버전이 없음(제정 전·폐지 후)
+  | { status: "no_article"; version: LawVersion }; // 그 버전에 같은 번호 조문이 없음
+
+export type OldNewRow = { no: number; text: string; changed: string[] };
+export type OldNewCompare = {
+  lawName: string;
+  old: LawVersion | null;
+  new: LawVersion | null;
+  oldRows: OldNewRow[];
+  newRows: OldNewRow[];
+};
+
+export type LowerRule = {
+  type: string; // 시행령·시행규칙·행정규칙
+  lawName: string;
+  articleNo: string | null;
+  title: string;
+  text: string;
+};
+export type ThreeTierRow = {
+  articleNo: string;
+  title: string;
+  text: string;
+  delegations: LowerRule[];
+};
+export type ThreeTier = { lawName: string; rows: ThreeTierRow[] };
+
+export type AnnexRef = {
+  no: string | null;
+  title: string;
+  kind: string | null; // 별표·서식
+  fileUrl: string | null;
+  pdfUrl: string | null;
+};
+
+export type OrdinanceHit = {
+  id: string;
+  name: string;
+  region: string | null;
+  kind: string | null;
+  effectiveFrom: string | null;
+  promulgatedAt: string | null;
+  sourceUrl: string;
+};
+export type OrdinanceDetail = OrdinanceHit & {
+  articles: { articleNo: string | null; title: string; text: string }[];
+};
+
+export type AdminRuleHit = {
+  id: string;
+  name: string;
+  kind: string | null;
+  agency: string | null;
+  issuedAt: string | null;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+};
+
+/** 법령 조문 ↔ 자치법규 조문 연계 (법제처 연계정보) */
+export type OrdinanceLink = {
+  lawName: string;
+  lawArticleNo: string | null;
+  ordinanceId: string;
+  ordinanceName: string;
+  ordinanceArticleNo: string | null;
+};

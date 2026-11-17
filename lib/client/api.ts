@@ -83,6 +83,8 @@ export function forgetQuestions() {
   try {
     for (const k of Object.keys(sessionStorage))
       if (k.startsWith("hz:")) sessionStorage.removeItem(k);
+    // 이 기기에 둔 조회 이력(DEC-026)도 함께 지운다
+    localStorage.removeItem("hz:recent");
   } catch {
     // 저장소를 못 쓰면 지울 것도 없다
   }
@@ -153,6 +155,156 @@ export const getCaseDetail = (id: string) =>
 export const getStatute = (id: string, asOf?: string) =>
   call<StatuteView>(
     `/api/v1/statutes/${encodeURIComponent(id)}${asOf ? `?${new URLSearchParams({ asOf })}` : ""}`,
+  );
+
+// --- 탐색 확장 (DEC-026 제안): 결정문·시점 조문·법령 도구·자치법규 ---------------------------
+export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
+export type DecisionRef = {
+  domain: DecisionDomain;
+  id: string;
+  title: string;
+  refNo: string | null;
+  agency: string | null;
+  decidedAt: string | null;
+  sourceUrl: string | null;
+};
+export type Listed<T> = {
+  items: T[];
+  outcome: "grounded" | "no_result_in_scope";
+  searchScopeNote: string;
+  notice: string;
+};
+export type DecisionDetailView = DecisionRef & {
+  sections: { section: string; text: string }[];
+  fromBody: boolean;
+  notice: string;
+};
+export type LawVersionView = {
+  mst: string;
+  lawName: string;
+  effectiveFrom: string | null;
+  promulgatedAt: string | null;
+  promulgationNo: string | null;
+  revisionType: string | null;
+};
+export type DiffPart = { type: "same" | "removed" | "added"; text: string };
+export type StatuteAtDate = {
+  lawName: string;
+  articleNo: string;
+  articleTitle: string;
+  body: string;
+  effectiveFrom: string | null;
+  version: LawVersionView;
+  sameAsCurrent: boolean;
+  diff: DiffPart[];
+};
+export type StatuteTimeView = StatuteView & {
+  atDate?: StatuteAtDate | null;
+  atDateVersion?: LawVersionView;
+};
+type LawBase = { lawName: string; sourceUrl: string; notice: string };
+export type ThreeTierView = LawBase & {
+  rows: {
+    articleNo: string;
+    title: string;
+    text: string;
+    delegations: {
+      type: string;
+      lawName: string;
+      articleNo: string | null;
+      title: string;
+      text: string;
+    }[];
+  }[];
+};
+export type OldNewRow = { no: number; text: string; changed: string[] };
+export type OldNewView = LawBase & {
+  old: LawVersionView | null;
+  new: LawVersionView | null;
+  oldRows: OldNewRow[];
+  newRows: OldNewRow[];
+};
+export type HistoryView = LawBase & { versions: LawVersionView[] };
+export type AnnexView = LawBase & {
+  items: {
+    no: string | null;
+    title: string;
+    kind: string | null;
+    fileUrl: string | null;
+    pdfUrl: string | null;
+  }[];
+};
+export type ImpactView = LawBase & {
+  articleCount: number;
+  lower: {
+    articleNo: string;
+    title: string;
+    delegations: { type: string; lawName: string; articleNo: string | null; title: string }[];
+  }[];
+  ordinances: {
+    lawName: string;
+    lawArticleNo: string | null;
+    ordinanceId: string;
+    ordinanceName: string;
+    ordinanceArticleNo: string | null;
+  }[];
+  checks: { articleNo: string; title: string; phrase: string; linked: number }[];
+  impactNote: string;
+  delegationNote: string;
+};
+export type OrdinanceRef = {
+  id: string;
+  name: string;
+  region: string | null;
+  kind: string | null;
+  effectiveFrom: string | null;
+  promulgatedAt: string | null;
+  sourceUrl: string;
+};
+export type OrdinanceView = OrdinanceRef & {
+  articles: { articleNo: string | null; title: string; text: string }[];
+  notice: string;
+};
+export type AdminRuleRef = {
+  id: string;
+  name: string;
+  kind: string | null;
+  agency: string | null;
+  issuedAt: string | null;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+};
+
+const post = <T>(path: string, body: unknown) =>
+  call<T>(path, { method: "POST", body: JSON.stringify(body) });
+
+export const searchDecisions = (domain: DecisionDomain, q: string) =>
+  post<Listed<DecisionRef> & { domain: DecisionDomain }>("/api/v1/decisions", { domain, q });
+export const getDecision = (domain: string, id: string) =>
+  call<DecisionDetailView>(
+    `/api/v1/decisions/${encodeURIComponent(domain)}/${encodeURIComponent(id)}`,
+  );
+export const searchOrdinances = (q: string) =>
+  post<Listed<OrdinanceRef>>("/api/v1/ordinances", { q });
+export const getOrdinance = (id: string) =>
+  call<OrdinanceView>(`/api/v1/ordinances/${encodeURIComponent(id)}`);
+export const searchAdminRules = (q: string) =>
+  post<Listed<AdminRuleRef>>("/api/v1/admin-rules", { q });
+export const getStatuteCases = (id: string) =>
+  call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
+export const getStatuteAt = (id: string, asOf?: string) =>
+  getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
+
+export type LawViews = {
+  "three-tier": ThreeTierView;
+  "old-new": OldNewView;
+  history: HistoryView;
+  annexes: AnnexView;
+  impact: ImpactView;
+};
+export const getLawView = <K extends keyof LawViews>(lawName: string, view: K, mst?: string) =>
+  call<LawViews[K]>(
+    `/api/v1/laws/${encodeURIComponent(lawName)}/${view}${mst ? `?${new URLSearchParams({ mst })}` : ""}`,
   );
 
 /** SSE 한 덩어리("event: …\ndata: …")를 읽는다. 형식이 다르면 null */
