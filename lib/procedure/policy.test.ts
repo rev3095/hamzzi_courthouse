@@ -63,7 +63,8 @@ function allFixedTexts(): string[] {
         f.label,
         f.help ?? "",
         f.example ?? "",
-        ...(f.options ?? []).map((o) => o.label),
+        // 공식 서식 문구를 그대로 인용한 확약(officialNotice)은 고정 안내가 아니라 출처 있는 인용이라 뺀다
+        ...(f.options ?? []).map((o) => o.label).filter((l) => l !== d.officialNotice?.text),
       ]),
     ]),
     PROCEDURE_NOTICE,

@@ -2,60 +2,27 @@
 // 신청취지·청구취지·신청이유의 기본 문장은 법원 서식·기재례의 고정 문장에 사용자가 적은 값만 넣는다.
 // 숫자는 사용자가 적은 값(날짜·금액·이율)과 목록 번호뿐이다 — 이자·비용을 셈하지 않는다(독촉절차비용 합계는 사용자가 적은 두 값의 덧셈만).
 import type { DocumentKind } from "@/lib/procedure/steps";
+import { compensationOrder, criminalComplaint } from "./fill-criminal";
+import {
+  blank,
+  BLANK_WON,
+  center,
+  formatDate,
+  formatWon,
+  heading,
+  lines,
+  numbered,
+  p,
+  party,
+  picked,
+  right,
+  signDate,
+  title,
+  type Block,
+  type V,
+} from "./fill-kit";
 
-export type BlockKind = "title" | "heading" | "text" | "center" | "right" | "blank";
-export type Block = { kind: BlockKind; text: string };
-
-const title = (text: string): Block => ({ kind: "title", text });
-const heading = (text: string): Block => ({ kind: "heading", text });
-const p = (text: string): Block => ({ kind: "text", text });
-const center = (text: string): Block => ({ kind: "center", text });
-const right = (text: string): Block => ({ kind: "right", text });
-const blank: Block = { kind: "blank", text: "" };
-
-type V = Record<string, string>;
-
-const BLANK_DATE = "        년      월      일";
-const BLANK_SHORT_DATE = "      .      .      .";
-const BLANK_WON = "                ";
-const RRN = "(주민등록번호:              -              )";
-
-/** "2026-03-01" → "2026. 3. 1." (사용자가 고른 날짜를 모양만 바꾼다) */
-export function formatDate(iso: string | undefined, empty = BLANK_SHORT_DATE): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? "");
-  return m ? `${m[1]}. ${+m[2]}. ${+m[3]}.` : empty;
-}
-
-/** "23000000" → "23,000,000" (사용자가 적은 금액에 쉼표만 넣는다) */
-export function formatWon(digits: string | undefined, empty = BLANK_WON): string {
-  return digits && /^\d+$/.test(digits) ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : empty;
-}
-
-/** 사용자가 적은 여러 줄 글 → 문단 블록 (빈 줄은 건너뛴다) */
-const lines = (s: string | undefined): Block[] =>
-  (s ?? "")
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map(p);
-
-/** 번호가 이미 붙은 줄이면 떼고 다시 매긴다 */
-const numbered = (items: string[], from = 1): Block[] =>
-  items.map((t, i) => p(`${from + i}. ${t.replace(/^\d+\s*[.)]\s*/, "")}`));
-
-const party = (role: string, nameV: string, addr: string, phone?: string, rrn = true): Block[] => [
-  p(`${role}  ${nameV}${rrn ? `  ${RRN}` : ""}`),
-  p(`        주소  ${addr}`),
-  ...(phone === undefined ? [] : [p(`        연락 가능한 전화번호  ${phone}`)]),
-];
-
-const picked = (v: string | undefined, labels: Record<string, string>): string[] =>
-  (v ?? "")
-    .split(",")
-    .filter((k) => labels[k])
-    .map((k) => labels[k]);
-
-const signDate = (v: V) => center(v.writtenOn ? formatDate(v.writtenOn) : BLANK_DATE);
+export { formatDate, formatWon, type Block, type BlockKind } from "./fill-kit";
 
 export function fillBlocks(
   kind: DocumentKind,
@@ -74,6 +41,10 @@ export function fillBlocks(
       return { title: "지급명령 신청서", basename: "지급명령신청서", blocks: paymentOrder(v) };
     case "complaint":
       return { title: "소장", basename: "소장", blocks: complaint(v) };
+    case "criminal-complaint":
+      return { title: "고소장 (사기)", basename: "고소장_사기", blocks: criminalComplaint(v) };
+    case "compensation-order":
+      return { title: "배상명령 신청서", basename: "배상명령신청서", blocks: compensationOrder(v) };
   }
 }
 

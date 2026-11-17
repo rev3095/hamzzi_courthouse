@@ -192,9 +192,10 @@ export const NOTICE_TEXTS: string[] = [
 export function shortcutOf(
   step: Pick<ProcedureStep, "document" | "shortcut">,
 ): { kind: "document"; href: string } | { kind: "official"; href: string; label: string } | null {
-  if (step.document) return { kind: "document", href: `/documents/${step.document}` };
+  // 공식 창구(예: 사이버범죄 신고시스템)를 정해 둔 단계는 그 창구가 먼저다. 서식 작성은 타임라인 단계 팝업에서 연다 (DEC-025)
   if (step.shortcut)
     return { kind: "official", href: step.shortcut.url, label: step.shortcut.label };
+  if (step.document) return { kind: "document", href: `/documents/${step.document}` };
   return null;
 }
 
