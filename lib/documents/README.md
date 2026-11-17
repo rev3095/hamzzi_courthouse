@@ -1,13 +1,55 @@
-# lib/documents — 내용증명·소장 양식 `[게이트]` (DEC-022)
+# lib/documents — 단계별 공식 서식 설문·편집·내보내기 `[게이트]` (DEC-022·023·025)
 
-`legal_documents` 게이트(F-013)가 승인되기 전에는 **꺼져 있다**: `POST /api/v1/documents/{kind}`는 맨 앞 `requireFeature`에서 403 FEATURE_GATED, 화면 `/documents/[kind]`는 안내·작성 요령·공식 양식 링크만 보인다. OQ-003(AI 문서 범위) 해결 전 활성화 금지.
+`legal_documents` 게이트(F-013)가 승인되기 전에는 **꺼져 있다**:
 
-| 파일        | 역할                                                                                                                    |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `policy.ts` | `DOCUMENT_SPECS`(필드·작성 요령·공식 링크), `parseDocumentInput`(검증, 오류는 필드 이름만), `fillDocument`(양식 채우기). 브라우저에서도 쓴다 — server-only를 넣지 않는다 |
-| `draft.ts`  | 초안 도우미(DEC-023) 규칙: `ruleSuggestions`(사건명·제목·입증방법), `screenFacts`·`screenMissing`(모델 문장 거르기), `factsText` |
+- `POST /api/v1/documents/{kind}`는 맨 앞 `requireFeature`에서 403 FEATURE_GATED를 낸다.
+- 화면 `/documents/[kind]`는 안내·작성 요령·공식 서식 링크만 보인다.
+- **관리자 모드(DEC-024) 브라우저만** 설문·편집·내보내기를 미리 볼 수 있다. 화면에 "관리자 미리보기" 띠가 붙는다.
+- 초안 도우미 API는 관리자여도 게이트를 그대로 따른다.
+- OQ-003(AI 문서 범위) 해결 전에는 공개 활성화를 하지 않는다.
 
-- 사용자가 적은 값을 정해진 칸에 넣기만 한다. LLM 없음, 법률 판단·금액·이자·새 문장을 만들지 않는다.
-- 입력에 이름·주소가 들어가므로 저장하지 않고 로그에도 남기지 않는다(`withRoute`는 본문을 기록하지 않음). 응답은 `no-store`.
-- AI 생성물이 아니어서 `AI_NOTICE` 대신 `DOCUMENT_NOTICE`를 붙인다.
-- **초안 도우미 (DEC-023)**: 결과 화면 '바로 가기'·'소장 작성 안내'가 `?from=<질문 번호>`로 온다. `POST /documents/{kind}/draft`는 질문 번호만 받아 그 질문 마스킹본으로 규칙 칸과 Haiku 사실관계 초안(`lib/ai/doc-draft`, $0.0015)을 돌려준다. 이름·주소·금액은 화면에서 직접 적고, 양식 채우기는 브라우저 안(`components/documents/DocumentForm.tsx`)에서 한다. 1회용 — 쿠키·localStorage·서버에 저장하지 않는다. AI 문장이 들어가면 `AI_NOTICE` + `DRAFT_NOTICE`("초안 · 법률 검토 필요").
+| 파일 | 역할 |
+| --- | --- |
+| `policy.ts` | 서식 정의를 담는다. 브라우저에서도 쓰므로 server-only를 넣지 않는다. 내용은 아래 목록 참고 |
+| `fill.ts` | `fillBlocks`: 입력값을 공식 서식 순서의 블록(title·heading·text·center·right·blank)으로 놓는다 |
+| `draft.ts` | 초안 도우미(DEC-023) 규칙: `ruleSuggestions`, `FACTS_FIELD`(사실관계 칸), `partyWords`, `screenFacts`·`screenMissing`, `factsText` |
+| `export/index.ts` | 형식 고르기 `buildFile`(형식별 코드는 dynamic import), `fetchFonts`, `downloadFile` |
+| `export/docx.ts` · `export/zip.ts` | DOCX(WordprocessingML)와 무압축 ZIP. 의존성 없음 |
+| `export/hwpx.ts` | HWPX(OWPML). `hwpx-js`(Apache-2.0)를 쓰고 정렬 문단 모양을 더한다. **실험 기능** |
+| `export/pdf.ts` | PDF. `pdf-lib`·`@pdf-lib/fontkit`(MIT)에 나눔고딕(SIL OFL, `public/fonts`, 서브셋)을 넣는다 |
+
+`policy.ts`에 들어 있는 것:
+
+- `DOCUMENT_SPECS`: 칸·설문 페이지·쉬운 설명·예시·공식 서식 이름과 출처·근거 조문
+- `invalidFields`: 페이지 단위 검사. 오류에는 칸 이름만 넣는다
+- `parseDocumentInput`: 입력 검증
+- `fillDocument`: 블록과 텍스트를 만든다
+
+## 서식과 근거 (공식 기관만, 사설 양식 금지)
+
+| kind | 단계 | 공식 서식 (대한민국 법원 전자민원센터 양식모음 등) | 법령 근거 |
+| --- | --- | --- | --- |
+| `demand-letter` | 내용증명 | 인터넷우체국 내용증명 신청 화면 | 우편법 시행규칙 제46·48·51조 |
+| `lease-registration` | 임차권등기명령 | [신청] 주택임차권등기명령신청서 (건물 중 일부·구분건물 포함) | 임차권등기명령 절차에 관한 규칙 제2·3조 |
+| `payment-order` | 지급명령 신청 | [민사] 지급명령신청서(일반) A2330, 표준양식 작성안내 A2342 | 민사소송법 제468조 |
+| `complaint` | 소송 | [민사] 소장 | 민사소송법 제249조 |
+
+출처와 확인 내용은 `docs/research/05_공식_서식_출처.md`에 있다.
+
+## 지키는 것
+
+- **값을 지어내지 않는다.** 사용자가 적은 값을 정해진 칸과 법원 서식 기본 문장(신청취지·청구취지·신청이유)에 넣기만 한다. LLM을 쓰지 않고, 법률 판단·이자·비용을 셈하지 않는다. 지급명령 독촉절차비용 합계만 사용자가 적은 두 금액의 덧셈이다.
+- **주민등록번호는 받지 않는다.** 문서에 빈칸으로 남기고 화면에서 직접 적으라고 안내한다(F-007).
+- **1회용이다.** 입력과 편집 결과는 화면 메모리에만 있다. 쿠키·localStorage·서버에 저장하지 않는다. 파일(HWPX·DOCX·PDF)도 브라우저 안에서 만들어 바로 내려받는다. 이름·주소·금액은 서버·외부 API로 가지 않는다.
+- **결과 표시를 단다.** AI 생성물이 아니어서 `DOCUMENT_NOTICE`를 쓴다. AI 문장이 들어가면 `AI_NOTICE` + `DRAFT_NOTICE`를 쓴다. 모든 서식에 `CHECK_NOTICE`(제출 전 법원 안내·전문가 확인)를 붙인다.
+- **화면 흐름** (`components/documents/DocumentStudio.tsx`):
+  1. 설문 팝업(`SurveyDialog`)에 답한다.
+  2. 입력대로 곧바로 완성한다.
+  3. "이대로 내보낼까요?"에 예 또는 아니요("직접 수정할게요")를 고른다.
+  4. 아니요면 편집기(`DocumentPaper`)에서 고친다. 문단 고치기·추가·삭제·정렬을 할 수 있다.
+  5. 저장한다. 메모리에서 확정만 하고 어디에도 쓰지 않는다.
+  6. 다시 예 또는 아니요("계속 수정할게요")를 고른다.
+- **초안 도우미 (DEC-023)**: 결과 화면이나 타임라인 단계의 '서식 작성하기'가 `?from=<질문 번호>`로 온다.
+  - `POST /documents/{kind}/draft`는 질문 번호만 받는다.
+  - 그 질문의 마스킹본으로 규칙 칸과 사실관계 칸 초안(`FACTS_FIELD`, Haiku 1회 $0.0015)을 돌려준다.
+- **개발 검사 도구**: `.mcp.json`의 `hwpx`(hwpx-mcp-server, MIT)로 만든 HWPX 파일을 열어 볼 수 있다. 서비스 런타임에서는 쓰지 않는다.

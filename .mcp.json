@@ -3,6 +3,10 @@
     "korean-law": {
       "command": "node",
       "args": ["scripts/korean-law-mcp.mjs"]
+    },
+    "hwpx": {
+      "command": "node",
+      "args": ["scripts/hwpx-mcp.mjs"]
     }
   }
 }

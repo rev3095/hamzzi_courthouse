@@ -87,25 +87,38 @@ describe("POST /documents/{kind}", () => {
 describe("DEC-022 양식 채우기 (LLM 없음)", () => {
   test("절대 규칙 3 사용자가 적지 않은 숫자·금액·이자를 만들지 않는다", () => {
     for (const kind of ["demand-letter", "complaint"] as const) {
-      const input = Object.fromEntries(
-        DOCUMENT_SPECS[kind].fields.map((f) => [f.key, f.optional ? "" : `값${f.key}`]),
+      // 글자 칸만 채운다 (금액·날짜는 documents-forms.test.ts에서 따로 본다)
+      const isWords = (f: { type: string }) => f.type === "text" || f.type === "textarea";
+      const input: Record<string, string> = Object.fromEntries(
+        DOCUMENT_SPECS[kind].fields
+          .filter((f) => !f.optional && isWords(f))
+          .map((f) => [f.key, `값${f.key}`]),
       );
+      if (kind === "complaint") Object.assign(input, { claimAmount: "1", provisional: "no" });
       const { text } = fillDocument(kind, parseDocumentInput(kind, input));
-      expect(text, kind).not.toMatch(/[0-9]/);
+      // 숫자는 목록 번호와 사용자가 적은 금액(1)뿐이다
+      expect(text.replace(/^\d+\.\s/gm, "").replace("금 1원", ""), kind).not.toMatch(/[0-9]/);
       expect(text).not.toMatch(/이자|연\s*\d|%|승소|반드시/);
       for (const f of DOCUMENT_SPECS[kind].fields) {
-        if (!f.optional) expect(text).toContain(`값${f.key}`);
+        if (!f.optional && isWords(f)) expect(text).toContain(`값${f.key}`);
       }
     }
   });
 
-  test("소장 양식은 청구취지·청구원인·입증방법 칸을 사용자 입력 그대로 쓴다", () => {
-    const input = Object.fromEntries(
-      DOCUMENT_SPECS.complaint.fields.map((f) => [f.key, f.optional ? "" : `${f.label} 입력`]),
-    );
+  test("소장 청구취지는 기본 문장에 금액만 넣고, 청구원인은 입력 그대로 쓴다", () => {
+    const input = {
+      ...Object.fromEntries(
+        DOCUMENT_SPECS.complaint.fields
+          .filter((f) => f.type === "text" || f.type === "textarea")
+          .map((f) => [f.key, f.optional ? "" : `${f.label} 입력`]),
+      ),
+      claimAmount: "1200000",
+      provisional: "yes",
+    };
     const { text, filename } = fillDocument("complaint", parseDocumentInput("complaint", input));
     expect(filename).toBe("소장.txt");
-    expect(text).toMatch(/청 구 취 지\n청구취지 입력/);
+    expect(text).toMatch(/청 구 취 지\n1\. 피고는 원고에게 금 1,200,000원을 지급하라\./);
+    expect(text).toMatch(/청 구 원 인\n청구원인 입력/);
     expect(text).toMatch(/제출할 법원 입력 귀중/);
   });
 });

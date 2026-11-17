@@ -58,7 +58,13 @@ function allFixedTexts(): string[] {
     ...Object.values(DOCUMENT_SPECS).flatMap((d) => [
       d.intro,
       ...d.tips,
-      ...d.fields.flatMap((f) => [f.label, f.hint ?? ""]),
+      ...d.pages.flatMap((p) => [p.title, p.help ?? ""]),
+      ...d.fields.flatMap((f) => [
+        f.label,
+        f.help ?? "",
+        f.example ?? "",
+        ...(f.options ?? []).map((o) => o.label),
+      ]),
     ]),
     PROCEDURE_NOTICE,
   ].filter(Boolean);
