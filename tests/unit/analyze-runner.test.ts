@@ -20,8 +20,8 @@ vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
 vi.mock("@/lib/citations/verify", () => cite);
 const rate = vi.hoisted(() => ({
-  tryGlobalQuota: vi.fn(async () => true),
-  aiDailyRule: () => ({ bucket: "ai_daily", limit: 200, windowSeconds: 86_400 }),
+  // 주간·하루 상한 확인 (DEC-026). 실제 숫자는 lib/ai/models.test.ts가 본다
+  tryAiQuota: vi.fn(async () => true),
 }));
 vi.mock("@/lib/auth/rate-limit", () => rate);
 
@@ -139,12 +139,12 @@ describe("DEC-015 무료 모드 (기본)", () => {
     );
     expect(out.result).toMatchObject({ mode: "search_only" });
     // 무료 모드는 하루 Claude 상한 카운터를 올리지 않는다
-    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
   });
 
   test("DEC-019 Pro라도 하루 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
     vi.stubEnv("AI_MODE", "pro-full");
-    rate.tryGlobalQuota.mockResolvedValueOnce(false);
+    rate.tryAiQuota.mockResolvedValueOnce(false);
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "search_only", outcome: "grounded" },
       citations: [],
@@ -204,7 +204,7 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
     });
     await analyzeInquiry({ ...INQ, masked_text: demoExamples()[0].question }, ANON, new Headers());
     expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
-    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
     expect(free.runFreeAnalysis).toHaveBeenCalled();
   });
 });

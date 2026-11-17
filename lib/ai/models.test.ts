@@ -1,12 +1,15 @@
-// DEC-026 라이트 답변 모델 선택 — 환경변수 해석·상한·하루 건수 (순수 함수, 실호출 없음)
+// DEC-026 라이트 답변 모델 선택 — 환경변수 해석·상한·주간/하루 건수 (순수 함수, 실호출 없음)
 import { describe, expect, test } from "vitest";
 import { COST_CAP_USD, LITE_ANSWER_TOKENS, PRICES, planCall } from "./cost";
 import {
   ANSWER_MODELS,
   DEFAULT_ANSWER_MODEL,
   MAX_LITE_CAP_USD,
+  DEFAULT_DAILY_BUDGET_USD,
+  DEFAULT_WEEKLY_BUDGET_USD,
   answerModel,
   dailyAiLimit,
+  weeklyAiLimit,
   type AnswerModelId,
 } from "./models";
 
@@ -71,29 +74,46 @@ describe("DEC-026 질문 1건 상한", () => {
   });
 });
 
-describe("DEC-026 하루 전체 건수 = min(건수 상한, 금액 상한 ÷ 질문 1건 상한)", () => {
-  test("라이트 Sonnet: $0.90 ÷ $0.03 = 30건 (부동소수 오차로 29가 되지 않는다)", () => {
-    expect(dailyAiLimit({ AI_MODE: "pro" })).toBe(30);
+describe("DEC-026 주간·하루 금액 상한 (Max 월 $100 프로모션 크레딧을 다 쓰되 한꺼번에 나가지 않게)", () => {
+  test("기본값: 주간 $21, 하루 $5", () => {
+    expect(DEFAULT_WEEKLY_BUDGET_USD).toBe(21);
+    expect(DEFAULT_DAILY_BUDGET_USD).toBe(5);
   });
 
-  test("라이트 Haiku: $0.90 ÷ $0.0015 = 600 → 건수 기본 100", () => {
-    expect(dailyAiLimit({ AI_MODE: "pro", AI_ANSWER_MODEL: "claude-haiku-5-5" })).toBe(100);
+  test("30일 최악의 경우(주간 4개 + 앞뒤 자투리 날 하루 몫 2번)도 $100을 넘지 않는다", () => {
+    expect(DEFAULT_WEEKLY_BUDGET_USD * 4 + DEFAULT_DAILY_BUDGET_USD * 2).toBeLessThanOrEqual(100);
+    // 하루 몫 7일이 주간 몫을 넘어야 주간 한도까지 쓸 수 있다
+    expect(DEFAULT_DAILY_BUDGET_USD * 7).toBeGreaterThan(DEFAULT_WEEKLY_BUDGET_USD);
   });
 
-  test("pro-full(Haiku 전체 $0.015): 60건", () => {
+  test("라이트 Sonnet: 주간 $21 ÷ $0.03 = 700건 (부동소수 오차로 699가 되지 않는다), 하루 $5 ÷ $0.03 = 166건", () => {
+    expect(weeklyAiLimit({ AI_MODE: "pro" })).toBe(700);
+    expect(dailyAiLimit({ AI_MODE: "pro" })).toBe(166);
+  });
+
+  test("라이트 Haiku: 주간 14,000건 · 하루 3,333건 (금액은 같다)", () => {
+    const env = { AI_MODE: "pro", AI_ANSWER_MODEL: "claude-haiku-5-5" };
+    expect(weeklyAiLimit(env)).toBe(14_000);
+    expect(dailyAiLimit(env)).toBe(3_333);
+  });
+
+  test("pro-full(Haiku 전체 $0.015): 주간 1,400건 · 하루 333건", () => {
     expect(COST_CAP_USD).toBe(0.015);
-    expect(dailyAiLimit({ AI_MODE: "pro-full" })).toBe(60);
+    expect(weeklyAiLimit({ AI_MODE: "pro-full" })).toBe(1_400);
+    expect(dailyAiLimit({ AI_MODE: "pro-full" })).toBe(333);
   });
 
-  test("AI_DAILY_LIMIT을 크게 줘도 금액 상한을 넘지 못한다 — 모델을 바꿔도 하루 최대 금액이 늘지 않는다", () => {
-    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_LIMIT: "500" })).toBe(30);
+  test("AI_DAILY_LIMIT을 주면 건수로도 막는다. 크게 줘도 금액 상한을 넘지 못한다", () => {
+    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_LIMIT: "500" })).toBe(166);
     expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_LIMIT: "10" })).toBe(10);
+    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_LIMIT: "-1" })).toBe(166);
   });
 
-  test("하루 금액을 바꿀 수 있다. 0이면 유료 분석 없음, 잘못된 값은 기본값", () => {
-    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_BUDGET_USD: "1.5" })).toBe(50);
+  test("금액을 바꿀 수 있다. 0이면 유료 분석 없음, 잘못된 값은 기본값", () => {
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "6.3" })).toBe(210);
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "0" })).toBe(0);
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "abc" })).toBe(700);
+    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_BUDGET_USD: "0.9" })).toBe(30);
     expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_BUDGET_USD: "0" })).toBe(0);
-    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_BUDGET_USD: "abc" })).toBe(30);
-    expect(dailyAiLimit({ AI_MODE: "pro", AI_DAILY_LIMIT: "-1" })).toBe(30);
   });
 });

@@ -19,6 +19,8 @@ vi.mock("@/lib/auth/rate-limit", async (orig) => ({
   ...(await orig<typeof import("@/lib/auth/rate-limit")>()),
   assertRateLimit: rate.assertRateLimit,
   tryGlobalQuota: rate.tryGlobalQuota,
+  // 주간·하루 상한 확인(DEC-026)도 같은 가짜로 본다
+  tryAiQuota: rate.tryGlobalQuota,
 }));
 const mode = vi.hoisted(() => ({ aiMode: vi.fn() }));
 vi.mock("@/lib/ai/mode", () => mode);
