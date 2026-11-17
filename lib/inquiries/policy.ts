@@ -1,6 +1,7 @@
 // 질문(inquiry) 입력·확인 규칙 (F-001 AC2, F-007). 순수 함수 — DB·인증과 분리해 테스트한다.
 import { ApiError } from "@/lib/api/errors";
 import { scanInput } from "@/lib/pii";
+import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
 
 /** 입력 최대 길이 — 임시 값. 확정은 OQ-API-01 */
@@ -106,7 +107,14 @@ export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
     };
   }
   if (owner?.kind === "anon" && owner.admin) {
-    return { anonymous: true, used: null, limit: null, remaining: null, loginRequired: false, admin: true };
+    return {
+      anonymous: true,
+      used: null,
+      limit: null,
+      remaining: null,
+      loginRequired: false,
+      admin: true,
+    };
   }
   const used = Math.min(Math.max(questionsUsed, 0), ANON_QUESTION_LIMIT);
   return {
@@ -139,8 +147,7 @@ export function assertSensitiveConsent(sensitive: SensitiveCategory[], consent: 
 
 /** admin: 관리자 모드(DEC-024, 비밀번호 쿠키) — 비로그인 하루 3회·IP 상한을 받지 않는다. 소유권은 익명 세션 그대로 */
 export type Owner =
-  | { kind: "user"; userId: string }
-  | { kind: "anon"; anonSessionId: string; admin?: boolean };
+  { kind: "user"; userId: string } | { kind: "anon"; anonSessionId: string; admin?: boolean };
 
 /** 비로그인 횟수 제한을 받는 소유자인지 (관리자 모드는 제외) */
 export const countsAnonQuota = (owner: Owner): owner is { kind: "anon"; anonSessionId: string } =>
@@ -261,4 +268,22 @@ export function parseFeedbackRequest(body: unknown): {
   if (!comment) return { helpful: b.helpful, commentMasked: null };
   const scan = scanInput(comment);
   return { helpful: b.helpful, commentMasked: scan.sensitive.length > 0 ? null : scan.maskedText };
+}
+
+/**
+ * POST /inquiries/{id}/analyze 본문 (DEC-026). 본문이 없으면 카테고리 없음.
+ * category는 홈 카테고리 버튼의 정해진 값만 받는다 — 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다.
+ */
+export function parseAnalyzeRequest(raw: string): { category: CategoryKey | null } {
+  if (!raw.trim()) return { category: null };
+  let body: unknown;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    throw new ApiError("VALIDATION_ERROR", { reason: "invalid_json" });
+  }
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (b.category === undefined || b.category === null) return { category: null };
+  if (!isCategoryKey(b.category)) throw new ApiError("VALIDATION_ERROR", { fields: ["category"] });
+  return { category: b.category };
 }

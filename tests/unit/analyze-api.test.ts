@@ -28,11 +28,12 @@ const RESULT = {
 let logs: RequestLog[] = [];
 setLogSink((e) => logs.push(e));
 
-const call = (accept?: string) =>
+const call = (accept?: string, body?: string) =>
   POST(
     new Request(`http://localhost/api/v1/inquiries/${INQ_ID}/analyze`, {
       method: "POST",
       headers: accept ? { accept } : {},
+      ...(body !== undefined && { body }),
     }),
     { params: Promise.resolve({ id: INQ_ID }) },
   );
@@ -84,7 +85,35 @@ describe("POST /inquiries/{id}/analyze", () => {
       expect.objectContaining({ id: INQ_ID }),
       { kind: "anon", anonSessionId: "anon-1" },
       expect.any(Headers),
+      undefined,
+      { category: null },
     );
+  });
+
+  test("DEC-026 홈 카테고리는 정해진 값만 분석에 넘긴다", async () => {
+    const res = await call(undefined, JSON.stringify({ category: "family" }));
+    expect(res.status).toBe(200);
+    expect(runner.analyzeInquiry).toHaveBeenCalledWith(
+      expect.objectContaining({ id: INQ_ID }),
+      expect.anything(),
+      expect.any(Headers),
+      undefined,
+      { category: "family" },
+    );
+  });
+
+  test("DEC-026 정해지지 않은 카테고리·깨진 본문은 분석 전에 400", async () => {
+    for (const body of [
+      JSON.stringify({ category: "이혼" }),
+      JSON.stringify({ category: 3 }),
+      "{",
+    ]) {
+      const res = await call(undefined, body);
+      expect(res.status, body).toBe(400);
+      expect((await res.json()).error.code).toBe("VALIDATION_ERROR");
+    }
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
+    expect(store.getOwnedInquiry).not.toHaveBeenCalled();
   });
 
   test("DEC-010 3회를 다 쓴 비로그인은 모델을 부르기 전에 LOGIN_REQUIRED", async () => {

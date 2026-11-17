@@ -8,6 +8,7 @@ import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import {
   FREE_STEP_MESSAGES,
   caseQueriesFrom,
+  withCaseHint,
   findExample,
   replayCitations,
   replayResult,
@@ -29,7 +30,7 @@ const CASE_DETAILS = 5;
 
 export async function runFreeAnalysis(
   maskedText: string,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void } = {},
+  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; caseHint?: string | null } = {},
 ): Promise<FreeAnalysis> {
   const example = findExample(maskedText);
   if (example) {
@@ -61,7 +62,7 @@ export type FreeSearch = {
 /** LLM 없이 법제처만으로 근거를 찾는다 (무료). 무료 모드와 라이트 답변(DEC-020)이 같이 쓴다 */
 export async function freeSearch(
   maskedText: string,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void } = {},
+  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; caseHint?: string | null } = {},
 ): Promise<FreeSearch> {
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   deps.onStep?.({ stage: "search", message: FREE_STEP_MESSAGES.search });
@@ -77,7 +78,8 @@ export async function freeSearch(
     : [];
 
   // ② 찾은 조문 제목으로 판례 검색 → 중복 제거 → 상세
-  const queries = caseQueriesFrom(articles);
+  // 홈 카테고리(DEC-026)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다
+  const queries = withCaseHint(caseQueriesFrom(articles), deps.caseHint);
   const caseResults = await Promise.allSettled(
     queries.map((q) => source.searchCases(q, CASES_PER_QUERY)),
   );
@@ -86,13 +88,13 @@ export async function freeSearch(
   }
   const seen = new Set<string>();
   const hits: CaseHit[] = [];
-  for (const r of caseResults) {
-    if (r.status !== "fulfilled") continue;
-    for (const h of r.value) {
-      if (seen.has(h.id)) continue;
-      seen.add(h.id);
-      hits.push(h);
-    }
+  const lists = caseResults.map((r) => (r.status === "fulfilled" ? r.value : []));
+  // 카테고리 검색어가 있으면 검색어마다 번갈아 고른다 — 한 검색어 결과가 상세 조회 자리를 다 차지하지 않게
+  const ordered = deps.caseHint ? interleave(lists) : lists.flat();
+  for (const h of ordered) {
+    if (seen.has(h.id)) continue;
+    seen.add(h.id);
+    hits.push(h);
   }
   const picked = hits.slice(0, CASE_DETAILS);
   const details = await Promise.allSettled(picked.map((h) => source.getCase(h.id)));
@@ -114,4 +116,13 @@ export async function freeSearch(
     added: [...articles.map((a) => a.id), ...cases.map((c) => `case:${c.caseNo}`)],
   });
   return { articles, cases, searches };
+}
+
+/** [[a1,a2],[b1]] → [a1,b1,a2] */
+function interleave<T>(lists: T[][]): T[] {
+  const out: T[] = [];
+  for (let i = 0; lists.some((l) => i < l.length); i++) {
+    for (const l of lists) if (i < l.length) out.push(l[i]);
+  }
+  return out;
 }

@@ -148,3 +148,38 @@ describe("DEC-015 법제처 검색 전용", () => {
     ).toEqual(["임차권등기명령", "대항력 등"]);
   });
 });
+
+describe("DEC-026 홈 카테고리 판례 검색어", () => {
+  test("고정 검색어를 맨 앞에 더하고, 같은 말은 한 번만, 최대 3개", async () => {
+    const { withCaseHint } = await import("@/lib/demo/policy");
+    expect(withCaseHint(["임차권등기명령"], null)).toEqual(["임차권등기명령"]);
+    expect(withCaseHint(["임차권등기명령", "대항력"], "이혼")).toEqual([
+      "이혼",
+      "임차권등기명령",
+      "대항력",
+    ]);
+    expect(withCaseHint(["이혼", "재산분할"], "이혼")).toEqual(["이혼", "재산분할"]);
+    expect(withCaseHint(["a", "b", "c"], "h")).toEqual(["h", "a", "b"]);
+  });
+
+  test("카테고리를 고르면 무료 검색이 그 분야 판례 검색어로도 찾고, 검색 과정에 남긴다", async () => {
+    const src = source();
+    const out = await runFreeAnalysis("집주인이 보증금을 안 돌려줘요", {
+      lawSource: src,
+      caseHint: "임대차보증금",
+    });
+    expect(src.searchCases).toHaveBeenCalledWith("임대차보증금", expect.any(Number));
+    expect(out.result.searches.map((s) => s.keyword)).toContain("임대차보증금");
+    expect(out.model).toBe("search_only");
+  });
+
+  test("예시 질문은 카테고리가 있어도 검색하지 않고 재생한다 (비용 0)", async () => {
+    const src = source();
+    const out = await runFreeAnalysis(demoExamples()[0].question, {
+      lawSource: src,
+      caseHint: "임대차보증금",
+    });
+    expect(out.model).toBe("replay");
+    expect(src.searchCases).not.toHaveBeenCalled();
+  });
+});

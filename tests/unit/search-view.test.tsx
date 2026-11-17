@@ -36,7 +36,7 @@ test("F-003 자주 찾는 검색어를 누르면 바로 검색하고, 건수·�
   expect(within(card).getByText("대법원")).toBeDefined();
   expect(within(card).getByText("선고 2021.03.11")).toBeDefined();
   expect(within(card).getByText("가상다1")).toBeDefined();
-  expect(within(card).getByRole("link", { name: "보증금반환" }).getAttribute("href")).toBe("/cases/111");
+  expect(within(card).getByRole("link", { name: "보증금반환" }).getAttribute("href")).toBe("/cases/111?from=search");
   expect(screen.getByText(NOTICE)).toBeDefined();
   expect(screen.queryByText(/유사도|관련도/)).toBeNull();
 });

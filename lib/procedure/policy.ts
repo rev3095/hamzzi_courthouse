@@ -2,6 +2,8 @@
 // 질문 문장(이 기기에 있을 때)·결과의 법령 이름·분야 낱말로 홈 예시 질문 섹션에 맞는 타임라인(lib/procedure/steps TRACKS)을 고른다.
 // 결과(승패·처벌)를 판정하지 않고, 단계와 난이도 라벨만 고른다 (DEC-002, 절대 규칙 2).
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
+import { CATEGORIES, type CategoryKey } from "./categories";
+import { LIFE_TRACKS, type LifeTrack, type LifeTrackKey } from "./life-tracks";
 import {
   DIFFICULTY_LABEL,
   OFFICIAL,
@@ -11,9 +13,12 @@ import {
   type TrackKey,
 } from "./steps";
 
-/** 타임라인 9개 + 타임라인을 숨기는 경우 (형사만, 갚거나 돌려줘야 하는 쪽, 형사 조사를 받는 쪽, 정하지 못함) */
-export type CaseType = TrackKey | "criminal" | "defendant" | "accused" | "other";
-type NoticeType = Exclude<CaseType, TrackKey>;
+/**
+ * 타임라인 9개 + 생활 분쟁 타임라인 4개(DEC-026) + 타임라인을 숨기는 경우
+ * (형사만, 갚거나 돌려줘야 하는 쪽, 형사 조사를 받는 쪽, 정하지 못함)
+ */
+export type CaseType = TrackKey | LifeTrackKey | "criminal" | "defendant" | "accused" | "other";
+type NoticeType = Exclude<CaseType, TrackKey | LifeTrackKey>;
 
 type Input = Pick<DemoAnalysisResult, "intent" | "articles"> & {
   mode?: DemoAnalysisResult["mode"];
@@ -51,13 +56,38 @@ const RESIDENCE_WORD = /갱신|나가라|나가래|계속살|실거주|집을팔
 const RETURN_WORD = /돌려받|돌려주|돌려줘|못받|안돌려|안줘|안준/;
 const MONEY_WORD =
   /돌려받|돌려주|돌려줘|대여금|빌려준|빌려줬|못받|안받|안줘|안준|안주|대금|물건값|환불|배상|미지급|받을수있/;
+// 생활 분쟁 섹션 (DEC-026)
+const FAMILY_WORD = /이혼|양육비|양육권|친권|재산분할|면접교섭|외도|불륜|혼인관계/;
+const FAMILY_LAW = /^(가사소송법|양육비이행확보및지원에관한법률)$/;
+const INHERIT_WORD = /상속|유산|유류분|한정승인|유언/;
+const DEFAMATION_WORD = /명예훼손|모욕|악플|악성댓글|비방|허위사실|욕설.*(댓글|게시|단톡|대화방)/;
+const CONSUMER_WORD =
+  /환불|청약철회|반품|쇼핑몰|온라인몰|인터넷쇼핑|홈쇼핑|구독해지|이용권|헬스장|필라테스|학원비/;
+const CONSUMER_LAW =
+  /^(전자상거래등에서의소비자보호에관한법률|할부거래에관한법률|방문판매등에관한법률|소비자기본법)$/;
 
 /**
  * 사건 유형 (규칙). 순서가 곧 우선순위다.
  * 분류에는 질문 문장과 찾은 법령 이름만 쓴다. 분석의 분야·목표 문장은 모델이 쓴 것이라
  * 미리 검증해 둔 예시 재생(replay)일 때만 함께 본다 (DEC-021: 타임라인을 LLM이 정하지 않는다).
+ * 사용자가 홈에서 고른 카테고리(DEC-026)는 규칙이 타임라인을 정하지 못할 때(그 밖·형사만·일반 금전)만 쓴다 —
+ * 수사를 받는 쪽·서류를 받은 쪽·갚을 쪽 판정은 언제나 규칙이 먼저다.
  */
-export function classifyCase(r: Input, question: string | null): CaseType {
+export function classifyCase(
+  r: Input,
+  question: string | null,
+  category?: CategoryKey | null,
+): CaseType {
+  const ruled = classifyByRules(r, question);
+  if (!category) return ruled;
+  const hinted = CATEGORIES[category].track;
+  if (ruled === "other" || ruled === "criminal") return hinted;
+  // 일반 금전 절차는 생활 분쟁 섹션(가족·상속·소비자·명예훼손)을 골랐을 때만 바꾼다 (상가 보증금 등은 그대로)
+  if (ruled === "money" && hinted in LIFE_TRACKS) return hinted;
+  return ruled;
+}
+
+function classifyByRules(r: Input, question: string | null): CaseType {
   const fixedIntent = r.mode === "replay" ? [r.intent.area, r.intent.goal] : [];
   const text = norm([question ?? "", ...fixedIntent].join(" "));
   const laws = new Set([...r.intent.laws, ...r.articles.map((a) => a.lawName)].map((l) => norm(l)));
@@ -67,6 +97,11 @@ export function classifyCase(r: Input, question: string | null): CaseType {
   if (DEFENDANT.test(text)) return "defendant";
   if (COUNTERPART.test(text)) return CREDITOR.test(text) ? "other" : "defendant";
   if (OWE_QUESTION.test(text) && !OTHER_PARTY_SUBJECT.test(text)) return "defendant";
+
+  // 생활 분쟁 섹션 (DEC-026): 가족·상속·명예훼손은 금전 낱말이 섞여도(재산분할·유류분 반환·위자료) 그 절차가 먼저다
+  if (FAMILY_WORD.test(text) || hasLaw(FAMILY_LAW)) return "family";
+  if (INHERIT_WORD.test(text)) return "inheritance";
+  if (DEFAMATION_WORD.test(text)) return "defamation";
 
   const commercial = /상가/.test(text) || laws.has("상가건물임대차보호법");
   const lease = !commercial && (laws.has("주택임대차보호법") || LEASE_WORD.test(text));
@@ -80,6 +115,7 @@ export function classifyCase(r: Input, question: string | null): CaseType {
   if (lease && DEPOSIT_WORD.test(text) && !RESIDENCE_WORD.test(text)) return "lease_deposit";
   // 빌려준 돈은 연락이 끊겨도 대여금 절차부터 (고소는 별도 안내)
   if (FRAUD_WORD.test(text) && !LEND_WORD.test(text)) return "fraud";
+  if (CONSUMER_WORD.test(text) || hasLaw(CONSUMER_LAW)) return "consumer";
   if (NEIGHBOR_WORD.test(text) || laws.has("동물보호법")) return "neighbor";
   if (lease && RESIDENCE_WORD.test(text)) {
     return DEPOSIT_WORD.test(text) && RETURN_WORD.test(text) ? "lease_deposit" : "lease_residence";
@@ -91,20 +127,25 @@ export function classifyCase(r: Input, question: string | null): CaseType {
   return "other";
 }
 
+type TimelineFields = {
+  /** 홈 예시 질문 섹션 이름 */
+  section: string;
+  title: string;
+  steps: ProcedureStep[];
+  recommended: ProcedureStep;
+  /** 왜 이 단계를 먼저 추천하는지 (고정 문구) */
+  reason: string;
+  /** 함께 알아 둘 별도 절차 (형사·민사가 겹칠 때 등) */
+  note: string | null;
+};
+
+/**
+ * 생활 분쟁 섹션(DEC-026)은 kind를 따로 둔다 — 기존 섹션(timeline)만 공식 서식 작성기(lib/documents)의
+ * 섹션 키(TrackKey)를 쓰므로, 문서 초안 쪽 타입을 바꾸지 않고 새 섹션을 더하기 위해서다.
+ */
 export type ProcedurePlan =
-  | {
-      kind: "timeline";
-      caseType: TrackKey;
-      /** 홈 예시 질문 섹션 이름 */
-      section: string;
-      title: string;
-      steps: ProcedureStep[];
-      recommended: ProcedureStep;
-      /** 왜 이 단계를 먼저 추천하는지 (고정 문구) */
-      reason: string;
-      /** 함께 알아 둘 별도 절차 (형사·민사가 겹칠 때 등) */
-      note: string | null;
-    }
+  | ({ kind: "timeline"; caseType: TrackKey } & TimelineFields)
+  | ({ kind: "life_timeline"; caseType: LifeTrackKey } & TimelineFields)
   | {
       kind: "notice";
       caseType: NoticeType;
@@ -142,9 +183,38 @@ const WAGE_DISMISSAL_NOTE =
   "해고 자체가 부당하다고 다투려면 노동위원회 구제신청이 따로 있고, 신청할 수 있는 기간이 정해져 있어요.";
 const CRIMINAL_NOTE = "사기 등 형사 고소를 함께 생각하신다면, 고소는 이 민사 절차와 따로 진행돼요.";
 
+export type TimelinePlan = Extract<ProcedurePlan, { kind: "timeline" | "life_timeline" }>;
+
+/** 타임라인을 보이는 안내인지 (기존 섹션·생활 분쟁 섹션) */
+export function hasTimeline(plan: ProcedurePlan): plan is TimelinePlan {
+  return plan.kind === "timeline" || plan.kind === "life_timeline";
+}
+
+const FAMILY_SUPPORT_NOTE =
+  "양육비를 이미 정했는데 받지 못하고 있다면 마지막 단계(양육비 이행 확보)부터 확인하세요.";
+
 /** 결과 화면에 보일 절차 안내. 섹션별 타임라인이거나, 타임라인을 숨기고 유형 안내만 */
-export function procedurePlan(r: Input, question: string | null): ProcedurePlan {
-  const caseType = classifyCase(r, question);
+export function procedurePlan(
+  r: Input,
+  question: string | null,
+  category?: CategoryKey | null,
+): ProcedurePlan {
+  const caseType = classifyCase(r, question, category);
+  if (caseType in LIFE_TRACKS) {
+    const track: LifeTrack = LIFE_TRACKS[caseType as LifeTrackKey];
+    const text = norm(question ?? "");
+    return {
+      kind: "life_timeline",
+      caseType: track.key,
+      section: track.section,
+      title: track.title,
+      steps: track.steps,
+      recommended: track.steps.find((s) => s.key === track.recommended)!,
+      reason: track.reason,
+      note:
+        track.note ?? (track.key === "family" && /양육비/.test(text) ? FAMILY_SUPPORT_NOTE : null),
+    };
+  }
   if (caseType in TRACKS) {
     const track = TRACKS[caseType as TrackKey];
     const lawNames = new Set(
@@ -183,6 +253,7 @@ export const NOTICE_TEXTS: string[] = [
   LEASE_FRAUD_NOTE,
   WAGE_DISMISSAL_NOTE,
   CRIMINAL_NOTE,
+  FAMILY_SUPPORT_NOTE,
 ];
 
 /**

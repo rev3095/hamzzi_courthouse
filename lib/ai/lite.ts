@@ -87,11 +87,17 @@ export async function runLiteAnalysis(
     lawSource?: LawSource;
     onStep?: (e: StepEvent) => void;
     costCapUsd?: number;
+    /** 홈 카테고리의 고정 판례 검색어 (DEC-026) */
+    caseHint?: string | null;
   } = {},
 ): Promise<LiteAnalysisOutput> {
   const context = input.context ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
-  const found = await freeSearch(input.maskedText, { lawSource: source, onStep: deps.onStep });
+  const found = await freeSearch(input.maskedText, {
+    lawSource: source,
+    onStep: deps.onStep,
+    caseHint: deps.caseHint,
+  });
 
   const evidence = new EvidenceSet();
   for (const a of found.articles) evidence.addArticle(a);

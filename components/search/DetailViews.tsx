@@ -3,7 +3,7 @@
 // 법제처에서 가져온 내용만 보여 준다. 없으면 "찾을 수 없음" — 대체 내용을 만들지 않는다 (API.md 3절 NOT_FOUND).
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   getCaseDetail,
   getDecision,
@@ -15,9 +15,69 @@ import {
   type StatuteTimeView,
 } from "@/lib/client/api";
 import { DECISION_DOMAINS, isDecisionDomain } from "@/lib/search/explore";
+import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
-import { OriginalLink, SearchCredit, SearchNotice, searchErrorText } from "./parts";
+import {
+  Highlighted,
+  OriginalLink,
+  SearchCredit,
+  SearchNotice,
+  recallSearch,
+  searchErrorText,
+} from "./parts";
 import { useRecordRecent } from "./recent";
+
+const noSubscribe = () => () => {};
+
+/** 검색에서 왔으면(?from=search) 그 검색어 낱말. 주소에는 검색어를 두지 않고 이 기기에 둔 것만 읽는다 (F-007) */
+function useSearchTerms(): string[] {
+  const fromSearch = useSearchParams().get("from") === "search";
+  const query = useSyncExternalStore(noSubscribe, recallSearch, () => null);
+  return fromSearch ? highlightTerms(query) : [];
+}
+
+/** 요지 항목은 강조 영역으로 (글자 크기는 그대로, 바탕·왼쪽 선만) */
+const KEY_SECTIONS = new Set(["판시사항", "판결요지", "결정요지", "회답", "재결요지", "주문"]);
+
+function TermsLegend({ terms }: { terms: string[] }) {
+  if (terms.length === 0) return null;
+  return (
+    <p className="text-muted mt-3 text-[13px]">
+      <mark className="bg-honey-line text-ink rounded-[3px] px-1">검색어</mark> 표시는 검색에서 적은
+      낱말이에요.
+    </p>
+  );
+}
+
+function Sections({
+  sections,
+  terms,
+}: {
+  sections: { section: string; text: string }[];
+  terms: string[];
+}) {
+  return (
+    <>
+      {sections.map((s) => (
+        <section
+          key={s.section}
+          className={
+            KEY_SECTIONS.has(s.section)
+              ? "rounded-card border-honey-line bg-honey border-l-gold mt-6 border border-l-4 px-5 py-4"
+              : "mt-6"
+          }
+        >
+          <H2>{s.section}</H2>
+          <p className={BODY}>
+            <Highlighted text={s.text} terms={terms} />
+          </p>
+        </section>
+      ))}
+    </>
+  );
+}
+
+const META_BAND = "bg-cream text-label mt-2 w-fit rounded-[6px] px-2 py-0.5 text-sm";
 
 export function useLoad<T>(key: string, load: () => Promise<ApiResult<T>>) {
   const [state, setState] = useState<{ key: string; r: ApiResult<T> } | null>(null);
@@ -83,6 +143,7 @@ export const BODY = "text-ink mt-2 text-[15px] leading-[1.8] whitespace-pre-line
 export function CaseRoute() {
   const { id } = useParams<{ id: string }>();
   const r = useLoad(id, () => getCaseDetail(id));
+  const terms = useSearchTerms();
   const c: CaseDetailView | null = r?.ok ? r.data : null;
   useRecordRecent(
     c && {
@@ -101,8 +162,10 @@ export function CaseRoute() {
   return (
     <Shell>
       <SearchNotice notice={c.notice} />
-      <H1>{c.caseName || c.caseNo}</H1>
-      <p className="text-muted mt-1 text-sm">
+      <H1>
+        <Highlighted text={c.caseName || c.caseNo} terms={terms} />
+      </H1>
+      <p className={META_BAND}>
         {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
       </p>
       {c.fromBody && (
@@ -110,12 +173,8 @@ export function CaseRoute() {
           판시사항·요지가 없어 개인정보를 가린 본문 일부를 보여 드려요
         </p>
       )}
-      {c.sections.map((s) => (
-        <section key={s.section} className="mt-6">
-          <H2>{s.section}</H2>
-          <p className={BODY}>{s.text}</p>
-        </section>
-      ))}
+      <TermsLegend terms={terms} />
+      <Sections sections={c.sections} terms={terms} />
       {c.citedStatutes.length > 0 && (
         <section className="mt-6">
           <H2>참조조문</H2>
@@ -153,6 +212,7 @@ export function CaseRoute() {
 export function DecisionRoute() {
   const { domain, id } = useParams<{ domain: string; id: string }>();
   const r = useLoad(`${domain}|${id}`, () => getDecision(domain, id));
+  const terms = useSearchTerms();
   const d = r?.ok ? r.data : null;
   const label = isDecisionDomain(domain) ? DECISION_DOMAINS[domain].label : "결정문";
   useRecordRecent(
@@ -172,8 +232,10 @@ export function DecisionRoute() {
   return (
     <Shell>
       <SearchNotice notice={d.notice} />
-      <H1>{d.title}</H1>
-      <p className="text-muted mt-1 text-sm">
+      <H1>
+        <Highlighted text={d.title} terms={terms} />
+      </H1>
+      <p className={META_BAND}>
         {[label, d.agency, dotDate(d.decidedAt), d.refNo].filter(Boolean).join(" · ")}
       </p>
       {d.fromBody && (
@@ -186,12 +248,8 @@ export function DecisionRoute() {
           법제처가 이 자료의 요지 항목을 제공하지 않아요. 원문에서 확인해 주세요.
         </p>
       )}
-      {d.sections.map((s) => (
-        <section key={s.section} className="mt-6">
-          <H2>{s.section}</H2>
-          <p className={BODY}>{s.text}</p>
-        </section>
-      ))}
+      <TermsLegend terms={terms} />
+      <Sections sections={d.sections} terms={terms} />
       <div className="mt-4">
         {d.sourceUrl ? (
           <OriginalLink url={d.sourceUrl} label="법제처에서 원문 보기 →" />

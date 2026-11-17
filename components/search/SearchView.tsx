@@ -15,9 +15,18 @@ import {
   type DecisionDomain,
 } from "@/lib/client/api";
 import { directTarget } from "@/lib/search/explore";
+import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
-import { OriginalLink, RecentList, SearchCredit, SearchNotice, searchErrorText } from "./parts";
+import {
+  Highlighted,
+  OriginalLink,
+  RecentList,
+  SearchCredit,
+  SearchNotice,
+  rememberSearch,
+  searchErrorText,
+} from "./parts";
 
 type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
 
@@ -74,7 +83,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
         ...r.data,
         items: r.data.items.map((c) => ({
           key: c.id,
-          href: `/cases/${c.id}`,
+          href: `/cases/${c.id}?from=search`,
           title: c.caseName || c.caseNo,
           tags: tags(c.court, c.decidedAt && `선고 ${dotDate(c.decidedAt)}`, c.caseNo),
           sourceUrl: c.sourceUrl,
@@ -125,7 +134,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
       ...r.data,
       items: r.data.items.map((d) => ({
         key: d.id,
-        href: `/decisions/${d.domain}/${d.id}`,
+        href: `/decisions/${d.domain}/${d.id}?from=search`,
         title: d.title,
         tags: tags(d.agency, dotDate(d.decidedAt), d.refNo),
         sourceUrl: d.sourceUrl,
@@ -193,8 +202,13 @@ export function SearchView() {
       go(r.data.items[0].href);
       return;
     }
+    // 서버가 받아 준 검색어만 이 기기에 남긴다 (개인정보로 막힌 검색어는 남기지 않음) — 상세 화면 하이라이트용
+    rememberSearch(q);
     setState({ kind: "done", q, data: r.data });
   };
+
+  // 검색 결과에서 검색어 낱말을 하이라이트한다 (F-003)
+  const terms = state.kind === "done" ? highlightTerms(state.q) : [];
 
   const quick = (q: string) => {
     setText(q);
@@ -349,7 +363,7 @@ export function SearchView() {
                       href={c.href}
                       className="font-display text-ink text-[19px] leading-snug font-bold underline-offset-2 hover:underline"
                     >
-                      {c.title}
+                      <Highlighted text={c.title} terms={terms} />
                     </Link>
                   ) : (
                     <p className="font-display text-ink text-[19px] leading-snug font-bold">

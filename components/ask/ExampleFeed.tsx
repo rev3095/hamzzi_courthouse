@@ -1,19 +1,12 @@
 "use client";
-// 분야별 예시 질문 피드 (S-01, DEC-012 — 직접 작성한 가상 사연). D+의 빠른 기능 칩 자리 (docs/07 결정 3).
-// 누르면(마우스·Enter·Space) 질문창에 채우고 바로 보낸다. 무료 모드에서는 미리 검증해 둔 분석을 재생한다 (DEC-015).
+// 분야별 예시 답변 피드 (S-01, DEC-012 — 직접 작성한 가상 사연). D+의 빠른 기능 칩 자리 (docs/07 결정 3).
+// 누르면 예시 답변 화면(/examples/[id], DEC-026)으로 바로 간다 — 질문 생성·분석 API를 부르지 않아 질문 횟수에 세지 않는다.
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
-export type FeedExample = { id: string; question: string; area: string };
+export type FeedExample = { id: string; question: string; area: string; href: string };
 
-export function ExampleFeed({
-  examples,
-  onPick,
-  disabled,
-}: {
-  examples: FeedExample[];
-  onPick: (question: string) => void;
-  disabled?: boolean;
-}) {
+export function ExampleFeed({ examples }: { examples: FeedExample[] }) {
   const areas = useMemo(() => ["전체", ...new Set(examples.map((e) => e.area))], [examples]);
   const [area, setArea] = useState("전체");
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -21,11 +14,13 @@ export function ExampleFeed({
 
   return (
     <section id="examples" aria-labelledby="examples-title" className="w-full text-left">
-      <div className="flex items-baseline gap-2">
+      <div className="flex flex-wrap items-baseline gap-x-2">
         <h2 id="examples-title" className="font-display text-ink text-[19px] font-bold">
-          예시 질문
+          예시 답변 바로 보기
         </h2>
-        <span className="text-muted text-[13px]">직접 작성한 가상 사연</span>
+        <span className="text-muted text-[13px]">
+          직접 작성한 가상 사연 · 질문 횟수에 포함되지 않아요
+        </span>
       </div>
       {/* 분야 칩: 탭 목록. Tab으로 들어와 ←→·Home·End로 옮기면 바로 선택된다 (WAI-ARIA tabs) */}
       <div
@@ -80,19 +75,17 @@ export function ExampleFeed({
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((e) => (
             <li key={e.id}>
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => onPick(e.question)}
-                aria-label={`예시 질문으로 시작: ${e.question}`}
-                className="rounded-card border-line hover:border-gold flex h-full w-full flex-col gap-2 border bg-white p-5 text-left transition-colors disabled:opacity-60"
+              <Link
+                href={e.href}
+                aria-label={`예시 답변 보기: ${e.question}`}
+                className="rounded-card border-line hover:border-gold flex h-full w-full flex-col gap-2 border bg-white p-5 text-left transition-colors"
               >
                 <span className="bg-cream text-label w-fit rounded-[6px] px-2 py-0.5 text-xs font-semibold">
                   {e.area}
                 </span>
                 <span className="text-ink text-[15px] leading-relaxed">{e.question}</span>
-                <span className="text-link mt-auto pt-1 text-sm">이 질문으로 시작 →</span>
-              </button>
+                <span className="text-link mt-auto pt-1 text-sm">예시 답변 보기 →</span>
+              </Link>
             </li>
           ))}
         </ul>

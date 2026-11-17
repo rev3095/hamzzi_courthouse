@@ -164,6 +164,8 @@ type DemoAnalysisResult = {
   searchScopeNote: string;
 }
 ```
+- **요청 본문(선택, DEC-026)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
+- **예시 답변 화면(DEC-026)**: 홈의 예시 카드는 이 API를 쓰지 않는다. `/examples/[id]`가 저장된 예시 분석(`mode: "replay"`와 같은 형식)을 빌드 때 정적으로 렌더링한다 — 질문 생성·분석·저장·횟수 차감 없음.
 - **무료 모드(기본, DEC-015)**: Claude를 부르지 않는다. 질문이 예시 질문과 같으면 `mode: "replay"`(저장된 검증 결과), 아니면 `mode: "search_only"`(법제처 조문·판례 목록, 답변 문단 없음). 저장·비로그인 차감은 Pro와 같다. `AI_MODE=pro`일 때만 아래 실제 분석을 한다.
 - 이어 묻기면 부모 inquiry 사슬의 최근 3개 질문·답변을 맥락으로만 쓰고, 근거는 다시 검색한다 (Pro 모드).
 - 상태: `draft`·`failed`(재시도)만 분석한다. 이미 `analyzed`면 `409 INVALID_STATE`(횟수 이중 차감 방지). 실패하면 `failed`로 바뀐다.
