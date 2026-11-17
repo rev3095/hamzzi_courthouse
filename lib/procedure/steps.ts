@@ -19,7 +19,11 @@ export type DocumentKind =
   | "payment-order"
   | "complaint"
   | "criminal-complaint"
-  | "compensation-order";
+  | "compensation-order"
+  | "wage-petition"
+  | "wage-advance"
+  | "dismissal-remedy"
+  | "dismissal-review";
 
 export type OfficialLink = { label: string; url: string };
 
@@ -371,6 +375,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         ],
         links: [OFFICIAL.moelComplaint],
         shortcut: OFFICIAL.moelComplaint,
+        document: "wage-petition",
         question: "고용노동부에 임금체불 진정은 어떻게 내나요?",
       },
       {
@@ -403,6 +408,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "사업주가 끝까지 지급하지 않으면 지급명령·소송을 검토해요. 법률구조공단 무료 소송 지원 대상인지도 확인해 보세요.",
         ],
         links: [OFFICIAL.comwel, OFFICIAL.klac],
+        document: "wage-advance",
         question: "대지급금 요건과 민사 절차 중 무엇을 먼저 알아봐야 하나요?",
       },
       ENFORCE,
@@ -440,6 +446,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         ],
         links: [OFFICIAL.nlrc],
         shortcut: OFFICIAL.nlrc,
+        document: "dismissal-remedy",
         question: "부당해고 구제신청은 어디에 어떻게 내나요?",
       },
       {
@@ -467,6 +474,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         prepare: ["재심 신청서", "초심 판정서"],
         cautions: ["판정에 불복하려면 정해진 기간 안에 중앙노동위원회에 재심을 신청해야 해요."],
         links: [OFFICIAL.nlrc],
+        document: "dismissal-review",
         question: "중앙노동위원회 재심은 어떻게 신청하나요?",
       },
       {

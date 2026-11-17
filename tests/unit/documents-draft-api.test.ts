@@ -132,3 +132,22 @@ describe("POST /documents/{kind}/draft", () => {
     expect((await call("will", { inquiryId: ID })).status).toBe(404);
   });
 });
+
+describe("DEC-025 새 서식의 초안 도우미", () => {
+  test("사실관계 칸이 없는 서식(간이대지급금)은 모델을 부르지 않고 하루 상한도 쓰지 않는다", async () => {
+    const res = await call("wage-advance", { inquiryId: ID });
+    expect(res.status).toBe(200);
+    const { data } = await res.json();
+    expect(data.ai).toEqual({ used: false, reason: "no_facts" });
+    expect(data.notice).toBeNull();
+    expect(ai.draftFacts).not.toHaveBeenCalled();
+    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+  });
+
+  test("고소장·임차권등기명령은 각 서식의 사실관계 칸에 넣는다", async () => {
+    let data = (await (await call("criminal-complaint", { inquiryId: ID })).json()).data;
+    expect(data.suggestions.damageDetail).toBe("1. 원고는 전세 계약을 맺었습니다.");
+    data = (await (await call("lease-registration", { inquiryId: ID })).json()).data;
+    expect(data.suggestions.extraReason).toBe("1. 원고는 전세 계약을 맺었습니다.");
+  });
+});

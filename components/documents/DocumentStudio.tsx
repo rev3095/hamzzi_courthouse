@@ -157,7 +157,7 @@ export function DocumentStudio({
       return next;
     });
     const factsKey = FACTS_FIELD[kind];
-    if (data.ai.used && filled.includes(factsKey)) {
+    if (factsKey && data.ai.used && filled.includes(factsKey)) {
       // 서버가 고지를 빠뜨려도 AI 문장에는 늘 AI_NOTICE를 붙인다 (절대 규칙 6)
       setAiNotice(data.notice ?? AI_NOTICE);
       setAiFields((s) => new Set(s).add(factsKey));
@@ -176,7 +176,7 @@ export function DocumentStudio({
   }
 
   const draftPanel =
-    inquiryId && draftEnabled ? (
+    inquiryId && draftEnabled && spec.draftFields ? (
       <DraftPanel
         draftFields={spec.draftFields}
         state={draft}

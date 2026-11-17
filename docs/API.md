@@ -229,7 +229,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 | 메서드 · 경로 | 인증 | 설명 | 게이트 키 | F-ID |
 |---|---|---|---|---|
 | GET `/procedures?caseType=` | user | 절차 단계·기간·난이도 라벨 | `procedure_guide` | F-014 |
-| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`) | anon·user | 내용증명·주택임차권등기명령 신청서·지급명령 신청서·소장·고소장(사기)·배상명령 신청서 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | `legal_documents` | F-013 (DEC-022·025) |
+| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`·`wage-petition`·`wage-advance`·`dismissal-remedy`·`dismissal-review`) | anon·user | 내용증명·주택임차권등기명령·지급명령·소장·고소장(사기)·배상명령·임금체불 진정서·간이대지급금 지급청구서·부당해고 구제신청서·재심신청서 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | `legal_documents` | F-013 (DEC-022·025) |
 | POST `/documents/{kind}/draft` | 질문 소유자 | 초안 도우미: 질문 마스킹본으로 규칙 칸 + Haiku 사실관계 초안(1건 $0.0015, 저장 안 함) | `legal_documents` | F-013 (DEC-023) |
 | POST `/inquiries/{id}/agent/messages` | 소유자 | 방향 제안·동의/비동의 대화 | `consult_agent` | F-008 |
 | POST `/inquiries/{id}/summary` | 소유자 | 사건 요약서 생성 | `consult_agent` | F-008 AC2 |
@@ -255,7 +255,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 // req: { inquiryId: string }  없으면 400 VALIDATION_ERROR(fields: ["inquiryId"]) · 남의 질문 403 · 없는 질문 404 · 분석 전 409 INVALID_STATE · 1시간 10회 넘으면 429
 { data: {
     kind: DocumentKind;                      // lib/procedure/steps DocumentKind
-    suggestions: Record<string, string>;   // 채울 칸 키 → 값. 소장 caseName·evidence·claimCause, 내용증명 subject·facts, 임차권등기명령 extraReason, 지급명령 claimCause, 고소장 damageDetail, 배상명령 claimContent. 없는 칸은 빠진다
+    suggestions: Record<string, string>;   // 채울 칸 키 → 값. 소장 caseName·evidence·claimCause, 내용증명 subject·facts, 임차권등기명령 extraReason, 지급명령 claimCause, 고소장 damageDetail, 배상명령 claimContent, 진정서 petitionDetail, 구제신청 reason, 재심 reviewReason. 사실관계 칸이 없는 서식(간이대지급금)은 모델을 부르지 않고 ai.reason "no_facts". 없는 칸은 빠진다
     missing: string[];                       // 더 적으면 좋은 사실(숫자 없는 짧은 질문, 최대 4개)
     ai: { used: true } | { used: false; reason: "free_mode"|"daily_limit"|"cost_cap"|"model_failed"|"no_facts" };
     notice: string | null;                   // AI 문장이 들어가면 AI_NOTICE

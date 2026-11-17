@@ -137,6 +137,80 @@ const FULL: Record<DocumentKind, Record<string, string>> = {
     attachments: "계좌 이체 내역",
     writtenOn: "2026-11-17",
   },
+  "wage-petition": {
+    petitionerName: "김햄찌",
+    petitionerAddress: "해바라기시 씨앗구 볍씨로 7",
+    petitionerPhone: "010-0000-1234",
+    companyName: "도토리식당",
+    employerName: "이도토리",
+    companyAddress: "도토리시 참나무구 밤길 3",
+    employerPhone: "",
+    startDate: "2025-03-02",
+    stillWorking: "no",
+    endDate: "2026-08-31",
+    jobDuty: "주방 보조",
+    contractType: "written",
+    payday: "매월 10일",
+    unpaidWage: "4200000",
+    unpaidSeverance: "",
+    petitionDetail: "2026년 7월분과 8월분 임금을 받지 못했습니다.",
+    evidence: "근로계약서\n급여 입금 내역",
+    office: "도토리지방고용노동청",
+    writtenOn: "2026-11-17",
+  },
+  "wage-advance": {
+    claimantName: "김햄찌",
+    claimantAddress: "해바라기시 씨앗구 볍씨로 7",
+    claimantPhone: "010-0000-1234",
+    claimantEmail: "",
+    workFrom: "2025-03-02",
+    workTo: "2026-08-31",
+    claimantStatus: "retired",
+    claimBasis: "certificate",
+    totalUnpaid: "4200000",
+    alreadyPaid: "",
+    pensionPending: "no",
+    insurancePending: "no",
+    unpaidRecentWage: "4200000",
+    unpaidRecentSeverance: "",
+    notifyBy: "sms",
+    companyName: "도토리식당",
+    employerName: "이도토리",
+    companyAddress: "도토리시 참나무구 밤길 3",
+    office: "도토리지역본부",
+    writtenOn: "",
+  },
+  "dismissal-remedy": {
+    workerName: "김햄찌",
+    workerAddress: "해바라기시 씨앗구 볍씨로 7",
+    workerPhone: "",
+    companyName: "도토리상사",
+    employerName: "이도토리",
+    companyAddress: "도토리시 참나무구 밤길 3",
+    workplace: "",
+    hireDate: "2024-01-08",
+    dismissalDate: "2026-10-31",
+    noticeDate: "2026-10-30",
+    remedyAim: "reinstate",
+    reason: "2026년 10월 30일 대표가 말로 해고를 알렸고 해고 사유를 서면으로 받지 못했습니다.",
+    commission: "도토리지방노동위원회",
+    writtenOn: "2026-11-17",
+  },
+  "dismissal-review": {
+    applicantName: "김햄찌",
+    applicantAddress: "해바라기시 씨앗구 볍씨로 7",
+    applicantPhone: "",
+    respondentName: "이도토리",
+    respondentCompany: "도토리상사",
+    respondentAddress: "도토리시 참나무구 밤길 3",
+    firstCommission: "도토리지방노동위원회",
+    firstCaseNumber: "2026부해777",
+    decisionReceived: "2027-01-05",
+    reviewAim: "초심 판정을 취소하고, 초심에서 구한 구제신청을 인정하는 판정을 구합니다.",
+    reviewReason:
+      "초심은 해고 통지가 서면으로 이루어졌다고 보았으나 서면 통지를 받은 사실이 없습니다.",
+    writtenOn: "",
+  },
 };
 
 const digits = (s: string) =>
@@ -160,7 +234,10 @@ function strayNumbers(text: string, input: Record<string, string>): string[] {
       l
         .replace(/^\s*\d+\.\s/, "")
         .replace(/[①-⑳]/g, "")
-        .replace(/제\d+항|\b\d+항|제\d+조/g, ""),
+        .replace(/제\d+(조|항|호)(의\d+)?/g, "")
+        .replace(/\b\d+항/g, "")
+        // 법령 서식 문구 그대로 (간이대지급금 ⑤ 칸)
+        .replace(/최종 3개월분|마지막 3개월분|최종 3년간/g, ""),
     )
     .join("\n");
   return digits(structural).filter((d) => !allowed.has(d));
@@ -461,5 +538,66 @@ describe("DEC-025 2차 사기 서식", () => {
     expect(TRACKS.fraud.steps.find((s) => s.key === "compensation_order")?.document).toBe(
       "compensation-order",
     );
+  });
+});
+
+describe("DEC-025 정의 일관성", () => {
+  test.each(DOCUMENT_KINDS)("%s: 선택지 값은 칸 길이 안, 기본값은 선택지 안", (kind) => {
+    for (const f of DOCUMENT_SPECS[kind].fields) {
+      for (const o of f.options ?? []) expect(o.value.length, `${f.key}:${o.value}`).toBeLessThanOrEqual(f.max);
+      if (f.type === "choice" && f.defaultValue)
+        expect(f.options?.map((o) => o.value), f.key).toContain(f.defaultValue);
+    }
+  });
+});
+
+describe("DEC-025 3차 노동 서식", () => {
+  test("간이대지급금: ⑥ 지급받을 대지급금·⑧ 계좌는 빈칸, 법령 서식 청구 문장 그대로", () => {
+    const { text } = fillDocument(
+      "wage-advance",
+      parseDocumentInput("wage-advance", FULL["wage-advance"]),
+    );
+    expect(text).toContain("⑥ 지급받아야 할 대지급금              원");
+    expect(text).toContain("⑧ 입금의뢰  입금은행:              예금주:              계좌번호:");
+    expect(text).toContain("[✔]퇴직자 대지급금 청구  [ ]재직자 대지급금 청구");
+    expect(text).toContain("[ ]판결등에 따른 청구  [✔]체불 임금등ㆍ사업주 확인서에 따른 청구");
+    expect(text).toContain("③ 지급받지 못한 임금등의 총 확정금액  4,200,000원");
+    expect(text).toContain("위와 같이 대지급금의 지급을 청구합니다.");
+    expect(text).toContain("근로복지공단 도토리지역본부장 귀하");
+  });
+
+  test("구제신청서: 노동위원회규칙 제39조 기재사항(근로자·사업주·취지·이유·해고통지서 수령일)", () => {
+    const { text } = fillDocument(
+      "dismissal-remedy",
+      parseDocumentInput("dismissal-remedy", FULL["dismissal-remedy"]),
+    );
+    for (const s of ["신청인 (근로자)", "피신청인 (사용자)", "신 청 취 지", "신 청 이 유"])
+      expect(text).toContain(s);
+    expect(text).toContain("해고통지서 수령일  2026. 10. 30.");
+    expect(text).toContain("라는 구제명령을 구합니다.");
+  });
+
+  test("진정서: 재직 중이면 퇴사일을 묻지 않는다", () => {
+    expect(
+      invalidFields("wage-petition", ["startDate", "stillWorking", "endDate"], {
+        startDate: "2025-03-02",
+        stillWorking: "yes",
+      }),
+    ).toEqual([]);
+    const { text } = fillDocument(
+      "wage-petition",
+      parseDocumentInput("wage-petition", { ...FULL["wage-petition"], stillWorking: "yes", endDate: "" }),
+    );
+    expect(text).toContain("~ 현재 (재직 중)");
+  });
+
+  test("노동 타임라인 단계에 서식이 연결되고, 공식 창구 바로 가기는 그대로", () => {
+    const wage = TRACKS.wage.steps;
+    expect(wage.find((s) => s.key === "complaint")?.document).toBe("wage-petition");
+    expect(shortcutOf(wage.find((s) => s.key === "complaint")!)?.kind).toBe("official");
+    expect(wage.find((s) => s.key === "recovery")?.document).toBe("wage-advance");
+    const dis = TRACKS.dismissal.steps;
+    expect(dis.find((s) => s.key === "remedy")?.document).toBe("dismissal-remedy");
+    expect(dis.find((s) => s.key === "review")?.document).toBe("dismissal-review");
   });
 });
