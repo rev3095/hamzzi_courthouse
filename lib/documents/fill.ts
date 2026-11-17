@@ -3,6 +3,7 @@
 // 숫자는 사용자가 적은 값(날짜·금액·이율)과 목록 번호뿐이다 — 이자·비용을 셈하지 않는다(독촉절차비용 합계는 사용자가 적은 두 값의 덧셈만).
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { compensationOrder, criminalComplaint } from "./fill-criminal";
+import { dismissalRemedy, dismissalReview, wageAdvance, wagePetition } from "./fill-labor";
 import {
   blank,
   BLANK_WON,
@@ -45,6 +46,22 @@ export function fillBlocks(
       return { title: "고소장 (사기)", basename: "고소장_사기", blocks: criminalComplaint(v) };
     case "compensation-order":
       return { title: "배상명령 신청서", basename: "배상명령신청서", blocks: compensationOrder(v) };
+    case "wage-petition":
+      return { title: "임금체불 진정서", basename: "임금체불진정서", blocks: wagePetition(v) };
+    case "wage-advance":
+      return {
+        title: "간이대지급금 지급청구서",
+        basename: "간이대지급금지급청구서",
+        blocks: wageAdvance(v),
+      };
+    case "dismissal-remedy":
+      return { title: "부당해고 구제신청서", basename: "부당해고구제신청서", blocks: dismissalRemedy(v) };
+    case "dismissal-review":
+      return {
+        title: "부당해고 구제 재심신청서",
+        basename: "부당해고구제재심신청서",
+        blocks: dismissalReview(v),
+      };
   }
 }
 

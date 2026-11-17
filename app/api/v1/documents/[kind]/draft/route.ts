@@ -55,12 +55,15 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const suggestions: Record<string, string> = ruleSuggestions(kind, track, maskedStory);
   let missing: string[] = [];
   let ai: AiState;
-  if (aiMode() === "free") ai = { used: false, reason: "free_mode" };
+  const factsKey = FACTS_FIELD[kind];
+  // 사실관계 칸이 없는 서식(예: 간이대지급금 지급청구서)은 모델을 부르지 않는다
+  if (!factsKey) ai = { used: false, reason: "no_facts" };
+  else if (aiMode() === "free") ai = { used: false, reason: "free_mode" };
   else if (!(await tryGlobalQuota(aiDailyRule()))) ai = { used: false, reason: "daily_limit" };
   else {
     const out = await draftFacts({ kind, maskedStory });
     if (out.ok) {
-      suggestions[FACTS_FIELD[kind]] = out.text;
+      suggestions[factsKey] = out.text;
       missing = out.missing;
       ai = { used: true };
     } else ai = { used: false, reason: out.reason };

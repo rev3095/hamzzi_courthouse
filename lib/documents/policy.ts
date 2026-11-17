@@ -24,6 +24,7 @@ import {
 } from "./fields";
 import { fillBlocks, type Block } from "./fill";
 import { CRIMINAL_SPECS } from "./specs/criminal";
+import { LABOR_SPECS } from "./specs/labor";
 
 export {
   CHECK_NOTICE,
@@ -45,6 +46,10 @@ export const DOCUMENT_KINDS = [
   "complaint",
   "criminal-complaint",
   "compensation-order",
+  "wage-petition",
+  "wage-advance",
+  "dismissal-remedy",
+  "dismissal-review",
 ] as const satisfies readonly DocumentKind[];
 
 export const isDocumentKind = (v: string): v is DocumentKind =>
@@ -52,6 +57,7 @@ export const isDocumentKind = (v: string): v is DocumentKind =>
 
 export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
   ...CRIMINAL_SPECS,
+  ...LABOR_SPECS,
   "demand-letter": {
     kind: "demand-letter",
     title: "내용증명",
@@ -511,13 +517,16 @@ export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
 };
 
 /** 초안 도우미(DEC-023)가 사실관계 문장을 넣는 칸 */
-export const FACTS_FIELD: Record<DocumentKind, string> = {
+export const FACTS_FIELD: Partial<Record<DocumentKind, string>> = {
   complaint: "claimCause",
   "demand-letter": "facts",
   "lease-registration": "extraReason",
   "payment-order": "claimCause",
   "criminal-complaint": "damageDetail",
   "compensation-order": "claimContent",
+  "wage-petition": "petitionDetail",
+  "dismissal-remedy": "reason",
+  "dismissal-review": "reviewReason",
 };
 
 export type DocumentInput = Record<string, string>;

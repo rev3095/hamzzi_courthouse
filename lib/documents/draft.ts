@@ -69,6 +69,10 @@ const PARTY_WORDS: Record<DocumentKind, { me: string; other: string }> = {
   "payment-order": { me: "채권자", other: "채무자" },
   "criminal-complaint": { me: "고소인", other: "피고소인" },
   "compensation-order": { me: "신청인", other: "피고인" },
+  "wage-petition": { me: "진정인", other: "피진정인" },
+  "wage-advance": { me: "청구인", other: "사업주" },
+  "dismissal-remedy": { me: "신청인", other: "피신청인" },
+  "dismissal-review": { me: "재심신청인", other: "재심피신청인" },
 };
 
 /** 원고·피고 / 보내는 사람·받는 사람 / 신청인·피신청인 / 채권자·채무자를 문장에서 부르는 말 */
