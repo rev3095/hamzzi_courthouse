@@ -392,6 +392,11 @@ def ops(conn) -> None:
                          "values (%s, '[검증]', now() - interval '1 day') returning id", (old,))
     keep = scalar(conn, "insert into public.anon_sessions (expires_at) values (now() - interval '1 day') returning id")
     keep_q = scalar(conn, "insert into public.inquiries (anon_session_id, masked_text) values (%s, '[검증]') returning id", (keep,))
+    # 주간 상한(DEC-026, ai_weekly 7일 창): 카운터는 8일 동안 남아야 한다
+    rk = "verify-" + uuid.uuid4().hex
+    conn.execute("insert into public.rate_limit_hits (bucket, key_hash, window_start, hits) values "
+                 "('ai_weekly', %s, now() - interval '3 days', 1), ('ai_weekly', %s, now() - interval '9 days', 1)",
+                 (rk, rk))
     check(scalar(conn, "select expires_at > now() from public.anon_sessions where id = %s", (keep,)),
           "새 질문이 생기면 익명 세션 보유 기간이 질문만큼 늘어남")
     out = scalar(conn, f"select {PURGE.split('(')[0]}()")
@@ -400,6 +405,12 @@ def ops(conn) -> None:
           "질문이 남지 않은 기한 지난 익명 세션 파기")
     check(scalar(conn, "select count(*) from public.inquiries where id = %s", (keep_q,)) == 1, "기한 안 된 질문은 남음")
     check(isinstance(out, dict) and out.get("inquiries", 0) >= 1, f"파기 결과 건수 반환 ({out})")
+    check(scalar(conn, "select count(*) from public.rate_limit_hits where key_hash = %s "
+                       "and window_start > now() - interval '4 days'", (rk,)) == 1,
+          "주간 카운터(3일 전 창)는 파기하지 않음 — 보유 8일")
+    check(scalar(conn, "select count(*) from public.rate_limit_hits where key_hash = %s "
+                       "and window_start < now() - interval '8 days'", (rk,)) == 0,
+          "8일 지난 카운터는 파기")
     check(scalar(conn, "select count(*) from cron.job where jobname = 'hz-retention-purge'") == 1,
           "pg_cron 매일 파기 작업 등록")
 

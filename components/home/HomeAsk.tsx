@@ -3,6 +3,7 @@
 // 카테고리를 고르면 질문창 위에 안내·문장 시작·그 분야 예시 답변이 나온다. 보내기는 지금처럼 질문 1번으로 센다(DEC-024).
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
+// 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
@@ -34,7 +35,11 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
   const current = category ? CATEGORIES[category] : null;
   const categoryExamples = current ? examples.filter((e) => current.examples.includes(e.id)) : [];
 
-  const submit = (q: string) => (blocked ? showLimit() : void send(q));
+  // 서버 findExample과 같은 비교 (NFKC, 공백 하나로)
+  const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim();
+  const isExample = (q: string) => examples.some((e) => norm(e.question) === norm(q));
+
+  const submit = (q: string) => (blocked && !isExample(q) ? showLimit() : void send(q));
   const focusBox = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -107,7 +112,7 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
               ? DEMO_LIMIT_TEXT
-              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 3번까지 물어볼 수 있어요."}
+              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 3번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요."}
           </p>
         )}
       </div>

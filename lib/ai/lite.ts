@@ -1,5 +1,5 @@
-// 라이트 Haiku 답변 (AI_MODE=pro, DEC-020). 질문 1건 Claude 비용 $0.0015 상한.
-// ① 무료 법제처 검색(lib/demo freeSearch, LLM 없음) → ② 근거를 예산에 맞게 줄여 Haiku 답변 1회 → (라우트가) 무료 인용 검증.
+// 라이트 답변 (AI_MODE=pro, DEC-020·026). 답변 모델은 AI_ANSWER_MODEL(기본 Sonnet 5.5 $0.03, Haiku 5.5 $0.0015) — lib/ai/models.ts.
+// ① 무료 법제처 검색(lib/demo freeSearch, LLM 없음) → ② 근거를 예산에 맞게 줄여 답변 1회 → (라우트가) 무료 인용 검증.
 // 의도 분석·재검색은 하지 않는다. 입력이 예산을 넘으면 근거를 하나씩 빼며 다시 잰다(토큰 세기는 무과금).
 // 예산 안에 못 맞추거나 답변이 출력 한도를 넘으면 AI 문단 없이 찾은 근거만 낸다 — 오류로 끝내지 않는다.
 import "server-only";
@@ -17,11 +17,11 @@ import {
   type ModelClient,
   type Usage,
 } from "./client";
-import { LITE_ANSWER_TOKENS, LITE_COST_CAP_USD } from "./cost";
+import { LITE_ANSWER_TOKENS } from "./cost";
 import { userMessage } from "./message";
+import { ANSWER_MODELS, answerModel, type AnswerModelId } from "./models";
 import {
   AnswerZ,
-  MODELS,
   STEP_MESSAGES,
   answerSchema,
   assembleDraft,
@@ -37,13 +37,16 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-16";
+export const LITE_PROMPT_VERSION = "lite-2026-11-18";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
 const LITE_CASE_CHARS = 800;
-/** 처음 넣어 볼 근거 수. 예산을 넘으면 뒤에서부터 뺀다 */
-const LITE_MAX_ARTICLES = 4;
+/**
+ * 처음 넣어 볼 근거 수. 예산을 넘으면 뒤에서부터 뺀다.
+ * 조문 6개 (DEC-026, 이전 4개): 2026-11-18 비교에서 질문의 핵심 조문이 5번째라 잘린 사례가 2건 중 2건
+ */
+export const LITE_MAX_ARTICLES = 6;
 const LITE_MAX_CASES = 3;
 const ANSWER_TIMEOUT_MS = 25_000;
 
@@ -86,11 +89,17 @@ export async function runLiteAnalysis(
     model?: ModelClient;
     lawSource?: LawSource;
     onStep?: (e: StepEvent) => void;
+    /** 답변 모델. 기본은 AI_ANSWER_MODEL (lib/ai/models.ts) */
+    answerModel?: AnswerModelId;
+    /** 질문 1건 상한. 기본은 답변 모델의 liteCapUsd */
     costCapUsd?: number;
     /** 홈 카테고리의 고정 판례 검색어 (DEC-028) */
     caseHint?: string | null;
   } = {},
 ): Promise<LiteAnalysisOutput> {
+  const answer = deps.answerModel
+    ? { id: deps.answerModel, ...ANSWER_MODELS[deps.answerModel] }
+    : answerModel();
   const context = input.context ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   const found = await freeSearch(input.maskedText, {
@@ -114,7 +123,7 @@ export async function runLiteAnalysis(
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
     const model = withCostCap(
       deps.model ?? createModelClient(),
-      deps.costCapUsd ?? LITE_COST_CAP_USD,
+      deps.costCapUsd ?? answer.liteCapUsd,
     );
     // 예산을 넘으면 마지막 근거를 하나 빼고 다시 잰다 (토큰 세기는 무과금, 생성 호출은 하지 않음)
     for (;;) {
@@ -123,9 +132,10 @@ export async function runLiteAnalysis(
           model,
           "answer",
           {
-            model: MODELS.answer,
+            model: answer.id,
             max_tokens: LITE_ANSWER_TOKENS.max,
-            thinking: { type: "disabled" },
+            // 생각 끔 — Haiku는 disabled, Sonnet 5.5는 between_tools (effort low라 허용). 출력 길이를 고정해 상한을 지킨다
+            thinking: answer.thinking,
             system: [{ type: "text", text: LITE_ANSWER_SYSTEM }],
             output_config: {
               effort: "low",
@@ -190,7 +200,7 @@ export async function runLiteAnalysis(
     evidence,
     dropped,
     usage,
-    model: MODELS.answer,
+    model: answer.id,
     promptVersion: LITE_PROMPT_VERSION,
     costUsd: spent,
     costCapped,

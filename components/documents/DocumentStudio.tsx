@@ -43,7 +43,7 @@ type DraftState =
 
 const NO_AI: Record<string, string> = {
   free_mode: "지금은 AI 문장 정리가 꺼져 있어 정해진 칸만 채웠어요.",
-  daily_limit: "오늘 AI 정리 횟수를 다 써서 정해진 칸만 채웠어요.",
+  daily_limit: "이번 주 AI 정리 횟수를 다 써서 정해진 칸만 채웠어요.",
   cost_cap: "사연이 길어 AI 정리를 하지 못하고 정해진 칸만 채웠어요.",
   model_failed: "AI 정리를 하지 못해 정해진 칸만 채웠어요.",
   no_facts: "사연에서 옮겨 적을 사실을 찾지 못해 정해진 칸만 채웠어요.",

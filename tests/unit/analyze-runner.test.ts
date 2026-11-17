@@ -20,8 +20,8 @@ vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
 vi.mock("@/lib/citations/verify", () => cite);
 const rate = vi.hoisted(() => ({
-  tryGlobalQuota: vi.fn(async () => true),
-  aiDailyRule: () => ({ bucket: "ai_daily", limit: 200, windowSeconds: 86_400 }),
+  // 주간·하루 상한 확인 (DEC-026). 실제 숫자는 lib/ai/models.test.ts가 본다
+  tryAiQuota: vi.fn(async () => true),
 }));
 vi.mock("@/lib/auth/rate-limit", () => rate);
 
@@ -136,15 +136,17 @@ describe("DEC-015 무료 모드 (기본)", () => {
       }),
       ANON,
       expect.any(Headers),
+      // 예시가 아닌 실제 질문은 무료 모드(검색 전용)라도 하루 3회에서 1회를 쓴다
+      { consumeAnonQuota: true },
     );
     expect(out.result).toMatchObject({ mode: "search_only" });
-    // 무료 모드는 하루 Claude 상한 카운터를 올리지 않는다
-    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+    // 무료 모드는 주간 Claude 상한 카운터를 올리지 않는다
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
   });
 
-  test("DEC-019 Pro라도 하루 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
+  test("DEC-019·026 Pro라도 주간 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
     vi.stubEnv("AI_MODE", "pro-full");
-    rate.tryGlobalQuota.mockResolvedValueOnce(false);
+    rate.tryAiQuota.mockResolvedValueOnce(false);
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "search_only", outcome: "grounded" },
       citations: [],
@@ -193,7 +195,7 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
     expect(store.finishAnalysis).toHaveBeenCalled();
   });
 
-  test("유료 모드라도 예시 질문은 미리 만든 분석을 재생하고 하루 상한을 쓰지 않는다 (비용 0)", async () => {
+  test("DEC-027 유료 모드라도 예시 질문은 미리 만든 분석을 재생 — 주간 상한도, 비로그인 하루 3회도 쓰지 않는다 (비용 0)", async () => {
     vi.stubEnv("AI_MODE", "pro");
     const { demoExamples } = await import("@/lib/demo/policy");
     free.runFreeAnalysis.mockResolvedValue({
@@ -204,7 +206,31 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
     });
     await analyzeInquiry({ ...INQ, masked_text: demoExamples()[0].question }, ANON, new Headers());
     expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
-    expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
     expect(free.runFreeAnalysis).toHaveBeenCalled();
+    expect(store.finishAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "replay" }),
+      ANON,
+      expect.any(Headers),
+      { consumeAnonQuota: false },
+    );
+  });
+
+  test("DEC-027 무료 모드에서도 예시 질문 재생은 횟수를 차감하지 않는다", async () => {
+    vi.stubEnv("AI_MODE", "");
+    const { demoExamples } = await import("@/lib/demo/policy");
+    free.runFreeAnalysis.mockResolvedValue({
+      result: { mode: "replay", outcome: "grounded" },
+      citations: [],
+      stats: { total: 1, removed: 0 },
+      model: "replay",
+    });
+    await analyzeInquiry({ ...INQ, masked_text: demoExamples()[1].question }, ANON, new Headers());
+    expect(store.finishAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      ANON,
+      expect.any(Headers),
+      { consumeAnonQuota: false },
+    );
   });
 });

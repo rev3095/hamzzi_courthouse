@@ -194,7 +194,7 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 ### `rate_limit_hits` — 레이트 리밋 카운터 **(데모 운영)**
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| bucket | text | `search`·`lookup`·`write` 등 (lib/auth/rate-limit.ts) |
+| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_weekly`(7일 창, DEC-026) 등 (lib/auth/rate-limit.ts) |
 | key_hash | text | HMAC(IP, `ANON_IP_SALT`) 등 해시만. 원본 IP 저장 안 함 |
 | window_start | timestamptz | 고정 창 시작 (`date_bin`) |
 | hits | int | |
@@ -244,7 +244,7 @@ PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용
 | `inquiries` (마스킹본) + `analysis_results`·`result_citations`·`result_feedback`·`followup_questions` | 만든 날 + 30일 (`expires_at` 기본값, 기존 행은 `created_at + 30일`로 채움) | 질문을 지우면 나머지는 연쇄 삭제 |
 | `anon_sessions` | 마지막 질문의 `expires_at`까지 (트리거 `inquiries_extend_anon_expiry`) | 기한이 지나고 남은 질문이 없을 때 |
 | `anon_usage` | 30일 | |
-| `rate_limit_hits` | 1일 | |
+| `rate_limit_hits` | 8일 (2026-11-18, 이전 1일 — 주간 유료 상한 `ai_weekly` 카운터가 창 끝까지 남게, DEC-026, 마이그레이션 `20261117160154_ai_weekly_quota_retention.sql`) | |
 | `audit_logs`·`gate_changes` | 파기하지 않음 (append-only) | 보유 기간은 OQ-DM-03에 남김 |
 | `consents`·`deletion_requests` | 로그인 사용자용 — 데모에서 쓰지 않음 | OQ-DM-03 |
 

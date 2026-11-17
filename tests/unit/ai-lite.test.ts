@@ -1,10 +1,11 @@
-// DEC-020 라이트 Haiku 답변 (AI_MODE=pro, 질문 1건 $0.0015). 모델·법제처를 가짜로 바꿔 흐름과 비용 상한만 확인한다.
+// DEC-020·026 라이트 답변 (AI_MODE=pro, Sonnet 5.5 $0.03 / Haiku 5.5 $0.0015). 모델·법제처를 가짜로 바꿔 흐름과 비용 상한만 확인한다.
 // Claude 실호출 없음 (절대 규칙: 유료 테스트 반복 금지).
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { runLiteAnalysis } = await import("@/lib/ai/lite");
+const { runLiteAnalysis, liteEvidenceKeys, LITE_MAX_ARTICLES } = await import("@/lib/ai/lite");
+const { EvidenceSet } = await import("@/lib/search/evidence");
 const { ApiError } = await import("@/lib/api/errors");
 import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
 import type { LawSource } from "@/lib/search/law-source";
@@ -75,12 +76,78 @@ function fakeModel(opts: { tokens?: (p: CreateParams) => number; fail?: unknown 
   return model;
 }
 
-describe("DEC-020 라이트 답변", () => {
-  test("의도 분석·재검색 없이 Haiku 답변 1회, thinking 끔, 출력 1,200토큰 이하", async () => {
+const HAIKU = { answerModel: "claude-haiku-5-5" as const };
+
+describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  test("AI_ANSWER_MODEL이 없으면 Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
+    vi.stubEnv("AI_ANSWER_MODEL", "");
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
       { model, lawSource: fakeSource() },
+    );
+    expect(model.calls).toHaveLength(1);
+    const p = model.calls[0];
+    expect(p.model).toBe("claude-sonnet-5-5");
+    expect(p.thinking).toEqual({ type: "between_tools" });
+    expect(p.output_config?.effort).toBe("low");
+    expect(p.max_tokens).toBeLessThanOrEqual(1_200);
+    expect(out.model).toBe("claude-sonnet-5-5");
+  });
+
+  test("Sonnet 질문 1건 비용은 Sonnet 단가로 계산하고 $0.03 이하 (입력 5,000 + 출력 400 = $0.014)", async () => {
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model: fakeModel(), lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+    );
+    expect(out.costUsd).toBeCloseTo(0.014, 6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.03);
+  });
+
+  test("Sonnet 상한을 넘을 입력이면 근거를 빼고, 끝내 못 맞추면 부르지 않는다 (입력 20,000 = $0.04)", async () => {
+    const model = fakeModel({ tokens: () => 20_000 });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+    );
+    expect(model.calls).toHaveLength(0);
+    expect(out.costCapped).toBe(true);
+    expect(out.costUsd).toBe(0);
+  });
+
+  test("목록 밖 모델 이름(오타·Opus)은 가장 싼 Haiku로 돌아간다", async () => {
+    vi.stubEnv("AI_ANSWER_MODEL", "claude-opus-5-5");
+    const model = fakeModel();
+    await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource() },
+    );
+    expect(model.calls[0].model).toBe("claude-haiku-5-5");
+    expect(model.calls[0].thinking).toEqual({ type: "disabled" });
+  });
+
+  test("모델에 넘기는 조문은 6개까지 (이전 4개), 판례는 3건까지", () => {
+    const evidence = new EvidenceSet();
+    for (let i = 1; i <= 8; i++)
+      evidence.addArticle({ ...ART, id: `law:주택임대차보호법:제${i}조`, articleNo: `제${i}조` });
+    for (let i = 1; i <= 5; i++)
+      evidence.addCase({ ...CASE, id: `${i}`, caseNo: `2020다1234${i}` });
+    const keys = liteEvidenceKeys(evidence);
+    const statutes = keys.filter((k) => k.startsWith("law:"));
+    expect(LITE_MAX_ARTICLES).toBe(6);
+    expect(statutes).toHaveLength(6);
+    expect(keys.length - statutes.length).toBe(3);
+  });
+});
+
+describe("DEC-020 라이트 답변 (Haiku)", () => {
+  test("의도 분석·재검색 없이 Haiku 답변 1회, thinking 끔, 출력 1,200토큰 이하", async () => {
+    const model = fakeModel();
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
     );
     expect(model.calls).toHaveLength(1);
     const p = model.calls[0];
@@ -95,7 +162,7 @@ describe("DEC-020 라이트 답변", () => {
   test("질문 1건 비용은 $0.0015 이하 (입력 5,000 + 출력 400 토큰 = $0.0007)", async () => {
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model: fakeModel(), lawSource: fakeSource() },
+      { model: fakeModel(), lawSource: fakeSource(), ...HAIKU },
     );
     expect(out.costUsd).toBeCloseTo(0.0007, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.0015);
@@ -106,7 +173,10 @@ describe("DEC-020 라이트 답변", () => {
     const model = fakeModel({
       tokens: (p) => (JSON.stringify(p.messages).includes("2020다12345") ? 13_000 : 5_000),
     });
-    const out = await runLiteAnalysis({ maskedText: "보증금을 못 받았어요" }, { model, lawSource: fakeSource() });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
     expect(model.calls).toHaveLength(1);
     expect(JSON.stringify(model.calls[0].messages)).not.toContain("2020다12345");
     expect(out.draft.answer.points).toHaveLength(1);
@@ -114,7 +184,10 @@ describe("DEC-020 라이트 답변", () => {
 
   test("근거 1개도 예산에 못 맞추면 Claude를 부르지 않고 찾은 근거만 낸다 (오류 아님)", async () => {
     const model = fakeModel({ tokens: () => 20_000 });
-    const out = await runLiteAnalysis({ maskedText: "보증금을 못 받았어요" }, { model, lawSource: fakeSource() });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
     expect(model.calls).toHaveLength(0);
     expect(out.costCapped).toBe(true);
     expect(out.costUsd).toBe(0);
@@ -124,7 +197,10 @@ describe("DEC-020 라이트 답변", () => {
 
   test("출력 한도 초과 등 모델 실패는 오류 대신 근거만 낸다 — 재시도하지 않는다", async () => {
     const model = fakeModel({ fail: new ApiError("MODEL_FAILED", { reason: "max_tokens" }) });
-    const out = await runLiteAnalysis({ maskedText: "보증금을 못 받았어요" }, { model, lawSource: fakeSource() });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
     expect(model.calls).toHaveLength(1);
     expect(out.costCapped).toBe(true);
   });

@@ -1,19 +1,25 @@
 // Pro 분석 비용 상한 (DEC-019). 질문 1건의 Claude 호출 합계가 COST_CAP_USD를 넘지 않게 호출 전에 막는다.
 // 순수 함수 — 단가표·비용 계산·호출 계획만. 실제 호출 감싸기는 client.ts withCostCap.
-// 단가 출처: claude-api 스킬 모델 표 (2026-10-06 캐시). 바뀌면 이 표만 고친다.
+// 단가 출처: claude-api 스킬 모델 표 (2026-11-03 캐시). 바뀌면 이 표만 고친다.
 
 export type Price = { input: number; output: number; cacheRead: number; cacheWrite: number };
 
-/** USD / 1M 토큰. 프롬프트 100K 토큰 이하 구간 (넘으면 입력 $0.50·출력 $2.50 — LONG_PROMPT_TOKENS로 막는다) */
+/**
+ * USD / 1M 토큰. 캐시 쓰기는 5분 기준(입력의 1.25배).
+ * Haiku는 프롬프트 100K 토큰 이하 구간 (넘으면 입력 $0.50·출력 $2.50 — LONG_PROMPT_TOKENS로 막는다).
+ * Sonnet 5.5는 라이트 답변 모델 선택용 (DEC-026, lib/ai/models.ts)
+ */
 export const PRICES: Record<string, Price> = {
   "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
+  "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
 };
 
 /** 질문 1건 상한 (사용자 결정: Claude Console 기준 $0.01~0.015 안팎) */
 export const COST_CAP_USD = 0.015;
 /**
- * 라이트 모드(AI_MODE=pro, DEC-020) 질문 1건 상한 — 사용자 결정 $0.0015 (2026-11-16, 이전 $0.001).
+ * 라이트 모드(AI_MODE=pro, DEC-020) Haiku 질문 1건 상한 — 사용자 결정 $0.0015 (2026-11-16, 이전 $0.001).
  * 배분: 입력 약 9,000토큰($0.0009) + 출력 1,200토큰($0.0006). 입력은 호출 전에 무과금 토큰 세기로 확인한다.
+ * 라이트 답변 모델별 상한은 lib/ai/models.ts ANSWER_MODELS (DEC-026, Sonnet 5.5 $0.03)
  */
 export const LITE_COST_CAP_USD = 0.0015;
 export const LITE_ANSWER_TOKENS = { max: 1_200, min: 700 } as const;
