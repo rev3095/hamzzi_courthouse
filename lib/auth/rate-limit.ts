@@ -1,5 +1,6 @@
 import "server-only";
 
+import { dailyAiLimit } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requestIpHash } from "./ip";
@@ -19,16 +20,12 @@ export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds:
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
 
 /**
- * 유료(Claude) 분석 하루 전체 상한 (DEC-019·020). 질문 1건 상한 × 건수 = 하루 최대 비용.
- * 기본 100건(분석과 문서 초안을 함께 센다) — 라이트($0.0015)면 하루 최대 약 $0.15, pro-full($0.015)이면 약 $1.5. AI_DAILY_LIMIT로 바꾼다.
+ * 유료(Claude) 분석 하루 전체 상한 (DEC-019·020·026). 질문 1건 상한 × 건수 = 하루 최대 비용.
+ * 건수(AI_DAILY_LIMIT, 기본 100)와 금액(AI_DAILY_BUDGET_USD, 기본 $0.90 ÷ 질문 1건 상한) 중 작은 값 — lib/ai/models.ts.
+ * 라이트 Sonnet($0.03)이면 30건, 라이트 Haiku($0.0015)면 100건, pro-full($0.015)이면 60건. 분석과 문서 초안을 함께 센다.
  */
 export function aiDailyRule(env: Record<string, string | undefined> = process.env): RateRule {
-  const n = Number.parseInt(env.AI_DAILY_LIMIT ?? "", 10);
-  return {
-    bucket: "ai_daily",
-    limit: Number.isFinite(n) && n >= 0 ? n : 100,
-    windowSeconds: 86_400,
-  };
+  return { bucket: "ai_daily", limit: dailyAiLimit(env), windowSeconds: 86_400 };
 }
 
 /** 사이트 전체 카운터를 1 올리고, 상한 안이면 true. 넘으면 false (호출한 쪽이 무료 모드로 처리한다) */

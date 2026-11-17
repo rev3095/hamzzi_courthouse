@@ -37,7 +37,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
 ## 기술 스택 (확정, DEC-004)
-Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 서비스 모델은 **`claude-haiku-5-5`로 확정**(DEC-019·020, 단가표 lib/ai/cost.ts)
+Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 서비스 모델은 라이트 답변 **`claude-sonnet-5-5`**(DEC-026), 전체 파이프라인·문서 초안은 **`claude-haiku-5-5`**(DEC-019·020·023), 단가표 lib/ai/cost.ts
 Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 데이터와 API가 다르다).
 
 ## 명령어
@@ -67,12 +67,13 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 환경변수 (`.env.local`, 값은 사용자가 직접 넣는다)
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
 - `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
-- `AI_MODE` 분석 모드 (DEC-015·019·020). Console API 크레딧이 별도 과금되므로 코드 기본값은 무료:
+- `AI_MODE` 분석 모드 (DEC-015·019·020·026). Console API 크레딧이 별도 과금되므로 코드 기본값은 무료:
   - 없음/그 밖의 값 = **free**: Claude 호출 없음. 예시 질문은 저장된 답변 재생, 그 밖은 법제처 검색 결과만
-  - `pro` = **라이트 답변**(DEC-020): 무료 법제처 검색 + Haiku 답변 1회, 질문 1건 **$0.0015** 상한(2026-11-16 결정)
+  - `pro` = **라이트 답변**(DEC-020·026): 무료 법제처 검색 + 답변 1회. 답변 모델은 `AI_ANSWER_MODEL`
   - `pro-full` = 전체 파이프라인(의도·재검색·답변, DEC-019), 질문 1건 $0.015 상한. 명시할 때만
   - 유료 모드라도 예시 질문은 재생(비용 0). 유료 버전 보존 태그 `paid-ai-v1`
-- `AI_DAILY_LIMIT` 유료 분석 하루 전체 건수 상한 (기본 100). 넘으면 그날은 무료 모드
+- `AI_ANSWER_MODEL` 라이트 답변 모델 (DEC-026, lib/ai/models.ts). 없음 = **`claude-sonnet-5-5`**(질문 1건 **$0.03** 상한, 2026-11-18 결정) · `claude-haiku-5-5`($0.0015). 목록 밖 값은 Haiku로. Opus·Fable은 생각을 끌 수 없어 허용하지 않는다
+- `AI_DAILY_LIMIT`(기본 100건)·`AI_DAILY_BUDGET_USD`(기본 $0.90) 유료 분석 하루 전체 상한 = min(건수, 금액 ÷ 질문 1건 상한) → 라이트 Sonnet 30건 · 라이트 Haiku 100건 · pro-full 60건. 넘으면 그날은 무료 모드
 - `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
@@ -88,7 +89,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 - 비로그인 횟수: POST /inquiries는 3회를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 하루 3회(`quota_day`, 한국 시간) + 같은 IP 해시 24시간 10회, `anon_usage`). `questions_used`를 직접 update하지 않는다. 관리자 모드(`hz_admin` 서명 쿠키, `lib/auth/admin-*`)면 `resolveOwner`가 `admin: true`를 붙이고 `countsAnonQuota`가 false라 검사·차감을 모두 건너뛴다.
-- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 하루 상한(`AI_DAILY_LIMIT`) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). `pro` → `runLiteAnalysis`(lib/ai/lite.ts: `freeSearch` + Haiku 1회) + `verifyDraft`. `pro-full` → `runDemoAnalysis` + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지).
+- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 하루 상한(`dailyAiLimit`, lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). `pro` → `runLiteAnalysis`(lib/ai/lite.ts: `freeSearch` + `AI_ANSWER_MODEL` 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `pro-full` → `runDemoAnalysis` + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지).
 - 비용 상한: 모든 Claude 호출은 `withCostCap`(lib/ai/client.ts)을 거친다. 호출 전 무과금 `countTokens`로 입력을 재고 `planCall`(lib/ai/cost.ts)이 (쓴 비용 + 입력 + max_tokens 출력)이 상한 안일 때만 보낸다. 넘으면 `CostCapReached` — 라이트는 근거를 하나씩 빼고 다시 재고, 못 맞추면 AI 문단 없이 근거만 낸다. 키 점검은 `/api/v1/health`의 `ai.key`(모델 정보 조회, 무과금). **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
 - `cacheComponents: true`(next.config.ts): `usePathname`·`useParams`·`useSearchParams` 같은 클라이언트 훅은 `<Suspense>` 안에서만 쓴다. 밖에서 쓰면 로컬 `pnpm dev`·CI는 통과해도 **Vercel 빌드가 프리렌더에서 실패**한다(예: 헤더 남은 질문 `QuotaRouteSync`).

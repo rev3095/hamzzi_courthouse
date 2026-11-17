@@ -33,9 +33,20 @@
 - 숫자는 단위까지 토큰으로 비교해 그 문단 출처 원문에 같은 토큰이 있어야 한다. 한글 수사("삼 년", "열흘")·전각 숫자도 본다. 조문·사건번호·날짜 속 숫자는 숫자 검사에서 빼고 인용 검사로 본다.
 - 의도 요약도 단정 표현·질문에 없는 숫자가 있으면 비우고, 관련 법률은 근거로 가져온 법령명만 남긴다.
 
-### 라이트 답변 (AI_MODE=pro, DEC-020)
+### 라이트 답변 (AI_MODE=pro, DEC-020·026)
 
-`lite.ts` `runLiteAnalysis`: 무료 법제처 검색(`lib/demo` `freeSearch`) → 근거를 조문 4·판례 3건, 600·800자로 줄여 Haiku 답변 1회(`LITE_ANSWER_SYSTEM`, 문단 3~4개, 출력 1,200토큰, thinking 끔, effort low) → 라우트가 무료 인용 검증. 질문 1건 **$0.0015** 상한(`LITE_COST_CAP_USD`, 2026-11-16 $0.001에서 올림).
+`lite.ts` `runLiteAnalysis`: 무료 법제처 검색(`lib/demo` `freeSearch`) → 근거를 조문 6·판례 3건, 600·800자로 줄여 답변 1회(`LITE_ANSWER_SYSTEM`, 문단 3~4개, 출력 1,200토큰, thinking 끔, effort low) → 라우트가 무료 인용 검증.
+
+- 답변 모델은 `models.ts` `answerModel()`이 `AI_ANSWER_MODEL`로 고른다 (DEC-026). 허용 목록은 둘뿐이고, 목록 밖 값은 가장 싼 Haiku로 돌아간다.
+
+| 모델 | 생각 끄기 | 질문 1건 상한 | 실측 (2026-11-18, 2건) |
+|---|---|---|---|
+| `claude-sonnet-5-5` (기본) | `between_tools` (effort high 이하에서만 허용) | **$0.03** | 약 $0.020, 8~11초 |
+| `claude-haiku-5-5` | `disabled` | $0.0015 (`LITE_COST_CAP_USD`) | 약 $0.0009, 6~7초 |
+
+- Opus 5.5·Fable은 생각을 끌 수 없어(보내면 400) 출력 길이·비용이 고정되지 않으므로 넣지 않았다. 넣으려면 출력 한도에 생각 몫을 더하고 상한을 다시 정해야 한다 (`docs/reports/2026-11-17_모델_선택_분석.md` 6장).
+- 하루 전체 건수는 `dailyAiLimit()` = min(`AI_DAILY_LIMIT` 기본 100, `AI_DAILY_BUDGET_USD` 기본 $0.90 ÷ 질문 1건 상한). Sonnet이면 30건, Haiku면 100건 — 모델을 바꿔도 하루 최대 금액이 늘지 않는다. 단, 카운터가 건수라 같은 날 중간에 Sonnet → Haiku로 바꾸면 그날만 약 $0.1 더 쓸 수 있다.
+- 비교 근거: `docs/reports/2026-11-18_Haiku_Sonnet_Opus_답변_비교.md`. 문서 초안 도우미·전체 파이프라인은 Haiku 그대로(`policy.ts` `MODELS`).
 
 - 호출 전 무과금 토큰 세기로 입력을 재고, 넘으면 근거를 뒤에서부터 하나씩 빼고 다시 잰다. 하나도 못 넣으면 Claude를 부르지 않는다.
 - 출력 한도 초과·형식 오류는 오류로 끝내지 않고 AI 문단 없이 근거만 낸다(`costCapped`). SDK 재시도 0.
@@ -59,8 +70,8 @@
 - 단가(USD/1M): 입력 0.10 · 출력 0.50 · 캐시 읽기 0.01 · 캐시 쓰기 0.125. 프롬프트 100K 토큰 이상은 장문 단가라 요청하지 않는다.
 - 호출 전: `countTokens`(무과금)로 입력을 재고, 실패하면 글자 수 × 1.5로 넉넉히 잡는다. (쓴 비용 + 입력 정가 + 출력 한도) > 상한이면 부르지 않고, 남은 예산에 맞춰 `max_tokens`를 줄인다.
 - 호출 후: `usage`(입력·출력·캐시 읽기·쓰기)로 실제 비용을 누적한다. 결과의 `costUsd`는 단가표로 계산한 값이다.
-- 하루 전체 상한: `AI_DAILY_LIMIT`(기본 200건)을 넘으면 그날은 무료 모드 (lib/auth/rate-limit `tryGlobalQuota`).
-- 키 점검: `key-check.ts` — 모델 정보 조회만(무과금), `/api/v1/health`의 `ai.key`.
+- 하루 전체 상한: `dailyAiLimit()`(pro-full이면 min(`AI_DAILY_LIMIT` 100, $0.90 ÷ $0.015 = 60건))을 넘으면 그날은 무료 모드 (lib/auth/rate-limit `tryGlobalQuota`).
+- 키 점검: `key-check.ts` — 라이트 답변 모델 정보 조회만(무과금), `/api/v1/health`의 `ai.key`.
 
 ### 테스트·비용
 
