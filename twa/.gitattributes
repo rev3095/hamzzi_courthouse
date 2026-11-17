@@ -1,0 +1,4 @@
+# Windows 배치 파일은 CRLF, 유닉스 스크립트는 LF로 체크아웃 (gradlew 실행 보장)
+*.bat text eol=crlf
+gradlew text eol=lf
+*.jar binary

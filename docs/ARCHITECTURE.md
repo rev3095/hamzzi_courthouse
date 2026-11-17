@@ -175,6 +175,7 @@ flowchart TB
 |---|---|
 | 환경 | 로컬 / 스테이징 / 운영 (제안). 스테이징은 실제 사용자 데이터 없음 |
 | 데모 배포 | Vercel(Hobby, GitHub main 자동 배포) `hamzzi-courthouse.vercel.app`, 서버 함수 리전 `icn1`(서울, `vercel.json`) · Supabase 개발 프로젝트 Seoul(ap-northeast-2). 환경변수는 Vercel 프로젝트 설정에 따로 넣는다(`SUPABASE_DB_URL` 제외). 법제처 호출은 도메인 등록 후 가능 (OQ-ARC-05). 운영 호스팅·플랜은 P11 전에 정한다 |
+| Android 앱 | 배포 사이트를 그대로 띄우는 TWA(`twa/`, 패키지 `app.vercel.hamzzi_courthouse.twa`). 웹 배포가 곧 앱 업데이트이고, 사이트 연결은 `public/.well-known/assetlinks.json`. 절차는 `docs/08_Google_Play_배포.md` |
 | 비밀 관리 | API 키는 서버 환경변수만, 클라이언트 노출 금지(PRD 13) |
 | 마이그레이션 | DB 스키마는 마이그레이션 파일로 관리, 운영 반영은 사람 승인 |
 | 정기 작업 | 데모: 보유 기간 파기 `purge_expired_records()`를 Supabase **pg_cron**(`hz-retention-purge`, 매일 03:17 UTC)으로 DB 안에서 실행한다 — 무료 플랜 사용 가능, 비밀값·외부 호출 없음 (DEC-018 제안, DATA_MODEL 7절). Vercel Cron은 쓰지 않는다 |
