@@ -12,8 +12,8 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
   expert: "전문가 권장",
 };
 
-/** 문서 작성 화면 (/documents/[kind]). legal_documents 게이트 뒤 (DEC-022) */
-export type DocumentKind = "demand-letter" | "complaint";
+/** 문서 작성 화면 (/documents/[kind]). legal_documents 게이트 뒤 (DEC-022·025) */
+export type DocumentKind = "demand-letter" | "lease-registration" | "payment-order" | "complaint";
 
 export type OfficialLink = { label: string; url: string };
 
@@ -104,6 +104,7 @@ const ORDER: ProcedureStep = {
     "상대방 주소를 모르면 진행이 어려울 수 있어요.",
   ],
   links: [OFFICIAL.ecfs, OFFICIAL.proSe],
+  document: "payment-order",
   question: "지급명령은 어떻게 신청하고, 상대방이 이의를 내면 어떻게 되나요?",
 };
 
@@ -230,6 +231,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "등기가 마쳐졌는지 확인한 뒤에 이사하는 것이 안전해요.",
         ],
         links: [OFFICIAL.ecfs],
+        document: "lease-registration",
         question: "임차권등기명령은 언제, 어떻게 신청하나요?",
       },
       ORDER,

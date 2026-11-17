@@ -2,6 +2,7 @@
 // 절차 타임라인 (F-014 데모 축소판, DEC-021). Figma D+ "절차 타임라인"(번호 노드 가로 직선)을 따르되
 // 노드 아래 예상 기간 대신 난이도 라벨을 쓴다 (절대 규칙 3, DEC-002).
 // 마일스톤 팝업: 마우스 호버·키보드 포커스·탭으로 열린다. Esc로 닫고 포커스는 노드로 돌아간다.
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { difficultyLabel } from "@/lib/procedure/policy";
 import {
@@ -30,6 +31,7 @@ export function ProcedureTimeline({
   steps,
   recommendedKey,
   onAskStep,
+  inquiryId,
 }: {
   /** 홈 예시 질문 섹션 이름 (예: 임대차) */
   section: string;
@@ -38,6 +40,8 @@ export function ProcedureTimeline({
   steps: ProcedureStep[];
   recommendedKey: string;
   onAskStep?: (question: string) => void;
+  /** 결과의 질문 번호 — 서식 작성 화면 초안 도우미(DEC-023)로 넘긴다 */
+  inquiryId?: string;
 }) {
   const [open, setOpen] = useState<Open>(null);
   const baseId = useId();
@@ -208,6 +212,14 @@ export function ProcedureTimeline({
                     </a>
                   ))}
                 </div>
+                {s.document && (
+                  <Link
+                    href={`/documents/${s.document}${inquiryId ? `?from=${encodeURIComponent(inquiryId)}` : ""}`}
+                    className="text-link inline-flex min-h-11 items-center text-[13px] font-semibold underline-offset-2 hover:underline"
+                  >
+                    이 단계 서식 작성하기 →
+                  </Link>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   {onAskStep && (
                     <button

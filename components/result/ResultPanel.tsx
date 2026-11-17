@@ -97,6 +97,7 @@ export function ResultPanel({
             steps={plan.steps}
             recommendedKey={plan.recommended.key}
             onAskStep={onAskStep}
+            inquiryId={inquiryId}
           />
           {plan.note && <p className="text-muted mt-4 text-[13px] leading-relaxed">{plan.note}</p>}
           <div className="rounded-card border-honey-line bg-honey mt-6 px-5 py-4">
@@ -247,7 +248,7 @@ function NextSteps({
           <span>
             <span className="block text-base font-bold">{title}</span>
             <span className="mt-0.5 block text-[13px] text-white/75">
-              작성 요령 · 공식 양식 안내 (문서 자동 작성은 법률 검토 후 열려요)
+              작성 요령 · 공식 서식 안내 (서식 작성·내보내기는 법률 검토 후 열려요)
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">

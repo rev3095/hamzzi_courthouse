@@ -29,11 +29,8 @@ const SUBJECTS: Partial<Record<TrackKey, string>> = {
 
 const LEND = /빌려준|빌려줬|대여금|대여/;
 
-/** 사실관계를 넣을 칸 */
-export const FACTS_FIELD: Record<DocumentKind, string> = {
-  complaint: "claimCause",
-  "demand-letter": "facts",
-};
+/** 사실관계를 넣을 칸 (화면에서도 쓰므로 가벼운 policy.ts에 둔다) */
+export { FACTS_FIELD } from "./policy";
 
 export type RuleSuggestions = Record<string, string>;
 
@@ -57,16 +54,24 @@ export function ruleSuggestions(
     if (items.length) {
       out.evidence = items.map((p, i) => `갑 제${i + 1}호증  ${p}`).join("\n");
     }
-  } else {
+  } else if (kind === "demand-letter") {
     const subject = SUBJECTS[track] ?? (lend ? "대여금 반환 요청" : undefined);
     if (subject) out.subject = subject;
   }
+  // 임차권등기명령·지급명령: 규칙 칸 없음 (당사자·금액·날짜는 사용자가 직접 적는다)
   return out;
 }
 
-/** 원고·피고 / 보내는 사람·받는 사람을 문장에서 부르는 말 */
+const PARTY_WORDS: Record<DocumentKind, { me: string; other: string }> = {
+  complaint: { me: "원고", other: "피고" },
+  "demand-letter": { me: "본인", other: "귀하" },
+  "lease-registration": { me: "신청인", other: "피신청인" },
+  "payment-order": { me: "채권자", other: "채무자" },
+};
+
+/** 원고·피고 / 보내는 사람·받는 사람 / 신청인·피신청인 / 채권자·채무자를 문장에서 부르는 말 */
 export function partyWords(kind: DocumentKind): { me: string; other: string } {
-  return kind === "complaint" ? { me: "원고", other: "피고" } : { me: "본인", other: "귀하" };
+  return PARTY_WORDS[kind];
 }
 
 const digitsOf = (s: string) =>
@@ -151,6 +156,7 @@ export function screenMissing(items: string[]): string[] {
 
 /** 사실관계 칸에 넣을 글. 문단 번호는 코드가 매긴다 */
 export function factsText(kind: DocumentKind, kept: string[]): string {
-  if (kind === "complaint") return kept.map((s, i) => `${i + 1}. ${s}`).join("\n");
+  if (kind === "complaint" || kind === "payment-order")
+    return kept.map((s, i) => `${i + 1}. ${s}`).join("\n");
   return kept.join("\n");
 }

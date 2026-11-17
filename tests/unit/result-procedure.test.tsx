@@ -76,6 +76,24 @@ describe("F-014 결과 요약형 레이아웃", () => {
     );
   });
 
+  test("DEC-025 타임라인 단계(임차권등기명령·지급명령)에서 그 단계 서식 작성 화면으로 간다", () => {
+    const id = "11111111-2222-3333-4444-555555555555";
+    renderLease({ inquiryId: id });
+    const list = screen.getByRole("list", { name: "절차 단계" });
+    for (const [label, kind] of [
+      [/임차권등기명령/, "lease-registration"],
+      [/지급명령 신청/, "payment-order"],
+    ] as const) {
+      fireEvent.focus(within(list).getByRole("button", { name: label }));
+      const group = within(list).getByRole("group", { name: label });
+      expect(
+        within(group)
+          .getByRole("link", { name: /이 단계 서식 작성하기/ })
+          .getAttribute("href"),
+      ).toBe(`/documents/${kind}?from=${id}`);
+    }
+  });
+
   test("세부 내용(기존 답변·법령·판례·검증 탭)은 접혀 있다", () => {
     const { container } = renderLease();
     const details = container.querySelector("details")!;
