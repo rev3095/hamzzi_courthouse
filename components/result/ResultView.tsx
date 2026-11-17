@@ -268,7 +268,7 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
     body: "같은 네트워크에서는 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.",
   },
   LOGIN_REQUIRED: {
-    title: "질문 3번을 모두 썼어요",
+    title: "오늘 질문 3번을 모두 썼어요",
     body: DEMO_LIMIT_TEXT,
   },
   NOT_FOUND: {
@@ -436,7 +436,7 @@ function FollowUp({
       ) : (
         <p className="text-muted mt-2 text-[13px]">
           {quota?.anonymous && quota.remaining !== null
-            ? `남은 질문 ${quota.remaining}/${quota.limit} · 심층 질문도 1번으로 세요`
+            ? `오늘 남은 질문 ${quota.remaining}/${quota.limit} · 심층 질문도 1번으로 세요`
             : "심층 질문도 질문 1번으로 세요"}
         </p>
       )}

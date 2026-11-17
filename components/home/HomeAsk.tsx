@@ -27,7 +27,7 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           <p className="text-muted mt-3 text-[13px] leading-relaxed">
             {blocked
               ? DEMO_LIMIT_TEXT
-              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 3번까지 물어볼 수 있어요."}
+              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 3번까지 물어볼 수 있어요."}
           </p>
         )}
       </div>

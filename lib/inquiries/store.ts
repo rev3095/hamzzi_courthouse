@@ -3,6 +3,7 @@ import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import type { RequestScope } from "@/lib/api/route";
 import { ensureAnonSession, getAnonSessionId } from "@/lib/auth/anon";
+import { isAdminRequest } from "@/lib/auth/admin-session";
 import { getActor } from "@/lib/auth/server";
 import type { InputScan } from "@/lib/pii";
 import { requestIpHash } from "@/lib/auth/ip";
@@ -12,6 +13,8 @@ import {
   ANON_IP_WINDOW,
   ANON_IP_WINDOW_MS,
   ANON_QUESTION_LIMIT,
+  countsAnonQuota,
+  questionsUsedToday,
   type FinishResult,
   type Owner,
   type StoredPiiFindings,
@@ -34,7 +37,10 @@ export async function resolveOwner(
   const actor = await getActor(scope);
   if (actor) return { kind: "user", userId: actor.userId };
   const anonSessionId = opts.create ? await ensureAnonSession() : await getAnonSessionId();
-  return anonSessionId ? { kind: "anon", anonSessionId } : null;
+  if (!anonSessionId) return null;
+  return (await isAdminRequest())
+    ? { kind: "anon", anonSessionId, admin: true }
+    : { kind: "anon", anonSessionId };
 }
 
 export type InquiryRow = {
@@ -50,15 +56,15 @@ export type InquiryRow = {
 
 const SENSITIVE_PURPOSE = "법률 정보 분석을 위한 민감정보 처리";
 
-/** 비로그인 세션이 쓴 질문 수 (F-001 AC3). 세션이 없으면 0 */
+/** 비로그인 세션이 오늘(한국 시간) 쓴 질문 수 (F-001 AC3, DEC-024). 세션이 없거나 다른 날 센 값이면 0 */
 export async function getAnonQuestionsUsed(anonSessionId: string): Promise<number> {
   const { data, error } = await createServiceClient()
     .from("anon_sessions")
-    .select("questions_used")
+    .select("questions_used, quota_day")
     .eq("id", anonSessionId)
-    .maybeSingle<{ questions_used: number }>();
+    .maybeSingle<{ questions_used: number; quota_day: string | null }>();
   if (error) throw new Error("anon_sessions 조회 실패");
-  return data?.questions_used ?? 0;
+  return data ? questionsUsedToday(data.questions_used, data.quota_day) : 0;
 }
 
 /** 비로그인 IP 해시 (원본 IP는 여기서 해시로만 바꾸고 버린다). production에서 솔트가 없으면 오류 */
@@ -226,8 +232,9 @@ export async function finishAnalysis(
 ): Promise<string> {
   const { data, error } = await createServiceClient().rpc("finish_demo_analysis", {
     p_inquiry: input.inquiryId,
-    p_anon_session: owner.kind === "anon" ? owner.anonSessionId : null,
-    p_ip_hash: owner.kind === "anon" ? anonIpHash(headers) : null,
+    // 관리자 모드(DEC-024)는 횟수를 차감하지 않는다 — 소유권은 라우트가 getOwnedInquiry로 이미 확인했다
+    p_anon_session: countsAnonQuota(owner) ? owner.anonSessionId : null,
+    p_ip_hash: countsAnonQuota(owner) ? anonIpHash(headers) : null,
     p_session_limit: ANON_QUESTION_LIMIT,
     p_ip_limit: ANON_IP_DAILY_LIMIT,
     p_window: ANON_IP_WINDOW,

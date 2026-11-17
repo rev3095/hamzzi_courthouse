@@ -10,6 +10,7 @@ import { analyzeInquiry } from "@/lib/inquiries/analyze";
 import {
   assertAnalyzable,
   assertAnonQuota,
+  countsAnonQuota,
   assertReadyToAnalyze,
   wantsEventStream,
 } from "@/lib/inquiries/policy";
@@ -34,7 +35,8 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   assertReadyToAnalyze({ status: inquiry.status, piiFindings: inquiry.pii_findings });
   // 3회를 다 쓴 비로그인은 모델을 부르기 전에 막는다 (DEC-010). 실제 차감은 성공 후
   // IP 해시 24시간 상한도 먼저 본다 — 쿠키를 바꿔 가며 분석 비용을 쓰는 것을 막는다. 최종 판정은 저장 트랜잭션에서
-  if (owner.kind === "anon") {
+  // 관리자 모드(DEC-024)는 횟수·IP 상한을 받지 않는다 (질문 1건·하루 전체 비용 상한은 그대로)
+  if (countsAnonQuota(owner)) {
     assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
     await assertAnonIpAvailable(req.headers);
   }

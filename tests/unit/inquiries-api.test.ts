@@ -131,6 +131,14 @@ describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
     expect(store.createInquiry).not.toHaveBeenCalled();
   });
 
+  test("DEC-024 관리자 모드는 3회를 다 써도 접수하고 횟수를 읽지 않는다", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1", admin: true });
+    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    const res = await post({ text: "사기를 당했어요" });
+    expect(res.status).toBe(201);
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+  });
+
   test("F-001 AC3 2회까지 쓴 비로그인은 질문을 접수한다", async () => {
     store.getAnonQuestionsUsed.mockResolvedValue(2);
     expect((await post({ text: "사기를 당했어요" })).status).toBe(201);

@@ -43,7 +43,7 @@ test("범위 밖 기능(변호사·소장·과금)은 홈에 없다 (절대 규�
   }
 });
 
-test("F-001 헤더에 남은 질문 수를 보여 준다", async () => {
+test("F-001 DEC-024 헤더에 오늘 남은 질문 수를 보여 준다", async () => {
   render(<SiteHeader />);
-  expect((await screen.findByTestId("quota")).textContent).toBe("남은 질문 2/3");
+  expect((await screen.findByTestId("quota")).textContent).toBe("오늘 남은 질문 2/3");
 });
