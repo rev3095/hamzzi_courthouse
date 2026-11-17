@@ -85,6 +85,7 @@ export function forgetQuestions() {
       if (k.startsWith("hz:")) sessionStorage.removeItem(k);
     // 이 기기에 둔 조회 이력(DEC-029)도 함께 지운다
     localStorage.removeItem("hz:recent");
+    localStorage.removeItem("hz:pins");
   } catch {
     // 저장소를 못 쓰면 지울 것도 없다
   }

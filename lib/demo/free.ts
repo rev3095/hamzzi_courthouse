@@ -3,7 +3,7 @@ import "server-only";
 import type { StepEvent } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import type { CitationRow, DemoAnalysisResult } from "@/lib/citations/policy";
-import { createLawSource, type LawSource } from "@/lib/search/law-source";
+import { createLawSource, type LawSource, type LawExplorer } from "@/lib/search/law-source";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import {
   FREE_STEP_MESSAGES,
@@ -96,6 +96,28 @@ export async function freeSearch(
     seen.add(h.id);
     hits.push(h);
   }
+  // ③ 키워드 검색 판례가 모자라면 찾은 조문이 본문에 나오는 판례로 채운다 (DEC-029 탐색 확장, 조문 2개까지만 추가 조회)
+  const citing: { keyword: string; total: number }[] = [];
+  const explorer = source as Partial<LawExplorer>;
+  if (hits.length < CASE_DETAILS && explorer.casesCiting) {
+    const targets = articles.slice(0, 2);
+    const extra = await Promise.allSettled(
+      targets.map((a) => explorer.casesCiting!(a.lawName, a.articleNo, CASE_DETAILS)),
+    );
+    extra.forEach((r, i) => {
+      if (r.status !== "fulfilled") return;
+      const list = r.value;
+      citing.push({
+        keyword: `${targets[i].lawName} ${targets[i].articleNo} (조문이 나오는 판례)`,
+        total: list.length,
+      });
+      for (const h of list) {
+        if (seen.has(h.id)) continue;
+        seen.add(h.id);
+        hits.push(h);
+      }
+    });
+  }
   const picked = hits.slice(0, CASE_DETAILS);
   const details = await Promise.allSettled(picked.map((h) => source.getCase(h.id)));
   const cases = picked.map((h, i) => {
@@ -109,6 +131,7 @@ export async function freeSearch(
       const r = caseResults[i];
       return { keyword: q, total: r.status === "fulfilled" ? r.value.length : 0 };
     }),
+    ...citing,
   ];
   deps.onStep?.({
     stage: "search",

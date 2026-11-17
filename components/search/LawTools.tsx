@@ -1,5 +1,5 @@
 "use client";
-// 법령 도구 /laws/[name] (DEC-029 제안): 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 점검.
+// 법령 도구 /laws/[name] (DEC-029 제안): 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 대조.
 // 법제처에 등록된 대조표·관계만 보여 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -15,7 +15,7 @@ const LABELS: Record<LawView, string> = {
   "old-new": "신구조문 대조",
   history: "개정 연혁",
   annexes: "별표·서식",
-  impact: "연계·위임 점검",
+  impact: "연계·위임 대조",
 };
 
 const LOADING = "법제처에서 불러오고 있어요…";
@@ -277,7 +277,7 @@ function Impact({ d }: { d: LawViews["impact"] }) {
         )}
       </section>
       <section>
-        <H2>위임 문구 점검</H2>
+        <H2>위임 문구 대조</H2>
         <p className="text-muted mt-1 text-[13px] leading-relaxed">{d.delegationNote}</p>
         {d.checks.length === 0 ? (
           <p className="text-muted mt-2 text-sm">위임 문구가 있는 조문을 찾지 못했어요.</p>

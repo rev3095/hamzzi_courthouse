@@ -127,7 +127,7 @@ test("DEC-010 4번째 질문은 데모 한도 안내", async ({ page }) => {
   });
   await page.goto("/");
   await expect(
-    page.getByText("데모에서는 질문을 3번까지 할 수 있어요", { exact: false }),
+    page.getByText("데모에서는 하루에 질문을 3번까지 할 수 있어요", { exact: false }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
   await page.getByRole("button", { name: "물어보기" }).click();

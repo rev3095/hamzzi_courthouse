@@ -65,7 +65,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/statutes/{id}` | 공개/user | 조문 + 시행일 + 그 날짜의 조문 | F-004, DEC-029 |
 | GET `/statutes/{id}/cases` | 공개 | 이 조문이 나오는 판례 | F-003, DEC-029 |
 | GET·POST `/decisions` · GET `/decisions/{domain}/{id}` | 공개 | 법령해석례·헌재 결정례·조세심판 재결례·관세청 해석 검색·상세 | F-003, DEC-029 |
-| GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 점검 | F-004, DEC-029 |
+| GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029 |
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |

@@ -35,7 +35,7 @@ const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "interpretation", label: "법령해석례", placeholder: "예: 임대차, 공공임대주택" },
   { kind: "constitutional", label: "헌재 결정례", placeholder: "예: 임대차보호법, 재산권" },
   { kind: "tax_tribunal", label: "조세심판 재결례", placeholder: "예: 양도소득세, 증여" },
-  { kind: "customs", label: "관세청 해석", placeholder: "예: 과세가격, 원산지" },
+  // 관세청 해석(customs)은 법제처 인증키에 대상 승인이 없어 결과가 오지 않는다(2026-11-18 확인). 승인 뒤 탭을 다시 연다 — API는 그대로 둔다
   { kind: "ordinances", label: "자치법규", placeholder: "예: 출산장려금, 주차장 설치" },
   { kind: "admin_rules", label: "행정규칙", placeholder: "예: 임대차, 최저임금 고시" },
 ];
@@ -276,6 +276,19 @@ export function SearchView() {
           ))}
         </ul>
       </section>
+
+      <Link
+        href="/research"
+        className="border-honey-line bg-honey hover:border-gold rounded-card mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border px-5 py-4"
+      >
+        <span>
+          <span className="text-ink block text-[15px] font-bold">판례 리서치 화면으로 보기</span>
+          <span className="text-muted block text-[13px]">
+            목록 옆에서 요지를 바로 읽고, 법원·기간으로 거르고, 보관함에 모아 인용 표기를 복사해요.
+          </span>
+        </span>
+        <span className="text-link text-sm font-semibold">열기 →</span>
+      </Link>
 
       {state.kind === "idle" && <RecentList />}
       {state.kind === "error" && (

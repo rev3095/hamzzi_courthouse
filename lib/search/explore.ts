@@ -1,4 +1,4 @@
-// 탐색 확장 순수 규칙 (DEC-029 제안): 결정문 통합 검색, 바로 가기, 시점 조문 비교, 신구 대조, 3단 비교, 자치법규, 연계·위임 점검.
+// 탐색 확장 순수 규칙 (DEC-029 제안): 결정문 통합 검색, 바로 가기, 시점 조문 비교, 신구 대조, 3단 비교, 자치법규, 연계·위임 대조.
 // 법제처에서 가져온 값만 정리하고 새 내용을 만들지 않는다(절대 규칙 1). 유불리·심각도 같은 판단을 붙이지 않는다(절대 규칙 2).
 // 네트워크·korean-law-mcp에 의존하지 않는다 (단위 테스트 대상).
 import { ApiError } from "@/lib/api/errors";
@@ -384,7 +384,7 @@ export function parseOldNew(xml: string, fallbackName: string): OldNewCompare {
   };
 }
 
-// --- 3단 비교 · 위임 점검 -------------------------------------------------------------------
+// --- 3단 비교 · 위임 대조 -------------------------------------------------------------------
 
 type RawTier = {
   meta?: { lawName?: string };
@@ -470,7 +470,7 @@ export const IMPACT_NOTE =
 
 const fileUrl = (v: unknown) => {
   const s = str(v);
-  if (!s) return null;
+  if (!s || /\/DRF\/|[?&]OC=/i.test(s)) return null;
   if (/^https?:\/\/(www\.)?law\.go\.kr\//.test(s)) return s.replace(/^http:/, "https:");
   // 인증키가 든 DRF 주소는 쓰지 않는다
   return s.startsWith("/LSW/") ? `${LAW_GO}${s}` : null;

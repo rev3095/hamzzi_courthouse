@@ -29,7 +29,7 @@ export function SiteHeader() {
         <nav aria-label="주요 메뉴" className="flex items-center gap-2">
           <Link
             href="/search"
-            className="text-ink rounded-button flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-2 text-sm font-semibold"
+            className="text-ink border-honey-line bg-honey hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3 text-sm font-bold shadow-[0_1px_0_rgba(26,34,51,0.04)]"
           >
             <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
               <circle cx="9.5" cy="9.5" r="6.5" stroke="currentColor" strokeWidth="2" />
@@ -43,7 +43,10 @@ export function SiteHeader() {
             <span className="max-sm:sr-only">판례 검색</span>
           </Link>
           {quota?.admin && (
-            <span className="text-ink text-[13px] font-semibold whitespace-nowrap" data-testid="quota">
+            <span
+              className="text-ink text-[13px] font-semibold whitespace-nowrap"
+              data-testid="quota"
+            >
               관리자 · 무제한
             </span>
           )}

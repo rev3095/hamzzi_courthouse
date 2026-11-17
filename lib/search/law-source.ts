@@ -106,7 +106,7 @@ export type LawExplorer = {
   /** 법률 → 시행령 → 시행규칙 위임조문 3단비교 */
   getThreeTier(lawName: string): Promise<ThreeTier | null>;
   listAnnexes(lawName: string): Promise<{ lawName: string; items: AnnexRef[] } | null>;
-  /** 법령 전체 조문 (위임 문구 점검용) */
+  /** 법령 전체 조문 (위임 문구 대조용) */
   getLawArticles(lawName: string): Promise<{ lawName: string; articles: ArticleHit[] } | null>;
   /** 이 법령과 그 시행령·시행규칙 조문에 연계된 자치법규 조문 */
   linkedOrdinances(lawName: string, limit?: number): Promise<OrdinanceLink[]>;

@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { runFreeAnalysis } = await import("@/lib/demo/free");
+const { runFreeAnalysis, freeSearch } = await import("@/lib/demo/free");
 const { ApiError } = await import("@/lib/api/errors");
 const { AI_NOTICE } = await import("@/lib/api/respond");
 const { demoExamples, findExample, replayCitations, searchSentence, caseQueriesFrom } =
@@ -181,5 +181,30 @@ describe("DEC-028 홈 카테고리 판례 검색어", () => {
     });
     expect(out.model).toBe("replay");
     expect(src.searchCases).not.toHaveBeenCalled();
+  });
+});
+
+describe("DEC-029 조문이 나오는 판례로 보충", () => {
+  test("키워드 판례가 모자라면 찾은 조문이 본문에 나오는 판례를 더하고 검색 과정에 남긴다", async () => {
+    const extra = { ...CASE, id: "900001", caseNo: "가상다900001" };
+    const casesCiting = vi.fn(async () => [extra, CASE]);
+    const getCase = vi.fn(async (id: string) => ({ ...CASE, id }));
+    const src = { ...source({ getCase }), casesCiting };
+    const found = await freeSearch("집주인이 보증금을 돌려주지 않아요", { lawSource: src });
+    expect(casesCiting).toHaveBeenCalledWith(ART.lawName, ART.articleNo, expect.any(Number));
+    // 이미 찾은 판례는 한 번만
+    expect(found.cases.map((c) => c.id)).toEqual([CASE.id, "900001"]);
+    expect(found.searches.at(-1)?.keyword).toContain("조문이 나오는 판례");
+  });
+
+  test("보충 검색이 실패해도 찾은 결과는 그대로 낸다", async () => {
+    const src = {
+      ...source(),
+      casesCiting: vi.fn(async () => {
+        throw new Error("upstream");
+      }),
+    };
+    const found = await freeSearch("집주인이 보증금을 돌려주지 않아요", { lawSource: src });
+    expect(found.cases.map((c) => c.id)).toEqual([CASE.id]);
   });
 });

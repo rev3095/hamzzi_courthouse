@@ -52,7 +52,7 @@ test("DEC-022 '내용증명 바로 가기'는 법률 검토 전 안내와 공식
   await mockApi(page, { analyze: { result: replayOf(lease.question) } });
   await page.goto(`/inquiries/${INQ}`);
   await page.getByRole("link", { name: /내용증명 바로 가기/ }).click();
-  await page.waitForURL("**/documents/demand-letter");
+  await page.waitForURL("**/documents/demand-letter**");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("내용증명 작성 안내");
   await expect(page.getByText("법률 검토 후 열릴 기능이에요")).toBeVisible();
   await expect(page.getByRole("link", { name: /인터넷우체국/ })).toHaveAttribute(

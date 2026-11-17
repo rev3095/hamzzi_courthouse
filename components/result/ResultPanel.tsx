@@ -5,6 +5,7 @@
 // → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·심층 질문하기) → 의견 → 법제처 출처.
 // 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
 // 문서 작성은 legal_documents 게이트 뒤라 '바로 가기'는 안내 화면으로 간다 (절대 규칙 5, DEC-022).
+import { rememberSearch } from "../search/parts";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
@@ -441,6 +442,12 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
             >
               조문 전체 보기 →
             </Link>
+            <Link
+              href={`/laws/${encodeURIComponent(a.lawName)}?tab=three-tier`}
+              className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
+            >
+              시행령·연혁 보기 →
+            </Link>
             <OriginalLink url={a.sourceUrl} label="법제처 원문 보기 →" />
           </div>
         </li>
@@ -449,39 +456,91 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
   );
 }
 
+/**
+ * 이번 분석이 쓴 판례 검색어. 무료·라이트는 조문 제목·분야 고정 낱말이고, 전체 파이프라인(pro-full)은 모델이 마스킹본에서 뽑은 낱말이다.
+ * 질문 문장 자체는 넣지 않고, 리서치 화면에서 검색할 때 서버가 개인정보 검사를 한 번 더 한다 (F-007)
+ */
+export function researchKeywords(result: DemoAnalysisResult): string[] {
+  const words = result.searches
+    .map((s) => s.keyword.trim())
+    .filter((k) => k && k.length <= 30 && !k.includes("("));
+  return [...new Set(words)].slice(0, 4);
+}
+
+/** 판례 리서치(/research)로 이어가기. 검색어는 주소에 두지 않고 이 기기에만 건넨다 */
+function ResearchLinks({ result }: { result: DemoAnalysisResult }) {
+  const keywords = researchKeywords(result);
+  return (
+    <div className="border-honey-line bg-honey rounded-card mb-4 border px-5 py-4">
+      <p className="text-ink text-[15px] font-bold">판례 더 찾아보기</p>
+      <p className="text-muted mt-0.5 text-[13px] leading-relaxed">
+        판례 리서치 화면에서 요지를 나란히 읽고, 해석례·헌재 결정례까지 넓혀 볼 수 있어요. 검색은
+        질문 횟수와 따로 세요.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {keywords.map((k) => (
+          <Link
+            key={k}
+            href="/research?from=result"
+            onClick={() => rememberSearch(k)}
+            className="border-line text-ink hover:border-gold flex min-h-11 items-center rounded-full border bg-white px-4 text-sm"
+          >
+            {k}
+          </Link>
+        ))}
+        <Link
+          href="/research"
+          className="text-link flex min-h-11 items-center px-1 text-sm font-semibold underline-offset-2 hover:underline"
+        >
+          판례 리서치 열기 →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function CasesTab({ result }: { result: DemoAnalysisResult }) {
-  if (result.cases.length === 0) return <Empty text="이번 검색에서 찾은 판례가 없어요." />;
+  if (result.cases.length === 0)
+    return (
+      <>
+        <ResearchLinks result={result} />
+        <Empty text="이번 검색에서 찾은 판례가 없어요." />
+      </>
+    );
   const sorted = [...result.cases].sort((a, b) => Number(b.used) - Number(a.used));
   return (
-    <ul className="grid gap-3 lg:grid-cols-2">
-      {sorted.map((c) => (
-        <li key={c.id} className="rounded-card border-line flex flex-col gap-1.5 border p-5">
-          <div className="flex flex-wrap gap-1.5">
-            <UsedLabel used={c.used} />
-            {c.fromBody && (
-              <span className="bg-soft text-muted rounded-[6px] px-2 py-0.5 text-xs">
-                판시사항·요지가 없어 본문 일부를 근거로 씀
-              </span>
-            )}
-          </div>
-          <p className="font-display text-ink text-base leading-snug font-bold">
-            {c.caseName || c.caseNo}
-          </p>
-          <p className="text-muted text-[13px]">
-            {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link
-              href={`/cases/${c.id}`}
-              className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
-            >
-              판시사항·요지 보기 →
-            </Link>
-            <OriginalLink url={c.sourceUrl} label="법제처 원문 보기 →" />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ResearchLinks result={result} />
+      <ul className="grid gap-3 lg:grid-cols-2">
+        {sorted.map((c) => (
+          <li key={c.id} className="rounded-card border-line flex flex-col gap-1.5 border p-5">
+            <div className="flex flex-wrap gap-1.5">
+              <UsedLabel used={c.used} />
+              {c.fromBody && (
+                <span className="bg-soft text-muted rounded-[6px] px-2 py-0.5 text-xs">
+                  판시사항·요지가 없어 본문 일부를 근거로 씀
+                </span>
+              )}
+            </div>
+            <p className="font-display text-ink text-base leading-snug font-bold">
+              {c.caseName || c.caseNo}
+            </p>
+            <p className="text-muted text-[13px]">
+              {[c.court, dotDate(c.decidedAt), c.caseNo].filter(Boolean).join(" · ")}
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href={`/cases/${c.id}`}
+                className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
+              >
+                판시사항·요지 보기 →
+              </Link>
+              <OriginalLink url={c.sourceUrl} label="법제처 원문 보기 →" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

@@ -294,7 +294,7 @@ const LAW_TOOLS: [string, string][] = [
   ["old-new", "신구조문 대조"],
   ["history", "개정 연혁"],
   ["annexes", "별표·서식"],
-  ["impact", "연계·위임 점검"],
+  ["impact", "연계·위임 대조"],
 ];
 
 function RelatedCases({ id }: { id: string }) {
@@ -420,6 +420,12 @@ export function StatuteRoute() {
               .filter(Boolean)
               .join(" · ")}
           </p>
+          {at.articleTitle !== s.articleTitle && (
+            <p className="text-muted mt-2 text-sm">
+              조문 제목이 지금과 달라요. 그 사이 조문 번호가 바뀌었다면 다른 내용의 조문일 수 있으니
+              법제처 연혁에서 확인해 주세요.
+            </p>
+          )}
           {at.sameAsCurrent ? (
             <>
               <p className="text-muted mt-2 text-sm">

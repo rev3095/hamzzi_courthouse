@@ -1,5 +1,5 @@
 // @vitest-environment node
-// 탐색 확장 (DEC-029 제안): 결정문 통합 검색·바로 가기·시점 조문·신구 대조·3단 비교·자치법규·연계·위임 점검. 법제처는 가짜.
+// 탐색 확장 (DEC-029 제안): 결정문 통합 검색·바로 가기·시점 조문·신구 대조·3단 비교·자치법규·연계·위임 대조. 법제처는 가짜.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import { AI_NOTICE, SEARCH_NOTICE } from "@/lib/api/respond";
@@ -235,7 +235,7 @@ describe("신구조문 대조", () => {
   });
 });
 
-describe("3단 비교 · 위임 점검", () => {
+describe("3단 비교 · 위임 대조", () => {
   const tier = threeTier(
     {
       meta: { lawName: "주택임대차보호법" },
