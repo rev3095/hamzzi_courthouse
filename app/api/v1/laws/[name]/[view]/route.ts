@@ -1,4 +1,4 @@
-// GET /api/v1/laws/{name}/{view} — 법령 도구 (DEC-026 제안). view = three-tier | old-new | history | annexes | impact.
+// GET /api/v1/laws/{name}/{view} — 법령 도구 (DEC-029 제안). view = three-tier | old-new | history | annexes | impact.
 // 법제처에 등록된 관계·대조표만 정리해 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 import { ApiError } from "@/lib/api/errors";
 import { ok } from "@/lib/api/respond";

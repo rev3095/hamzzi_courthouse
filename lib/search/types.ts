@@ -36,7 +36,7 @@ export type CaseDetail = CaseHit & {
 /** 인용 실존 재조회 결과 (F-005 AC2 ③). exists=null은 판정 불가(확인 필요) */
 export type CitationCheck = { citation: string; exists: boolean | null; note?: string };
 
-// --- 탐색 확장 (DEC-026 제안): 결정문·시점 조문·신구 대조·3단 비교·자치법규 ---------------------
+// --- 탐색 확장 (DEC-029 제안): 결정문·시점 조문·신구 대조·3단 비교·자치법규 ---------------------
 
 /** 판례 밖 결정문 종류. 법제처 Open API 대상: expc · detc · ttSpecialDecc · kcsCgmExpc */
 export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";

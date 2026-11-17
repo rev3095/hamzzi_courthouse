@@ -1,4 +1,4 @@
-// /api/v1/ordinances — 자치법규(조례·규칙) 검색 (DEC-026 제안). 법제처 실시간 조회, 저장하지 않는다.
+// /api/v1/ordinances — 자치법규(조례·규칙) 검색 (DEC-029 제안). 법제처 실시간 조회, 저장하지 않는다.
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute, type RequestScope } from "@/lib/api/route";
 import { SEARCH_RATE, assertRateLimit } from "@/lib/auth/rate-limit";

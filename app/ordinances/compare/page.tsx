@@ -1,4 +1,4 @@
-// 자치법규 나란히 보기 (DEC-026 제안). ?a=&b= 자치법규일련번호 두 개.
+// 자치법규 나란히 보기 (DEC-029 제안). ?a=&b= 자치법규일련번호 두 개.
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { OrdinanceCompareRoute } from "@/components/search/OrdinanceViews";

@@ -63,7 +63,7 @@ export function searchErrorText(err: ClientError): string {
   return `일시적인 오류가 발생했어요.${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
 }
 
-/** 조회 이력 (DEC-026 제안). 이 기기에만 있고 서버로 보내지 않는다 */
+/** 조회 이력 (DEC-029 제안). 이 기기에만 있고 서버로 보내지 않는다 */
 export function RecentList({ compact = false }: { compact?: boolean }) {
   const items = useRecent();
   if (items.length === 0) return null;

@@ -1,4 +1,4 @@
-// 자치법규 조문 (DEC-026 제안). id = 법제처 자치법규일련번호.
+// 자치법규 조문 (DEC-029 제안). id = 법제처 자치법규일련번호.
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { OrdinanceRoute } from "@/components/search/OrdinanceViews";

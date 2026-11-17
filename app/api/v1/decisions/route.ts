@@ -1,4 +1,4 @@
-// /api/v1/decisions — 판례 밖 결정문 검색 (DEC-026 제안): 법령해석례·헌재 결정례·조세심판 재결례·관세청 해석.
+// /api/v1/decisions — 판례 밖 결정문 검색 (DEC-029 제안): 법령해석례·헌재 결정례·조세심판 재결례·관세청 해석.
 // 법제처 실시간 조회, 저장하지 않는다. 화면은 POST 본문을 쓴다 — 검색어가 주소·접속 기록에 남지 않게 (F-007)
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute, type RequestScope } from "@/lib/api/route";

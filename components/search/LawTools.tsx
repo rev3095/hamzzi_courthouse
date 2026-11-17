@@ -1,5 +1,5 @@
 "use client";
-// 법령 도구 /laws/[name] (DEC-026 제안): 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 점검.
+// 법령 도구 /laws/[name] (DEC-029 제안): 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 점검.
 // 법제처에 등록된 대조표·관계만 보여 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";

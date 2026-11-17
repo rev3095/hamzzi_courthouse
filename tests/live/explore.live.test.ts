@@ -1,4 +1,4 @@
-// 실제 법제처 호출로 탐색 확장 어댑터를 확인한다 (DEC-026 제안). 실행: pnpm test:live (무료, Claude 호출 없음)
+// 실제 법제처 호출로 탐색 확장 어댑터를 확인한다 (DEC-029 제안). 실행: pnpm test:live (무료, Claude 호출 없음)
 // 법제처 등록 IP에서만 통과한다. 결과 내용은 출력하지 않고 형태만 확인한다.
 import { describe, expect, test, vi } from "vitest";
 
@@ -7,7 +7,7 @@ const { createLawSource } = await import("@/lib/search/law-source");
 
 const LAW = "주택임대차보호법";
 
-describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 확장 (DEC-026)", () => {
+describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 확장 (DEC-029)", () => {
   const source = createLawSource({ timeoutMs: 30_000 });
 
   test("결정문: 법령해석례 검색·상세, 헌재 결정례·조세심판 재결례 검색", async () => {

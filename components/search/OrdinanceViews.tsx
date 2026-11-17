@@ -1,5 +1,5 @@
 "use client";
-// 자치법규 /ordinances/[id] · 나란히 보기 /ordinances/compare?a=&b= (DEC-026 제안).
+// 자치법규 /ordinances/[id] · 나란히 보기 /ordinances/compare?a=&b= (DEC-029 제안).
 // 두 지자체의 조문을 그대로 나란히 놓을 뿐, 어느 쪽이 낫다는 평가나 요약을 만들지 않는다.
 import { useParams, useSearchParams } from "next/navigation";
 import { getOrdinance, type OrdinanceView } from "@/lib/client/api";

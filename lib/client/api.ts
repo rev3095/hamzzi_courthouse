@@ -83,7 +83,7 @@ export function forgetQuestions() {
   try {
     for (const k of Object.keys(sessionStorage))
       if (k.startsWith("hz:")) sessionStorage.removeItem(k);
-    // 이 기기에 둔 조회 이력(DEC-026)도 함께 지운다
+    // 이 기기에 둔 조회 이력(DEC-029)도 함께 지운다
     localStorage.removeItem("hz:recent");
   } catch {
     // 저장소를 못 쓰면 지울 것도 없다
@@ -157,7 +157,7 @@ export const getStatute = (id: string, asOf?: string) =>
     `/api/v1/statutes/${encodeURIComponent(id)}${asOf ? `?${new URLSearchParams({ asOf })}` : ""}`,
   );
 
-// --- 탐색 확장 (DEC-026 제안): 결정문·시점 조문·법령 도구·자치법규 ---------------------------
+// --- 탐색 확장 (DEC-029 제안): 결정문·시점 조문·법령 도구·자치법규 ---------------------------
 export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
 export type DecisionRef = {
   domain: DecisionDomain;

@@ -1,5 +1,5 @@
 "use client";
-// 조회 이력 (DEC-026 제안). 열어 본 판례·조문·결정문·자치법규의 제목과 주소만 이 기기(localStorage)에 둔다.
+// 조회 이력 (DEC-029 제안). 열어 본 판례·조문·결정문·자치법규의 제목과 주소만 이 기기(localStorage)에 둔다.
 // 검색어·질문은 담지 않는다 — 공개 자료의 이름뿐이다 (F-007). 서버로 보내지 않고, '내 기록 삭제'와 '지우기'로 없앤다.
 import { useEffect, useSyncExternalStore } from "react";
 

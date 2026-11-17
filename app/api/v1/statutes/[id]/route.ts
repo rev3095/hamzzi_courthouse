@@ -1,5 +1,5 @@
 // GET /api/v1/statutes/{id}?asOf=YYYY-MM-DD — 조문 + 시행일 (F-004). id = "법령명:제N조" (URL 인코딩).
-// 법제처에 없으면 404. asOf가 현행 시행일보다 앞이면 법제처 연혁에서 그 날짜에 시행 중이던 조문을 가져와 현행과 나란히 준다 (DEC-026 제안).
+// 법제처에 없으면 404. asOf가 현행 시행일보다 앞이면 법제처 연혁에서 그 날짜에 시행 중이던 조문을 가져와 현행과 나란히 준다 (DEC-029 제안).
 import { ApiError } from "@/lib/api/errors";
 import { ok } from "@/lib/api/respond";
 import { withRoute } from "@/lib/api/route";

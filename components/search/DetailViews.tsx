@@ -1,5 +1,5 @@
 "use client";
-// 판례 상세 /cases/[id] (F-003 AC3) · 조문 /statutes/[id] (F-004) · 결정문 /decisions/[domain]/[id] (DEC-026 제안).
+// 판례 상세 /cases/[id] (F-003 AC3) · 조문 /statutes/[id] (F-004) · 결정문 /decisions/[domain]/[id] (DEC-029 제안).
 // 법제처에서 가져온 내용만 보여 준다. 없으면 "찾을 수 없음" — 대체 내용을 만들지 않는다 (API.md 3절 NOT_FOUND).
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";

@@ -1,4 +1,4 @@
-// /api/v1/admin-rules — 행정규칙(고시·훈령·예규) 검색 (DEC-026 제안). 목록과 법제처 원문 링크만 준다.
+// /api/v1/admin-rules — 행정규칙(고시·훈령·예규) 검색 (DEC-029 제안). 목록과 법제처 원문 링크만 준다.
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute, type RequestScope } from "@/lib/api/route";
 import { SEARCH_RATE, assertRateLimit } from "@/lib/auth/rate-limit";

@@ -1,5 +1,5 @@
 "use client";
-// 빠른 열기 (DEC-026 제안): Ctrl/Cmd+K로 최근 본 자료와 검색 화면을 연다. 이력은 이 기기에만 있다.
+// 빠른 열기 (DEC-029 제안): Ctrl/Cmd+K로 최근 본 자료와 검색 화면을 연다. 이력은 이 기기에만 있다.
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Modal } from "../Modal";

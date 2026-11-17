@@ -91,7 +91,7 @@ export type LawSource = {
   verifyCases(caseNos: string[]): Promise<CitationCheck[]>;
 };
 
-/** 탐색 확장 (DEC-026 제안). 모두 법제처 실시간 조회이고 저장하지 않는다 */
+/** 탐색 확장 (DEC-029 제안). 모두 법제처 실시간 조회이고 저장하지 않는다 */
 export type LawExplorer = {
   /** 조문을 본문에서 언급한 판례 ("법령명 제N조" 본문 검색). 느슨한 대체 검색은 하지 않는다 */
   casesCiting(lawName: string, articleNo: string, limit?: number): Promise<CaseHit[]>;
