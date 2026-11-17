@@ -31,11 +31,13 @@ export async function analyzeInquiry(
   const started = Date.now();
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
-    // 유료 모드라도 예시 질문은 미리 만든 분석을 재생한다(비용 0). 주간·하루 전체 상한(DEC-019·020·026)을
-    // 넘으면 그 기간은 무료 모드로 처리한다 — 운영자 최대 비용 고정 (주간 $21·하루 $5).
-    // 비로그인 3회 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7)
+    // 유료 모드라도 예시 질문은 미리 만든 분석을 재생한다(비용 0). 주간 전체 상한(DEC-019·020·026, $21)을
+    // 넘으면 그 주는 무료 모드로 처리한다 — 운영자 최대 비용 고정.
+    // 비로그인 하루 3회 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7).
+    // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
     const mode = aiMode();
-    if (mode === "free" || findExample(inquiry.masked_text) !== null || !(await tryAiQuota())) {
+    const example = findExample(inquiry.masked_text) !== null;
+    if (mode === "free" || example || !(await tryAiQuota())) {
       const free = await runFreeAnalysis(inquiry.masked_text, { onStep });
       const resultId = await finishAnalysis(
         {
@@ -50,6 +52,7 @@ export async function analyzeInquiry(
         },
         owner,
         headers,
+        { consumeAnonQuota: free.model !== "replay" },
       );
       return { resultId, result: free.result };
     }

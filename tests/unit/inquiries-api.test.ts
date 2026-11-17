@@ -12,6 +12,12 @@ const store = vi.hoisted(() => ({
   getAnonQuestionsUsed: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
+vi.mock("server-only", () => ({}));
+const rate = vi.hoisted(() => ({ assertRateLimit: vi.fn() }));
+vi.mock("@/lib/auth/rate-limit", async (orig) => ({
+  ...(await orig<typeof import("@/lib/auth/rate-limit")>()),
+  assertRateLimit: rate.assertRateLimit,
+}));
 
 const { POST: create } = await import("@/app/api/v1/inquiries/route");
 const { POST: confirm } = await import("@/app/api/v1/inquiries/[id]/pii-confirmation/route");
@@ -137,6 +143,36 @@ describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
     const res = await post({ text: "사기를 당했어요" });
     expect(res.status).toBe(201);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+  });
+
+  test("DEC-027 예시 질문은 3회를 다 써도 접수하고 횟수를 읽지 않는다 (저장된 분석 재생)", async () => {
+    const { demoExamples } = await import("@/lib/demo/policy");
+    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    // 공백 차이는 같은 예시로 본다
+    const res = await post({ text: `  ${demoExamples()[0].question}  ` });
+    expect(res.status).toBe(201);
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+    // 대신 같은 네트워크 1시간 30회만 본다
+    expect(rate.assertRateLimit).toHaveBeenCalledWith(
+      { bucket: "example", limit: 30, windowSeconds: 3600 },
+      expect.any(Headers),
+    );
+  });
+
+  test("DEC-027 예시 질문도 같은 네트워크 1시간 상한을 넘으면 429이고 저장하지 않는다", async () => {
+    const { demoExamples } = await import("@/lib/demo/policy");
+    rate.assertRateLimit.mockRejectedValueOnce(
+      new ApiError("RATE_LIMITED", { reason: "example_hourly" }),
+    );
+    const res = await post({ text: demoExamples()[0].question });
+    expect(res.status).toBe(429);
+    expect(store.createInquiry).not.toHaveBeenCalled();
+  });
+
+  test("예시가 아닌 질문은 예시 상한을 보지 않고 하루 3회를 본다", async () => {
+    await post({ text: "사기를 당했어요" });
+    expect(rate.assertRateLimit).not.toHaveBeenCalled();
+    expect(store.getAnonQuestionsUsed).toHaveBeenCalled();
   });
 
   test("F-001 AC3 2회까지 쓴 비로그인은 질문을 접수한다", async () => {

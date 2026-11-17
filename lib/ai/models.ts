@@ -40,14 +40,13 @@ export function answerModel(env: Env = process.env): AnswerProfile {
 }
 
 /**
- * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 요청: Max 월 $100 프로모션 크레딧을 다 쓸 수 있게).
- * - 주간 $21 (AI_WEEKLY_BUDGET_USD): 월 $100 ÷ 약 4.3주. 크레딧은 결제 주기(약 30일)마다 들어오고 남으면 사라진다.
- * - 하루 $5 (AI_DAILY_BUDGET_USD): 한꺼번에 많이 나가지 않게 막는 몫. 주간 창(토 09:00 KST 시작)이
- *   결제 주기와 어긋나도 30일 최대 = 주간 4개 $84 + 앞뒤 자투리 날 하루 몫 → 약 $94로 $100 안.
- * 프로모션 크레딧이 구매 크레딧보다 먼저 쓰인다(공식 문서). 자동 충전이 꺼져 있으면 크레딧이 바닥날 때 요청이 멈춘다.
+ * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 결정): **주간 $21만** (AI_WEEKLY_BUDGET_USD). 하루 상한은 두지 않는다.
+ * 월 $100(Max 프로모션 크레딧, 결제 주기마다 들어오고 남으면 사라진다) ÷ 약 4.3주.
+ * 한계: 주간 창(토 09:00 KST 시작)이 결제 주기와 어긋나면 한 주기(30일)에 창이 5~6개 걸칠 수 있어,
+ * 많이 쓰는 경우 $100을 넘을 수 있다. 넘는 몫은 구매 크레딧에서 빠지고, 그것도 바닥나면(자동 충전 꺼짐) 요청이 멈춘다.
+ * 프로모션 크레딧이 구매 크레딧보다 먼저 쓰인다(공식 문서).
  */
 export const DEFAULT_WEEKLY_BUDGET_USD = 21;
-export const DEFAULT_DAILY_BUDGET_USD = 5;
 
 const parseNonNegative = (v: string | undefined, parse: (s: string) => number) => {
   const n = parse(v ?? "");
@@ -64,19 +63,10 @@ const countFor = (budgetUsd: number, env: Env) =>
   Math.floor(budgetUsd / perQuestionCap(env) + 1e-9);
 
 /**
- * 유료 분석 하루 전체 건수 = 금액 상한(AI_DAILY_BUDGET_USD, 기본 $5) ÷ 질문 1건 상한.
- * AI_DAILY_LIMIT을 주면 그 건수와 둘 중 작은 값. Sonnet 166건 · Haiku 3,333건 · pro-full 333건.
- * 분석과 문서 초안을 함께 센다. 모델을 비싼 쪽으로 바꿔도 하루 최대 금액이 늘지 않는다.
- * 한계: 카운터는 건수라서, 창 중간에 Sonnet → Haiku로 바꾸면 그 창만 상한이 다시 계산돼 조금 더 쓸 수 있다.
+ * 유료 분석 주간 전체 건수 = AI_WEEKLY_BUDGET_USD(기본 $21) ÷ 질문 1건 상한. Sonnet 700건 · Haiku 14,000건 · pro-full 1,400건.
+ * 분석과 문서 초안을 함께 센다. 모델을 비싼 쪽으로 바꿔도 주간 최대 금액이 늘지 않는다.
+ * 한계: 카운터는 건수라서, 주 중간에 Sonnet → Haiku로 바꾸면 그 주만 상한이 다시 계산돼 조금 더 쓸 수 있다.
  */
-export function dailyAiLimit(env: Env = process.env): number {
-  const count = parseNonNegative(env.AI_DAILY_LIMIT, (s) => Number.parseInt(s, 10));
-  const budget = parseNonNegative(env.AI_DAILY_BUDGET_USD, Number.parseFloat);
-  const byBudget = countFor(budget ?? DEFAULT_DAILY_BUDGET_USD, env);
-  return count === null ? byBudget : Math.min(count, byBudget);
-}
-
-/** 유료 분석 주간 전체 건수 = AI_WEEKLY_BUDGET_USD(기본 $21) ÷ 질문 1건 상한. Sonnet 700건 */
 export function weeklyAiLimit(env: Env = process.env): number {
   const budget = parseNonNegative(env.AI_WEEKLY_BUDGET_USD, Number.parseFloat);
   return countFor(budget ?? DEFAULT_WEEKLY_BUDGET_USD, env);

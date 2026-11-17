@@ -5,7 +5,7 @@ import { HamzziJudge } from "./HamzziJudge";
 import { Modal, SecondaryButton } from "./Modal";
 
 export const DEMO_LIMIT_TEXT =
-  "데모에서는 하루에 질문을 3번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 3번이 생겨요. 지금까지 받은 결과는 이 창에서 뒤로 가기로 다시 볼 수 있어요.";
+  "데모에서는 하루에 질문을 3번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 3번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요. 지금까지 받은 결과는 이 창에서 뒤로 가기로 다시 볼 수 있어요.";
 
 export function LimitNotice({ onClose }: { onClose: () => void }) {
   return (

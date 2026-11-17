@@ -194,7 +194,7 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 ### `rate_limit_hits` — 레이트 리밋 카운터 **(데모 운영)**
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| bucket | text | `search`·`lookup`·`write`·`ai_daily`·`ai_weekly`(7일 창, DEC-026) 등 (lib/auth/rate-limit.ts) |
+| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_weekly`(7일 창, DEC-026) 등 (lib/auth/rate-limit.ts) |
 | key_hash | text | HMAC(IP, `ANON_IP_SALT`) 등 해시만. 원본 IP 저장 안 함 |
 | window_start | timestamptz | 고정 창 시작 (`date_bin`) |
 | hits | int | |

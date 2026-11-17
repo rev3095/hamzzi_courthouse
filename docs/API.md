@@ -105,7 +105,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
   loginRequired: boolean;      // 오늘 3회를 다 쓴 비로그인
   admin: boolean }             // 관리자 모드(DEC-024) — 횟수 제한 없음
 ```
-비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다.
+비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다. **예시 질문**(홈에 보이는 질문과 같은 문장, 공백·전각 차이 무시)은 저장된 분석을 재생하므로 `POST /inquiries`·`analyze` 모두 횟수를 보지 않고 차감도 하지 않는다(DEC-027) — 3회를 다 쓴 뒤에도 열 수 있다. 대신 같은 네트워크 1시간 30회까지(`429 RATE_LIMITED`, `reason: example_hourly`). 이어 묻기라도 문장이 예시와 같으면 맥락 없이 예시를 재생하고 세지 않는다.
 
 ### POST·DELETE `/admin/session` (DEC-024)
 ```ts
@@ -259,6 +259,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
     missing: string[];                       // 더 적으면 좋은 사실(숫자 없는 짧은 질문, 최대 4개)
     ai: { used: true } | { used: false; reason: "free_mode"|"daily_limit"|"cost_cap"|"model_failed"|"no_facts" };
     notice: string | null;                   // AI 문장이 들어가면 AI_NOTICE
+    // reason "daily_limit" = 전체 유료 상한(DEC-026 이후 주간 $21)에 닿음. 이름은 호환 때문에 그대로 둔다
 } }  // Cache-Control: no-store, 저장·로그 없음
 
 // GET /procedures (F-014)
