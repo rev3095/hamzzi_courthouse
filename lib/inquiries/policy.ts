@@ -43,9 +43,23 @@ export function parseCreateRequest(body: unknown): CreateRequest {
   };
 }
 
-// --- 비로그인 질문 횟수 (F-001 AC3, DEC-005, DEC-010) -----------------------------------
-/** 비로그인 질문 횟수 (이어 묻기 포함). 1회 = analyze 성공 1건 */
+// --- 비로그인 질문 횟수 (F-001 AC3, DEC-005, DEC-010, DEC-024) -----------------------------
+/** 비로그인 하루 질문 횟수 (이어 묻기 포함). 1회 = analyze 성공 1건. 한국 시간 0시에 다시 3회 (DEC-024) */
 export const ANON_QUESTION_LIMIT = 3;
+
+/** 한국 시간(UTC+9, 서머타임 없음) 날짜 "YYYY-MM-DD" — DB의 (now() at time zone 'Asia/Seoul')::date와 같다 */
+export function kstDay(now: number = Date.now()): string {
+  return new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** 저장된 횟수가 오늘 센 값일 때만 그대로, 다른 날(또는 센 적 없음)이면 0 */
+export function questionsUsedToday(
+  questionsUsed: number,
+  quotaDay: string | null,
+  now: number = Date.now(),
+): number {
+  return quotaDay === kstDay(now) ? questionsUsed : 0;
+}
 /** 같은 IP 해시의 24시간 비로그인 분석 상한 — 쿠키 삭제 남용 방지용 느슨한 상한 (PRD OQ-009) */
 export const ANON_IP_DAILY_LIMIT = 10;
 export const ANON_IP_WINDOW = "24 hours";
@@ -75,12 +89,24 @@ export type Quota = {
   limit: number | null;
   remaining: number | null;
   loginRequired: boolean;
+  /** 관리자 모드(DEC-024): 질문 횟수 제한 없음 */
+  admin: boolean;
 };
 
-/** GET /me/quota. 로그인 사용자 사용량 제한은 아직 정하지 않았다 (PRD 11) */
+/** GET /me/quota. 로그인 사용자 사용량 제한은 아직 정하지 않았다 (PRD 11). 비로그인은 오늘(한국 시간) 쓴 횟수 */
 export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
   if (owner?.kind === "user") {
-    return { anonymous: false, used: null, limit: null, remaining: null, loginRequired: false };
+    return {
+      anonymous: false,
+      used: null,
+      limit: null,
+      remaining: null,
+      loginRequired: false,
+      admin: false,
+    };
+  }
+  if (owner?.kind === "anon" && owner.admin) {
+    return { anonymous: true, used: null, limit: null, remaining: null, loginRequired: false, admin: true };
   }
   const used = Math.min(Math.max(questionsUsed, 0), ANON_QUESTION_LIMIT);
   return {
@@ -89,6 +115,7 @@ export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
     limit: ANON_QUESTION_LIMIT,
     remaining: ANON_QUESTION_LIMIT - used,
     loginRequired: used >= ANON_QUESTION_LIMIT,
+    admin: false,
   };
 }
 
@@ -110,7 +137,14 @@ export function assertSensitiveConsent(sensitive: SensitiveCategory[], consent: 
   }
 }
 
-export type Owner = { kind: "user"; userId: string } | { kind: "anon"; anonSessionId: string };
+/** admin: 관리자 모드(DEC-024, 비밀번호 쿠키) — 비로그인 하루 3회·IP 상한을 받지 않는다. 소유권은 익명 세션 그대로 */
+export type Owner =
+  | { kind: "user"; userId: string }
+  | { kind: "anon"; anonSessionId: string; admin?: boolean };
+
+/** 비로그인 횟수 제한을 받는 소유자인지 (관리자 모드는 제외) */
+export const countsAnonQuota = (owner: Owner): owner is { kind: "anon"; anonSessionId: string } =>
+  owner.kind === "anon" && owner.admin !== true;
 
 /**
  * 소유자 판단. 로그인 사용자는 user_id로, 비로그인은 같은 익명 세션이면서 아직 계정에 연결되지 않은 행만.

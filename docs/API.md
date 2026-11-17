@@ -52,13 +52,14 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ## 4. Phase 1 엔드포인트
 | 메서드 · 경로 | 인증 | 설명 | F-ID |
 |---|---|---|---|
-| POST `/inquiries` | anon(3회)·user | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
+| POST `/inquiries` | anon(하루 3회, 관리자 모드 무제한)·user | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
 | POST `/inquiries/{id}/pii-confirmation` | 소유자(anon 포함) | 마스킹 확인·민감정보 동의 | F-007 |
 | POST `/inquiries/{id}/analyze` | 소유자(anon 포함) | 구조화 + 검색 + 근거 요약 | F-002~F-006 |
 | PATCH `/inquiries/{id}/facts` | user 소유자 | 사실관계 요약 수정 | F-002 AC1 |
 | POST `/inquiries/{id}/answers` | user 소유자 | 추가 질문 답변 | F-002 AC2 |
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
-| GET `/me/quota` | anon·user | 남은 비로그인 질문 수(0~3), 로그인 필요 여부 | DEC-010 |
+| GET `/me/quota` | anon·user | 오늘 남은 비로그인 질문 수(0~3), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024 |
+| POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
 | GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
 | GET `/statutes/{id}` | 공개/user | 조문 + 시행일 | F-004 |
@@ -98,12 +99,20 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ```ts
 // 200 — 조회만 한다. 쿠키 없는 첫 방문자에게 익명 세션을 만들지 않는다
 { anonymous: boolean;          // 로그인 사용자면 false
-  used: number | null;         // 비로그인 사용 횟수 0~3 (로그인 사용자 null)
-  limit: number | null;        // 3 (DEC-010)
+  used: number | null;         // 오늘(한국 시간) 비로그인 사용 횟수 0~3 (로그인 사용자·관리자 모드 null)
+  limit: number | null;        // 3 (DEC-010, 하루 단위 DEC-024)
   remaining: number | null;
-  loginRequired: boolean }     // 3회를 다 쓴 비로그인
+  loginRequired: boolean;      // 오늘 3회를 다 쓴 비로그인
+  admin: boolean }             // 관리자 모드(DEC-024) — 횟수 제한 없음
 ```
-비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 3회 + 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
+비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다.
+
+### POST·DELETE `/admin/session` (DEC-024)
+```ts
+// POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
+// 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · ADMIN_PASSCODE 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
+// DELETE → 쿠키 삭제, 200 { admin: false }. 본문·비밀번호는 로그에 남기지 않는다
+``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
 
 ### POST `/inquiries/{id}/analyze`
 ```ts

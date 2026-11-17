@@ -24,6 +24,7 @@ describe("GET /me/quota", () => {
       limit: 3,
       remaining: 3,
       loginRequired: false,
+      admin: false,
     });
     expect(store.resolveOwner.mock.calls[0][1]).toEqual({ create: false });
   });
@@ -42,6 +43,20 @@ describe("GET /me/quota", () => {
       limit: null,
       remaining: null,
       loginRequired: false,
+      admin: false,
+    });
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+  });
+
+  test("DEC-024 관리자 모드는 횟수 없이 무제한 (DB 횟수를 읽지 않는다)", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "a1", admin: true });
+    expect((await (await get()).json()).data).toEqual({
+      anonymous: true,
+      used: null,
+      limit: null,
+      remaining: null,
+      loginRequired: false,
+      admin: true,
     });
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
   });

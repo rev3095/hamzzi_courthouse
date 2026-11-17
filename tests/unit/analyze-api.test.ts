@@ -95,6 +95,16 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(runner.analyzeInquiry).not.toHaveBeenCalled();
   });
 
+  test("DEC-024 관리자 모드는 횟수·IP 사전 검사 없이 분석한다", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1", admin: true });
+    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    const res = await call();
+    expect(res.status).toBe(200);
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+    expect(store.assertAnonIpAvailable).not.toHaveBeenCalled();
+    expect(runner.analyzeInquiry).toHaveBeenCalled();
+  });
+
   test("DEC-010 같은 IP 해시 24시간 상한도 모델을 부르기 전에 막는다 (429)", async () => {
     store.assertAnonIpAvailable.mockRejectedValue(
       new ApiError("RATE_LIMITED", { reason: "anon_ip_daily" }),

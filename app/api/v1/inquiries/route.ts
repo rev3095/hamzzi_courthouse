@@ -5,6 +5,7 @@ import { ok } from "@/lib/api/respond";
 import { readJson, withRoute } from "@/lib/api/route";
 import {
   assertAnonQuota,
+  countsAnonQuota,
   assertParentAnalyzed,
   assertSensitiveConsent,
   parseCreateRequest,
@@ -24,7 +25,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
 
   const owner = await resolveOwner(scope, { create: true });
   if (!owner) throw new Error("owner 없음");
-  if (owner.kind === "anon") assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
+  if (countsAnonQuota(owner)) assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
 
   if (parentInquiryId) {
     // 남의 것 403, 없으면 404 (getOwnedInquiry), 분석 전이면 409

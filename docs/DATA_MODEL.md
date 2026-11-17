@@ -108,7 +108,8 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 |---|---|---|
 | id | uuid PK | 쿠키 값 |
 | ip_hash | text | 남용 방지용 해시(원본 IP 저장 안 함) |
-| questions_used | int | 0~3 **(데모)**. `consume_anon_question`(DB 함수)만 올린다 |
+| questions_used | int | 그날(`quota_day`) 쓴 질문 수 0~3 **(데모)**. `consume_anon_question`(DB 함수)만 올린다 |
+| quota_day | date null | 횟수를 센 날짜(Asia/Seoul). 날짜가 바뀌면 `consume_anon_question`이 0부터 다시 센다 (DEC-024, `20261117131253_anon_daily_quota.sql`) |
 | claimed_by | uuid FK null | 로그인 후 연결된 사용자 |
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
 
@@ -121,8 +122,8 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | used_at | timestamptz | 분석 성공 시각 |
 
 인덱스: `(ip_hash, used_at desc)`, `(anon_session_id)`. append-only, 서버 전용(정책 없음).
-같은 `ip_hash`의 24시간 분석은 10회까지 — 쿠키 삭제 남용 방지용 느슨한 상한, 3회 제한은 쿠키(세션) 기준 (PRD OQ-009).
-DB 함수 `consume_anon_question(session, ip_hash, 세션 상한, IP 상한, 기간)` → `ok`/`session_limit`/`ip_limit`/`unknown_session`: 세션 행 잠금 + IP 해시 advisory lock으로 원자적으로 확인·증가한다. service_role만 실행.
+같은 `ip_hash`의 24시간 분석은 10회까지 — 쿠키 삭제 남용 방지용 느슨한 상한, 하루 3회 제한은 쿠키(세션) 기준 (PRD OQ-009, DEC-024).
+DB 함수 `consume_anon_question(session, ip_hash, 세션 상한, IP 상한, 기간)` → `ok`/`session_limit`/`ip_limit`/`unknown_session`: 세션 행 잠금 + IP 해시 advisory lock으로 원자적으로 확인·증가한다. `quota_day`가 오늘(Asia/Seoul)이 아니면 0부터 센다(DEC-024). service_role만 실행.
 
 DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, response, outcome, model, …, citations jsonb)` **(데모, `20261021112604_finish_demo_analysis.sql`)**: inquiries 행 잠금 → 이미 `analyzed`면 `already_analyzed` → 비로그인이면 같은 트랜잭션에서 `consume_anon_question` → `analysis_results`·`result_citations` 저장 → `analyzed`. 같은 질문의 동시 요청은 한 번만 차감되고, 저장이 실패하면 차감도 되돌아간다. 반환 `{status: ok, resultId}` 또는 `already_analyzed`/`unknown_inquiry`/`not_owner`/`session_limit`/`ip_limit`/`unknown_session`. service_role만 실행.
 

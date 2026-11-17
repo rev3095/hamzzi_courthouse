@@ -166,7 +166,7 @@ def gates(conn) -> None:
 
 
 def anon_quota(conn) -> None:
-    print("[4] 비로그인 횟수 (DEC-010)")
+    print("[4] 비로그인 횟수 (DEC-010, 하루 3회 DEC-024)")
     fn = CONSUME.split("(")[0]
     call = f"select {fn}(%s, %s, 3, 10, interval '24 hours')"
 
@@ -178,6 +178,13 @@ def anon_quota(conn) -> None:
     check(scalar(conn, "select count(*) from public.anon_usage where anon_session_id = %s", (s1,)) == 3, "anon_usage 3행")
     raises(conn, "questions_used 4 직접 기록", "update public.anon_sessions set questions_used = 4 where id = %s", (s1,),
            match="anon_sessions_questions_used_check")
+    # 하루 3회 (DEC-024): 오늘 날짜(한국 시간)로 기록하고, 날짜가 바뀌면 0부터 다시 센다
+    check(scalar(conn, "select quota_day = (now() at time zone 'Asia/Seoul')::date from public.anon_sessions where id = %s",
+                 (s1,)) is True, "quota_day = 오늘(Asia/Seoul)")
+    conn.execute("update public.anon_sessions set quota_day = quota_day - 1 where id = %s", (s1,))
+    check(scalar(conn, call, (s1, "verify-ip-" + uuid.uuid4().hex)) == "ok", "어제 3회를 쓴 세션도 오늘은 다시 ok")
+    check(scalar(conn, "select questions_used from public.anon_sessions where id = %s", (s1,)) == 1,
+          "날짜가 바뀌면 questions_used가 0부터 다시 센다 (지금 1)")
 
     # IP 해시 상한: 상한 4로 두고 새 세션에서 1회 더 → 4번째 ok, 5번째 ip_limit
     ip_call = f"select {fn}(%s, %s, 3, 4, interval '24 hours')"

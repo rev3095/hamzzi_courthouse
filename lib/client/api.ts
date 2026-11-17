@@ -18,6 +18,8 @@ export type Quota = {
   limit: number | null;
   remaining: number | null;
   loginRequired: boolean;
+  /** 관리자 모드(DEC-024): 질문 횟수 제한 없음 */
+  admin: boolean;
 };
 
 export type CreatedInquiry = {
