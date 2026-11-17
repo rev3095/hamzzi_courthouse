@@ -19,7 +19,10 @@
     "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "db:verify": "uv run --no-project --with \"psycopg[binary]\" --env-file .env.local python -X utf8 scripts/verify_db.py",
     "collector:test": "cd collector && uv run pytest && uv run ruff check .",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "android:version": "node twa/release.mjs check",
+    "android:bump": "node twa/release.mjs bump",
+    "android:build": "node twa/release.mjs build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",

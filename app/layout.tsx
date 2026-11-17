@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_KR, Noto_Serif_KR, Playfair_Display } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -27,6 +27,12 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "햄찌법원",
   description: "법령·판례를 근거로 내 법률 문제를 정리해 주는 AI 법률 정보 서비스",
+  icons: { apple: "/icons/icon-192.png" },
+};
+
+// 모바일 브라우저·Android 앱(TWA) 상태 표시줄 색 = --bg (app/manifest.ts와 같게)
+export const viewport: Viewport = {
+  themeColor: "#faf9f6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

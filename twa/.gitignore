@@ -1,0 +1,25 @@
+# Gradle·Android 빌드 결과
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 빌드 산출물 (Play Console에 직접 올린다, 저장소에 넣지 않음)
+*.apk
+*.aab
+*.idsig
+
+# 서명 키 — 절대 커밋하지 않는다 (docs/08_Google_Play_배포.md 3절)
+*.jks
+*.keystore
+keystore.properties
+
+# 버전 이름 붙인 빌드 사본 (pnpm android:build)
+dist/
+# Bubblewrap이 만드는 스토어 아이콘 사본 (store/play-icon-512.png를 쓴다)
+store_icon.png
