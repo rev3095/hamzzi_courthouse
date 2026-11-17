@@ -1,5 +1,5 @@
 "use client";
-// 홈 카테고리 버튼 (S-01, DEC-026). 분야를 고르면 질문창 위에 안내·질문 틀이 나타난다.
+// 홈 카테고리 버튼 (S-01, DEC-028). 분야를 고르면 질문창 위에 안내·질문 틀이 나타난다.
 // Figma에 아직 프레임이 없어 05 Components "칩·예시 질문" 카드 스타일(cream 라벨·line 테두리·gold 강조)로 만든다.
 // 이모지·색 아이콘은 쓰지 않는다 (브랜드 가이드 3.5).
 import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";

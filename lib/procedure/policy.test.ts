@@ -62,7 +62,7 @@ function allFixedTexts(): string[] {
       t.reason,
       t.note ?? "",
     ]),
-    // 홈 카테고리 버튼 문구 (DEC-026)
+    // 홈 카테고리 버튼 문구 (DEC-028)
     ...CATEGORY_LIST.flatMap((c) => [
       c.label,
       c.description,
@@ -119,7 +119,7 @@ describe("F-014 절차 단계 상수 (DEC-021)", () => {
   });
 
   test("공식 안내 링크는 정부·법원·공공기관 https 주소만", () => {
-    // 숫자가 든 공식 주소(소비자상담센터 1372)도 허용한다 (DEC-026)
+    // 숫자가 든 공식 주소(소비자상담센터 1372)도 허용한다 (DEC-028)
     for (const l of [...Object.values(OFFICIAL), ...Object.values(LIFE_OFFICIAL)])
       expect(l.url).toMatch(/^https:\/\/([a-z0-9-]+\.)+(go\.kr|or\.kr|gov\.kr)$/);
   });
@@ -277,7 +277,7 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
   });
 
   test("해고 낱말만으로 부당해고로 보내지 않는다 (피해구제신청·해고예고수당·퇴직금)", () => {
-    // 환불 다툼은 소비자·환불 섹션(DEC-026)으로 간다 — 부당해고로 가지 않는 것이 이 검사의 목적
+    // 환불 다툼은 소비자·환불 섹션(DEC-028)으로 간다 — 부당해고로 가지 않는 것이 이 검사의 목적
     expect(classifyCase(bare(["민법"]), "소비자원에 피해구제신청 했는데 환불을 안 해줘요")).toBe(
       "consumer",
     );

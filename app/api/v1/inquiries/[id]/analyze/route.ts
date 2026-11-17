@@ -29,7 +29,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
-  // 본문은 선택: 홈 카테고리(DEC-026). 검증 실패는 소유자 확인 전에 400
+  // 본문은 선택: 홈 카테고리(DEC-028). 검증 실패는 소유자 확인 전에 400
   const { category } = parseAnalyzeRequest(await req.text());
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);

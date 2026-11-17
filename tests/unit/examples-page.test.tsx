@@ -1,4 +1,4 @@
-// DEC-026 예시 답변 화면 /examples/[id]: 저장된 예시 답변을 질문 생성·분석·횟수 API 없이 바로 보여 준다.
+// DEC-028 예시 답변 화면 /examples/[id]: 저장된 예시 답변을 질문 생성·분석·횟수 API 없이 바로 보여 준다.
 // 화면은 실제 결과 화면과 같은 ResultPanel(AI 고지·타임라인·근거·법제처 출처)을 쓴다 (절대 규칙 1·6).
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
@@ -24,7 +24,7 @@ const { demoExamples, exampleSlug } = await import("@/lib/demo/policy");
 const renderPage = async (id: string) =>
   render(await ExamplePage({ params: Promise.resolve({ id }) } as PageProps<"/examples/[id]">));
 
-describe("DEC-026 예시 답변 즉시 보기", () => {
+describe("DEC-028 예시 답변 즉시 보기", () => {
   test("예시 10건이 모두 정적 주소를 갖고, 평가용 이름(trap)은 주소에 없다", () => {
     const ids = generateStaticParams().map((p) => p.id);
     expect(ids).toHaveLength(demoExamples().length);

@@ -30,7 +30,7 @@ export async function analyzeInquiry(
   onStep?: (e: StepEvent) => void,
   opts: { category?: CategoryKey | null } = {},
 ): Promise<{ resultId: string; result: DemoAnalysisResult }> {
-  // 홈 카테고리(DEC-026)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
+  // 홈 카테고리(DEC-028)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
   const caseHint = opts.category ? CATEGORIES[opts.category].caseQuery : null;
   const started = Date.now();
   try {

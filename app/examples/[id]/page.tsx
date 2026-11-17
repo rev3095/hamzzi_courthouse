@@ -1,4 +1,4 @@
-// 예시 답변 화면 /examples/[id] (DEC-026, S-04 재사용). 예시 질문(lib/demo/examples.json, P9 평가에서 인용 검증을 통과한
+// 예시 답변 화면 /examples/[id] (DEC-028, S-04 재사용). 예시 질문(lib/demo/examples.json, P9 평가에서 인용 검증을 통과한
 // 미리 만든 분석)을 질문 생성·분석 API 없이 빌드 때 정적으로 렌더링한다 — Claude 호출·DB 저장·질문 횟수 차감이 없다.
 // 결과 형식(AI 고지·타임라인·근거·검증 탭·법제처 출처)은 실제 결과 화면과 같은 ResultPanel을 쓴다 (절대 규칙 1·6).
 import type { Metadata } from "next";

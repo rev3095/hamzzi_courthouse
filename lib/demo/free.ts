@@ -78,7 +78,7 @@ export async function freeSearch(
     : [];
 
   // ② 찾은 조문 제목으로 판례 검색 → 중복 제거 → 상세
-  // 홈 카테고리(DEC-026)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다
+  // 홈 카테고리(DEC-028)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다
   const queries = withCaseHint(caseQueriesFrom(articles), deps.caseHint);
   const caseResults = await Promise.allSettled(
     queries.map((q) => source.searchCases(q, CASES_PER_QUERY)),

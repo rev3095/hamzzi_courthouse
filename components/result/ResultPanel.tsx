@@ -55,9 +55,9 @@ export function ResultPanel({
   onDeepAsk?: () => void;
   /** 이 결과의 질문 번호 — 문서 작성 안내에 ?from=으로 넘겨 초안 도우미(DEC-023)가 쓴다 */
   inquiryId?: string;
-  /** 홈에서 고른 카테고리 (DEC-026). 규칙이 타임라인을 정하지 못할 때만 분류를 돕는다 */
+  /** 홈에서 고른 카테고리 (DEC-028). 규칙이 타임라인을 정하지 못할 때만 분류를 돕는다 */
   category?: CategoryKey | null;
-  /** 예시 답변 화면(/examples/[id]): 심층 질문 대신 "내 상황으로 질문하기"로 홈에 보낸다 (질문 횟수 차감 없음, DEC-026) */
+  /** 예시 답변 화면(/examples/[id]): 심층 질문 대신 "내 상황으로 질문하기"로 홈에 보낸다 (질문 횟수 차감 없음, DEC-028) */
   askHref?: string;
 }) {
   const searchOnly = result.mode === "search_only";

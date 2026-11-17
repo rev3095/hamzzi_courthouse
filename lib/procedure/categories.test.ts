@@ -18,7 +18,7 @@ const bare = (laws: string[]) => ({
   })),
 });
 
-describe("DEC-026 홈 카테고리 버튼", () => {
+describe("DEC-028 홈 카테고리 버튼", () => {
   test("카테고리마다 정해진 타임라인과 판례 검색어가 있다", () => {
     for (const c of CATEGORY_LIST) {
       expect(c.track in TRACKS || c.track in LIFE_TRACKS, c.key).toBe(true);

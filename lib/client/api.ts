@@ -331,7 +331,7 @@ export async function analyzeStream(
 ): Promise<ApiResult<AnalyzedResult>> {
   let res: Response;
   try {
-    // 홈에서 고른 카테고리(DEC-026)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
+    // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
     res = await fetch(`/api/v1/inquiries/${id}/analyze`, {
       method: "POST",
       headers: {
@@ -389,7 +389,7 @@ export function rememberQuestion(
   try {
     sessionStorage.setItem(QKEY(id), maskedText);
     if (parentId) sessionStorage.setItem(PKEY(id), parentId);
-    // 카테고리(DEC-026)는 개인정보가 아닌 정해진 값이다. 이어 묻기는 앞 질문의 카테고리를 물려받는다
+    // 카테고리(DEC-028)는 개인정보가 아닌 정해진 값이다. 이어 묻기는 앞 질문의 카테고리를 물려받는다
     const cat = category ?? (parentId ? sessionStorage.getItem(CKEY(parentId)) : null);
     if (cat) sessionStorage.setItem(CKEY(id), cat);
   } catch {

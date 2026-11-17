@@ -1,6 +1,6 @@
 "use client";
 // 분야별 예시 답변 피드 (S-01, DEC-012 — 직접 작성한 가상 사연). D+의 빠른 기능 칩 자리 (docs/07 결정 3).
-// 누르면 예시 답변 화면(/examples/[id], DEC-026)으로 바로 간다 — 질문 생성·분석 API를 부르지 않아 질문 횟수에 세지 않는다.
+// 누르면 예시 답변 화면(/examples/[id], DEC-028)으로 바로 간다 — 질문 생성·분석 API를 부르지 않아 질문 횟수에 세지 않는다.
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 

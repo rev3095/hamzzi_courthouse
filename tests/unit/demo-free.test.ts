@@ -149,7 +149,7 @@ describe("DEC-015 법제처 검색 전용", () => {
   });
 });
 
-describe("DEC-026 홈 카테고리 판례 검색어", () => {
+describe("DEC-028 홈 카테고리 판례 검색어", () => {
   test("고정 검색어를 맨 앞에 더하고, 같은 말은 한 번만, 최대 3개", async () => {
     const { withCaseHint } = await import("@/lib/demo/policy");
     expect(withCaseHint(["임차권등기명령"], null)).toEqual(["임차권등기명령"]);

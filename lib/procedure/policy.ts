@@ -14,7 +14,7 @@ import {
 } from "./steps";
 
 /**
- * 타임라인 9개 + 생활 분쟁 타임라인 4개(DEC-026) + 타임라인을 숨기는 경우
+ * 타임라인 9개 + 생활 분쟁 타임라인 4개(DEC-028) + 타임라인을 숨기는 경우
  * (형사만, 갚거나 돌려줘야 하는 쪽, 형사 조사를 받는 쪽, 정하지 못함)
  */
 export type CaseType = TrackKey | LifeTrackKey | "criminal" | "defendant" | "accused" | "other";
@@ -56,7 +56,7 @@ const RESIDENCE_WORD = /갱신|나가라|나가래|계속살|실거주|집을팔
 const RETURN_WORD = /돌려받|돌려주|돌려줘|못받|안돌려|안줘|안준/;
 const MONEY_WORD =
   /돌려받|돌려주|돌려줘|대여금|빌려준|빌려줬|못받|안받|안줘|안준|안주|대금|물건값|환불|배상|미지급|받을수있/;
-// 생활 분쟁 섹션 (DEC-026)
+// 생활 분쟁 섹션 (DEC-028)
 const FAMILY_WORD = /이혼|양육비|양육권|친권|재산분할|면접교섭|외도|불륜|혼인관계/;
 const FAMILY_LAW = /^(가사소송법|양육비이행확보및지원에관한법률)$/;
 const INHERIT_WORD = /상속|유산|유류분|한정승인|유언/;
@@ -70,7 +70,7 @@ const CONSUMER_LAW =
  * 사건 유형 (규칙). 순서가 곧 우선순위다.
  * 분류에는 질문 문장과 찾은 법령 이름만 쓴다. 분석의 분야·목표 문장은 모델이 쓴 것이라
  * 미리 검증해 둔 예시 재생(replay)일 때만 함께 본다 (DEC-021: 타임라인을 LLM이 정하지 않는다).
- * 사용자가 홈에서 고른 카테고리(DEC-026)는 규칙이 타임라인을 정하지 못할 때(그 밖·형사만·일반 금전)만 쓴다 —
+ * 사용자가 홈에서 고른 카테고리(DEC-028)는 규칙이 타임라인을 정하지 못할 때(그 밖·형사만·일반 금전)만 쓴다 —
  * 수사를 받는 쪽·서류를 받은 쪽·갚을 쪽 판정은 언제나 규칙이 먼저다.
  */
 export function classifyCase(
@@ -98,7 +98,7 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   if (COUNTERPART.test(text)) return CREDITOR.test(text) ? "other" : "defendant";
   if (OWE_QUESTION.test(text) && !OTHER_PARTY_SUBJECT.test(text)) return "defendant";
 
-  // 생활 분쟁 섹션 (DEC-026): 가족·상속·명예훼손은 금전 낱말이 섞여도(재산분할·유류분 반환·위자료) 그 절차가 먼저다
+  // 생활 분쟁 섹션 (DEC-028): 가족·상속·명예훼손은 금전 낱말이 섞여도(재산분할·유류분 반환·위자료) 그 절차가 먼저다
   if (FAMILY_WORD.test(text) || hasLaw(FAMILY_LAW)) return "family";
   if (INHERIT_WORD.test(text)) return "inheritance";
   if (DEFAMATION_WORD.test(text)) return "defamation";
@@ -140,7 +140,7 @@ type TimelineFields = {
 };
 
 /**
- * 생활 분쟁 섹션(DEC-026)은 kind를 따로 둔다 — 기존 섹션(timeline)만 공식 서식 작성기(lib/documents)의
+ * 생활 분쟁 섹션(DEC-028)은 kind를 따로 둔다 — 기존 섹션(timeline)만 공식 서식 작성기(lib/documents)의
  * 섹션 키(TrackKey)를 쓰므로, 문서 초안 쪽 타입을 바꾸지 않고 새 섹션을 더하기 위해서다.
  */
 export type ProcedurePlan =

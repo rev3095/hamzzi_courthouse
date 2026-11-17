@@ -90,7 +90,7 @@ describe("POST /inquiries/{id}/analyze", () => {
     );
   });
 
-  test("DEC-026 홈 카테고리는 정해진 값만 분석에 넘긴다", async () => {
+  test("DEC-028 홈 카테고리는 정해진 값만 분석에 넘긴다", async () => {
     const res = await call(undefined, JSON.stringify({ category: "family" }));
     expect(res.status).toBe(200);
     expect(runner.analyzeInquiry).toHaveBeenCalledWith(
@@ -102,7 +102,7 @@ describe("POST /inquiries/{id}/analyze", () => {
     );
   });
 
-  test("DEC-026 정해지지 않은 카테고리·깨진 본문은 분석 전에 400", async () => {
+  test("DEC-028 정해지지 않은 카테고리·깨진 본문은 분석 전에 400", async () => {
     for (const body of [
       JSON.stringify({ category: "이혼" }),
       JSON.stringify({ category: 3 }),

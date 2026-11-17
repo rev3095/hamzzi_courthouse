@@ -271,7 +271,7 @@ export function parseFeedbackRequest(body: unknown): {
 }
 
 /**
- * POST /inquiries/{id}/analyze 본문 (DEC-026). 본문이 없으면 카테고리 없음.
+ * POST /inquiries/{id}/analyze 본문 (DEC-028). 본문이 없으면 카테고리 없음.
  * category는 홈 카테고리 버튼의 정해진 값만 받는다 — 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다.
  */
 export function parseAnalyzeRequest(raw: string): { category: CategoryKey | null } {

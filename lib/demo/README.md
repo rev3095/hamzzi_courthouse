@@ -15,7 +15,7 @@
 
 - 비로그인 3회 제한·결과 저장은 Pro와 같은 `finishAnalysis` 트랜잭션을 쓴다 (절대 규칙 7). `analysis_results.model`은 `replay` 또는 `search_only`.
 - 예시 질문은 직접 작성한 것이다 (DEC-012). 화면(P6)은 `demoExamples()`로 목록을 받는다.
-- **예시 답변 화면 `/examples/[id]` (DEC-026)**: 홈의 예시 카드는 질문 생성·분석 API를 거치지 않고 이 정적 화면으로 간다 — `exampleBySlug`·`replayResult`로 빌드 때 렌더링, Claude·법제처·DB·질문 횟수 차감 없음. 주소 이름은 `exampleSlug`(평가용 이름 `trap-*`·`other-01`을 `dismissal-01`·`neighbor-01`·`traffic-01`로). 예시가 속한 홈 카테고리는 `exampleCategory`. 질문창에 예시 문장을 그대로 적어 보내면 위 `replay` 경로를 타고 횟수에 센다.
-- 카테고리 검색어(DEC-026): `freeSearch(..., { caseHint })`가 `withCaseHint`로 판례 검색어 맨 앞에 더하고, 검색어마다 번갈아 상세 조회 자리를 나눈다.
+- **예시 답변 화면 `/examples/[id]` (DEC-028)**: 홈의 예시 카드는 질문 생성·분석 API를 거치지 않고 이 정적 화면으로 간다 — `exampleBySlug`·`replayResult`로 빌드 때 렌더링, Claude·법제처·DB·질문 횟수 차감 없음. 주소 이름은 `exampleSlug`(평가용 이름 `trap-*`·`other-01`을 `dismissal-01`·`neighbor-01`·`traffic-01`로). 예시가 속한 홈 카테고리는 `exampleCategory`. 질문창에 예시 문장을 그대로 적어 보내면 위 `replay` 경로를 타고 횟수에 센다.
+- 카테고리 검색어(DEC-028): `freeSearch(..., { caseHint })`가 `withCaseHint`로 판례 검색어 맨 앞에 더하고, 검색어마다 번갈아 상세 조회 자리를 나눈다.
 - 예시를 바꾸려면 새 분석 결과가 필요하고, 그건 Claude 실호출(별도 과금)이다 — 사용자 허락 없이 하지 않는다.
 - 테스트: `tests/unit/demo-free.test.ts`(가짜 법제처), `tests/live/free.live.test.ts`(법제처 실호출, 무료).

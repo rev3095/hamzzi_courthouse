@@ -87,7 +87,7 @@ export async function runLiteAnalysis(
     lawSource?: LawSource;
     onStep?: (e: StepEvent) => void;
     costCapUsd?: number;
-    /** 홈 카테고리의 고정 판례 검색어 (DEC-026) */
+    /** 홈 카테고리의 고정 판례 검색어 (DEC-028) */
     caseHint?: string | null;
   } = {},
 ): Promise<LiteAnalysisOutput> {

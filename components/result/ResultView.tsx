@@ -57,7 +57,7 @@ export function ResultView({ id }: { id: string }) {
       () => null,
     ),
   };
-  // 홈에서 고른 카테고리 (DEC-026, 이 기기에만). 정해진 값이 아니면 버린다
+  // 홈에서 고른 카테고리 (DEC-028, 이 기기에만). 정해진 값이 아니면 버린다
   const storedCategory = useSyncExternalStore(
     noSubscribe,
     () => recallQuestion(id).category,

@@ -18,7 +18,7 @@ export const FREE_STEP_MESSAGES = {
 export const SEARCH_ONLY_NOTE =
   "무료 모드에서는 AI 답변 없이, 국가법령정보센터(법제처)에서 이 질문으로 찾은 현행 법령 조문과 판례 목록만 보여 드립니다. 질문과 관련이 없는 항목이 섞일 수 있으니 원문을 확인해 주세요.";
 
-/** 예시 답변 화면(/examples/[slug]) 머리 안내 (DEC-026) */
+/** 예시 답변 화면(/examples/[slug]) 머리 안내 (DEC-028) */
 export const EXAMPLE_PAGE_NOTE =
   "직접 작성한 가상 사연에 대해 미리 분석해 둔 예시 답변이에요. 새로 분석하지 않고 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
 
@@ -44,7 +44,7 @@ export function exampleArea(e: Pick<DemoExample, "tags" | "result">): string {
   return AREA_LABEL[tag] ?? tag;
 }
 
-// 예시 답변 화면 주소 (/examples/[slug], DEC-026). 평가용 이름(trap-*·other-*)을 주소에 보이지 않게 바꾼다
+// 예시 답변 화면 주소 (/examples/[slug], DEC-028). 평가용 이름(trap-*·other-*)을 주소에 보이지 않게 바꾼다
 const SLUG: Record<string, string> = {
   "trap-number": "dismissal-01",
   "trap-vague": "neighbor-01",
@@ -62,7 +62,7 @@ export function exampleBySlug(slug: string): DemoExample | null {
   return EXAMPLES.find((e) => exampleSlug(e.id) === slug) ?? null;
 }
 
-/** 예시가 속한 홈 카테고리 (DEC-026) */
+/** 예시가 속한 홈 카테고리 (DEC-028) */
 export function exampleCategory(id: string): CategoryKey | null {
   return CATEGORY_LIST.find((c) => c.examples.includes(id))?.key ?? null;
 }
@@ -145,7 +145,7 @@ export function caseQueriesFrom(articles: ArticleHit[], max = 2): string[] {
 }
 
 /**
- * 판례 검색어에 홈 카테고리의 고정 검색어(DEC-026)를 맨 앞에 더한다. 같은 말이 있으면 한 번만, 최대 max개.
+ * 판례 검색어에 홈 카테고리의 고정 검색어(DEC-028)를 맨 앞에 더한다. 같은 말이 있으면 한 번만, 최대 max개.
  * 고정 검색어는 정해 둔 법률 용어라 질문 문장(개인정보 가능성)이 섞이지 않는다.
  */
 export function withCaseHint(queries: string[], hint?: string | null, max = 3): string[] {

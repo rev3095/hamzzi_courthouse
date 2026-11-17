@@ -1,4 +1,4 @@
-// DEC-026 홈 카테고리 버튼: 분야를 고르면 안내·문장 시작이 나오고, 보낸 질문에 그 분야를 이 기기에만 붙인다.
+// DEC-028 홈 카테고리 버튼: 분야를 고르면 안내·문장 시작이 나오고, 보낸 질문에 그 분야를 이 기기에만 붙인다.
 // 예시 카드는 예시 답변 화면으로 가는 링크라 질문 생성 API를 부르지 않는다.
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -42,7 +42,7 @@ const posts = () =>
     ([url, init]) => String(url).includes("/inquiries") && init?.method === "POST",
   );
 
-test("DEC-026 카테고리 버튼이 모두 보인다", () => {
+test("DEC-028 카테고리 버튼이 모두 보인다", () => {
   render(<Home />);
   const group = screen.getByRole("region", { name: "어떤 일인가요?" });
   for (const c of CATEGORY_LIST) {
@@ -50,7 +50,7 @@ test("DEC-026 카테고리 버튼이 모두 보인다", () => {
   }
 });
 
-test("DEC-026 카테고리를 고르면 안내·질문 틀이 나오고, 문장 시작을 누르면 입력란에 들어간다 (보내지는 않음)", () => {
+test("DEC-028 카테고리를 고르면 안내·질문 틀이 나오고, 문장 시작을 누르면 입력란에 들어간다 (보내지는 않음)", () => {
   render(<Home />);
   fireEvent.click(screen.getByRole("button", { name: /가족·이혼/ }));
   expect(screen.getByRole("button", { name: /가족·이혼/ }).getAttribute("aria-pressed")).toBe(
@@ -65,7 +65,7 @@ test("DEC-026 카테고리를 고르면 안내·질문 틀이 나오고, 문장 
   expect(screen.queryByRole("button", { name: "분야 선택 해제" })).toBeNull();
 });
 
-test("DEC-026 카테고리를 고르고 보낸 질문은 지금처럼 질문 생성 API를 거치고, 분야는 이 기기에만 남긴다", async () => {
+test("DEC-028 카테고리를 고르고 보낸 질문은 지금처럼 질문 생성 API를 거치고, 분야는 이 기기에만 남긴다", async () => {
   render(<Home />);
   fireEvent.click(screen.getByRole("button", { name: /소비자·환불/ }));
   const box = screen.getByLabelText("질문");
@@ -79,7 +79,7 @@ test("DEC-026 카테고리를 고르고 보낸 질문은 지금처럼 질문 생
   expect(sessionStorage.getItem(`hz:c:${INQ}`)).toBe("consumer");
 });
 
-test("DEC-026 예시 카드는 예시 답변 화면 링크다 (질문 생성 API를 부르지 않는다)", () => {
+test("DEC-028 예시 카드는 예시 답변 화면 링크다 (질문 생성 API를 부르지 않는다)", () => {
   render(<Home />);
   const feed = screen.getByRole("region", { name: "예시 답변 바로 보기" });
   for (const e of demoExamples()) {
@@ -91,7 +91,7 @@ test("DEC-026 예시 카드는 예시 답변 화면 링크다 (질문 생성 API
   expect(posts()).toHaveLength(0);
 });
 
-test("DEC-026 고른 분야에 예시가 있으면 예시 답변 링크를 함께 보인다", () => {
+test("DEC-028 고른 분야에 예시가 있으면 예시 답변 링크를 함께 보인다", () => {
   render(<Home />);
   fireEvent.click(screen.getByRole("button", { name: /임대차/ }));
   const links = screen.getAllByRole("link", { name: /^예시 답변 \d$/ });
