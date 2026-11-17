@@ -8,7 +8,7 @@ test("홈 페이지가 열린다", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("햄찌법원");
-  await expect(page.getByTestId("quota")).toHaveText("남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
   await expect(page.getByText("변호사 찾기")).toHaveCount(0);
 });
 
@@ -39,7 +39,7 @@ test("DEC-012·DEC-015 예시 질문을 누르면 재생 결과가 보인다 (AI
   await expect(
     page.getByText(`인용 ${result.recheck.items.length}건을 법제처에서 다시 조회했어요`),
   ).toBeVisible();
-  await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
 });
 
 test("F-007 개인정보가 보이면 가린 문장을 확인한 뒤 분석한다", async ({ page }) => {
@@ -219,18 +219,18 @@ test("접근성 예시 질문은 키보드로 고를 수 있다 (Tab·방향키�
 test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서버 값과 같다", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByTestId("quota")).toHaveText("남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
   await page
     .getByRole("button", { name: /예시 질문으로 시작/ })
     .first()
     .click();
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
-  await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
-  await expect(page.getByText("남은 질문 2/3 · 심층 질문도 1번으로 세요")).toBeVisible();
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
+  await expect(page.getByText("오늘 남은 질문 2/3 · 심층 질문도 1번으로 세요")).toBeVisible();
   await page.getByRole("link", { name: "새 질문" }).click();
   await page.waitForURL("**/");
-  await expect(page.getByTestId("quota")).toHaveText("남은 질문 2/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
 });
 
 test("PRD 14 도움 여부 피드백: 네 → 의견 보내기", async ({ page }) => {
