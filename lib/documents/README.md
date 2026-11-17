@@ -10,6 +10,9 @@
 
 | 파일 | 역할 |
 | --- | --- |
+| `fields.ts` | 서식 형식(Field·DocumentSpec)과 공통 칸 도우미(이름·주소·연락처·작성일·법원·이자) |
+| `specs/*.ts` | 섹션별 서식 정의 (예: `specs/criminal.ts` 사기) |
+| `fill-kit.ts` · `fill-*.ts` | 채우기 공통 도구와 섹션별 채우기 (예: `fill-criminal.ts`) |
 | `policy.ts` | 서식 정의를 담는다. 브라우저에서도 쓰므로 server-only를 넣지 않는다. 내용은 아래 목록 참고 |
 | `fill.ts` | `fillBlocks`: 입력값을 공식 서식 순서의 블록(title·heading·text·center·right·blank)으로 놓는다 |
 | `draft.ts` | 초안 도우미(DEC-023) 규칙: `ruleSuggestions`, `FACTS_FIELD`(사실관계 칸), `partyWords`, `screenFacts`·`screenMissing`, `factsText` |
@@ -33,6 +36,8 @@
 | `lease-registration` | 임차권등기명령 | [신청] 주택임차권등기명령신청서 (건물 중 일부·구분건물 포함) | 임차권등기명령 절차에 관한 규칙 제2·3조 |
 | `payment-order` | 지급명령 신청 | [민사] 지급명령신청서(일반) A2330, 표준양식 작성안내 A2342 | 민사소송법 제468조 |
 | `complaint` | 소송 | [민사] 소장 | 민사소송법 제249조 |
+| `criminal-complaint` | 사기 · 고소·신고 | 경찰민원24 [수사] 간이고소장(사기)·고소장. 진실확약(무고) 문구는 그대로 인용 | 형사소송법 제237조, 형법 제156조 |
+| `compensation-order` | 사기 · 배상명령 신청 | [형사] 배상명령 신청서 (B3002) | 소송촉진 등에 관한 특례법 제25·26조 |
 
 출처와 확인 내용은 `docs/research/05_공식_서식_출처.md`에 있다.
 

@@ -13,7 +13,13 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 };
 
 /** 문서 작성 화면 (/documents/[kind]). legal_documents 게이트 뒤 (DEC-022·025) */
-export type DocumentKind = "demand-letter" | "lease-registration" | "payment-order" | "complaint";
+export type DocumentKind =
+  | "demand-letter"
+  | "lease-registration"
+  | "payment-order"
+  | "complaint"
+  | "criminal-complaint"
+  | "compensation-order";
 
 export type OfficialLink = { label: string; url: string };
 
@@ -506,6 +512,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         ],
         links: [OFFICIAL.cyberPolice, OFFICIAL.police],
         shortcut: OFFICIAL.cyberPolice,
+        document: "criminal-complaint",
         question: "중고거래 사기는 어디에 어떻게 고소·신고하나요?",
       },
       {
@@ -536,6 +543,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "정식 재판이 열리지 않고 약식명령으로 끝나면 배상명령을 신청할 수 없을 수 있어요. 그때는 민사 청구를 검토하세요.",
         ],
         links: [OFFICIAL.proSe, OFFICIAL.klac],
+        document: "compensation-order",
         question: "배상명령은 언제, 어떻게 신청하나요?",
       },
       {

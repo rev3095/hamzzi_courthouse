@@ -196,8 +196,14 @@ export function DocumentStudio({
         한글(HWPX)·워드(DOCX)·PDF로 내려받을 수 있어요. 입력한 내용은 이 화면에만 있고 어디에도
         저장되지 않아요(새로고침하면 사라져요).
       </p>
-      {kind !== "demand-letter" && (
+      {spec.pages.some((pg) => pg.help === RRN_NOTICE) && (
         <p className="text-muted mt-2 text-[13px] leading-relaxed">{RRN_NOTICE}</p>
+      )}
+      {spec.officialNotice && (
+        <blockquote className="rounded-card border-note-line bg-note text-ink mt-3 border px-4 py-3 text-[13px] leading-relaxed">
+          “{spec.officialNotice.text}”
+          <span className="text-muted mt-1 block">출처: {spec.officialNotice.source}</span>
+        </blockquote>
       )}
 
       {phase !== "edit" && (

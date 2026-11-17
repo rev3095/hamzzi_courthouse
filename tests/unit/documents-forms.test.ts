@@ -23,6 +23,7 @@ import {
   invalidFields,
   parseDocumentInput,
 } from "@/lib/documents/policy";
+import { shortcutOf } from "@/lib/procedure/policy";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { TRACKS } from "@/lib/procedure/steps";
 
@@ -97,6 +98,45 @@ const FULL: Record<DocumentKind, Record<string, string>> = {
     court: "도토리지방법원",
     writtenOn: "2026-11-17",
   },
+  "criminal-complaint": {
+    complainantName: "김햄찌",
+    complainantAddress: "해바라기시 씨앗구 볍씨로 7",
+    complainantPhone: "010-0000-1234",
+    accusedName: "",
+    accusedAddress: "",
+    accusedPhone: "",
+    accusedSite: "도토리마켓",
+    accusedId: "acorn77",
+    accusedAccount: "다람은행 333-22-1111",
+    fraudType: "trade",
+    incidentDate: "2026-09-03",
+    incidentPlace: "도토리마켓 앱 채팅",
+    damageDetail:
+      "2026년 9월 3일 중고 노트북을 사기로 하고 850,000원을 보냈습니다.\n그 뒤 물건을 받지 못했고 연락이 끊겼습니다.",
+    damageAmount: "850000",
+    punish: "yes",
+    evidence: "이체 내역\n대화 캡처",
+    duplicate: "no",
+    relatedCriminal: "no",
+    relatedCivil: "no",
+    pledge: "agree",
+    policeStation: "해바라기경찰서",
+    writtenOn: "2026-11-17",
+  },
+  "compensation-order": {
+    caseNumber: "2026고단1234",
+    caseName: "사기",
+    court: "해바라기지방법원",
+    applicantName: "김햄찌",
+    applicantAddress: "해바라기시 씨앗구 볍씨로 7",
+    applicantPhone: "010-0000-1234",
+    defendantName: "이도토리",
+    defendantAddress: "도토리시 참나무구 밤길 3",
+    claimAmount: "850000",
+    claimContent: "피고인은 2026년 9월 3일 신청인을 속여 850,000원을 받아 갔습니다.",
+    attachments: "계좌 이체 내역",
+    writtenOn: "2026-11-17",
+  },
 };
 
 const digits = (s: string) =>
@@ -115,7 +155,13 @@ function strayNumbers(text: string, input: Record<string, string>): string[] {
   );
   const structural = text
     .split("\n")
-    .map((l) => l.replace(/^\s*\d+\.\s/, "").replace(/제\d+항|\b\d+항/g, ""))
+    // 목록 번호·원문자(①…)·'제1항'·조문 인용(형법 제156조)은 구조 번호·근거 인용이라 뺀다
+    .map((l) =>
+      l
+        .replace(/^\s*\d+\.\s/, "")
+        .replace(/[①-⑳]/g, "")
+        .replace(/제\d+항|\b\d+항|제\d+조/g, ""),
+    )
     .join("\n");
   return digits(structural).filter((d) => !allowed.has(d));
 }
@@ -139,8 +185,13 @@ describe("DEC-025 서식 정의 (공식 서식 기준)", () => {
       expect(spec.officialForms.length).toBeGreaterThan(0);
       expect(spec.basis.length).toBeGreaterThan(0);
       for (const f of spec.officialForms) {
-        expect(f.url).toMatch(/^https:\/\/www\.(scourt|epost)\.go\.kr/);
-        expect(f.source).toMatch(/법원|우정사업본부/);
+        // 공공기관 도메인(go.kr·or.kr의 법원·경찰·노동·법률구조공단·금융감독원·법제처)만
+        expect(f.url).toMatch(
+          /^https:\/\/(www\.)?(scourt\.go\.kr|epost\.go\.kr|minwon24\.police\.go\.kr|hldcc\.or\.kr|law\.go\.kr|moel\.go\.kr|labor\.moel\.go\.kr|nlrc\.go\.kr|fss\.or\.kr|comwel\.or\.kr)(\/|$)/,
+        );
+        expect(f.source).toMatch(
+          /법원|우정사업본부|경찰청|법제처|대한법률구조공단|고용노동부|노동위원회|금융감독원|근로복지공단/,
+        );
       }
     },
   );
@@ -355,5 +406,60 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
       "주택임차권등기명령신청서.docx",
     );
     expect((await buildFile("hwpx", doc.blocks, meta, none)).mime).toBe("application/hwp+zip");
+  });
+});
+
+describe("DEC-025 2차 사기 서식", () => {
+  test("고소장: 경찰 서식 진실확약 문구를 그대로 넣고, 체크해야만 완성된다", () => {
+    const input = FULL["criminal-complaint"];
+    const { text } = fillDocument(
+      "criminal-complaint",
+      parseDocumentInput("criminal-complaint", input),
+    );
+    expect(text).toContain(
+      "만일 허위사실을 고소하였을 때에는 형법 제156조 무고죄로 처벌받을 것임을 서약합니다.",
+    );
+    expect(text).toContain("① 사기 수법 : 일반 매매");
+    expect(text).toContain("⑤ 피해 금액 : 850,000원");
+    expect(text).toContain("■ 피고소인에 대한 처벌을 원함");
+    expect(text).toContain("해바라기경찰서 귀중");
+    expect(invalidFields("criminal-complaint", ["pledge"], { pledge: "" })).toEqual(["pledge"]);
+  });
+
+  test("고소장: 피고소인 정보를 몰라도 되고, 피해 금액을 비우면 '모름'", () => {
+    const { text } = fillDocument(
+      "criminal-complaint",
+      parseDocumentInput("criminal-complaint", {
+        ...FULL["criminal-complaint"],
+        accusedSite: "",
+        accusedId: "",
+        accusedAccount: "",
+        damageAmount: "",
+        incidentDate: "",
+      }),
+    );
+    expect(text).toContain("⑤ 피해 금액 : 모름");
+    expect(text).toContain("② 피해를 당한 날짜 : \n");
+  });
+
+  test("배상명령: 특례법 제26조 기재사항(사건·신청인·피고인·배상 대상·금액)이 모두 들어간다", () => {
+    const { text } = fillDocument(
+      "compensation-order",
+      parseDocumentInput("compensation-order", FULL["compensation-order"]),
+    );
+    expect(text).toContain("사    건  2026고단1234  사기");
+    expect(text).toContain("1. 배상을 청구하는 금액   금 850,000원");
+    expect(text).toContain("피 고 인  이도토리");
+    expect(text).toContain("해바라기지방법원 귀중");
+    expect(text).not.toContain("주민등록번호");
+  });
+
+  test("사기 타임라인: 고소·신고 바로 가기는 공식 신고 창구가 먼저, 서식은 단계에서 연다", () => {
+    const report = TRACKS.fraud.steps.find((s) => s.key === "report")!;
+    expect(report.document).toBe("criminal-complaint");
+    expect(shortcutOf(report)?.kind).toBe("official");
+    expect(TRACKS.fraud.steps.find((s) => s.key === "compensation_order")?.document).toBe(
+      "compensation-order",
+    );
   });
 });

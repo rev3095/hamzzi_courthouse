@@ -6,150 +6,52 @@
 // 사용자가 적은 값을 정해진 칸·기본 문장에 넣기만 한다 — LLM을 쓰지 않고, 법률 판단·주장·이자·금액을 지어내지 않는다.
 // 입력에는 이름·주소가 들어가므로 저장하지 않는다 (F-007, DEC-006). 브라우저에서도 쓰므로 server-only를 넣지 않는다.
 import { ApiError } from "@/lib/api/errors";
-import type { DocumentKind, OfficialLink } from "@/lib/procedure/steps";
+import type { DocumentKind } from "@/lib/procedure/steps";
 import { OFFICIAL } from "@/lib/procedure/steps";
+import {
+  address,
+  COURT_SOURCE,
+  court,
+  interestFields,
+  LONG,
+  name,
+  phone,
+  RRN_NOTICE,
+  SCOURT_FORMS,
+  writtenOn,
+  type DocumentSpec,
+  type Field,
+} from "./fields";
 import { fillBlocks, type Block } from "./fill";
+import { CRIMINAL_SPECS } from "./specs/criminal";
+
+export {
+  CHECK_NOTICE,
+  DOCUMENT_NOTICE,
+  DRAFT_NOTICE,
+  RRN_NOTICE,
+  type DocumentSpec,
+  type Field,
+  type FieldOption,
+  type FieldType,
+  type FormPage,
+  type OfficialForm,
+} from "./fields";
 
 export const DOCUMENT_KINDS = [
   "demand-letter",
   "lease-registration",
   "payment-order",
   "complaint",
+  "criminal-complaint",
+  "compensation-order",
 ] as const satisfies readonly DocumentKind[];
 
 export const isDocumentKind = (v: string): v is DocumentKind =>
   (DOCUMENT_KINDS as readonly string[]).includes(v);
 
-/** 문서 결과 표시 (AI 생성물이 아니므로 AI_NOTICE 대신 이 문구) */
-export const DOCUMENT_NOTICE = "입력하신 내용으로 채운 양식 · AI 생성 아님 · 법률 자문 아님";
-/** 초안 도우미(DEC-023)의 AI 문장이 들어간 문서 표시. AI_NOTICE(서버 응답의 notice)와 함께 보인다 */
-export const DRAFT_NOTICE = "초안 · 법률 검토 필요";
-/** 모든 서식 공통 — 제출·발송 전 확인 (절대 규칙 2: 결과를 단정하지 않는다) */
-export const CHECK_NOTICE =
-  "이 양식은 참고용 초안이에요. 내거나 보내기 전에 법원·우체국 안내를 확인하고, 변호사·법무사 또는 대한법률구조공단 상담을 받아 보세요.";
-/** 주민등록번호는 받지 않는다 (F-007) — 공식 서식에 칸이 있어 빈칸으로 남긴다 */
-export const RRN_NOTICE =
-  "공식 서식에는 주민등록번호 칸이 있어요. 햄찌법원은 주민등록번호를 받지 않으니, 내보낸 문서의 빈칸에 직접 적어 주세요.";
-
-export type FieldType = "text" | "textarea" | "date" | "money" | "rate" | "choice" | "checks";
-export type FieldOption = { value: string; label: string };
-
-export type Field = {
-  key: string;
-  label: string;
-  type: FieldType;
-  max: number;
-  optional?: boolean;
-  /** 쉬운 설명 */
-  help?: string;
-  /** 예시 (숫자 대신 ○) */
-  example?: string;
-  options?: FieldOption[];
-  /** 다른 칸이 채워졌을 때(value가 있으면 그 값일 때)만 묻는다 */
-  when?: { key: string; value?: string };
-  /** 처음 값 (choice·checks) */
-  defaultValue?: string;
-};
-
-export type FormPage = { title: string; help?: string; fields: string[] };
-
-/** 공식 기관 서식 (이름은 기관 목록 표기 그대로) */
-export type OfficialForm = { name: string; source: string; url: string };
-
-export type DocumentSpec = {
-  kind: DocumentKind;
-  title: string;
-  /** 단계 이름 (타임라인과 같은 이름) */
-  stepLabel: string;
-  intro: string;
-  tips: string[];
-  links: OfficialLink[];
-  officialForms: OfficialForm[];
-  /** 항목 구성의 법령 근거 (조문 이름) */
-  basis: string[];
-  /** 초안 도우미가 채우는 칸 이름 (화면 안내) */
-  draftFields: string;
-  fields: Field[];
-  pages: FormPage[];
-};
-
-const NAME = 50;
-const ADDRESS = 200;
-const PHONE = 30;
-const LONG = 3000;
-const SCOURT_FORMS = "https://www.scourt.go.kr/nm/minwon/doc/DocListAction.work";
-const COURT_SOURCE = "대한민국 법원 전자민원센터 양식모음";
-
-const name = (key: string, label: string, help?: string): Field => ({
-  key,
-  label,
-  type: "text",
-  max: NAME,
-  help,
-});
-const address = (key: string, label: string): Field => ({
-  key,
-  label,
-  type: "text",
-  max: ADDRESS,
-  help: "도로명주소와 동·호수까지 적어요. 법원·우체국은 이 주소로 서류를 보내요.",
-  example: "○○시 ○○구 ○○로 ○○, ○○동 ○○호",
-});
-const phone = (key: string, label: string): Field => ({
-  key,
-  label,
-  type: "text",
-  max: PHONE,
-  optional: true,
-  help: "법원이 연락할 수 있는 번호예요. 비워 두면 문서에 빈칸으로 남아요.",
-});
-const writtenOn: Field = {
-  key: "writtenOn",
-  label: "작성일",
-  type: "date",
-  max: 10,
-  optional: true,
-  help: "비워 두면 날짜 칸을 비워 두고, 내기 전에 직접 적을 수 있어요.",
-};
-const court = (help: string): Field => ({
-  key: "court",
-  label: "제출할 법원",
-  type: "text",
-  max: 50,
-  help,
-  example: "○○지방법원",
-});
-const interestFields = (servedLabel: string): Field[] => [
-  {
-    key: "interestRate",
-    label: "이자·지연손해금 이율 (연 %)",
-    type: "rate",
-    max: 5,
-    optional: true,
-    help: "약정한 이율이나 법이 정한 이율을 숫자만 적어요. 잘 모르면 비워 두고 법원 안내를 확인하세요. 비우면 원금만 청구하는 문장이 돼요.",
-  },
-  {
-    key: "interestFrom",
-    label: "이자를 셈하기 시작하는 날",
-    type: "choice",
-    max: 10,
-    when: { key: "interestRate" },
-    defaultValue: "served",
-    options: [
-      { value: "served", label: servedLabel },
-      { value: "date", label: "직접 정한 날부터" },
-    ],
-  },
-  {
-    key: "interestDate",
-    label: "이자를 셈하기 시작하는 날짜",
-    type: "date",
-    max: 10,
-    when: { key: "interestFrom", value: "date" },
-  },
-];
-
 export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
+  ...CRIMINAL_SPECS,
   "demand-letter": {
     kind: "demand-letter",
     title: "내용증명",
@@ -614,6 +516,8 @@ export const FACTS_FIELD: Record<DocumentKind, string> = {
   "demand-letter": "facts",
   "lease-registration": "extraReason",
   "payment-order": "claimCause",
+  "criminal-complaint": "damageDetail",
+  "compensation-order": "claimContent",
 };
 
 export type DocumentInput = Record<string, string>;
