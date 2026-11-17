@@ -4,6 +4,7 @@
 import { AI_NOTICE } from "@/lib/api/respond";
 import type { CitationRow, DemoAnalysisResult } from "@/lib/citations/policy";
 import { scanInput } from "@/lib/pii";
+import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import data from "./examples.json";
 
@@ -16,6 +17,10 @@ export const FREE_STEP_MESSAGES = {
 
 export const SEARCH_ONLY_NOTE =
   "무료 모드에서는 AI 답변 없이, 국가법령정보센터(법제처)에서 이 질문으로 찾은 현행 법령 조문과 판례 목록만 보여 드립니다. 질문과 관련이 없는 항목이 섞일 수 있으니 원문을 확인해 주세요.";
+
+/** 예시 답변 화면(/examples/[slug]) 머리 안내 (DEC-026) */
+export const EXAMPLE_PAGE_NOTE =
+  "직접 작성한 가상 사연에 대해 미리 분석해 둔 예시 답변이에요. 새로 분석하지 않고 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
 
 export const REPLAY_NOTE =
   "미리 분석해 둔 예시 질문의 답변입니다. 국가법령정보센터(법제처)에서 찾은 현행 법령 조문과 판례만 근거로 썼고, 인용은 법제처 재조회로 확인했습니다.";
@@ -39,13 +44,43 @@ export function exampleArea(e: Pick<DemoExample, "tags" | "result">): string {
   return AREA_LABEL[tag] ?? tag;
 }
 
+// 예시 답변 화면 주소 (/examples/[slug], DEC-026). 평가용 이름(trap-*·other-*)을 주소에 보이지 않게 바꾼다
+const SLUG: Record<string, string> = {
+  "trap-number": "dismissal-01",
+  "trap-vague": "neighbor-01",
+  "other-01": "traffic-01",
+};
+
+/** 예시 답변 화면 주소에 쓰는 이름 */
+export const exampleSlug = (id: string) => SLUG[id] ?? id;
+
+/** 예시 답변 화면 주소 — 질문 생성·분석 API를 거치지 않고 저장된 답변을 바로 보여 준다 (질문 횟수 차감 없음) */
+export const exampleHref = (id: string) => `/examples/${exampleSlug(id)}`;
+
+/** 주소 이름으로 예시 찾기. 없으면 null */
+export function exampleBySlug(slug: string): DemoExample | null {
+  return EXAMPLES.find((e) => exampleSlug(e.id) === slug) ?? null;
+}
+
+/** 예시가 속한 홈 카테고리 (DEC-026) */
+export function exampleCategory(id: string): CategoryKey | null {
+  return CATEGORY_LIST.find((c) => c.examples.includes(id))?.key ?? null;
+}
+
 /** 화면(P6) 예시 질문 목록 — 직접 작성한 질문이다 (DEC-012) */
-export function demoExamples(): { id: string; tags: string[]; question: string; area: string }[] {
+export function demoExamples(): {
+  id: string;
+  tags: string[];
+  question: string;
+  area: string;
+  href: string;
+}[] {
   return EXAMPLES.map((e) => ({
     id: e.id,
     tags: e.tags,
     question: e.question,
     area: exampleArea(e),
+    href: exampleHref(e.id),
   }));
 }
 
@@ -107,6 +142,15 @@ export function caseQueriesFrom(articles: ArticleHit[], max = 2): string[] {
     if (out.length >= max) break;
   }
   return out;
+}
+
+/**
+ * 판례 검색어에 홈 카테고리의 고정 검색어(DEC-026)를 맨 앞에 더한다. 같은 말이 있으면 한 번만, 최대 max개.
+ * 고정 검색어는 정해 둔 법률 용어라 질문 문장(개인정보 가능성)이 섞이지 않는다.
+ */
+export function withCaseHint(queries: string[], hint?: string | null, max = 3): string[] {
+  if (!hint) return queries;
+  return [hint, ...queries.filter((q) => q !== hint)].slice(0, max);
 }
 
 /** 검색 전용 결과 (API.md 4.1 형식, mode=search_only, 답변 문단 없음) */

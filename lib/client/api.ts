@@ -175,12 +175,18 @@ export function parseSseBlock(block: string): { event: string; data: unknown } |
 export async function analyzeStream(
   id: string,
   onStep: (e: StepEvent) => void,
+  category?: string | null,
 ): Promise<ApiResult<AnalyzedResult>> {
   let res: Response;
   try {
+    // 홈에서 고른 카테고리(DEC-026)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
     res = await fetch(`/api/v1/inquiries/${id}/analyze`, {
       method: "POST",
-      headers: { accept: "text/event-stream" },
+      headers: {
+        accept: "text/event-stream",
+        ...(category && { "content-type": "application/json" }),
+      },
+      ...(category && { body: JSON.stringify({ category }) }),
       credentials: "same-origin",
     });
   } catch {
@@ -220,21 +226,38 @@ export async function analyzeStream(
 // 결과 화면 맨 위 질문 표시와 이어 묻기 스레드용. 서버 응답에는 질문 문장이 없어서 이 기기에만 둔다.
 const QKEY = (id: string) => `hz:q:${id}`;
 const PKEY = (id: string) => `hz:p:${id}`;
+const CKEY = (id: string) => `hz:c:${id}`;
 
-export function rememberQuestion(id: string, maskedText: string, parentId?: string) {
+export function rememberQuestion(
+  id: string,
+  maskedText: string,
+  parentId?: string,
+  category?: string | null,
+) {
   try {
     sessionStorage.setItem(QKEY(id), maskedText);
     if (parentId) sessionStorage.setItem(PKEY(id), parentId);
+    // 카테고리(DEC-026)는 개인정보가 아닌 정해진 값이다. 이어 묻기는 앞 질문의 카테고리를 물려받는다
+    const cat = category ?? (parentId ? sessionStorage.getItem(CKEY(parentId)) : null);
+    if (cat) sessionStorage.setItem(CKEY(id), cat);
   } catch {
     // 저장소를 못 쓰면 질문 표시만 빠진다
   }
 }
 
-export function recallQuestion(id: string): { text: string | null; parentId: string | null } {
+export function recallQuestion(id: string): {
+  text: string | null;
+  parentId: string | null;
+  category: string | null;
+} {
   try {
-    return { text: sessionStorage.getItem(QKEY(id)), parentId: sessionStorage.getItem(PKEY(id)) };
+    return {
+      text: sessionStorage.getItem(QKEY(id)),
+      parentId: sessionStorage.getItem(PKEY(id)),
+      category: sessionStorage.getItem(CKEY(id)),
+    };
   } catch {
-    return { text: null, parentId: null };
+    return { text: null, parentId: null, category: null };
   }
 }
 

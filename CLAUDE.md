@@ -33,6 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/research/01_데이터_소스.md` | 데이터 수집기 작업 |
 | `docs/research/03_규제_쟁점.md` | 게이트 기능·동의·과금 관련 작업 |
 | `docs/research/05_공식_서식_출처.md` | 문서 작성 서식(공식 기관 서식·근거 조문·이용 조건) |
+| `docs/research/06_카테고리_분류_조사.md` | 홈 카테고리·절차 섹션 분류 근거(생활법령 분야·판례 사건 종류) |
 | `docs/01_AI_Native_개발_파이프라인.md` | 단계별 작업 방식·프롬프트 |
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
@@ -92,6 +93,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 비용 상한: 모든 Claude 호출은 `withCostCap`(lib/ai/client.ts)을 거친다. 호출 전 무과금 `countTokens`로 입력을 재고 `planCall`(lib/ai/cost.ts)이 (쓴 비용 + 입력 + max_tokens 출력)이 상한 안일 때만 보낸다. 넘으면 `CostCapReached` — 라이트는 근거를 하나씩 빼고 다시 재고, 못 맞추면 AI 문단 없이 근거만 낸다. 키 점검은 `/api/v1/health`의 `ai.key`(모델 정보 조회, 무과금). **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
 - `cacheComponents: true`(next.config.ts): `usePathname`·`useParams`·`useSearchParams` 같은 클라이언트 훅은 `<Suspense>` 안에서만 쓴다. 밖에서 쓰면 로컬 `pnpm dev`·CI는 통과해도 **Vercel 빌드가 프리렌더에서 실패**한다(예: 헤더 남은 질문 `QuotaRouteSync`).
+- 홈 카테고리(lib/procedure/categories, DEC-026)는 분류 보조·무료 판례 검색어에만 쓰고 이 기기(sessionStorage)·analyze 본문 `category`로만 오간다(DB 저장 없음). 예시 질문은 `/examples/[id]` 정적 화면으로 바로 보여 주고 질문 생성·횟수 API를 부르지 않는다.
 - 절차 타임라인(lib/procedure, DEC-021)은 LLM 없는 규칙 기반이다. 단계 문구에 숫자·단정 표현이 들어가면 `policy.test.ts`가 막는다. 결과(승패)를 판정하지 않는다.
 - 문서 작성(lib/documents, DEC-022·025)은 `legal_documents` 게이트 뒤에 있다(게이트가 꺼져 있으면 관리자 모드 브라우저만 미리보기): API 맨 앞 `requireFeature`, 화면은 게이트가 꺼져 있으면 안내·공식 양식 링크만. 사용자 입력을 칸에 넣기만 하고 저장·로그하지 않는다. AI 생성물이 아니라 `AI_NOTICE` 대신 `DOCUMENT_NOTICE`. 초안 도우미(DEC-023, `POST /documents/{kind}/draft`)는 질문 번호만 받아 마스킹본으로 규칙 칸 + Haiku 사실관계 초안($0.0015)을 주고, 그때는 `AI_NOTICE` + `DRAFT_NOTICE`. 이름·주소·금액은 브라우저 밖으로 보내지 않는다(양식 채우기는 브라우저에서, 저장소·쿠키 없음). 서식 4종(내용증명·주택임차권등기명령·지급명령·소장)은 공식 기관 서식·법령 기준이고(사설 양식 금지, docs/research/05), 화면은 설문 팝업 → 완성 → 예/아니요 → 웹 편집기 → 저장 → 예/아니요, 내보내기 HWPX(hwpx-js, 실험)·DOCX(자체 ZIP)·PDF(pdf-lib + public/fonts 나눔고딕)는 모두 브라우저 안에서 만든다. 주민등록번호는 받지 않는다.
 - 브라우저 쪽 API 호출과 남은 질문 수는 lib/client/api.ts·components/useQuota.ts 한 저장소로 공유한다(헤더·홈·이어 묻기가 같은 값을 본다).

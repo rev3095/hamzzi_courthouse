@@ -16,6 +16,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import { moodForError } from "@/lib/mascot/moods";
+import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { HamzziJudge } from "../HamzziJudge";
 import { DEMO_LIMIT_TEXT } from "../LimitNotice";
 import { PrimaryButton, SecondaryButton } from "../Modal";
@@ -33,6 +34,7 @@ type View =
   | { kind: "error"; error: ClientError };
 
 const noSubscribe = () => () => {};
+const categoryOf = (v: string | null): CategoryKey | null => (isCategoryKey(v) ? v : null);
 
 /** /inquiries/[id] — 주소의 id마다 화면 상태를 새로 시작한다 */
 export function ResultRoute() {
@@ -55,16 +57,28 @@ export function ResultView({ id }: { id: string }) {
       () => null,
     ),
   };
+  // 홈에서 고른 카테고리 (DEC-026, 이 기기에만). 정해진 값이 아니면 버린다
+  const storedCategory = useSyncExternalStore(
+    noSubscribe,
+    () => recallQuestion(id).category,
+    () => null,
+  );
+  const category = categoryOf(storedCategory);
   const alive = useRef(true);
   // 개발 모드(StrictMode)에서 effect가 두 번 돌아도 분석은 한 번만 시작한다
   const started = useRef(false);
 
   const analyze = useCallback(async () => {
     setView({ kind: "analyzing", steps: [] });
-    const r = await analyzeStream(id, (e) => {
-      if (!alive.current) return;
-      setView((v) => (v.kind === "analyzing" ? { ...v, steps: [...v.steps, e] } : v));
-    });
+    const r = await analyzeStream(
+      id,
+      (e) => {
+        if (!alive.current) return;
+        setView((v) => (v.kind === "analyzing" ? { ...v, steps: [...v.steps, e] } : v));
+      },
+      // 렌더 값 대신 저장소에서 바로 읽는다 — 화면 상태가 바뀌어도 분석을 다시 시작하지 않게
+      categoryOf(recallQuestion(id).category),
+    );
     if (!alive.current) return;
     if (r.ok) {
       notifyQuotaChanged();
@@ -120,6 +134,7 @@ export function ResultView({ id }: { id: string }) {
             resultId={view.resultId}
             question={question.text}
             parentId={id}
+            category={category}
           />
         ))}
       {view.kind === "error" && (
@@ -365,11 +380,13 @@ function DoneView({
   resultId,
   question,
   parentId,
+  category,
 }: {
   result: DemoAnalysisResult;
   resultId: string;
   question: string | null;
   parentId: string;
+  category: CategoryKey | null;
 }) {
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -389,6 +406,7 @@ function DoneView({
       }}
       onDeepAsk={focusBox}
       inquiryId={parentId}
+      category={category}
       followUp={<FollowUp parentId={parentId} text={text} setText={setText} inputRef={inputRef} />}
       footer={<Feedback resultId={resultId} />}
     />

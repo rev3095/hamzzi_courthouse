@@ -10,6 +10,7 @@ import { analyzeInquiry } from "@/lib/inquiries/analyze";
 import {
   assertAnalyzable,
   assertAnonQuota,
+  parseAnalyzeRequest,
   countsAnonQuota,
   assertReadyToAnalyze,
   wantsEventStream,
@@ -28,6 +29,8 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
+  // 본문은 선택: 홈 카테고리(DEC-026). 검증 실패는 소유자 확인 전에 400
+  const { category } = parseAnalyzeRequest(await req.text());
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
@@ -42,7 +45,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   }
 
   if (!wantsEventStream(req)) {
-    const out = await analyzeInquiry(inquiry, owner, req.headers);
+    const out = await analyzeInquiry(inquiry, owner, req.headers, undefined, { category });
     return ok({ status: "analyzed", ...out }, scope.requestId);
   }
 
@@ -50,7 +53,9 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   return sseResponse(
     scope.requestId,
     async (send) => {
-      const out = await analyzeInquiry(inquiry, owner, req.headers, (e) => send("step", e));
+      const out = await analyzeInquiry(inquiry, owner, req.headers, (e) => send("step", e), {
+        category,
+      });
       send("result", { status: "analyzed", ...out });
     },
     // 스트림은 응답을 돌려준 뒤에 끝나므로 결과(오류 코드)를 따로 남긴다 — 본문·메시지는 남기지 않는다

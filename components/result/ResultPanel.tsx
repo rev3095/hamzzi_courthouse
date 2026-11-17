@@ -8,9 +8,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
+import type { CategoryKey } from "@/lib/procedure/categories";
 import {
   difficultyLabel,
   evidenceSummary,
+  hasTimeline,
   procedurePlan,
   shortcutOf,
   recommendText,
@@ -38,6 +40,8 @@ export function ResultPanel({
   onAskStep,
   onDeepAsk,
   inquiryId,
+  category,
+  askHref,
 }: {
   result: DemoAnalysisResult;
   question: string | null;
@@ -51,11 +55,15 @@ export function ResultPanel({
   onDeepAsk?: () => void;
   /** 이 결과의 질문 번호 — 문서 작성 안내에 ?from=으로 넘겨 초안 도우미(DEC-023)가 쓴다 */
   inquiryId?: string;
+  /** 홈에서 고른 카테고리 (DEC-026). 규칙이 타임라인을 정하지 못할 때만 분류를 돕는다 */
+  category?: CategoryKey | null;
+  /** 예시 답변 화면(/examples/[id]): 심층 질문 대신 "내 상황으로 질문하기"로 홈에 보낸다 (질문 횟수 차감 없음, DEC-026) */
+  askHref?: string;
 }) {
   const searchOnly = result.mode === "search_only";
   const usedArticles = result.articles.filter((a) => a.used).length;
   const usedCases = result.cases.filter((c) => c.used).length;
-  const plan = procedurePlan(result, question);
+  const plan = procedurePlan(result, question, category);
 
   return (
     <article className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
@@ -89,7 +97,7 @@ export function ResultPanel({
 
       <SummaryStrip result={result} plan={plan} />
 
-      {plan.kind === "timeline" ? (
+      {hasTimeline(plan) ? (
         <>
           <ProcedureTimeline
             section={plan.section}
@@ -117,7 +125,7 @@ export function ResultPanel({
       <Details result={result} />
 
       <div id="deep-question">{followUp}</div>
-      <NextSteps plan={plan} onDeepAsk={onDeepAsk} inquiryId={inquiryId} />
+      <NextSteps plan={plan} onDeepAsk={onDeepAsk} inquiryId={inquiryId} askHref={askHref} />
       {footer}
       <SourceCredit note={result.searchScopeNote} />
     </article>
@@ -131,7 +139,7 @@ function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: Proc
       <li className="rounded-button bg-soft text-ink px-3 py-1.5 text-sm">
         {evidenceSummary(result)}
       </li>
-      {plan.kind === "timeline" && (
+      {hasTimeline(plan) && (
         <li className="rounded-button bg-cream text-label px-3 py-1.5 text-sm font-semibold">
           추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
         </li>
@@ -226,21 +234,23 @@ function NextSteps({
   plan,
   onDeepAsk,
   inquiryId,
+  askHref,
 }: {
   plan: ProcedurePlan;
   onDeepAsk?: () => void;
   inquiryId?: string;
+  askHref?: string;
 }) {
-  const go = plan.kind === "timeline" ? shortcutOf(plan.recommended) : null;
+  const go = hasTimeline(plan) ? shortcutOf(plan.recommended) : null;
   const from = inquiryId ? `?from=${encodeURIComponent(inquiryId)}` : "";
   // 먼저 추천한 단계가 소장이 아니어도, 그 타임라인에 소송 단계가 있으면 소장 작성 안내를 함께 보인다
   const complaint =
-    plan.kind === "timeline" && plan.recommended.document !== "complaint"
+    hasTimeline(plan) && plan.recommended.document !== "complaint"
       ? plan.steps.find((s) => s.document === "complaint")
       : undefined;
   const cardClass =
     "rounded-card bg-ink flex min-h-[72px] items-center justify-between gap-3 px-5 py-4 text-white";
-  const title = plan.kind === "timeline" ? `${plan.recommended.label} 바로 가기` : "";
+  const title = hasTimeline(plan) ? `${plan.recommended.label} 바로 가기` : "";
   return (
     <section aria-label="다음 단계" className="mt-4 grid gap-3 lg:grid-cols-2">
       {go?.kind === "document" && (
@@ -285,21 +295,39 @@ function NextSteps({
           </span>
         </Link>
       )}
-      <button
-        type="button"
-        onClick={onDeepAsk}
-        className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4 text-left"
-      >
-        <span>
-          <span className="block text-base font-bold">심층 질문하기</span>
-          <span className="text-muted mt-0.5 block text-[13px]">
-            위 입력란에 이 사건을 더 물어보세요 · 질문 1번으로 세요
+      {/* 예시 화면의 "내 상황으로 질문하기"는 전체 페이지로 연다 — 홈이 주소의 ?category=를 첫 렌더에서 읽게 */}
+      {askHref ? (
+        <a
+          href={askHref}
+          className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4"
+        >
+          <span>
+            <span className="block text-base font-bold">내 상황으로 질문하기</span>
+            <span className="text-muted mt-0.5 block text-[13px]">
+              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 3번에 세요
+            </span>
           </span>
-        </span>
-        <span aria-hidden="true" className="text-xl">
-          →
-        </span>
-      </button>
+          <span aria-hidden="true" className="text-xl">
+            →
+          </span>
+        </a>
+      ) : (
+        <button
+          type="button"
+          onClick={onDeepAsk}
+          className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4 text-left"
+        >
+          <span>
+            <span className="block text-base font-bold">심층 질문하기</span>
+            <span className="text-muted mt-0.5 block text-[13px]">
+              위 입력란에 이 사건을 더 물어보세요 · 질문 1번으로 세요
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-xl">
+            →
+          </span>
+        </button>
+      )}
     </section>
   );
 }

@@ -1,9 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { demoExamples, findExample, replayResult } from "@/lib/demo/policy";
+import { CATEGORY_LIST } from "./categories";
+import { LIFE_OFFICIAL, LIFE_STEPS, LIFE_TRACKS } from "./life-tracks";
 import {
   classifyCase,
   evidenceSummary,
+  hasTimeline,
   josaEulReul,
   NOTICE_TEXTS,
   procedurePlan,
@@ -47,13 +50,29 @@ function allFixedTexts(): string[] {
     procedurePlan(bare(["민법"]), null),
   ];
   return [
-    ...ALL_STEPS.flatMap((s) => [s.label, s.question, ...s.prepare, ...s.cautions]),
-    ...Object.values(TRACKS).flatMap((t) => [t.section, t.title, t.reason, t.note ?? ""]),
+    ...[...ALL_STEPS, ...LIFE_STEPS].flatMap((s) => [
+      s.label,
+      s.question,
+      ...s.prepare,
+      ...s.cautions,
+    ]),
+    ...[...Object.values(TRACKS), ...Object.values(LIFE_TRACKS)].flatMap((t) => [
+      t.section,
+      t.title,
+      t.reason,
+      t.note ?? "",
+    ]),
+    // 홈 카테고리 버튼 문구 (DEC-026)
+    ...CATEGORY_LIST.flatMap((c) => [
+      c.label,
+      c.description,
+      c.guide,
+      c.placeholder,
+      ...c.starters,
+    ]),
     ...NOTICE_TEXTS,
     ...plans.flatMap((p) =>
-      p.kind === "timeline"
-        ? [p.reason, p.note ?? "", recommendText(p.recommended)]
-        : [p.title, p.body],
+      hasTimeline(p) ? [p.reason, p.note ?? "", recommendText(p.recommended)] : [p.title, p.body],
     ),
     ...Object.values(DOCUMENT_SPECS).flatMap((d) => [
       d.intro,
@@ -90,7 +109,7 @@ describe("F-014 절차 단계 상수 (DEC-021)", () => {
   });
 
   test("DEC-002 모든 단계에 난이도 라벨·준비물·주의점·공식 링크가 있다", () => {
-    for (const s of ALL_STEPS) {
+    for (const s of [...ALL_STEPS, ...LIFE_STEPS]) {
       expect(DIFFICULTY_LABEL[s.difficulty]).toBeTruthy();
       expect(s.prepare.length).toBeGreaterThan(0);
       expect(s.cautions.length).toBeGreaterThan(0);
@@ -99,8 +118,9 @@ describe("F-014 절차 단계 상수 (DEC-021)", () => {
   });
 
   test("공식 안내 링크는 정부·법원·공공기관 https 주소만", () => {
-    for (const l of Object.values(OFFICIAL))
-      expect(l.url).toMatch(/^https:\/\/([a-z-]+\.)+(go\.kr|or\.kr|gov\.kr)$/);
+    // 숫자가 든 공식 주소(소비자상담센터 1372)도 허용한다 (DEC-026)
+    for (const l of [...Object.values(OFFICIAL), ...Object.values(LIFE_OFFICIAL)])
+      expect(l.url).toMatch(/^https:\/\/([a-z0-9-]+\.)+(go\.kr|or\.kr|gov\.kr)$/);
   });
 });
 
@@ -256,8 +276,9 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
   });
 
   test("해고 낱말만으로 부당해고로 보내지 않는다 (피해구제신청·해고예고수당·퇴직금)", () => {
+    // 환불 다툼은 소비자·환불 섹션(DEC-026)으로 간다 — 부당해고로 가지 않는 것이 이 검사의 목적
     expect(classifyCase(bare(["민법"]), "소비자원에 피해구제신청 했는데 환불을 안 해줘요")).toBe(
-      "money",
+      "consumer",
     );
     expect(classifyCase(bare(["근로기준법"]), "해고예고수당을 못 받았어요")).toBe("wage");
     const plan = procedurePlan(bare(["근로기준법"]), "해고됐는데 퇴직금도 못 받았어요");
@@ -315,8 +336,7 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
   test("모든 예시 질문에서 계획이 만들어지고 안내 문구에 단정 표현이 없다", () => {
     for (const e of demoExamples()) {
       const plan = procedurePlan(replayResult(findExample(e.question)!), e.question);
-      const texts =
-        plan.kind === "timeline" ? [plan.reason, plan.note ?? ""] : [plan.title, plan.body];
+      const texts = hasTimeline(plan) ? [plan.reason, plan.note ?? ""] : [plan.title, plan.body];
       for (const t of texts) expect(isAssertive(t), t).toBe(false);
     }
   });

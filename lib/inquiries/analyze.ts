@@ -9,6 +9,7 @@ import { runDemoAnalysis } from "@/lib/ai/orchestrator";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
+import { CATEGORIES, type CategoryKey } from "@/lib/procedure/categories";
 import { FREE_PROMPT_VERSION, findExample } from "@/lib/demo/policy";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import {
@@ -27,7 +28,10 @@ export async function analyzeInquiry(
   owner: Owner,
   headers: Headers,
   onStep?: (e: StepEvent) => void,
+  opts: { category?: CategoryKey | null } = {},
 ): Promise<{ resultId: string; result: DemoAnalysisResult }> {
+  // 홈 카테고리(DEC-026)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
+  const caseHint = opts.category ? CATEGORIES[opts.category].caseQuery : null;
   const started = Date.now();
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
@@ -40,7 +44,7 @@ export async function analyzeInquiry(
       findExample(inquiry.masked_text) !== null ||
       !(await tryGlobalQuota(aiDailyRule()))
     ) {
-      const free = await runFreeAnalysis(inquiry.masked_text, { onStep });
+      const free = await runFreeAnalysis(inquiry.masked_text, { onStep, caseHint });
       const resultId = await finishAnalysis(
         {
           inquiryId: inquiry.id,
@@ -66,7 +70,7 @@ export async function analyzeInquiry(
             { maskedText: inquiry.masked_text, context },
             { onStep, budgetMs: ANALYSIS_BUDGET_MS },
           )
-        : await runLiteAnalysis({ maskedText: inquiry.masked_text, context }, { onStep });
+        : await runLiteAnalysis({ maskedText: inquiry.masked_text, context }, { onStep, caseHint });
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep,
       screened: analysis.dropped.length,

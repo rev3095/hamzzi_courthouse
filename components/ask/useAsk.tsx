@@ -12,6 +12,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import type { PiiFinding } from "@/lib/pii";
+import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
 import { Modal, PrimaryButton, SecondaryButton } from "../Modal";
 
@@ -44,7 +45,7 @@ export function askErrorText(err: ClientError): string {
   return `${err.message}${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
 }
 
-export function useAsk(opts: { parentInquiryId?: string } = {}) {
+export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey | null } = {}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +81,7 @@ export function useAsk(opts: { parentInquiryId?: string } = {}) {
       }
       return;
     }
-    rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId);
+    rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
     if (r.data.piiConfirmationRequired) {
       setPending({
         kind: "pii",
