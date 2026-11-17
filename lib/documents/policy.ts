@@ -25,6 +25,7 @@ import {
 import { fillBlocks, type Block } from "./fill";
 import { CRIMINAL_SPECS } from "./specs/criminal";
 import { LABOR_SPECS } from "./specs/labor";
+import { MEDIATION_SPECS } from "./specs/mediation";
 
 export {
   CHECK_NOTICE,
@@ -50,6 +51,10 @@ export const DOCUMENT_KINDS = [
   "wage-advance",
   "dismissal-remedy",
   "dismissal-review",
+  "lease-mediation",
+  "civil-mediation",
+  "financial-mediation",
+  "property-disclosure",
 ] as const satisfies readonly DocumentKind[];
 
 export const isDocumentKind = (v: string): v is DocumentKind =>
@@ -58,6 +63,7 @@ export const isDocumentKind = (v: string): v is DocumentKind =>
 export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
   ...CRIMINAL_SPECS,
   ...LABOR_SPECS,
+  ...MEDIATION_SPECS,
   "demand-letter": {
     kind: "demand-letter",
     title: "내용증명",
@@ -522,11 +528,13 @@ export const FACTS_FIELD: Partial<Record<DocumentKind, string>> = {
   "demand-letter": "facts",
   "lease-registration": "extraReason",
   "payment-order": "claimCause",
-  "criminal-complaint": "damageDetail",
   "compensation-order": "claimContent",
   "wage-petition": "petitionDetail",
   "dismissal-remedy": "reason",
   "dismissal-review": "reviewReason",
+  "lease-mediation": "reason",
+  "civil-mediation": "cause",
+  "financial-mediation": "reason",
 };
 
 export type DocumentInput = Record<string, string>;

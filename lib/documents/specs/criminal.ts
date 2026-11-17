@@ -2,6 +2,7 @@
 // 고소장: 경찰민원24 민원 서식 [수사] 간이고소장(사기)·고소장(표준) 항목 순서, 형사소송법 제237조(고소의 방식).
 // 배상명령: 법원 전자민원센터 양식모음 [형사] 배상명령 신청서(B3002), 소송촉진 등에 관한 특례법 제26조 제3항(기재사항).
 // 수사·처벌 결과를 예측하지 않는다(절대 규칙 2). 허위 고소 서약 문구는 경찰 고소장 서식 문구를 그대로 인용한다.
+// 고소장은 진실확약(무고 서약)이 붙는 문서라 AI 초안(DEC-023)을 쓰지 않는다 — 피해 내용은 사용자가 직접 적는다.
 import { OFFICIAL } from "@/lib/procedure/steps";
 import {
   address,
@@ -45,16 +46,18 @@ export const FRAUD_TYPES: { value: string; label: string }[] = [
   { value: "unknown", label: "기타 / 모름" },
 ];
 
+/** 관련 사건 칸: 모르면 '모름'을 고르고, 문서에는 어느 쪽도 표시하지 않는다 (확정 진술로 바뀌지 않게) */
 const yesNo = (key: string, label: string, yes: string, no: string, help?: string): Field => ({
   key,
   label,
   type: "choice",
   max: 10,
-  defaultValue: "no",
+  defaultValue: "unknown",
   help,
   options: [
     { value: "yes", label: yes },
     { value: "no", label: no },
+    { value: "unknown", label: "잘 모르겠어요 (표시하지 않고, 낼 때 경찰서에 말할게요)" },
   ],
 });
 
@@ -78,7 +81,7 @@ export const CRIMINAL_SPECS = {
       { name: "[수사] 고소장", source: POLICE_SOURCE, url: POLICE_FORMS },
     ],
     basis: ["형사소송법 제237조(고소의 방식)", "형법 제156조(무고)"],
-    draftFields: "피해 내용",
+    draftFields: "",
     officialNotice: {
       text: FALSE_ACCUSATION_PLEDGE,
       source: "경찰청 고소장 서식 (고소내용에 대한 진실확약)",
@@ -186,7 +189,7 @@ export const CRIMINAL_SPECS = {
         "같은 내용으로 다른 경찰서·검찰청에 고소한 적",
         "있어요",
         "없어요",
-        "경찰 고소장 서식에서 꼭 표시하는 칸이에요.",
+        "경찰 고소장 서식에서 표시하도록 정한 칸이에요.",
       ),
       yesNo("relatedCriminal", "관련 사건이 수사 중인지", "수사 중이에요", "수사 중이 아니에요"),
       yesNo("relatedCivil", "관련 민사소송이 진행 중인지", "소송 중이에요", "소송 중이 아니에요"),
@@ -227,7 +230,7 @@ export const CRIMINAL_SPECS = {
       { title: "증거자료", fields: ["evidence"] },
       {
         title: "관련 사건",
-        help: "모르면 '아니에요' 쪽을 고르고, 낼 때 경찰서에 말해 주세요.",
+        help: "아는 것만 고르세요. 모르면 '잘 모르겠어요'를 골라요. 경찰 서식에서 표시하도록 정한 칸이라 낼 때 경찰서에 확인해 주세요.",
         fields: ["duplicate", "relatedCriminal", "relatedCivil"],
       },
       { title: "진실확약", fields: ["pledge"] },

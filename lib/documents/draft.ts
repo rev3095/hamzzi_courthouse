@@ -73,6 +73,10 @@ const PARTY_WORDS: Record<DocumentKind, { me: string; other: string }> = {
   "wage-advance": { me: "청구인", other: "사업주" },
   "dismissal-remedy": { me: "신청인", other: "피신청인" },
   "dismissal-review": { me: "재심신청인", other: "재심피신청인" },
+  "lease-mediation": { me: "신청인", other: "피신청인" },
+  "civil-mediation": { me: "신청인", other: "피신청인" },
+  "financial-mediation": { me: "신청인", other: "피신청인" },
+  "property-disclosure": { me: "채권자", other: "채무자" },
 };
 
 /** 원고·피고 / 보내는 사람·받는 사람 / 신청인·피신청인 / 채권자·채무자를 문장에서 부르는 말 */
@@ -104,6 +108,13 @@ const JUDGMENT_WORDS = [
   "인정됩니다",
   "해당합니다",
   "성립",
+  // 범죄 성립을 단정하는 표현 — 사용자가 직접 쓰지 않았으면 빼낸다 (무고 위험)
+  "속였",
+  "속여",
+  "기망",
+  "편취",
+  "사기를 쳤",
+  "처음부터",
 ];
 /** 법령·판례를 끌어오는 문장 — 사실관계에는 쓰지 않는다 (인용 검증 대상이 아니므로 아예 막는다, 절대 규칙 1) */
 const LEGAL_REF =

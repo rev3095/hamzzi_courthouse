@@ -23,7 +23,11 @@ export type DocumentKind =
   | "wage-petition"
   | "wage-advance"
   | "dismissal-remedy"
-  | "dismissal-review";
+  | "dismissal-review"
+  | "lease-mediation"
+  | "civil-mediation"
+  | "financial-mediation"
+  | "property-disclosure";
 
 export type OfficialLink = { label: string; url: string };
 
@@ -167,6 +171,7 @@ const ENFORCE: ProcedureStep = {
     "절차가 복잡해 전문가 상담을 권해요.",
   ],
   links: [OFFICIAL.ecfs, OFFICIAL.klac],
+  document: "property-disclosure",
   question: "판결을 받았는데도 돈을 주지 않으면 강제집행은 어떻게 하나요?",
 };
 
@@ -295,6 +300,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         prepare: ["조정 신청서", "임대차계약서", "주고받은 문자·내용증명"],
         cautions: ["조정은 양쪽이 합의해야 성립해요. 상대방이 응하지 않으면 소송을 검토해요."],
         links: [OFFICIAL.leaseMediation],
+        document: "lease-mediation",
         question: "주택임대차분쟁조정위원회 조정은 어떻게 신청하나요?",
       },
       suit({
@@ -623,6 +629,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "조정이 성립하지 않으면 소송을 검토해요.",
         ],
         links: [OFFICIAL.fss],
+        document: "financial-mediation",
         question: "보험 분쟁조정은 어떻게 신청하나요?",
       },
       suit({
@@ -690,6 +697,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "그 밖의 이웃 분쟁은 지역에 따라 지자체 조정 창구가 있을 수 있어요. 법률 상담은 대한법률구조공단에서 받을 수 있어요.",
         ],
         links: [OFFICIAL.klac, OFFICIAL.epeople],
+        document: "civil-mediation",
         question: "이웃 분쟁은 어디에서 조정이나 상담을 받을 수 있나요?",
       },
       suit({

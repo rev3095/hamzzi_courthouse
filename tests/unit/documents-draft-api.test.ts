@@ -49,7 +49,10 @@ beforeEach(() => {
     masked_text: lease.question,
     parent_inquiry_id: null,
   });
-  store.getLatestResult.mockResolvedValue({ id: "r-1", response: replayResult(findExample(lease.question)!) });
+  store.getLatestResult.mockResolvedValue({
+    id: "r-1",
+    response: replayResult(findExample(lease.question)!),
+  });
   store.loadFollowupContext.mockResolvedValue([]);
   rate.assertRateLimit.mockResolvedValue(undefined);
   rate.tryGlobalQuota.mockResolvedValue(true);
@@ -144,10 +147,15 @@ describe("DEC-025 새 서식의 초안 도우미", () => {
     expect(rate.tryGlobalQuota).not.toHaveBeenCalled();
   });
 
-  test("고소장·임차권등기명령은 각 서식의 사실관계 칸에 넣는다", async () => {
-    let data = (await (await call("criminal-complaint", { inquiryId: ID })).json()).data;
-    expect(data.suggestions.damageDetail).toBe("1. 원고는 전세 계약을 맺었습니다.");
-    data = (await (await call("lease-registration", { inquiryId: ID })).json()).data;
+  test("고소장은 무고 서약이 붙는 문서라 AI 초안을 쓰지 않는다 (사용자가 직접 적는다)", async () => {
+    const data = (await (await call("criminal-complaint", { inquiryId: ID })).json()).data;
+    expect(data.ai).toEqual({ used: false, reason: "no_facts" });
+    expect(data.suggestions.damageDetail).toBeUndefined();
+    expect(ai.draftFacts).not.toHaveBeenCalled();
+  });
+
+  test("임차권등기명령은 신청이유 추가 사정 칸에 넣는다", async () => {
+    const data = (await (await call("lease-registration", { inquiryId: ID })).json()).data;
     expect(data.suggestions.extraReason).toBe("1. 원고는 전세 계약을 맺었습니다.");
   });
 });
