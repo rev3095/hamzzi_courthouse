@@ -22,7 +22,7 @@
 | 03 Key Screen · D+ 원본 | 확정 시안 D+ 5프레임 — 홈 기본·분석 중·결과 × desktop-1440, 홈 기본·결과 × mobile-375. 프레임 이름에 S-ID(S-01·S-03·S-04), 레이어 이름은 `화면 / 영역 / 요소`. 반복 부분은 05의 인스턴스 (2026-10-22 정리) |
 | 04 Foundations | 색·모서리 Variables 견본, Text Styles 견본 (노드 `8:2`) |
 | 05 Components | 03 화면에서 뽑은 컴포넌트 세트 (변형 `기기=desktop/mobile`). 각 컴포넌트 설명에 F-ID·코드 위치 (아래 3.1) |
-| 99 Archive | 지난 시안, 범위 밖 화면, 정리 전 03 원본 `백업 2026-10-22` |
+| 99 Archive | 지난 시안, 범위 밖 화면, 정리 전 03 원본 `백업 2026-10-22`, 교체 전 SVG 마스코트 `백업 · SVG 마스코트 (2026-11-15 교체 전)` |
 
 ### D+ 원본을 옮길 때 그대로 둔 것 (구현 전에 결정 필요)
 옮기기는 원본과 같게 했다. 아래는 원본에 있던 내용이라 그대로 두었고, 구현 단계에서 사용자 결정이 필요하다.
@@ -95,7 +95,7 @@ Figma 변수는 컬렉션 `hz tokens`(모드 `light`)에 있고, 각 변수의 W
 3. Claude는 `figma-sync` 스킬(.claude/skills/figma-sync) 순서로 작업한다.
    - 토큰: `get_variable_defs` → `pnpm figma:tokens` → `app/globals.css` 반영
    - 화면: `get_design_context` + `get_screenshot` → `components/`·`app/` 구현 (API·lib·DB는 바꾸지 않음)
-   - 에셋: 마스코트·아이콘은 `download_assets`로 SVG를 받아 토큰 색으로 바꾼 컴포넌트로 만든다
+   - 에셋: 마스코트는 그림(PNG/webp)이다 (2026-11-15 교체). 코드는 `public/mascot/hamzzi-judge.webp`(전신 480×635)·`hamzzi-face.webp`(얼굴 160×160)를 쓰고, Figma의 같은 그림을 바꾸면 `download_assets`로 받아 이 파일을 갈아 끼운다. Figma 업로드는 PNG로 한다(webp는 Figma가 읽지 못함). 아이콘은 SVG로 받아 토큰 색으로 바꾼다
 4. 검증: 개발 서버 화면을 375·1440으로 캡처해 Figma 스크린샷과 나란히 비교하고, 남은 차이를 "어디 / 왜 / 제안"으로 보고한다. 사용자가 승인한 차이만 남긴다.
 5. 절대 규칙과 충돌하는 디자인(1절 목록 같은 것)은 고치지 않고 먼저 묻는다.
 
