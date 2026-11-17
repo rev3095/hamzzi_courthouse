@@ -18,6 +18,9 @@ import {
 import { FALSE_ACCUSATION_PLEDGE, FRAUD_TYPES } from "./specs/criminal";
 
 const box = (on: boolean) => (on ? "■" : "□");
+/** 있다·없다 둘 다 □이면 '모름' — 확정 진술을 만들지 않는다 */
+const pair = (v: string | undefined, yes: string, no: string) =>
+  `${yes} ${box(v === "yes")} / ${no} ${box(v === "no")}`;
 const orBlank = (v: string | undefined) => (v && v.trim() ? v : "");
 
 export function criminalComplaint(v: V): Block[] {
@@ -60,13 +63,13 @@ export function criminalComplaint(v: V): Block[] {
     blank,
     heading("5. 관련사건의 수사 및 재판 여부"),
     p(
-      `① 중복 고소 여부 : 본 고소장과 같은 내용의 고소장을 다른 검찰청 또는 경찰서에 제출하거나 제출하였던 사실이 ${v.duplicate === "yes" ? "있습니다" : "없습니다"}`,
+      `① 중복 고소 여부 : 본 고소장과 같은 내용의 고소장을 다른 검찰청 또는 경찰서에 제출하거나 제출하였던 사실이 ${pair(v.duplicate, "있습니다", "없습니다")}`,
     ),
     p(
-      `② 관련 형사사건 : 본 고소장에 기재된 범죄사실과 관련된 사건 또는 공범에 대하여 검찰청이나 경찰서에서 ${v.relatedCriminal === "yes" ? "수사 중에 있습니다" : "수사 중에 있지 않습니다"}`,
+      `② 관련 형사사건 : 본 고소장에 기재된 범죄사실과 관련된 사건 또는 공범에 대하여 검찰청이나 경찰서에서 ${pair(v.relatedCriminal, "수사 중에 있습니다", "수사 중에 있지 않습니다")}`,
     ),
     p(
-      `③ 관련 민사소송 : 본 고소장에 기재된 범죄사실과 관련된 사건에 대하여 법원에서 ${v.relatedCivil === "yes" ? "민사소송 중에 있습니다" : "민사소송 중에 있지 않습니다"}`,
+      `③ 관련 민사소송 : 본 고소장에 기재된 범죄사실과 관련된 사건에 대하여 법원에서 ${pair(v.relatedCivil, "민사소송 중에 있습니다", "민사소송 중에 있지 않습니다")}`,
     ),
     blank,
     heading("고소내용에 대한 진실확약"),

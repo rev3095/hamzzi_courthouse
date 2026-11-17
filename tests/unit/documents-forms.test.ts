@@ -211,6 +211,62 @@ const FULL: Record<DocumentKind, Record<string, string>> = {
       "초심은 해고 통지가 서면으로 이루어졌다고 보았으나 서면 통지를 받은 사실이 없습니다.",
     writtenOn: "",
   },
+  "lease-mediation": {
+    applicantName: "김햄찌",
+    applicantAddress: "해바라기시 씨앗구 볍씨로 7",
+    applicantPhone: "010-0000-1234",
+    applicantService: "",
+    respondentName: "이도토리",
+    respondentAddress: "도토리시 참나무구 밤길 3",
+    respondentPhone: "",
+    aim: "피신청인은 신청인의 계약갱신요구를 받아들인다.",
+    aimAmount: "",
+    aimBasis: "",
+    reason: "신청인은 2026년 9월 1일 문자로 계약 갱신을 요구했으나 피신청인이 거절했습니다.",
+    evidence: "임대차계약서 사본\n문자 내역",
+    branch: "서울중앙지부",
+    writtenOn: "2026-11-17",
+  },
+  "civil-mediation": {
+    caseName: "손해배상(기) 조정신청",
+    applicantName: "김햄찌",
+    applicantAddress: "해바라기시 씨앗구 볍씨로 7",
+    applicantPhone: "",
+    respondentName: "이도토리",
+    respondentAddress: "해바라기시 씨앗구 볍씨로 7, 위층",
+    respondentPhone: "",
+    claimAmount: "320000",
+    otherAims: "피신청인은 밤 시간에 소음을 내지 않는다.",
+    cause: "2026년 8월 12일 위층 누수로 천장이 젖어 수리비 320,000원이 들었습니다.",
+    evidence: "피해 사진\n수리비 영수증",
+    attachments: "proof,copy,fee",
+    court: "해바라기지방법원",
+    writtenOn: "2026-11-17",
+  },
+  "financial-mediation": {
+    applicantName: "김햄찌",
+    applicantAddress: "해바라기시 씨앗구 볍씨로 7",
+    applicantPhone: "010-0000-1234",
+    company: "도토리화재해상보험",
+    companyAddress: "",
+    aim: "피신청인은 신청인에게 보험금을 지급한다.",
+    reason: "2026년 6월 3일 교통사고 치료비 보험금을 청구했으나 7월 1일 거절 통지를 받았습니다.",
+    evidence: "보험증권 사본\n거절 통지서",
+    writtenOn: "2026-11-17",
+  },
+  "property-disclosure": {
+    creditorName: "김햄찌",
+    creditorAddress: "해바라기시 씨앗구 볍씨로 7",
+    creditorPhone: "",
+    debtorName: "이도토리",
+    debtorAddress: "도토리시 참나무구 밤길 3",
+    title: "해바라기지방법원 2026가소1234 대여금 사건의 집행력 있는 판결정본",
+    unpaidAmount: "3000000",
+    reason: "",
+    attachments: "title,service",
+    court: "도토리지방법원",
+    writtenOn: "2026-11-17",
+  },
 };
 
 const digits = (s: string) =>
@@ -544,9 +600,13 @@ describe("DEC-025 2차 사기 서식", () => {
 describe("DEC-025 정의 일관성", () => {
   test.each(DOCUMENT_KINDS)("%s: 선택지 값은 칸 길이 안, 기본값은 선택지 안", (kind) => {
     for (const f of DOCUMENT_SPECS[kind].fields) {
-      for (const o of f.options ?? []) expect(o.value.length, `${f.key}:${o.value}`).toBeLessThanOrEqual(f.max);
+      for (const o of f.options ?? [])
+        expect(o.value.length, `${f.key}:${o.value}`).toBeLessThanOrEqual(f.max);
       if (f.type === "choice" && f.defaultValue)
-        expect(f.options?.map((o) => o.value), f.key).toContain(f.defaultValue);
+        expect(
+          f.options?.map((o) => o.value),
+          f.key,
+        ).toContain(f.defaultValue);
     }
   });
 });
@@ -586,7 +646,11 @@ describe("DEC-025 3차 노동 서식", () => {
     ).toEqual([]);
     const { text } = fillDocument(
       "wage-petition",
-      parseDocumentInput("wage-petition", { ...FULL["wage-petition"], stillWorking: "yes", endDate: "" }),
+      parseDocumentInput("wage-petition", {
+        ...FULL["wage-petition"],
+        stillWorking: "yes",
+        endDate: "",
+      }),
     );
     expect(text).toContain("~ 현재 (재직 중)");
   });
@@ -599,5 +663,83 @@ describe("DEC-025 3차 노동 서식", () => {
     const dis = TRACKS.dismissal.steps;
     expect(dis.find((s) => s.key === "remedy")?.document).toBe("dismissal-remedy");
     expect(dis.find((s) => s.key === "review")?.document).toBe("dismissal-review");
+  });
+});
+
+describe("DEC-025 4차 분쟁조정·재산명시 서식", () => {
+  test("주택임대차분쟁조정: 생년월일은 빈칸, 시행령 제30조 신청 문장, 위원회 지부 귀중", () => {
+    const { text } = fillDocument(
+      "lease-mediation",
+      parseDocumentInput("lease-mediation", FULL["lease-mediation"]),
+    );
+    expect(text).toContain("(생년월일:                    )");
+    expect(text).toContain("같은 법 시행령 제30조제1항에 따라 위와 같이 조정을 신청합니다.");
+    expect(text).toContain("대한법률구조공단 서울중앙지부 주택임대차분쟁조정위원회 귀중");
+  });
+
+  test("민사 조정: 금액은 기본 문장에, 그 밖의 사항은 이어서, '라는 조정을 구합니다'", () => {
+    const { text } = fillDocument(
+      "civil-mediation",
+      parseDocumentInput("civil-mediation", FULL["civil-mediation"]),
+    );
+    expect(text).toMatch(
+      /신 청 취 지\n1\. 피신청인은 신청인에게 금 320,000원을 지급한다\.\n2\. 피신청인은 밤 시간에 소음을 내지 않는다\.\n라는 조정을 구합니다\./,
+    );
+  });
+
+  test("재산명시: 민사집행규칙 제25조 기재사항(당사자·집행권원·금전채무액·신청취지와 사유)", () => {
+    const { text } = fillDocument(
+      "property-disclosure",
+      parseDocumentInput("property-disclosure", FULL["property-disclosure"]),
+    );
+    expect(text).toContain("집행권원의 표시  해바라기지방법원 2026가소1234 대여금 사건의 집행력 있는 판결정본");
+    expect(text).toContain("채무자가 이행하지 아니하는 금전채무액  금 3,000,000원");
+    expect(text).toContain("채무자는 재산상태를 명시한 재산목록을 제출하라.");
+  });
+
+  test("분쟁조정·강제집행 단계에 서식이 연결된다 (강제집행은 여러 타임라인이 함께 쓴다)", () => {
+    const step = (t: keyof typeof TRACKS, k: string) => TRACKS[t].steps.find((s) => s.key === k);
+    expect(step("lease_residence", "mediation")?.document).toBe("lease-mediation");
+    expect(step("neighbor", "mediation")?.document).toBe("civil-mediation");
+    expect(step("traffic", "mediation")?.document).toBe("financial-mediation");
+    for (const t of ["lease_deposit", "contract_deposit", "money"] as const)
+      expect(step(t, "enforce")?.document).toBe("property-disclosure");
+  });
+});
+
+describe("DEC-025 법률 검토 반영", () => {
+  test("고소장 관련 사건 칸: 기본값은 '모름'이고, 모름이면 있다·없다 어느 쪽도 표시하지 않는다", () => {
+    expect(initialValues("criminal-complaint").duplicate).toBe("unknown");
+    const { text } = fillDocument(
+      "criminal-complaint",
+      parseDocumentInput("criminal-complaint", {
+        ...FULL["criminal-complaint"],
+        duplicate: "unknown",
+        relatedCriminal: "unknown",
+        relatedCivil: "no",
+      }),
+    );
+    expect(text).toContain("제출하였던 사실이 있습니다 □ / 없습니다 □");
+    expect(text).toContain("수사 중에 있습니다 □ / 수사 중에 있지 않습니다 □");
+    expect(text).toContain("민사소송 중에 있습니다 □ / 민사소송 중에 있지 않습니다 ■");
+  });
+
+  test("공식 문구 인용(officialNotice)은 등록한 상수와 정확히 같을 때만 쓴다", async () => {
+    const { FALSE_ACCUSATION_PLEDGE } = await import("@/lib/documents/specs/criminal");
+    const { WAGE_ADVANCE_NOTICE } = await import("@/lib/documents/specs/labor");
+    const allowed = new Set([FALSE_ACCUSATION_PLEDGE, WAGE_ADVANCE_NOTICE]);
+    for (const kind of DOCUMENT_KINDS) {
+      const n = DOCUMENT_SPECS[kind].officialNotice;
+      if (n) {
+        expect(allowed.has(n.text), kind).toBe(true);
+        expect(n.source, kind).toMatch(/서식/);
+      }
+    }
+  });
+
+  test("고소장에는 AI 초안 칸이 없다", async () => {
+    const { FACTS_FIELD } = await import("@/lib/documents/policy");
+    expect(FACTS_FIELD["criminal-complaint"]).toBeUndefined();
+    expect(DOCUMENT_SPECS["criminal-complaint"].draftFields).toBe("");
   });
 });

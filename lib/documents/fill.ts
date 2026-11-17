@@ -5,6 +5,12 @@ import type { DocumentKind } from "@/lib/procedure/steps";
 import { compensationOrder, criminalComplaint } from "./fill-criminal";
 import { dismissalRemedy, dismissalReview, wageAdvance, wagePetition } from "./fill-labor";
 import {
+  civilMediation,
+  financialMediation,
+  leaseMediation,
+  propertyDisclosure,
+} from "./fill-mediation";
+import {
   blank,
   BLANK_WON,
   center,
@@ -62,6 +68,22 @@ export function fillBlocks(
         basename: "부당해고구제재심신청서",
         blocks: dismissalReview(v),
       };
+    case "lease-mediation":
+      return {
+        title: "주택임대차분쟁조정 신청서",
+        basename: "주택임대차분쟁조정신청서",
+        blocks: leaseMediation(v),
+      };
+    case "civil-mediation":
+      return { title: "민사 조정신청서", basename: "민사조정신청서", blocks: civilMediation(v) };
+    case "financial-mediation":
+      return {
+        title: "금융분쟁조정 신청서",
+        basename: "금융분쟁조정신청서",
+        blocks: financialMediation(v),
+      };
+    case "property-disclosure":
+      return { title: "재산명시신청서", basename: "재산명시신청서", blocks: propertyDisclosure(v) };
   }
 }
 

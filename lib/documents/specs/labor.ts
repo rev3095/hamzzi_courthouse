@@ -15,7 +15,8 @@ import {
   type Field,
 } from "../fields";
 
-const LAW_GO = "https://www.law.go.kr";
+const WAGE_RULE_URL = "https://www.law.go.kr/법령/임금채권보장법시행규칙";
+const NLRC_RULE_URL = "https://www.law.go.kr/행정규칙/노동위원회규칙";
 const LAW_SOURCE = "법제처 국가법령정보센터";
 const LABOR_PORTAL = "https://labor.moel.go.kr";
 
@@ -173,14 +174,14 @@ export const LABOR_SPECS = {
       {
         name: "간이대지급금 지급청구서 (임금채권보장법 시행규칙 별지 제3호의2서식)",
         source: LAW_SOURCE,
-        url: LAW_GO,
+        url: WAGE_RULE_URL,
       },
     ],
     basis: ["임금채권보장법 제7조·제7조의2", "같은 법 시행규칙 제5조"],
     draftFields: "",
     officialNotice: {
       text: WAGE_ADVANCE_NOTICE,
-      source: "간이대지급금 지급청구서 뒤쪽 공지사항 (법령 서식 문구)",
+      source: "임금채권보장법 시행규칙 별지 제3호의2서식 뒤쪽 공지사항 (2026-11-18 법제처 조회)",
     },
     fields: [
       name("claimantName", "청구인 이름"),
@@ -246,14 +247,14 @@ export const LABOR_SPECS = {
       },
       money(
         "unpaidRecentWage",
-        "가. 마지막 석 달 치 임금·휴업수당·출산전후휴가 급여 중 못 받은 금액",
-        "서식의 ⑤-가 칸이에요. 재직자는 진정·소송을 낸 날 기준이에요.",
+        "⑤-가 칸: 임금·휴업수당·출산전후휴가기간 중 급여 가운데 못 받은 금액",
+        "기간 기준은 서식 ⑤-가 칸 문구와 뒤쪽 작성방법을 따라요. 문서에는 서식 문구가 그대로 들어가요.",
         true,
       ),
       money(
         "unpaidRecentSeverance",
-        "나. 퇴직급여 중 못 받은 금액 (퇴직자)",
-        "서식의 ⑤-나 칸이에요. 기간 기준은 서식 뒤쪽 작성방법을 확인하세요.",
+        "⑤-나 칸: 퇴직급여등 가운데 못 받은 금액 (퇴직자)",
+        "기간 기준은 서식 ⑤-나 칸 문구와 뒤쪽 작성방법을 따라요.",
         true,
       ),
       {
@@ -316,7 +317,7 @@ export const LABOR_SPECS = {
       {
         name: "부당해고 등 구제신청서 (노동위원회규칙 별지 제9호서식)",
         source: `${LAW_SOURCE} (노동위원회규칙)`,
-        url: LAW_GO,
+        url: NLRC_RULE_URL,
       },
     ],
     basis: [
@@ -399,7 +400,7 @@ export const LABOR_SPECS = {
       {
         name: "부당해고등 구제 재심 신청서 (노동위원회규칙 별지 서식)",
         source: `${LAW_SOURCE} (노동위원회규칙)`,
-        url: LAW_GO,
+        url: NLRC_RULE_URL,
       },
     ],
     basis: ["근로기준법 제31조(구제명령 등의 확정)", "노동위원회규칙 제89조(재심의 범위)"],
