@@ -18,7 +18,7 @@
 | `draft.ts` | 초안 도우미(DEC-023) 규칙: `ruleSuggestions`, `FACTS_FIELD`(사실관계 칸), `partyWords`, `screenFacts`·`screenMissing`, `factsText` |
 | `export/index.ts` | 형식 고르기 `buildFile`(형식별 코드는 dynamic import), `fetchFonts`, `downloadFile` |
 | `export/docx.ts` · `export/zip.ts` | DOCX(WordprocessingML)와 무압축 ZIP. 의존성 없음 |
-| `export/hwpx.ts` | HWPX(OWPML). `hwpx-js`(Apache-2.0)를 쓰고 정렬 문단 모양을 더한다. **실험 기능** |
+| `export/hwpx.ts` | HWPX(OWPML). 의존성 없이 한글 표준 구조(`<hp:t>`, 첫 run 안 `secPr`, 첫 항목 무압축 mimetype)로 직접 만든다. hwpx-mcp-server로 글자·정렬을 읽어 확인했다. 한글 프로그램 확인 전이라 **실험 기능** |
 | `export/pdf.ts` | PDF. `pdf-lib`·`@pdf-lib/fontkit`(MIT)에 나눔고딕(SIL OFL, `public/fonts`, 서브셋)을 넣는다 |
 
 `policy.ts`에 들어 있는 것:

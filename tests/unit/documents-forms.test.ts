@@ -3,14 +3,13 @@
 // 무료 로컬 검사만 (LLM 없음). 실명 대신 가상 이름을 쓴다.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { read as readHwpx } from "hwpx-js";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import { buildFile } from "@/lib/documents/export";
 import { documentXml, toDocx, xmlEscape } from "@/lib/documents/export/docx";
-import { hwpxDocument, toHwpx } from "@/lib/documents/export/hwpx";
+import { headerXml, sectionXml, toHwpx } from "@/lib/documents/export/hwpx";
 import { wrapLine } from "@/lib/documents/export/pdf";
 import { crc32 } from "@/lib/documents/export/zip";
 import { formatDate, formatWon } from "@/lib/documents/fill";
@@ -489,18 +488,31 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
     expect(documentXml([{ kind: "text", text: "A&B<" }])).toContain("A&amp;B&lt;");
   });
 
-  test("HWPX: 다시 읽으면 같은 문단, 제목은 가운데·서명줄은 오른쪽 정렬", () => {
-    const back = readHwpx(toHwpx(doc.blocks));
-    const texts = back.sections[0].paragraphs.map((p) =>
-      p.runs.map((r) => (r.t === "text" ? r.text : "")).join(""),
-    );
-    expect(texts).toEqual(doc.blocks.map((b) => b.text));
-    const model = hwpxDocument(doc.blocks);
-    const alignOf = (i: number) =>
-      model.head.paraProperties.find((pp) => pp.id === model.sections[0].paragraphs[i].paraPrIDRef)
-        ?.alignment;
-    expect(alignOf(0)).toBe("CENTER");
-    expect(alignOf(doc.blocks.findIndex((b) => b.kind === "right"))).toBe("RIGHT");
+  test("HWPX: 한글 표준(OWPML) 구조 — mimetype 첫 항목, 글자는 <hp:t>, 쪽 설정은 첫 run 안", () => {
+    const bytes = toHwpx(doc.blocks, { title: doc.title });
+    const raw = new TextDecoder().decode(bytes);
+    // 첫 로컬 파일 항목 이름이 mimetype이고 내용이 application/hwp+zip (무압축)
+    expect(raw.slice(30, 38)).toBe("mimetype");
+    expect(raw.slice(38, 38 + "application/hwp+zip".length)).toBe("application/hwp+zip");
+    for (const part of [
+      "version.xml",
+      "META-INF/container.xml",
+      "Contents/content.hpf",
+      "Contents/header.xml",
+      "Contents/section0.xml",
+    ])
+      expect(raw).toContain(part);
+    const section = sectionXml(doc.blocks);
+    expect(section).not.toContain("runText");
+    expect(section).toMatch(/^<\?xml[^>]*\?><hs:sec [^>]*><hp:p [^>]*><hp:run [^>]*><hp:secPr /);
+    const texts = [...section.matchAll(/<hp:t>([^<]*)<\/hp:t>/g)].map((m) => m[1]);
+    expect(texts).toEqual(doc.blocks.map((b) => xmlEscape(b.text)));
+    // 정렬: 제목은 가운데(paraPr 1), 서명줄은 오른쪽(paraPr 2)
+    const paraRefs = [...section.matchAll(/<hp:p [^>]*paraPrIDRef="(\d)"/g)].map((m) => m[1]);
+    expect(paraRefs[0]).toBe("1");
+    expect(paraRefs[doc.blocks.findIndex((b) => b.kind === "right")]).toBe("2");
+    expect(headerXml()).toContain('<hh:align horizontal="RIGHT"');
+    expect(sectionXml([{ kind: "text", text: "A&B<" }])).toContain("<hp:t>A&amp;B&lt;</hp:t>");
   });
 
   test("PDF: 한글 글꼴을 넣은 A4 PDF, 제목만 메타데이터에 넣는다 (이름 없음)", async () => {
@@ -692,7 +704,9 @@ describe("DEC-025 4차 분쟁조정·재산명시 서식", () => {
       "property-disclosure",
       parseDocumentInput("property-disclosure", FULL["property-disclosure"]),
     );
-    expect(text).toContain("집행권원의 표시  해바라기지방법원 2026가소1234 대여금 사건의 집행력 있는 판결정본");
+    expect(text).toContain(
+      "집행권원의 표시  해바라기지방법원 2026가소1234 대여금 사건의 집행력 있는 판결정본",
+    );
     expect(text).toContain("채무자가 이행하지 아니하는 금전채무액  금 3,000,000원");
     expect(text).toContain("채무자는 재산상태를 명시한 재산목록을 제출하라.");
   });
