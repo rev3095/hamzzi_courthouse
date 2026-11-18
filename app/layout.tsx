@@ -3,6 +3,7 @@ import { IBM_Plex_Sans_KR, Noto_Serif_KR, Playfair_Display } from "next/font/goo
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CommandPalette } from "@/components/search/CommandPalette";
+import { GuideBot } from "@/components/guide/GuideBot";
 import "./globals.css";
 
 const plexKr = IBM_Plex_Sans_KR({
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <SiteFooter />
         <CommandPalette />
+        <GuideBot />
       </body>
     </html>
   );

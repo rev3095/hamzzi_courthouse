@@ -69,7 +69,7 @@ export const MOOD_INFO: Record<MascotMood, MoodInfo> = {
   curious: {
     label: "궁금함",
     when: "이어 묻기·예시 질문처럼 질문을 기다릴 때",
-    usedIn: [],
+    usedIn: ["햄찌 안내 챗봇 · 첫 인사"],
     line: "더 궁금한 점이 있나요?",
     art: "호기심 어린 눈, 귀를 쫑긋",
   },
