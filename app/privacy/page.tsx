@@ -55,6 +55,11 @@ export default function PrivacyPage() {
           저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
           &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
         </p>
+        <p>
+          마이페이지에서 햄찌 안내 챗봇을 끄면 &lsquo;꺼짐&rsquo; 값 하나만 이 브라우저의
+          저장소(localStorage)에 두고, 다시 켜면 지워요. 서버로 보내지 않고, 챗봇과 나눈 대화는
+          어디에도 저장하지 않아요.
+        </p>
       </Section>
       <Section title="2. 이용 목적">
         <p>질문에 맞는 법령·판례를 찾아 정리해 보여 드리고, 남용을 막고, 오류를 고치는 데 써요.</p>
