@@ -32,7 +32,7 @@
 
 | 파일             | 역할                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `categories.ts`  | 홈 카테고리 버튼 11개(이름·설명·안내·placeholder·문장 시작·기본 타임라인·고정 판례 검색어 `caseQuery`·판례 사건 종류·예시 id). 분류 기준은 생활법령정보 분야 (docs/research/06) |
+| `categories.ts`  | 홈 카테고리 버튼 28개(DEC-034, 묶음 6개 `CATEGORY_GROUPS`로 화면에 나눠 보인다. 이름·설명·안내·placeholder·문장 시작·기본 타임라인·고정 판례 검색어 `caseQuery`·판례 사건 종류·예시 id). 분류 기준은 생활법령정보 분야 (docs/research/06) |
 | `life-tracks.ts` | 새 섹션 타임라인 `LIFE_TRACKS`: 가족·이혼(`family`)·상속(`inheritance`)·소비자·환불(`consumer`)·명예훼손·온라인(`defamation`). 공식 서식 작성기와 잇지 않는다(`document` 없음)  |
 
 - `procedurePlan`은 새 섹션이면 `kind: "life_timeline"`을 낸다(기존 섹션은 `timeline`). 화면은 `hasTimeline(plan)`으로 둘 다 타임라인으로 그린다. 종류를 나눈 까닭: 문서 초안(lib/documents)이 기존 섹션 키(`TrackKey`)만 다루므로 그쪽 타입을 바꾸지 않기 위해서.

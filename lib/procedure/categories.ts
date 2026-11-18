@@ -1,4 +1,4 @@
-// 홈 카테고리 버튼 (DEC-028). 순수 상수·규칙 — LLM을 쓰지 않는다.
+// 홈 카테고리 버튼 (DEC-028, 묶음·추가 섹션은 DEC-034). 순수 상수·규칙 — LLM을 쓰지 않는다.
 // 버튼 분류는 법제처 찾기쉬운 생활법령정보 분야를 따르고, 판례 사건 종류(민사·가사·형사·행정)는
 // 각 카테고리에서 찾는 판례의 범위 설명(caseKinds)에만 쓴다 (docs/research/06_카테고리_분류_조사.md).
 // 카테고리는 ① 질문 입력 안내(placeholder·문장 시작) ② 분류 보조(classifyCase가 규칙으로 정하지 못할 때만)
@@ -18,6 +18,24 @@ export const CATEGORY_KEYS = [
   "inheritance",
   "consumer",
   "defamation",
+  // 추가 섹션 (DEC-033·034)
+  "insult",
+  "assault",
+  "stalking",
+  "sex_crime",
+  "voice_phishing",
+  "crime_report",
+  "workplace_harassment",
+  "industrial_accident",
+  "domestic_violence",
+  "school_violence",
+  "medical",
+  "privacy",
+  "commercial_lease",
+  "respond_civil",
+  "respond_criminal",
+  "admin_appeal",
+  "debt_relief",
 ] as const;
 
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
@@ -194,10 +212,283 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseKinds: "형사·민사",
     examples: [],
   },
+  // ── 추가 섹션 (DEC-034): 추가 타임라인(more-tracks.ts)과 대면 모욕 ──
+  insult: {
+    key: "insult",
+    label: "욕설·모욕 (대면)",
+    description: "직접 들은 욕설, 사람들 앞 모욕·험담",
+    guide:
+      "피해를 본 쪽 기준으로 안내해요. 어디에서 누가 있는 자리였는지, 어떤 말을 들었는지 적어 주세요(실명·연락처는 빼고).",
+    placeholder: "예: 식당에서 다른 손님들이 보는 앞에서 심한 욕설을 들었어요.",
+    starters: [
+      "사람들 앞에서 심한 욕설을 들었어요. ",
+      "직장 동료가 다른 사람들에게 저에 대한 험담을 퍼뜨려요. ",
+    ],
+    track: "insult",
+    caseQuery: "모욕 공연성",
+    caseKinds: "형사·민사",
+    examples: [],
+  },
+  assault: {
+    key: "assault",
+    label: "폭행·상해",
+    description: "맞거나 다친 피해, 합의, 치료비",
+    guide:
+      "맞거나 다친 쪽 기준으로 안내해요. 언제 어디서 어떤 일이 있었고 얼마나 다쳤는지 적어 주세요.",
+    placeholder: "예: 술집에서 모르는 사람에게 맞아서 병원 치료를 받았어요.",
+    starters: ["모르는 사람에게 맞아서 다쳤어요. ", "가해자가 합의를 하자고 해요. "],
+    track: "assault",
+    caseQuery: "폭행 상해 손해배상",
+    caseKinds: "형사·민사",
+    examples: [],
+  },
+  stalking: {
+    key: "stalking",
+    label: "스토킹·협박",
+    description: "반복되는 연락·접근, 협박",
+    guide:
+      "피해를 본 쪽 기준으로 안내해요. 어떤 연락이나 접근이 언제부터 반복됐는지 적어 주세요. 위험하면 경찰 긴급신고가 먼저예요.",
+    placeholder: "예: 헤어진 사람이 계속 연락하고 집 앞에 찾아와요.",
+    starters: ["그만하라고 했는데도 계속 연락이 와요. ", "집이나 직장 앞에 계속 찾아와요. "],
+    track: "stalking",
+    caseQuery: "스토킹범죄",
+    caseKinds: "형사",
+    examples: [],
+  },
+  sex_crime: {
+    key: "sex_crime",
+    label: "성범죄 피해",
+    description: "성폭력·성추행·불법 촬영 피해",
+    guide:
+      "피해를 본 쪽 기준으로 안내해요. 적을 수 있는 만큼만 적어 주세요. 지원 기관 상담은 신고를 정하지 않았어도 받을 수 있어요.",
+    placeholder: "예: 불법 촬영 피해를 입었는데 어떻게 대응해야 할지 모르겠어요.",
+    starters: ["성추행 피해를 입었어요. ", "불법 촬영물이 퍼졌어요. "],
+    track: "sex_crime",
+    caseQuery: "강제추행",
+    caseKinds: "형사·민사",
+    examples: [],
+  },
+  voice_phishing: {
+    key: "voice_phishing",
+    label: "보이스피싱",
+    description: "기관 사칭·문자 사기로 보낸 돈",
+    guide:
+      "속아서 돈을 보낸 쪽 기준으로 안내해요. 언제 어떤 연락을 받고 어디로 돈을 보냈는지 적어 주세요. 지급정지 요청이 급해요.",
+    placeholder: "예: 검찰이라는 전화를 받고 알려 준 계좌로 돈을 보냈어요.",
+    starters: [
+      "기관을 사칭한 전화에 속아 돈을 보냈어요. ",
+      "문자에 있는 주소를 눌렀더니 돈이 빠져나갔어요. ",
+    ],
+    track: "voice_phishing",
+    caseQuery: "전기통신금융사기",
+    caseKinds: "형사·민사",
+    examples: [],
+  },
+  crime_report: {
+    key: "crime_report",
+    label: "그 밖의 범죄 피해",
+    description: "절도·횡령·재물손괴 등 고소",
+    guide: "피해를 본 쪽 기준으로 안내해요. 어떤 피해를 누구에게 어떻게 입었는지 적어 주세요.",
+    placeholder: "예: 맡겨 둔 물건을 돌려주지 않고 팔아 버렸어요.",
+    starters: ["물건을 도둑맞았어요. ", "맡긴 돈을 마음대로 써 버렸어요. "],
+    track: "crime_report",
+    caseQuery: "고소",
+    caseKinds: "형사",
+    examples: [],
+  },
+  workplace_harassment: {
+    key: "workplace_harassment",
+    label: "직장 내 괴롭힘",
+    description: "상사·동료의 괴롭힘, 따돌림",
+    guide:
+      "괴롭힘을 당한 쪽 기준으로 안내해요. 누가 어떤 행동을 언제부터 했는지, 회사에 알렸는지 적어 주세요.",
+    placeholder: "예: 상사가 다른 직원들 앞에서 계속 폭언을 해요.",
+    starters: ["상사에게 계속 폭언을 듣고 있어요. ", "회사에 신고했는데 조치를 하지 않아요. "],
+    track: "workplace_harassment",
+    caseQuery: "직장 내 괴롭힘",
+    caseKinds: "민사·행정",
+    examples: [],
+  },
+  industrial_accident: {
+    key: "industrial_accident",
+    label: "산재",
+    description: "일하다 다치거나 아픈 경우의 보상",
+    guide:
+      "일하다 다치거나 아픈 사람 기준으로 안내해요. 어떤 일을 하다가 어떻게 다쳤는지 적어 주세요.",
+    placeholder: "예: 공사 현장에서 일하다 다쳤는데 회사가 산재 처리를 안 해 줘요.",
+    starters: ["일하다가 다쳤어요. ", "회사가 산재 신청을 하지 말라고 해요. "],
+    track: "industrial_accident",
+    caseQuery: "업무상 재해",
+    caseKinds: "행정·민사",
+    examples: [],
+  },
+  domestic_violence: {
+    key: "domestic_violence",
+    label: "가정폭력",
+    description: "배우자·가족에게 당한 폭력",
+    guide:
+      "피해를 본 쪽 기준으로 안내해요. 위험하면 경찰 긴급신고가 먼저예요. 적을 수 있는 만큼만 적어 주세요.",
+    placeholder: "예: 배우자가 때려서 다쳤는데 접근을 막을 방법이 있나요?",
+    starters: ["배우자에게 폭력을 당했어요. ", "가해자가 집에 오지 못하게 하고 싶어요. "],
+    track: "domestic_violence",
+    caseQuery: "가정폭력",
+    caseKinds: "가사·형사",
+    examples: [],
+  },
+  school_violence: {
+    key: "school_violence",
+    label: "학교폭력",
+    description: "학생이 당한 폭력·따돌림",
+    guide:
+      "피해 학생과 보호자 기준으로 안내해요. 어떤 일이 언제부터 있었고 학교에 알렸는지 적어 주세요.",
+    placeholder: "예: 아이가 같은 반 학생들에게 따돌림과 괴롭힘을 당하고 있어요.",
+    starters: [
+      "아이가 학교에서 괴롭힘을 당하고 있어요. ",
+      "학교폭력 조치 결과를 받아들이기 어려워요. ",
+    ],
+    track: "school_violence",
+    caseQuery: "학교폭력",
+    caseKinds: "행정·민사",
+    examples: [],
+  },
+  medical: {
+    key: "medical",
+    label: "의료사고",
+    description: "진료·수술 뒤 생긴 피해",
+    guide: "환자 쪽 기준으로 안내해요. 어떤 진료를 받았고 그 뒤 어떤 일이 생겼는지 적어 주세요.",
+    placeholder: "예: 수술을 받은 뒤 상태가 나빠졌는데 병원은 책임이 없다고 해요.",
+    starters: ["수술을 받은 뒤 문제가 생겼어요. ", "병원이 진료 기록을 주지 않아요. "],
+    track: "medical",
+    caseQuery: "의료과실 손해배상",
+    caseKinds: "민사",
+    examples: [],
+  },
+  privacy: {
+    key: "privacy",
+    label: "개인정보",
+    description: "개인정보 유출·명의 도용",
+    guide:
+      "피해를 본 쪽 기준으로 안내해요. 어떤 정보가 어디에서 새거나 쓰였는지 적어 주세요(정보 자체는 적지 말고).",
+    placeholder: "예: 가입한 사이트에서 개인정보가 유출됐다는 통지를 받았어요.",
+    starters: [
+      "개인정보가 유출됐다는 통지를 받았어요. ",
+      "제 이름으로 모르는 가입이 되어 있어요. ",
+    ],
+    track: "privacy",
+    caseQuery: "개인정보 유출 손해배상",
+    caseKinds: "민사·형사",
+    examples: [],
+  },
+  commercial_lease: {
+    key: "commercial_lease",
+    label: "상가 임대차",
+    description: "상가 계약 갱신, 권리금, 임대료",
+    guide: "상가를 빌린 쪽(임차인) 기준으로 안내해요. 계약 기간과 무엇이 문제인지 적어 주세요.",
+    placeholder: "예: 상가 임대인이 재계약을 거절해서 권리금을 못 받게 됐어요.",
+    starters: ["상가 임대인이 재계약을 해 주지 않아요. ", "권리금을 받지 못하게 됐어요. "],
+    track: "commercial_lease",
+    caseQuery: "권리금 회수 방해",
+    caseKinds: "민사",
+    examples: [],
+  },
+  respond_civil: {
+    key: "respond_civil",
+    label: "소장·지급명령을 받음",
+    description: "법원 서류를 받은 쪽의 대응",
+    guide:
+      "서류를 받은 쪽 기준으로 안내해요. 어떤 서류를 받았는지 적어 주세요. 서류에 적힌 기한을 먼저 확인하세요.",
+    placeholder: "예: 법원에서 지급명령을 받았는데 어떻게 해야 하나요?",
+    starters: ["법원에서 지급명령을 받았어요. ", "소장을 받았는데 내용이 사실과 달라요. "],
+    track: "respond_civil",
+    caseQuery: "지급명령 이의신청",
+    caseKinds: "민사",
+    examples: [],
+  },
+  respond_criminal: {
+    key: "respond_criminal",
+    label: "고소·신고를 당함",
+    description: "수사를 받게 된 쪽의 대응",
+    guide: "수사를 받게 된 쪽 기준으로 안내해요. 어떤 일로 연락을 받았는지 적어 주세요.",
+    placeholder: "예: 경찰서에서 조사받으러 나오라는 연락을 받았어요.",
+    starters: ["경찰에서 출석하라는 연락을 받았어요. ", "고소를 당했다는 말을 들었어요. "],
+    track: "respond_criminal",
+    caseQuery: "피의자신문",
+    caseKinds: "형사",
+    examples: [],
+  },
+  admin_appeal: {
+    key: "admin_appeal",
+    label: "행정처분 불복",
+    description: "영업정지·면허 취소 등 처분 다투기",
+    guide:
+      "처분을 받은 쪽 기준으로 안내해요. 어떤 처분을 받았는지 적어 주세요. 처분서에 적힌 불복 기한을 먼저 확인하세요.",
+    placeholder: "예: 영업정지 처분을 받았는데 억울해서 다투고 싶어요.",
+    starters: ["영업정지 처분을 받았어요. ", "운전면허가 취소됐어요. "],
+    track: "admin_appeal",
+    caseQuery: "처분 취소",
+    caseKinds: "행정",
+    examples: [],
+  },
+  debt_relief: {
+    key: "debt_relief",
+    label: "빚·채무조정",
+    description: "갚기 어려운 빚, 개인회생·파산",
+    guide:
+      "빚을 갚기 어려운 쪽 기준으로 안내해요. 빚의 종류와 소득 상황을 적어 주세요(계좌번호는 빼고).",
+    placeholder: "예: 빚이 많아 갚기 어려운데 개인회생을 할 수 있을까요?",
+    starters: ["빚을 갚기 어려워졌어요. ", "개인회생과 파산 중 무엇을 알아봐야 할지 모르겠어요. "],
+    track: "debt_relief",
+    caseQuery: "개인회생",
+    caseKinds: "민사",
+    examples: [],
+  },
 };
 
 export const CATEGORY_LIST: Category[] = CATEGORY_KEYS.map((k) => CATEGORIES[k]);
 
 export function isCategoryKey(v: unknown): v is CategoryKey {
   return typeof v === "string" && (CATEGORY_KEYS as readonly string[]).includes(v);
+}
+
+/**
+ * 홈 화면 묶음 (DEC-034). 버튼이 많아져 묶음 탭 하나씩만 펼쳐 보인다. 모든 카테고리가 정확히 한 묶음에 든다
+ * (categories.test.ts가 확인). 묶음은 화면 정리용이고 분류·검색에는 쓰지 않는다.
+ */
+export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] }[] = [
+  {
+    key: "home",
+    label: "집·돈·계약",
+    keys: ["lease", "commercial_lease", "deposit", "loan", "consumer", "debt_relief"],
+  },
+  { key: "work", label: "일터", keys: ["labor", "workplace_harassment", "industrial_accident"] },
+  {
+    key: "crime",
+    label: "범죄 피해",
+    keys: [
+      "fraud",
+      "voice_phishing",
+      "defamation",
+      "insult",
+      "assault",
+      "stalking",
+      "sex_crime",
+      "crime_report",
+    ],
+  },
+  {
+    key: "family",
+    label: "가족·학교",
+    keys: ["family", "inheritance", "domestic_violence", "school_violence"],
+  },
+  { key: "life", label: "사고·생활", keys: ["traffic", "medical", "neighbor", "privacy"] },
+  {
+    key: "respond",
+    label: "서류·처분을 받음",
+    keys: ["respond_civil", "respond_criminal", "admin_appeal"],
+  },
+];
+
+/** 카테고리가 든 묶음 키 */
+export function groupOf(key: CategoryKey): string {
+  return CATEGORY_GROUPS.find((g) => g.keys.includes(key))?.key ?? CATEGORY_GROUPS[0].key;
 }

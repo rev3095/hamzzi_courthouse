@@ -35,6 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/research/03_규제_쟁점.md` | 게이트 기능·동의·과금 관련 작업 |
 | `docs/research/05_공식_서식_출처.md` | 문서 작성 서식(공식 기관 서식·근거 조문·이용 조건) |
 | `docs/research/06_카테고리_분류_조사.md` | 홈 카테고리·절차 섹션 분류 근거(생활법령 분야·판례 사건 종류) |
+| `docs/reports/` | 날짜별 분석·결정 보고서(모델·비용 비교, 배포 롤백·운영 모니터링 절차, 질문 해석·섹션 라벨). 비용·모델을 바꾸기 전에 해당 보고서 |
 | `docs/01_AI_Native_개발_파이프라인.md` | 단계별 작업 방식·프롬프트 |
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
@@ -81,7 +82,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(result·ask·search·documents·studio·guide·me) · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,mascot,guide,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `twa/` Android 앱(TWA, Bubblewrap) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·search·documents·studio·guide·me) · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,mascot,guide,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `twa/` Android 앱(TWA, Bubblewrap) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
@@ -97,7 +98,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
 - 판례·법령 탐색(DEC-029): `createLawSource()`는 `LawSource`(분석·검증)와 `LawExplorer`(결정문·연혁·시점 조문·3단 비교·신구 대조·별표·자치법규·행정규칙)를 함께 돌려준다. 판례 밖 자료 16종(결정문 12 + 조약·학칙·공사공단·공공기관 규정·영문 법령)의 target·필드 이름·상세 항목은 `DECISION_DOMAINS`(explore.ts) 한 표에 있다 — 새 종류는 여기에만 더하고 실호출(`tests/live/explore.live.test.ts`)로 필드 이름을 확인한다. 순수 규칙은 lib/search/explore.ts, 화면은 `/search`(종류 탭·바로 가기)·`/research`(업무용 리서치: 목록 + 옆 미리보기 + 보관함)·`/laws/[name]`·`/decisions/[domain]/[id]`·`/ordinances/[id]`. 모두 LLM 없음 — `SEARCH_NOTICE`, 관련도·심각도·유불리 판정 없음(절대 규칙 2), 결정문은 요지 항목만(DEC-007 원칙), 인증키가 든 `/DRF/` 주소는 응답에 싣지 않는다. 검색어는 주소에 두지 않고 `sessionStorage`(`hz:sq`)로만 화면 사이에 건네며, 조회 이력·보관함(`hz:recent`·`hz:pins`)은 공개 자료의 제목·주소만 localStorage에 둔다. 공개 저장소 lexdiff(BSL 1.1)의 기능 목록만 참고했고 코드는 가져오지 않는다.
 - `cacheComponents: true`(next.config.ts): `usePathname`·`useParams`·`useSearchParams` 같은 클라이언트 훅은 `<Suspense>` 안에서만 쓴다. 밖에서 쓰면 로컬 `pnpm dev`·CI는 통과해도 **Vercel 빌드가 프리렌더에서 실패**한다(예: 헤더 남은 질문 `QuotaRouteSync`).
-- 홈 카테고리(lib/procedure/categories, DEC-028)는 분류 보조·무료 판례 검색어에만 쓰고 이 기기(sessionStorage)·analyze 본문 `category`로만 오간다(DB 저장 없음). 예시 질문은 `/examples/[id]` 정적 화면으로 바로 보여 주고 질문 생성·횟수 API를 부르지 않는다.
+- 홈 카테고리(lib/procedure/categories, DEC-028 · 28개를 묶음 탭 6개로 나눠 보임 DEC-034)는 분류 보조·무료 판례 검색어에만 쓰고 이 기기(sessionStorage)·analyze 본문 `category`로만 오간다(DB 저장 없음). 예시 질문은 `/examples/[id]` 정적 화면으로 바로 보여 주고 질문 생성·횟수 API를 부르지 않는다.
 - 절차 타임라인(lib/procedure, DEC-021)은 LLM 없는 규칙 기반이다. 단계 문구에 숫자·단정 표현이 들어가면 `policy.test.ts`가 막는다. 결과(승패)를 판정하지 않는다. 라이트 답변의 질문 해석 호출이 고정 목록(`sections.ts`)에서 섹션 라벨만 고르고(DEC-033, 결과의 `section`), 라벨이 없으면 낱말 규칙으로 정한다 — 단계 문구는 언제나 고정 문안(`steps.ts`·`life-tracks.ts`·`more-tracks.ts`)이다.
 - 문서 작성(lib/documents, DEC-022·025)은 `legal_documents` 게이트 뒤에 있다(게이트가 꺼져 있으면 관리자 모드 브라우저만 미리보기): API 맨 앞 `requireFeature`, 화면은 게이트가 꺼져 있으면 안내·공식 양식 링크만. 사용자 입력을 칸에 넣기만 하고 저장·로그하지 않는다. AI 생성물이 아니라 `AI_NOTICE` 대신 `DOCUMENT_NOTICE`. 초안 도우미(DEC-023, `POST /documents/{kind}/draft`)는 질문 번호만 받아 마스킹본으로 규칙 칸 + Haiku 사실관계 초안($0.0015)을 주고, 그때는 `AI_NOTICE` + `DRAFT_NOTICE`. 이름·주소·금액은 브라우저 밖으로 보내지 않는다(양식 채우기는 브라우저에서, 저장소·쿠키 없음). 서식 14종(임대차·사기·노동·분쟁조정·집행, 목록은 lib/documents/README.md)은 공식 기관 서식·법령 기준이고(사설 양식 금지, docs/research/05), 화면은 설문 팝업 → 완성 → 예/아니요 → 웹 편집기 → 저장 → 예/아니요, 내보내기 HWPX(한글 표준 구조로 직접 작성)·DOCX(자체 ZIP)·PDF(pdf-lib + public/fonts 나눔고딕)는 모두 브라우저 안에서 만든다. 주민등록번호·생년월일·입금 계좌는 받지 않는다. 새 서식은 `specs/<섹션>.ts` + `fill-<섹션>.ts`에 더한다.
 - 브라우저 쪽 API 호출과 남은 질문 수는 lib/client/api.ts·components/useQuota.ts 한 저장소로 공유한다(헤더·홈·이어 묻기가 같은 값을 본다).
@@ -107,6 +108,8 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - Windows: Python 스크립트를 heredoc으로 넘기면 한글이 cp949로 깨진다. 파일로 저장해 `python -X utf8`로 실행한다.
 - Docker가 없으면 SQL은 `uv run --no-project --with pglast` 파서로 문법만 확인할 수 있다 (적용 검증 아님).
 - hook (.claude/settings.json): 편집 전 `protect.mjs`가 `.env*`(`.env.example` 제외)·`*.pem`·`*.key`·`secrets/` 편집을 막고, 편집 후 `format.mjs`가 ts·js·css·json에 prettier, ts·js에 `eslint --fix`, collector의 py에 `ruff format`을 자동 실행한다. 손으로 포맷을 맞출 필요는 없고, 편집 뒤 포맷 변경이 diff에 섞일 수 있다.
+- 여러 Claude 세션(데스크톱 앱·VS Code)이 이 폴더(main 체크아웃)에서 동시에 고치고 커밋한다. 여기서 `git add -A`·커밋을 하면 다른 세션의 작업 중 파일이 섞여 배포가 깨진 적이 있다(2026-11-18). 변경은 `git worktree add ../<이름> origin/main`으로 만든 별도 폴더에서 하고 `git push origin HEAD:main`으로 올린다. Windows에서 worktree 폴더는 경로가 길어 `git worktree remove`가 실패하므로 `cmd /c 'rmdir /s /q "\\?\<절대경로>"'` 뒤 `git worktree prune`으로 지운다.
+- `pnpm exec prettier --write lib`처럼 폴더째 포맷하면 관련 없는 파일이 바뀐다. 고친 파일만 지정한다.
 - `.env*`는 settings.json이 읽기도 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
 - korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용. ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
 
@@ -117,7 +120,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 작업 방식
 - 큰 기능은 계획을 먼저 보여주고 승인 후 구현한다.
 - 테스트 이름·커밋 메시지에 F-ID를 넣는다 (예: `F-003 AC2 결과 없음 안내`).
-- PRD에 없는 결정이 필요하면 임의로 정하지 말고 PRD 16.1 오픈 이슈에 추가를 제안한다.
+- PRD에 없는 결정이 필요하면 임의로 정하지 말고 PRD 16.1 오픈 이슈에 추가를 제안한다. 새 결정 번호는 PRD 16장 표의 마지막 DEC 다음 번호를 쓴다(다른 세션이 먼저 쓸 수 있으니 올리기 직전에 `origin/main`에서 다시 확인).
 - 데이터 소스는 공식 API만 쓴다. 판결서 인터넷 열람은 수집하지 않고 링크만 제공한다.
 
 ## 금지

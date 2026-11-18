@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { demoExamples } from "@/lib/demo/policy";
-import { CATEGORIES, CATEGORY_KEYS, CATEGORY_LIST, isCategoryKey } from "./categories";
+import {
+  CATEGORIES,
+  CATEGORY_GROUPS,
+  CATEGORY_KEYS,
+  CATEGORY_LIST,
+  groupOf,
+  isCategoryKey,
+} from "./categories";
 import { LIFE_TRACKS } from "./life-tracks";
 import { classifyCase, hasTimeline, procedurePlan } from "./policy";
 import { TRACKS } from "./steps";
@@ -26,6 +33,16 @@ describe("DEC-028 홈 카테고리 버튼", () => {
       expect(c.starters.length, c.key).toBeGreaterThan(0);
     }
     expect(CATEGORY_LIST.map((c) => c.key)).toEqual([...CATEGORY_KEYS]);
+  });
+
+  test("DEC-034 모든 카테고리가 정확히 한 묶음에 들고, 모든 타임라인에 카테고리가 있다", () => {
+    const grouped = CATEGORY_GROUPS.flatMap((g) => g.keys);
+    expect([...grouped].sort()).toEqual([...CATEGORY_KEYS].sort());
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect(groupOf("insult")).toBe("crime");
+    // 추가 타임라인(DEC-033)마다 홈 버튼이 있다
+    const tracks = new Set(CATEGORY_LIST.map((c) => c.track));
+    for (const key of Object.keys(LIFE_TRACKS)) expect(tracks.has(key as never), key).toBe(true);
   });
 
   test("카테고리 예시 답변은 실제 예시 질문만 가리킨다", () => {
