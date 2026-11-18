@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   4. 개인정보는 프롬프트·로그·에러 메시지에 남기지 않는다 (F-007). 입력 원문은 DB에 저장하지 않고 마스킹본만 저장한다 (DEC-006).
   5. `[게이트]` 기능(F-010~F-012), 모든 과금, 법률문서 생성은 F-013 승인 전 비활성 상태로만 구현한다.
   6. 모든 AI 결과에 "AI 생성 · 법률 자문 아님"을 표시한다. 문구는 직접 쓰지 말고 `AI_NOTICE`(lib/api/respond.ts)를 쓴다.
-  7. 비로그인은 **하루**(한국 시간 0시~24시, 0시 초기화) 해석이 필요한 실제 질문 **5회**(이어 묻기 포함, DEC-031 공모전 임시값 — 이전 3회, `ANON_QUESTION_LIMIT`)만 허용하고, 그 이후 요청은 서버에서 `LOGIN_REQUIRED`로 막는다 (DEC-005, DEC-010, DEC-024). 예외: **예시 질문**은 저장된 분석 재생(토큰 0)이라 횟수 검사·차감이 없다(DEC-027, 대신 같은 네트워크 1시간 30회), 관리자 모드(`/admin`, `ADMIN_PASSCODE`)는 횟수 제한이 없다. 관리자도 비용 상한은 그대로 받는다.
+  7. 비로그인은 **하루**(한국 시간 0시~24시, 0시 초기화) 해석이 필요한 실제 질문 **5회**(이어 묻기 포함, DEC-031 공모전 임시값 — 이전 3회, `ANON_QUESTION_LIMIT`)만 허용하고, 그 이후 요청은 서버에서 `LOGIN_REQUIRED`로 막는다 (DEC-005, DEC-010, DEC-024). 예외: **예시 질문**은 저장된 분석 재생(토큰 0)이라 횟수 검사·차감이 없다(DEC-027, 대신 같은 네트워크 1시간 30회), 관리자 모드(`/admin`, `ADMIN_PASSCODE`)는 횟수 제한이 없다. 관리자도 비용 상한은 그대로 받는다. 로그인은 **Google로만** 하고, 로그인 사용자는 하루 **10회**(`USER_QUESTION_LIMIT`, DEC-035).
   8. **테스트를 진행하지 않는다 (사용자 절대 규칙, 2026-11-15).** 정말 필요할 때만 이유와 예상 금액을 먼저 말하고 확인받은 뒤 **1회만** 한다. Claude 생성 호출(messages)·배포 사이트에서 실제 질문·평가가 모두 해당한다. 돈이 들지 않는 로컬 검사(가짜 모델 단위 테스트·린트·타입 검사·`pnpm build`·`docs:check`)는 허용한다(2026-11-15 사용자 확인). 검증은 이 무료 검사와 무과금 토큰 세기(count_tokens)·모델 정보 조회로 한다.
 
 ## 문서 지도 (필요할 때만 읽기)
@@ -35,11 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/research/03_규제_쟁점.md` | 게이트 기능·동의·과금 관련 작업 |
 | `docs/research/05_공식_서식_출처.md` | 문서 작성 서식(공식 기관 서식·근거 조문·이용 조건) |
 | `docs/research/06_카테고리_분류_조사.md` | 홈 카테고리·절차 섹션 분류 근거(생활법령 분야·판례 사건 종류) |
+| `docs/reports/` | 날짜별 분석·결정 보고서(모델·비용 비교, 배포 롤백·운영 모니터링 절차, 질문 해석·섹션 라벨). 비용·모델을 바꾸기 전에 해당 보고서 |
 | `docs/01_AI_Native_개발_파이프라인.md` | 단계별 작업 방식·프롬프트 |
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
 ## 기술 스택 (확정, DEC-004)
-Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 답변 모델은 사용자가 고른 단계(DEC-032: Light `claude-haiku-5-5` · Pro `claude-sonnet-5-5` · Pro Max `claude-opus-5-5`), 문서 초안·절차 분류는 **`claude-haiku-5-5`**(DEC-023·033), 단가표 lib/ai/cost.ts
+Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 답변 모델은 사용자가 고른 단계(DEC-036: Light `claude-haiku-5-5` · Pro `claude-sonnet-5-5` · Pro Max `claude-opus-5-5`), 문서 초안·절차 분류는 **`claude-haiku-5-5`**(DEC-023·033), 단가표 lib/ai/cost.ts
 Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 데이터와 API가 다르다).
 
 ## 명령어
@@ -70,19 +71,19 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 환경변수 (`.env.local`, 값은 사용자가 직접 넣는다)
 - `OPEN_LAW_API_KEY` 법제처 OC (lib/search, collector, test:live) · `ANTHROPIC_API_KEY` (lib/ai)
 - `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(없으면 `NEXT_PUBLIC_SUPABASE_ANON_KEY`)·`SUPABASE_SERVICE_ROLE_KEY`(서버 전용) · `SUPABASE_DB_URL`(수집기 직접 접속, `pnpm db:push`·`pnpm db:verify`)
-- `AI_MODE` 유료 답변을 끄는 스위치 (DEC-015·032, lib/ai/mode.ts). **답변 모델은 환경변수가 아니라 사용자가 질문마다 고른다** — `AI_MODE=pro`·`pro-full`·`AI_ANSWER_MODEL`은 폐기했고 더 읽지 않는다:
+- `AI_MODE` 유료 답변을 끄는 스위치 (DEC-015·036, lib/ai/mode.ts). **답변 모델은 환경변수가 아니라 사용자가 질문마다 고른다** — `AI_MODE=pro`·`pro-full`·`AI_ANSWER_MODEL`은 폐기했고 더 읽지 않는다:
   - `free` = Claude 호출 없음. 예시 질문은 저장된 답변 재생, 그 밖은 법제처 검색 결과만
   - 없음/그 밖의 값 = **유료**: 사용자가 고른 단계로 답변. 단, `ANTHROPIC_API_KEY`가 없으면 무료(CI·키 없는 개발 환경 보호)
   - 로컬 `.env.local`에 키가 있으면 로컬에서도 실제 질문이 과금된다 — 로컬에서 화면만 볼 때는 `AI_MODE=free`
   - 유료 모드라도 예시 질문은 재생(비용 0). 유료 버전 보존 태그 `paid-ai-v1`
-- 답변 단계 (DEC-032, lib/ai/models.ts `TIERS`): **Light** Haiku 5.5 $0.0015 · **Pro** Sonnet 5.5 $0.03(기본) · **Pro Max** Opus 5.5 $0.12(추정, 실측 전). 질문창 아래 슬라이더(components/ask/TierSlider)로 고르고 이 기기에만 기억한다(`hz:tier`)
-- `AI_WEEKLY_BUDGET_USD`(기본 **$80**, DEC-031 공모전 임시값 — 이전 $21) 유료 분석 주간 전체 금액 상한 — 하루 상한은 없다 (DEC-026, Max 월 $100 프로모션 크레딧을 다 쓸 수 있게). 건수가 아니라 **단위($0.0015)**로 센다(DEC-032): Light 1 · Pro 20 · Pro Max 80 · 문서 초안·절차 분류 1 → $80 = 53,333단위. 넘으면 그 주는 무료 모드. 주간 창은 매주 토 09:00 KST 시작, 카운터는 8일 보관(마이그레이션 `20261117160154`), 가중 차감 함수는 마이그레이션 `20261118143933`. 예시 질문 재생은 세지 않는다
-- `NEXT_PUBLIC_GOOGLE_LOGIN` Google 로그인 스위치 (DEC-035). `on`일 때만 헤더 로그인 버튼·내 질문 기록이 열린다. 없으면 비로그인 전용(DEC-016). 켜기 전에 Supabase에 Google 제공자와 돌아올 주소(`/auth/callback`)를 등록해야 한다
-- `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
+- 답변 단계 (DEC-036, lib/ai/models.ts `TIERS`): **Light** Haiku 5.5 $0.0015 · **Pro** Sonnet 5.5 $0.03(기본) · **Pro Max** Opus 5.5 $0.14(effort medium, 실측 전). 질문창 아래 슬라이더(components/ask/TierSlider)로 고르고 이 기기에만 기억한다(`hz:tier`)
+- `AI_WEEKLY_BUDGET_USD`(기본 **$80**, DEC-031 공모전 임시값 — 이전 $21) 유료 분석 주간 전체 금액 상한 — 하루 상한은 없다 (DEC-026, Max 월 $100 프로모션 크레딧을 다 쓸 수 있게). 건수가 아니라 **단위($0.0015)**로 센다(DEC-036): Light 1 · Pro 20 · Pro Max 94 · 문서 초안·절차 분류 1 → $80 = 53,333단위. 넘으면 그 주는 무료 모드. 주간 창은 매주 토 09:00 KST 시작, 카운터는 8일 보관(마이그레이션 `20261117160154`), 가중 차감 함수는 마이그레이션 `20261118143933`. 예시 질문 재생은 세지 않는다
+- `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). `ADMIN_PASSWORD`라는 이름도 받는다(둘 다 있으면 `ADMIN_PASSCODE`). 둘 다 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
+- `NEXT_PUBLIC_GOOGLE_LOGIN` `1`이면 Google 로그인 버튼을 켠다(DEC-035). 빌드 때 들어가므로 바꾸면 다시 배포. Supabase에 Google 공급자·돌아올 주소를 먼저 설정한다 — `?next=`가 붙으므로 허용 주소는 `https://<도메인>/auth/callback**`처럼 와일드카드로. 꺼져 있으면 `/auth/callback`도 세션을 만들지 않는다
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(result·ask·search·documents·studio·guide) · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,mascot,guide,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `twa/` Android 앱(TWA, Bubblewrap) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·search·documents·studio·guide·me) · `lib/{api,auth,inquiries,gate,pii,ai,demo,search,citations,calc,procedure,documents,mascot,guide,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `twa/` Android 앱(TWA, Bubblewrap) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
@@ -93,16 +94,16 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 - 비로그인 횟수: POST /inquiries는 3회를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 하루 3회(`quota_day`, 한국 시간) + 같은 IP 해시 24시간 10회, `anon_usage`). `questions_used`를 직접 update하지 않는다. 관리자 모드(`hz_admin` 서명 쿠키, `lib/auth/admin-*`)면 `resolveOwner`가 `admin: true`를 붙이고 `countsAnonQuota`가 false라 검사·차감을 모두 건너뛴다. 예시 질문(`findExample`, lib/demo/policy.ts)은 두 라우트가 사전 검사를 건너뛰고 `finishAnalysis(…, { consumeAnonQuota: false })`로 저장만 한다(DEC-027) — 홈 화면도 같은 기준으로 3회를 다 써도 예시를 연다.
-- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 주간 상한(`tryAiQuota(단계 가중치)`, lib/auth/rate-limit.ts · 금액은 lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). 그 밖에는 요청 본문의 `tier`(없으면 Pro)로 `runLiteAnalysis`(lib/ai/lite.ts: `freeSearch` + 그 단계 모델 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지). 전체 파이프라인 `runDemoAnalysis`는 코드에 남아 있지만 분석 경로에서 쓰지 않는다(DEC-032).
-- 로그인·내 기록(DEC-035): 화면은 lib/client/auth.ts(`LOGIN_ENABLED`, 세션은 Supabase 쿠키)·components/AuthMenu·SaveToggle·MyInquiries, 돌아오는 주소는 app/auth/callback(같은 사이트 경로만). `save: true`는 로그인 사용자 질문에만 `inquiries.saved`로 남고, 로그인 사용자는 `assertUserDaily`(계정 하루 20회)를 받는다. IP로 자동 로그인하지 않는다.
-- DeepSearch(DEC-034): 홈 질문창의 버튼 → `components/ask/DeepAsk`(양식·직접 입력). 칸 구성·합치기·보내기 전 점검은 lib/inquiries/deep.ts 순수 규칙이고 **점검에 모델을 쓰지 않는다**. 보내는 길은 일반 질문과 같고(`useAsk.send`), analyze 본문 `deep: true`면 근거만 조문 8·판례 4건까지 넓힌다(비용 상한 그대로).
-- 절차 분류(DEC-033): 규칙(lib/procedure/policy)이 `other`일 때만 `procedureHintFor`(lib/inquiries/procedure-hint.ts)가 저장된 라벨(`procedure_labels`, lib/procedure/labels-store.ts) → 없으면 Haiku 분류 1회(lib/ai/classify.ts) → 저장 순서로 본다. AI 문구 검사·승인 규칙은 lib/procedure/labels.ts(숫자·한글 수사·단정 표현·법령 언급·개인정보 금지). 라벨은 모두 pending으로 저장되고 `/admin` 승인 뒤에만 다른 질문에 쓰인다 — 방금 분류한 질문에만 AI가 고른 기존 타임라인이 바로 보인다. AI가 정한 안내(`plan.byAi`)에는 화면이 `AI_NOTICE`를 붙인다.
+- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 주간 상한(`tryAiQuota(단계 가중치)`, lib/auth/rate-limit.ts · 금액은 lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). 그 밖에는 요청 본문의 `tier`(없으면 Pro)로 `runLiteAnalysis`(lib/ai/lite.ts: 질문 해석 Haiku 1회(DEC-033: 섹션 라벨 + 검색어, 같은 질문 1건 상한 안) → `freeSearch` → 그 단계 모델 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지). 전체 파이프라인 `runDemoAnalysis`는 코드에 남아 있지만 분석 경로에서 쓰지 않는다(DEC-036).
+- 내 질문 기록(DEC-039): 로그인은 배포된 DEC-035(lib/client/login.ts, 마이페이지 components/me/MyPage)를 쓴다. 기록 남기기 선택은 lib/client/save.ts(`hz:save`)·components/ask/SaveToggle, 목록은 components/MyInquiries(`GET /me/inquiries`). `save: true`는 로그인 사용자 질문에만 `inquiries.saved`로 남는다.
+- DeepSearch(DEC-038): 홈 질문창의 버튼 → `components/ask/DeepAsk`(양식·직접 입력). 칸 구성·합치기·보내기 전 점검은 lib/inquiries/deep.ts 순수 규칙이고 **점검에 모델을 쓰지 않는다**. 보내는 길은 일반 질문과 같고(`useAsk.send`), analyze 본문 `deep: true`면 근거만 조문 8·판례 4건까지 넓힌다(비용 상한 그대로).
+- 절차 분류(DEC-037): 질문 해석 라벨(DEC-033)과 규칙(lib/procedure/policy)이 모두 정하지 못해 `other`일 때만 `procedureHintFor`(lib/inquiries/procedure-hint.ts)가 저장된 라벨(`procedure_labels`, lib/procedure/labels-store.ts) → 없으면 Haiku 분류 1회(lib/ai/classify.ts) → 저장 순서로 본다. AI 문구 검사·승인 규칙은 lib/procedure/labels.ts(숫자·한글 수사·단정 표현·법령 언급·개인정보 금지). 라벨은 모두 pending으로 저장되고 `/admin` 승인 뒤에만 다른 질문에 쓰인다 — 방금 분류한 질문에만 AI가 고른 기존 타임라인이 바로 보인다. AI가 정한 안내(`plan.byAi`)에는 화면이 `AI_NOTICE`를 붙인다.
 - 비용 상한: 모든 Claude 호출은 `withCostCap`(lib/ai/client.ts)을 거친다. 호출 전 무과금 `countTokens`로 입력을 재고 `planCall`(lib/ai/cost.ts)이 (쓴 비용 + 입력 + max_tokens 출력)이 상한 안일 때만 보낸다. 넘으면 `CostCapReached` — 라이트는 근거를 하나씩 빼고 다시 재고, 못 맞추면 AI 문단 없이 근거만 낸다. 키 점검은 `/api/v1/health`의 `ai.key`(모델 정보 조회, 무과금). **별도 과금 호출(Claude 실호출 테스트·평가)은 사용자의 명시적 허락 없이 하지 않는다** — `pnpm test:live`·`pnpm eval:demo`는 `ALLOW_PAID_API=1` 없이는 Claude 테스트를 건너뛴다.
 - 데모 검색: 라우트·lib/ai는 `createLawSource()`(lib/search/law-source.ts)만 쓰고, 한 요청에서 가져온 근거는 `EvidenceSet`(lib/search/evidence.ts)에 모아 인용 검증기에 넘긴다. korean-law-mcp는 `serverExternalPackages`(next.config.ts)로 번들링에서 뺀다.
 - 판례·법령 탐색(DEC-029): `createLawSource()`는 `LawSource`(분석·검증)와 `LawExplorer`(결정문·연혁·시점 조문·3단 비교·신구 대조·별표·자치법규·행정규칙)를 함께 돌려준다. 판례 밖 자료 16종(결정문 12 + 조약·학칙·공사공단·공공기관 규정·영문 법령)의 target·필드 이름·상세 항목은 `DECISION_DOMAINS`(explore.ts) 한 표에 있다 — 새 종류는 여기에만 더하고 실호출(`tests/live/explore.live.test.ts`)로 필드 이름을 확인한다. 순수 규칙은 lib/search/explore.ts, 화면은 `/search`(종류 탭·바로 가기)·`/research`(업무용 리서치: 목록 + 옆 미리보기 + 보관함)·`/laws/[name]`·`/decisions/[domain]/[id]`·`/ordinances/[id]`. 모두 LLM 없음 — `SEARCH_NOTICE`, 관련도·심각도·유불리 판정 없음(절대 규칙 2), 결정문은 요지 항목만(DEC-007 원칙), 인증키가 든 `/DRF/` 주소는 응답에 싣지 않는다. 검색어는 주소에 두지 않고 `sessionStorage`(`hz:sq`)로만 화면 사이에 건네며, 조회 이력·보관함(`hz:recent`·`hz:pins`)은 공개 자료의 제목·주소만 localStorage에 둔다. 공개 저장소 lexdiff(BSL 1.1)의 기능 목록만 참고했고 코드는 가져오지 않는다.
 - `cacheComponents: true`(next.config.ts): `usePathname`·`useParams`·`useSearchParams` 같은 클라이언트 훅은 `<Suspense>` 안에서만 쓴다. 밖에서 쓰면 로컬 `pnpm dev`·CI는 통과해도 **Vercel 빌드가 프리렌더에서 실패**한다(예: 헤더 남은 질문 `QuotaRouteSync`).
-- 홈 카테고리(lib/procedure/categories, DEC-028)는 분류 보조·무료 판례 검색어에만 쓰고 이 기기(sessionStorage)·analyze 본문 `category`로만 오간다(DB 저장 없음). 예시 질문은 `/examples/[id]` 정적 화면으로 바로 보여 주고 질문 생성·횟수 API를 부르지 않는다.
-- 절차 타임라인(lib/procedure, DEC-021)은 규칙이 먼저다(규칙이 정하지 못한 질문만 DEC-033 라벨을 본다). 단계 문구에 숫자·단정 표현이 들어가면 `policy.test.ts`가 막는다. 결과(승패)를 판정하지 않는다.
+- 홈 카테고리(lib/procedure/categories, DEC-028 · 28개를 묶음 탭 6개로 나눠 보임 DEC-034)는 분류 보조·무료 판례 검색어에만 쓰고 이 기기(sessionStorage)·analyze 본문 `category`로만 오간다(DB 저장 없음). 예시 질문은 `/examples/[id]` 정적 화면으로 바로 보여 주고 질문 생성·횟수 API를 부르지 않는다.
+- 절차 타임라인(lib/procedure, DEC-021)은 LLM 없는 규칙 기반이다. 단계 문구에 숫자·단정 표현이 들어가면 `policy.test.ts`가 막는다. 결과(승패)를 판정하지 않는다. 라이트 답변의 질문 해석 호출이 고정 목록(`sections.ts`)에서 섹션 라벨만 고르고(DEC-033, 결과의 `section`), 라벨이 없으면 낱말 규칙으로 정한다 — 단계 문구는 언제나 고정 문안(`steps.ts`·`life-tracks.ts`·`more-tracks.ts`)이다. 그래도 정하지 못한 질문만 DEC-037 저장 라벨·Haiku 분류를 본다.
 - 문서 작성(lib/documents, DEC-022·025)은 `legal_documents` 게이트 뒤에 있다(게이트가 꺼져 있으면 관리자 모드 브라우저만 미리보기): API 맨 앞 `requireFeature`, 화면은 게이트가 꺼져 있으면 안내·공식 양식 링크만. 사용자 입력을 칸에 넣기만 하고 저장·로그하지 않는다. AI 생성물이 아니라 `AI_NOTICE` 대신 `DOCUMENT_NOTICE`. 초안 도우미(DEC-023, `POST /documents/{kind}/draft`)는 질문 번호만 받아 마스킹본으로 규칙 칸 + Haiku 사실관계 초안($0.0015)을 주고, 그때는 `AI_NOTICE` + `DRAFT_NOTICE`. 이름·주소·금액은 브라우저 밖으로 보내지 않는다(양식 채우기는 브라우저에서, 저장소·쿠키 없음). 서식 14종(임대차·사기·노동·분쟁조정·집행, 목록은 lib/documents/README.md)은 공식 기관 서식·법령 기준이고(사설 양식 금지, docs/research/05), 화면은 설문 팝업 → 완성 → 예/아니요 → 웹 편집기 → 저장 → 예/아니요, 내보내기 HWPX(한글 표준 구조로 직접 작성)·DOCX(자체 ZIP)·PDF(pdf-lib + public/fonts 나눔고딕)는 모두 브라우저 안에서 만든다. 주민등록번호·생년월일·입금 계좌는 받지 않는다. 새 서식은 `specs/<섹션>.ts` + `fill-<섹션>.ts`에 더한다.
 - 브라우저 쪽 API 호출과 남은 질문 수는 lib/client/api.ts·components/useQuota.ts 한 저장소로 공유한다(헤더·홈·이어 묻기가 같은 값을 본다).
 - server-only 모듈을 직접 import하는 테스트는 `vi.mock("server-only", () => ({}))`를 둔다. 외부 응답은 tests/fixtures에 줄여서 녹화하고, 실명은 가상 이름으로 바꾼다.
@@ -111,6 +112,8 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - Windows: Python 스크립트를 heredoc으로 넘기면 한글이 cp949로 깨진다. 파일로 저장해 `python -X utf8`로 실행한다.
 - Docker가 없으면 SQL은 `uv run --no-project --with pglast` 파서로 문법만 확인할 수 있다 (적용 검증 아님).
 - hook (.claude/settings.json): 편집 전 `protect.mjs`가 `.env*`(`.env.example` 제외)·`*.pem`·`*.key`·`secrets/` 편집을 막고, 편집 후 `format.mjs`가 ts·js·css·json에 prettier, ts·js에 `eslint --fix`, collector의 py에 `ruff format`을 자동 실행한다. 손으로 포맷을 맞출 필요는 없고, 편집 뒤 포맷 변경이 diff에 섞일 수 있다.
+- 여러 Claude 세션(데스크톱 앱·VS Code)이 이 폴더(main 체크아웃)에서 동시에 고치고 커밋한다. 여기서 `git add -A`·커밋을 하면 다른 세션의 작업 중 파일이 섞여 배포가 깨진 적이 있다(2026-11-18). 변경은 `git worktree add ../<이름> origin/main`으로 만든 별도 폴더에서 하고 `git push origin HEAD:main`으로 올린다. Windows에서 worktree 폴더는 경로가 길어 `git worktree remove`가 실패하므로 `cmd /c 'rmdir /s /q "\\?\<절대경로>"'` 뒤 `git worktree prune`으로 지운다.
+- `pnpm exec prettier --write lib`처럼 폴더째 포맷하면 관련 없는 파일이 바뀐다. 고친 파일만 지정한다.
 - `.env*`는 settings.json이 읽기도 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
 - korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용. ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
 
@@ -121,7 +124,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 ## 작업 방식
 - 큰 기능은 계획을 먼저 보여주고 승인 후 구현한다.
 - 테스트 이름·커밋 메시지에 F-ID를 넣는다 (예: `F-003 AC2 결과 없음 안내`).
-- PRD에 없는 결정이 필요하면 임의로 정하지 말고 PRD 16.1 오픈 이슈에 추가를 제안한다.
+- PRD에 없는 결정이 필요하면 임의로 정하지 말고 PRD 16.1 오픈 이슈에 추가를 제안한다. 새 결정 번호는 PRD 16장 표의 마지막 DEC 다음 번호를 쓴다(다른 세션이 먼저 쓸 수 있으니 올리기 직전에 `origin/main`에서 다시 확인).
 - 데이터 소스는 공식 API만 쓴다. 판결서 인터넷 열람은 수집하지 않고 링크만 제공한다.
 
 ## 금지

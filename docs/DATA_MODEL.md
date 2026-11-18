@@ -96,11 +96,11 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | sensitive_consent_at | timestamptz null | 민감정보 별도 동의(F-007 AC2) |
 | structured | jsonb | `{facts[], inferred[], to_confirm[], issues[], case_type}` `[PII-M]` |
 | user_edited | bool | F-002 AC1 수정 여부 |
-| saved | bool | 로그인 사용자가 "내 기록에 남기기"로 보낸 질문 (DEC-035, 기본 false). 마이페이지 목록에만 쓴다 — 보유 기간은 그대로 |
+| saved | bool | 로그인 사용자가 "내 기록에 남기기"로 보낸 질문 (DEC-039, 기본 false). 마이페이지 목록에만 쓴다 — 보유 기간은 그대로 |
 | status | enum(`draft`,`need_info`,`analyzed`,`failed`) | |
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
 
-인덱스: `(user_id, created_at desc)`, `(anon_session_id)`, `(expires_at)`, `(user_id, created_at desc) where saved`(DEC-035).
+인덱스: `(user_id, created_at desc)`, `(anon_session_id)`, `(expires_at)`, `(user_id, created_at desc) where saved`(DEC-039).
 제약: `user_id`와 `anon_session_id` 중 하나는 반드시 존재. 같은 `anon_session_id`의 분석 완료 inquiry는 3건까지, 이어 묻기 포함 (DEC-010, 서버에서 검사).
 원문 저장이 나중에 필요해지면: 새 결정(DEC) + 별도 동의 + 암호화 컬럼 추가 마이그레이션으로만 도입한다 (DEC-006).
 
@@ -195,16 +195,16 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 ### `rate_limit_hits` — 레이트 리밋 카운터 **(데모 운영)**
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_units`(7일 창, 주간 유료 예산 단위, DEC-026·032 — 이전 `ai_weekly`)·`user_daily`(로그인 사용자 하루 20회, 키는 사용자 ID 해시, DEC-035) 등 (lib/auth/rate-limit.ts) |
+| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_units`(7일 창, 주간 유료 예산 단위, DEC-026·036 — 이전 `ai_weekly`) 등 (lib/auth/rate-limit.ts) |
 | key_hash | text | HMAC(IP, `ANON_IP_SALT`) 등 해시만. 원본 IP 저장 안 함 |
 | window_start | timestamptz | 고정 창 시작 (`date_bin`) |
 | hits | int | |
 
 PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용(정책 없음). DB 함수 `hit_rate_limit(bucket, key, 상한, 기간)` → 한 번 세고 상한 안이면 true (행 단위 upsert로 원자적). 질문 3회(DEC-010)와 별개 (DEC-017 제안).
 
-DB 함수 `hit_rate_limit_weighted(bucket, key, 상한, 기간, 가중치)`는 한 번에 여러 단위를 올린다 — 주간 유료 예산을 단계별 금액으로 세기 위해서다(DEC-032, 마이그레이션 `20261118143933`).
+DB 함수 `hit_rate_limit_weighted(bucket, key, 상한, 기간, 가중치)`는 한 번에 여러 단위를 올린다 — 주간 유료 예산을 단계별 금액으로 세기 위해서다(DEC-036, 마이그레이션 `20261118143933`).
 
-### `procedure_labels` — AI 절차 분류 라벨 (DEC-033) **(데모)**
+### `procedure_labels` — AI 절차 분류 라벨 (DEC-037) **(데모)**
 규칙이 절차를 정하지 못한 질문을 AI가 분류한 결과. 같은 낱말의 질문이 다시 오면 모델을 부르지 않고 이 표를 쓴다. **개인정보·질문 문장 없음**(서버가 저장 전에 숫자·개인정보 패턴을 검사).
 
 | 컬럼 | 타입 | 설명 |
@@ -265,7 +265,7 @@ DB 함수 `hit_rate_limit_weighted(bucket, key, 상한, 기간, 가중치)`는 �
 | `anon_usage` | 30일 | |
 | `rate_limit_hits` | 8일 (2026-11-18, 이전 1일 — 주간 유료 상한 `ai_weekly` 카운터가 창 끝까지 남게, DEC-026, 마이그레이션 `20261117160154_ai_weekly_quota_retention.sql`) | |
 | `audit_logs`·`gate_changes` | 파기하지 않음 (append-only) | 보유 기간은 OQ-DM-03에 남김 |
-| `consents`·`deletion_requests` | 로그인 사용자용 — 데모에서 쓰지 않음 | OQ-DM-03 |
+| `consents`·`deletion_requests` | 로그인 사용자용 — Google 로그인(DEC-035) 사용자 민감정보 동의·삭제 요청. 삭제 요청 처리는 운영자 수동 | OQ-DM-03 |
 
 - DB 함수 `purge_expired_records()`가 위 순서로 지우고 건수를 돌려주며 `audit_logs`에 `retention_purge`를 남긴다. Supabase **pg_cron** 작업 `hz-retention-purge`가 매일 03:17 UTC(12:17 KST)에 실행한다(무료 플랜 사용 가능).
 - 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.

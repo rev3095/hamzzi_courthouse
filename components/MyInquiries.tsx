@@ -1,11 +1,9 @@
 "use client";
-// 내 질문 기록 (DEC-035): 로그인 사용자가 남기기로 한 질문 목록. 누르면 그 답변을 다시 보고 이어서 물어볼 수 있다.
+// 내 질문 기록 (DEC-039): 로그인 사용자가 남기기로 한 질문 목록. 누르면 그 답변을 다시 보고 이어서 물어볼 수 있다.
 // 목록에는 가린 문장(마스킹본)만 온다. 원문은 어디에도 저장되지 않는다 (DEC-006).
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMyInquiries, rememberQuestion, type SavedInquiry } from "@/lib/client/api";
-import { LOGIN_ENABLED, signInWithGoogle } from "@/lib/client/auth";
-import { PrimaryButton } from "./Modal";
 
 type State =
   | { kind: "loading" }
@@ -43,16 +41,9 @@ export function MyInquiries() {
 
   if (state.kind === "login") {
     return (
-      <div className="mt-6">
-        <p className="text-muted text-[15px] leading-relaxed">
-          로그인하면 남겨 둔 질문과 답변을 다시 볼 수 있어요.
-        </p>
-        {LOGIN_ENABLED && (
-          <PrimaryButton className="mt-4" onClick={() => void signInWithGoogle("/me")}>
-            Google로 로그인
-          </PrimaryButton>
-        )}
-      </div>
+      <p className="text-muted mt-6 text-[15px] leading-relaxed">
+        로그인하면 남겨 둔 질문과 답변을 다시 볼 수 있어요.
+      </p>
     );
   }
 

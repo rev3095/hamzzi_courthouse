@@ -9,6 +9,8 @@ import { findExample } from "@/lib/demo/policy";
 import {
   assertAnonQuota,
   countsAnonQuota,
+  countsUserQuota,
+  assertUserQuota,
   assertParentAnalyzed,
   assertSensitiveConsent,
   parseCreateRequest,
@@ -18,6 +20,7 @@ import {
   getAnonQuestionsUsed,
   getOwnedInquiry,
   resolveOwner,
+  getUserQuestionsUsed,
 } from "@/lib/inquiries/store";
 import { scanInput } from "@/lib/pii";
 
@@ -32,6 +35,9 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     // 예시 질문은 하루 3회 대신 같은 네트워크 1시간 30회만 본다 (DEC-027)
     if (findExample(scan.maskedText) !== null) await assertRateLimit(EXAMPLE_RATE, req.headers);
     else assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
+  } else if (countsUserQuota(owner) && findExample(scan.maskedText) === null) {
+    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035). 예시 질문은 세지 않는다
+    assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
 
   if (parentInquiryId) {

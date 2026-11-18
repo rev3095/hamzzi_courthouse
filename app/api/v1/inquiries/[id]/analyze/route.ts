@@ -6,7 +6,6 @@ import { ok } from "@/lib/api/respond";
 import { withRoute } from "@/lib/api/route";
 import { sseResponse } from "@/lib/api/sse";
 import { ERROR_STATUS } from "@/lib/api/errors";
-import { assertUserDaily } from "@/lib/auth/rate-limit";
 import { findExample } from "@/lib/demo/policy";
 import { analyzeInquiry } from "@/lib/inquiries/analyze";
 import {
@@ -14,12 +13,16 @@ import {
   assertAnonQuota,
   parseAnalyzeRequest,
   countsAnonQuota,
+  countsUserQuota,
+  assertUserQuota,
   assertReadyToAnalyze,
   wantsEventStream,
 } from "@/lib/inquiries/policy";
 import {
   assertAnonIpAvailable,
+  claimInquiryForUser,
   getAnonQuestionsUsed,
+  getUserQuestionsUsed,
   getOwnedInquiry,
   resolveOwner,
 } from "@/lib/inquiries/store";
@@ -31,13 +34,15 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
-  // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-032)·DeepSearch(DEC-034). 검증 실패는 소유자 확인 전에 400
+  // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-036)·DeepSearch(DEC-038). 검증 실패는 소유자 확인 전에 400
   const { category, tier, deep } = parseAnalyzeRequest(await req.text());
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
   assertAnalyzable(inquiry.status);
   assertReadyToAnalyze({ status: inquiry.status, piiFindings: inquiry.pii_findings });
+  // 로그인 전 질문을 로그인 뒤 분석하면 먼저 계정에 연결해 하루 한도에 들어가게 한다 (DEC-035)
+  if (owner.kind === "user" && inquiry.user_id === null) await claimInquiryForUser(id, owner);
   // 3회를 다 쓴 비로그인은 모델을 부르기 전에 막는다 (DEC-010). 실제 차감은 성공 후
   // IP 해시 24시간 상한도 먼저 본다 — 쿠키를 바꿔 가며 분석 비용을 쓰는 것을 막는다. 최종 판정은 저장 트랜잭션에서
   // 관리자 모드(DEC-024)는 횟수·IP 상한을 받지 않는다 (질문 1건·주간 전체 비용 상한은 그대로)
@@ -45,10 +50,9 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   if (countsAnonQuota(owner) && findExample(inquiry.masked_text) === null) {
     assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
     await assertAnonIpAvailable(req.headers);
-  }
-  // 로그인 사용자는 비로그인 하루 한도 대신 계정 하루 상한을 받는다 (DEC-035). 예시 질문은 세지 않는다
-  if (owner.kind === "user" && findExample(inquiry.masked_text) === null) {
-    await assertUserDaily(owner.userId);
+  } else if (countsUserQuota(owner) && findExample(inquiry.masked_text) === null) {
+    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035) — 모델 호출 전에 오늘 분석 수를 본다
+    assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
 
   if (!wantsEventStream(req)) {

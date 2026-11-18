@@ -1,4 +1,4 @@
-// DEC-026·032 유료 분석 주간 상한 — tryAiQuota가 주간($80, DEC-031 임시) 전체 카운터 하나를 단계 가중치만큼 올린다. DB는 가짜.
+// DEC-026·036 유료 분석 주간 상한 — tryAiQuota가 주간($80, DEC-031 임시) 전체 카운터 하나를 단계 가중치만큼 올린다. DB는 가짜.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -10,7 +10,7 @@ const { aiWeeklyRule, tryAiQuota } = rateLimit;
 
 beforeEach(() => db.rpc.mockReset());
 
-describe("DEC-032 주간 상한은 단위로 센다", () => {
+describe("DEC-036 주간 상한은 단위로 센다", () => {
   test("주간 창 7일(ai_units, $80 = 53,333단위). 하루 규칙은 없다", () => {
     expect(aiWeeklyRule({})).toEqual({ bucket: "ai_units", limit: 53_333, windowSeconds: 604_800 });
     expect("aiDailyRule" in rateLimit).toBe(false);

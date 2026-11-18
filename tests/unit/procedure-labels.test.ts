@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-033 AI 절차 분류 라벨 — 규칙 → 저장된 라벨 → (유료일 때만) Haiku 분류 1회 → 저장. 모델·DB는 가짜.
+// DEC-037 AI 절차 분류 라벨 — 규칙 → 저장된 라벨 → (유료일 때만) Haiku 분류 1회 → 저장. 모델·DB는 가짜.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import {
@@ -33,18 +33,19 @@ const { procedureHintFor } = await import("@/lib/inquiries/procedure-hint");
 const STEPS: LabelStep[] = [
   { label: "처분 내용 확인", difficulty: "self", prepare: ["받은 처분서"], cautions: [] },
   {
-    label: "행정심판 청구",
+    label: "특허심판 청구",
     difficulty: "depends",
     prepare: ["청구서", "증거 자료"],
     cautions: ["청구할 수 있는 기간이 정해져 있어요"],
   },
 ];
-const Q = "영업정지 처분을 받았는데 행정심판을 하고 싶어요";
+// 규칙(lib/procedure/policy)에 타임라인이 없는 분야의 질문이어야 한다
+const Q = "출원이 거절 결정을 받았는데 특허심판을 하고 싶어요";
 
 const label = (over: Partial<ProcedureLabel>): ProcedureLabel => ({
   id: "l-1",
-  title: "행정심판 청구 절차",
-  keywords: ["행정심판"],
+  title: "특허심판 청구 절차",
+  keywords: ["특허심판"],
   track: null,
   steps: STEPS,
   status: "approved",
@@ -61,7 +62,7 @@ const result = (over: Partial<DemoAnalysisResult> = {}) =>
     ...over,
   }) as unknown as DemoAnalysisResult;
 
-describe("DEC-033 AI 문구 검사 (절대 규칙 1·2·3·4)", () => {
+describe("DEC-037 AI 문구 검사 (절대 규칙 1·2·3·4)", () => {
   test("숫자·단정 표현·개인정보 패턴이 있으면 버린다", () => {
     expect(isCleanText("청구서를 준비해요", 80)).toBe(true);
     expect(isCleanText("90일 안에 청구해요", 80)).toBe(false);
@@ -101,14 +102,14 @@ describe("DEC-033 AI 문구 검사 (절대 규칙 1·2·3·4)", () => {
   });
 
   test("낱말은 질문에 실제로 있고 흔한 낱말이 아니어야 한다", () => {
-    expect(cleanKeywords(["행정심판", "영업정지", "문제", "과태료", "홍길동1"], Q)).toEqual([
-      "행정심판",
-      "영업정지",
+    expect(cleanKeywords(["특허심판", "출원", "문제", "과태료", "홍길동1"], Q)).toEqual([
+      "특허심판",
+      "출원",
     ]);
   });
 });
 
-describe("DEC-033 분류 결과 → 라벨", () => {
+describe("DEC-037 분류 결과 → 라벨", () => {
   test("기존 타임라인을 고른 라벨도 pending으로 저장한다 — 그 질문 한 건에만 바로 보인다", () => {
     const l = labelFromClassification(
       { track: "neighbor", keywords: ["층간소음"], proposal: null },
@@ -124,12 +125,12 @@ describe("DEC-033 분류 결과 → 라벨", () => {
     const l = labelFromClassification(
       {
         track: "none",
-        keywords: ["행정심판"],
-        proposal: { title: "행정심판 청구 절차", steps: STEPS },
+        keywords: ["특허심판"],
+        proposal: { title: "특허심판 청구 절차", steps: STEPS },
       },
       Q,
     );
-    expect(l).toMatchObject({ track: null, status: "pending", title: "행정심판 청구 절차" });
+    expect(l).toMatchObject({ track: null, status: "pending", title: "특허심판 청구 절차" });
     expect(hintOf(label({ ...l!, status: "pending" }))).toBeNull();
     // AI가 새로 쓴 단계는 그 질문에도 승인 전에는 보이지 않는다
     expect(immediateHint(l!)).toBeNull();
@@ -138,7 +139,7 @@ describe("DEC-033 분류 결과 → 라벨", () => {
   test("초안에 숫자가 있으면 '절차 미정'으로만 남긴다 (같은 낱말에 모델을 다시 부르지 않게)", () => {
     const bad = [{ ...STEPS[0], cautions: ["90일 안에 내야 해요"] }, STEPS[1]];
     const l = labelFromClassification(
-      { track: "none", keywords: ["행정심판"], proposal: { title: "행정심판 절차", steps: bad } },
+      { track: "none", keywords: ["특허심판"], proposal: { title: "특허심판 절차", steps: bad } },
       Q,
     );
     expect(l).toMatchObject({ title: UNDECIDED_TITLE, steps: [], status: "pending" });
@@ -155,7 +156,7 @@ describe("DEC-033 분류 결과 → 라벨", () => {
   });
 });
 
-describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
+describe("DEC-037 저장된 라벨 찾기·화면 값", () => {
   test("질문에 낱말이 있는 라벨을 찾고, 거절된 라벨은 보지 않는다", () => {
     expect(matchLabel([label({})], Q)?.id).toBe("l-1");
     expect(matchLabel([label({ status: "rejected" })], Q)).toBeNull();
@@ -168,7 +169,7 @@ describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
       track: "neighbor",
     });
     expect(parseHint({ kind: "track", track: "없는절차" })).toBeNull();
-    expect(parseHint({ kind: "custom", title: "행정심판 청구 절차", steps: STEPS })?.kind).toBe(
+    expect(parseHint({ kind: "custom", title: "특허심판 청구 절차", steps: STEPS })?.kind).toBe(
       "custom",
     );
     expect(parseHint({ kind: "custom", title: "100% 이기는 절차", steps: STEPS })).toBeNull();
@@ -176,7 +177,7 @@ describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
 
   test("규칙이 정하지 못했을 때만 라벨의 타임라인을 보인다", () => {
     const hinted = result({
-      procedureHint: { kind: "custom", title: "행정심판 청구 절차", steps: STEPS },
+      procedureHint: { kind: "custom", title: "특허심판 청구 절차", steps: STEPS },
     });
     const plan = procedurePlan(hinted, Q);
     expect(plan.kind).toBe("custom_timeline");
@@ -184,7 +185,7 @@ describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
     expect(hasTimeline(plan) && plan.byAi).toBe(true);
     expect(hasTimeline(plan) && plan.steps.map((s) => s.label)).toEqual([
       "처분 내용 확인",
-      "행정심판 청구",
+      "특허심판 청구",
     ]);
     // 규칙이 정한 사건(임금)은 라벨이 있어도 규칙이 먼저다
     const wage = procedurePlan(
@@ -193,12 +194,13 @@ describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
     );
     expect(wage.caseType).toBe("wage");
     expect(hasTimeline(wage) && wage.byAi).toBe(false);
-    // 수사를 받는 쪽은 타임라인을 숨긴다 — 라벨로 바뀌지 않는다
+    // 수사를 받는 쪽은 규칙이 정한 받는 쪽 타임라인 그대로다 — 라벨로 바뀌지 않는다
     const accused = procedurePlan(
       result({ procedureHint: { kind: "track", track: "neighbor" } }),
       "제가 고소를 당했어요",
     );
-    expect(accused.kind).toBe("notice");
+    expect(accused.caseType).toBe("respond_criminal");
+    expect(hasTimeline(accused) && accused.byAi).toBe(false);
   });
 
   test("기존 타임라인을 가리키는 라벨은 그 타임라인을 그대로 보인다", () => {
@@ -208,7 +210,7 @@ describe("DEC-033 저장된 라벨 찾기·화면 값", () => {
   });
 });
 
-describe("DEC-033 분류 순서 — 같은 일을 두 번 하지 않는다", () => {
+describe("DEC-037 분류 순서 — 같은 일을 두 번 하지 않는다", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     rate.tryAiQuota.mockResolvedValue(true);
@@ -241,13 +243,13 @@ describe("DEC-033 분류 순서 — 같은 일을 두 번 하지 않는다", () 
     classify.classifyProcedure.mockResolvedValue({
       ok: true,
       costUsd: 0.0003,
-      output: { track: "neighbor", keywords: ["행정심판"], proposal: null },
+      output: { track: "neighbor", keywords: ["특허심판"], proposal: null },
     });
     const out = await procedureHintFor(result(), Q, { allowAi: true });
     expect(rate.tryAiQuota).toHaveBeenCalledWith(1);
     expect(classify.classifyProcedure).toHaveBeenCalledTimes(1);
     expect(labelStore.insertLabel).toHaveBeenCalledWith(
-      expect.objectContaining({ track: "neighbor", keywords: ["행정심판"], status: "pending" }),
+      expect.objectContaining({ track: "neighbor", keywords: ["특허심판"], status: "pending" }),
     );
     expect(out).toEqual({ kind: "track", track: "neighbor" });
   });

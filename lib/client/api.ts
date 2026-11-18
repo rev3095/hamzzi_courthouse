@@ -21,9 +21,20 @@ export type Quota = {
   loginRequired: boolean;
   /** 관리자 모드(DEC-024): 질문 횟수 제한 없음 */
   admin: boolean;
-  /** AI 답변이 켜져 있는지 (DEC-032). false면 답변 모드 선택을 숨긴다 */
+  /** AI 답변이 켜져 있는지 (DEC-036). false면 답변 모드 선택을 숨긴다 */
   ai?: boolean;
 };
+
+/** Google 로그인 사용자인지 (DEC-035). 서버가 판단한 값만 본다 */
+export const isSignedIn = (q: Quota | null) => q?.anonymous === false;
+
+/** 오늘 질문을 더 할 수 없는지 — 비로그인은 로그인 필요, Google 로그인은 하루 한도 소진 (DEC-035) */
+export const isQuotaBlocked = (q: Quota | null) =>
+  q?.loginRequired === true || (isSignedIn(q) && !q?.admin && q?.remaining === 0);
+
+/** Google 로그인 사용자의 하루 한도 소진 (429 RATE_LIMITED, reason user_daily — DEC-035) */
+export const isUserDailyLimit = (e: ClientError) =>
+  e.code === "RATE_LIMITED" && e.details?.reason === "user_daily";
 
 export type CreatedInquiry = {
   id: string;
@@ -65,7 +76,7 @@ export const createInquiry = (input: {
   text: string;
   sensitiveConsent?: boolean;
   parentInquiryId?: string;
-  /** 내 질문 기록에 남기기 (DEC-035). 로그인 사용자에게만 적용된다 */
+  /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
   save?: boolean;
 }) => call<CreatedInquiry>("/api/v1/inquiries", { method: "POST", body: JSON.stringify(input) });
 
@@ -77,7 +88,7 @@ export type SavedInquiry = {
   followup: boolean;
 };
 
-/** 내 질문 기록 (DEC-035, 로그인 필요) */
+/** 내 질문 기록 (DEC-039, 로그인 필요) */
 export const getMyInquiries = () => call<SavedInquiry[]>("/api/v1/me/inquiries");
 
 export const confirmPii = (id: string) =>
@@ -355,7 +366,7 @@ export async function analyzeStream(
   let res: Response;
   try {
     // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
-    // 답변 단계(DEC-032)는 이 기기에서 고른 값. 서버가 세 값 중 하나인지 확인한다
+    // 답변 단계(DEC-036)는 이 기기에서 고른 값. 서버가 세 값 중 하나인지 확인한다
     res = await fetch(`/api/v1/inquiries/${id}/analyze`, {
       method: "POST",
       headers: { accept: "text/event-stream", "content-type": "application/json" },
@@ -406,7 +417,7 @@ const PKEY = (id: string) => `hz:p:${id}`;
 const CKEY = (id: string) => `hz:c:${id}`;
 const DKEY = (id: string) => `hz:d:${id}`;
 
-/** DeepSearch로 보낸 질문 표시 (DEC-034). 개인정보가 아닌 표시 하나만 이 기기에 둔다 */
+/** DeepSearch로 보낸 질문 표시 (DEC-038). 개인정보가 아닌 표시 하나만 이 기기에 둔다 */
 export function rememberDeep(id: string) {
   try {
     sessionStorage.setItem(DKEY(id), "1");

@@ -13,7 +13,7 @@ export async function checkAiKey(
   if (!apiKey) return "missing";
   const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 5_000, logLevel: "off" });
   try {
-    // 세 단계의 답변 모델(DEC-032, Haiku는 문서 초안·절차 분류에도 쓴다)을 이 키로 쓸 수 있는지까지 본다
+    // 세 단계의 답변 모델(DEC-036, Haiku는 문서 초안·절차 분류에도 쓴다)을 이 키로 쓸 수 있는지까지 본다
     for (const id of new Set<string>(TIER_IDS.map((t) => TIERS[t].model))) {
       await client.models.retrieve(id);
     }

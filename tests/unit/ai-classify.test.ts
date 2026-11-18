@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-033 절차 분류 호출 — Haiku 1회, 생각 끔, $0.0015 상한. 모델은 가짜 (실호출 없음).
+// DEC-037 절차 분류 호출 — Haiku 1회, 생각 끔, $0.0015 상한. 모델은 가짜 (실호출 없음).
 import { describe, expect, test, vi } from "vitest";
 import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
 
@@ -26,7 +26,7 @@ function fakeModel(text: string, tokens = 1_500) {
 
 const OUT = { track: "neighbor", keywords: ["층간소음"], proposal: null };
 
-describe("DEC-033 절차 분류 호출", () => {
+describe("DEC-037 절차 분류 호출", () => {
   test("Haiku 1회 · 생각 끔 · 출력 900토큰 이하 · 구조화 출력, 비용은 $0.0015 이하", async () => {
     const model = fakeModel(JSON.stringify(OUT));
     const r = await classifyProcedure("윗집 층간소음이 심해요", { model });

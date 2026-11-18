@@ -68,7 +68,15 @@ export function withCostCap(inner: ModelClient, capUsd: number = COST_CAP_USD): 
         reserveUsd: options.reserveUsd,
       });
       if (!plan.ok) throw new CostCapReached(stage, plan.reason);
-      const res = await inner.create({ ...params, max_tokens: plan.maxTokens }, options);
+      let res: ModelMessage;
+      try {
+        res = await inner.create({ ...params, max_tokens: plan.maxTokens }, options);
+      } catch (e) {
+        // 시간 초과·연결 오류로 응답 없이 끝난 호출도 과금됐을 수 있다. 계획한 최대 비용을 쓴 것으로 쳐서
+        // 뒤따르는 호출(질문 해석 뒤의 답변, DEC-033)이 상한 전액을 다시 쓰지 못하게 한다
+        spent += usageCost(params.model, { inputTokens, outputTokens: plan.maxTokens });
+        throw e;
+      }
       spent += usageCost(params.model, {
         inputTokens: res.usage.input_tokens ?? 0,
         outputTokens: res.usage.output_tokens ?? 0,

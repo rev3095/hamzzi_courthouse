@@ -1,4 +1,4 @@
-// DEC-032 답변 단계 — 단계별 모델·상한·주간 예산 단위 (순수 함수, 실호출 없음)
+// DEC-036 답변 단계 — 단계별 모델·상한·주간 예산 단위 (순수 함수, 실호출 없음)
 import { describe, expect, test } from "vitest";
 import { PRICES, planCall } from "./cost";
 import { aiMode } from "./mode";
@@ -14,7 +14,7 @@ import {
   weeklyBudgetUnits,
 } from "./models";
 
-describe("DEC-032 단계 고르기", () => {
+describe("DEC-036 단계 고르기", () => {
   test("세 단계: Light = Haiku, Pro = Sonnet, Pro Max = Opus", () => {
     expect(TIER_IDS).toEqual(["light", "pro", "max"]);
     expect(TIERS.light.model).toBe("claude-haiku-5-5");
@@ -32,20 +32,21 @@ describe("DEC-032 단계 고르기", () => {
     }
   });
 
-  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 넣지 않는다", () => {
+  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 adaptive + effort medium", () => {
     expect(TIERS.light.thinking).toEqual({ type: "disabled" });
     expect(TIERS.pro.thinking).toEqual({ type: "between_tools" });
-    expect(TIERS.max.thinking).toBeUndefined();
+    expect(TIERS.max.thinking).toEqual({ type: "adaptive" });
+    expect([TIERS.light.effort, TIERS.pro.effort, TIERS.max.effort]).toEqual(["low", "low", "medium"]);
   });
 });
 
-describe("DEC-032 질문 1건 상한", () => {
-  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.12를 넘지 않는다", () => {
+describe("DEC-036 질문 1건 상한", () => {
+  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.14를 넘지 않는다", () => {
     for (const id of TIER_IDS) {
       expect(PRICES[TIERS[id].model]).toBeDefined();
-      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.12);
+      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.14);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.0015, 0.03, 0.12]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.0015, 0.03, 0.14]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -83,11 +84,11 @@ describe("DEC-032 질문 1건 상한", () => {
   });
 });
 
-describe("DEC-032 주간 예산은 단위로 센다 (하루 상한 없음)", () => {
-  test("가중치 × 단위 금액 = 그 단계의 질문 1건 상한", () => {
+describe("DEC-036 주간 예산은 단위로 센다 (하루 상한 없음)", () => {
+  test("가중치 = 그 단계의 질문 1건 상한 ÷ 단위 금액 (올림)", () => {
     expect(BUDGET_UNIT_USD).toBe(0.0015);
     for (const id of TIER_IDS) {
-      expect(TIERS[id].weight * BUDGET_UNIT_USD).toBeCloseTo(TIERS[id].capUsd, 10);
+      expect(TIERS[id].weight).toBe(Math.ceil(TIERS[id].capUsd / BUDGET_UNIT_USD - 1e-9));
     }
     expect(HELPER_WEIGHT).toBe(1);
   });
@@ -105,7 +106,7 @@ describe("DEC-032 주간 예산은 단위로 센다 (하루 상한 없음)", () 
   });
 });
 
-describe("DEC-032 끄는 스위치만 남긴다", () => {
+describe("DEC-036 끄는 스위치만 남긴다", () => {
   test("AI_MODE=free면 키가 있어도 무료 모드", () => {
     expect(aiMode({ AI_MODE: " FREE ", ANTHROPIC_API_KEY: "k" })).toBe("free");
   });

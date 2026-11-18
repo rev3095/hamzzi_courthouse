@@ -12,7 +12,7 @@ export type Price = { input: number; output: number; cacheRead: number; cacheWri
 export const PRICES: Record<string, Price> = {
   "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
   "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
-  // Pro Max 단계 (DEC-032)
+  // Pro Max 단계 (DEC-036)
   "claude-opus-5-5": { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
 };
 
@@ -21,10 +21,15 @@ export const COST_CAP_USD = 0.015;
 /**
  * 라이트 모드(AI_MODE=pro, DEC-020) Haiku 질문 1건 상한 — 사용자 결정 $0.0015 (2026-11-16, 이전 $0.001).
  * 배분: 입력 약 9,000토큰($0.0009) + 출력 1,200토큰($0.0006). 입력은 호출 전에 무과금 토큰 세기로 확인한다.
- * 단계별 상한·출력 한도는 lib/ai/models.ts TIERS (DEC-032: Light $0.0015 · Pro $0.03 · Pro Max $0.12)
+ * 단계별 상한·출력 한도는 lib/ai/models.ts TIERS (DEC-036: Light $0.0015 · Pro $0.03 · Pro Max $0.12)
  */
 export const LITE_COST_CAP_USD = 0.0015;
 export const LITE_ANSWER_TOKENS = { max: 1_200, min: 700 } as const;
+/**
+ * 질문 해석 (DEC-033): 검색 전에 Haiku 1회로 섹션 라벨과 검색어를 뽑는다. 출력은 짧은 JSON이라 300토큰이면 충분하다.
+ * 정가 기준 입력 약 2,000토큰($0.0002) + 출력 300토큰($0.00015) — 질문 1건 상한(라이트 답변과 같은 상한) 안에서 쓴다
+ */
+export const UNDERSTAND_TOKENS = { max: 300, min: 120 } as const;
 
 /** 문서 초안 도우미(DEC-023) 1건 상한 — 라이트와 같은 $0.0015. 사연 정리만 하므로 출력이 짧다 */
 export const DOC_DRAFT_COST_CAP_USD = 0.0015;

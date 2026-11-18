@@ -111,7 +111,7 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
     /** 검증·1차 거르기를 통과하지 못해 뺀 문단 수 (DEC-014). 뺀 문단 내용은 내보내지 않는다 */
     removed: number;
   };
-  /** 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만, DEC-033). 없으면 생략 */
+  /** 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만, DEC-037). 없으면 생략 */
   procedureHint?: ProcedureHint;
 };
 

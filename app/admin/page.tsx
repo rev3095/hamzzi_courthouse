@@ -17,7 +17,7 @@ export default function AdminPage() {
           <h1 className="font-display text-ink text-[24px] font-bold">관리자 모드</h1>
           <p className="text-muted mt-2 text-[15px] leading-relaxed">
             관리자 모드에서는 이 브라우저에서 질문 횟수 제한 없이 쓸 수 있어요. 질문 1건 비용 상한과
-            주간 전체 상한은 그대로예요.
+            주간 전체 비용 상한은 그대로예요.
           </p>
           <AdminLogin />
           <AdminLabels />

@@ -12,7 +12,7 @@ export type CreateRequest = {
   text: string;
   sensitiveConsent: boolean;
   parentInquiryId: string | null;
-  /** 내 질문 기록에 남기기 (DEC-035). 로그인 사용자에게만 적용된다 */
+  /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
   save: boolean;
 };
 
@@ -75,8 +75,27 @@ export function questionsUsedToday(
 export const ANON_IP_DAILY_LIMIT = 10;
 export const ANON_IP_WINDOW = "24 hours";
 export const ANON_IP_WINDOW_MS = 24 * 60 * 60 * 1000;
-/** LOGIN_REQUIRED details.loginProviders (DEC-005 소셜 로그인) */
+/** LOGIN_REQUIRED details.loginProviders — Google 로그인만 연다 (DEC-005, DEC-035) */
 export const LOGIN_PROVIDERS = ["google"];
+
+// --- 로그인 사용자 질문 횟수 (DEC-035) ---------------------------------------------------------
+/**
+ * Google 로그인 사용자 하루 질문 횟수 (이어 묻기 포함, 예시 질문 제외). 한국 시간 0시에 다시 센다.
+ * 10회 — 2026-11-18 사용자 결정 (DEC-035). 화면 문구도 이 값을 쓴다
+ */
+export const USER_QUESTION_LIMIT = 10;
+
+/** 오늘(한국 시간) 0시 시각 ISO 문자열 — 로그인 사용자의 오늘 분석 수를 셀 때 쓴다 */
+export function kstDayStartIso(now: number = Date.now()): string {
+  return `${kstDay(now)}T00:00:00+09:00`;
+}
+
+/** 로그인 사용자가 오늘 한도를 다 썼으면 429 RATE_LIMITED(reason user_daily). 더 할 로그인이 없어 LOGIN_REQUIRED가 아니다 */
+export function assertUserQuota(questionsUsed: number) {
+  if (questionsUsed >= USER_QUESTION_LIMIT) {
+    throw new ApiError("RATE_LIMITED", { reason: "user_daily", limit: USER_QUESTION_LIMIT });
+  }
+}
 
 const loginRequired = () => new ApiError("LOGIN_REQUIRED", { loginProviders: LOGIN_PROVIDERS });
 
@@ -104,26 +123,27 @@ export type Quota = {
   admin: boolean;
 };
 
-/** GET /me/quota. 로그인 사용자 사용량 제한은 아직 정하지 않았다 (PRD 11). 비로그인은 오늘(한국 시간) 쓴 횟수 */
+/** GET /me/quota. 오늘(한국 시간) 쓴 횟수 — 비로그인 ANON_QUESTION_LIMIT, Google 로그인 USER_QUESTION_LIMIT (DEC-035) */
 export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
-  if (owner?.kind === "user") {
+  if (owner?.admin) {
     return {
-      anonymous: false,
-      used: null,
-      limit: null,
-      remaining: null,
-      loginRequired: false,
-      admin: false,
-    };
-  }
-  if (owner?.kind === "anon" && owner.admin) {
-    return {
-      anonymous: true,
+      anonymous: owner.kind !== "user",
       used: null,
       limit: null,
       remaining: null,
       loginRequired: false,
       admin: true,
+    };
+  }
+  if (owner?.kind === "user") {
+    const used = Math.min(Math.max(questionsUsed, 0), USER_QUESTION_LIMIT);
+    return {
+      anonymous: false,
+      used,
+      limit: USER_QUESTION_LIMIT,
+      remaining: USER_QUESTION_LIMIT - used,
+      loginRequired: false,
+      admin: false,
     };
   }
   const used = Math.min(Math.max(questionsUsed, 0), ANON_QUESTION_LIMIT);
@@ -155,13 +175,21 @@ export function assertSensitiveConsent(sensitive: SensitiveCategory[], consent: 
   }
 }
 
-/** admin: 관리자 모드(DEC-024, 비밀번호 쿠키) — 비로그인 하루 3회·IP 상한을 받지 않는다. 소유권은 익명 세션 그대로 */
+/**
+ * admin: 관리자 모드(DEC-024, 비밀번호 쿠키) — 하루 질문 횟수·IP 상한을 받지 않는다.
+ * 로그인 사용자의 anonSessionId: 같은 브라우저에서 로그인 전에 한 질문 — 로그인 뒤에도 계속 볼 수 있게 (DEC-035)
+ */
 export type Owner =
-  { kind: "user"; userId: string } | { kind: "anon"; anonSessionId: string; admin?: boolean };
+  | { kind: "user"; userId: string; anonSessionId?: string | null; admin?: boolean }
+  | { kind: "anon"; anonSessionId: string; admin?: boolean };
 
 /** 비로그인 횟수 제한을 받는 소유자인지 (관리자 모드는 제외) */
 export const countsAnonQuota = (owner: Owner): owner is { kind: "anon"; anonSessionId: string } =>
   owner.kind === "anon" && owner.admin !== true;
+
+/** 로그인 사용자 하루 횟수 제한을 받는 소유자인지 (관리자 모드는 제외, DEC-035) */
+export const countsUserQuota = (owner: Owner): owner is { kind: "user"; userId: string } =>
+  owner.kind === "user" && owner.admin !== true;
 
 /**
  * 소유자 판단. 로그인 사용자는 user_id로, 비로그인은 같은 익명 세션이면서 아직 계정에 연결되지 않은 행만.
@@ -172,7 +200,11 @@ export function isOwner(
   owner: Owner | null,
 ): boolean {
   if (!owner) return false;
-  if (owner.kind === "user") return row.userId === owner.userId;
+  if (owner.kind === "user") {
+    if (row.userId === owner.userId) return true;
+    // 같은 브라우저에서 로그인 전에 한 질문(계정에 연결되지 않은 행)은 로그인 뒤에도 본인 것으로 본다
+    return row.userId === null && !!owner.anonSessionId && row.anonSessionId === owner.anonSessionId;
+  }
   return row.userId === null && row.anonSessionId === owner.anonSessionId;
 }
 
@@ -297,14 +329,14 @@ export function parseAnalyzeRequest(raw: string): {
     throw new ApiError("VALIDATION_ERROR", { reason: "invalid_json" });
   }
   const b = (body ?? {}) as Record<string, unknown>;
-  // 답변 단계(DEC-032): 정해진 세 값만 받는다. 없으면 서버 기본값(Pro)
+  // 답변 단계(DEC-036): 정해진 세 값만 받는다. 없으면 서버 기본값(Pro)
   const tier = b.tier ?? null;
   if (tier !== null && !isTierId(tier))
     throw new ApiError("VALIDATION_ERROR", { fields: ["tier"] });
   const category = b.category ?? null;
   if (category !== null && !isCategoryKey(category))
     throw new ApiError("VALIDATION_ERROR", { fields: ["category"] });
-  // DeepSearch(DEC-034): 같은 비용 상한 안에서 근거를 더 넓게 넘겨 본다
+  // DeepSearch(DEC-038): 같은 비용 상한 안에서 근거를 더 넓게 넘겨 본다
   if (b.deep !== undefined && typeof b.deep !== "boolean")
     throw new ApiError("VALIDATION_ERROR", { fields: ["deep"] });
   return { category, tier, deep: b.deep === true };

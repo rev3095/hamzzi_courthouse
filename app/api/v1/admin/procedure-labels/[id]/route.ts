@@ -1,4 +1,4 @@
-// PATCH /api/v1/admin/procedure-labels/{id} — 라벨 승인·거절 (DEC-033, 관리자 모드 DEC-024).
+// PATCH /api/v1/admin/procedure-labels/{id} — 라벨 승인·거절 (DEC-037, 관리자 모드 DEC-024).
 // 승인하면 그 낱말이 든 질문에 절차 안내가 보이고, 거절하면 분류에 쓰지 않는다.
 import { ApiError } from "@/lib/api/errors";
 import { ok } from "@/lib/api/respond";

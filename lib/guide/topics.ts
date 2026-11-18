@@ -312,11 +312,13 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     ],
   },
   "roadmap-login": {
-    label: "로그인 기능이 생기나요?",
-    source: "DEC-016",
+    label: "로그인은 어떻게 해요?",
+    source: "DEC-032 · DEC-035",
     lines: [
-      "데모는 로그인 없이 운영하고 있어요. 소셜 로그인은 보류 중이고, 연결할지는 나중에 다시 정해요.",
+      "로그인은 Google 계정으로만 할 수 있어요. 마이페이지(오른쪽 위 프로필)에 Google 로그인 버튼이 있어요. 버튼이 '준비 중'으로 보이면 아직 열기 전이에요.",
+      "로그인하지 않아도 지금처럼 쓸 수 있고, 로그인하면 하루 질문 횟수가 늘어나요.",
     ],
+    links: [{ href: "/me", label: "마이페이지" }],
   },
   "roadmap-quality": {
     label: "답변 품질은 어떻게 확인해요?",

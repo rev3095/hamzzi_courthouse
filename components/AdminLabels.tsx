@@ -1,5 +1,5 @@
 "use client";
-// 관리자 모드: AI 절차 분류 라벨 검토 (DEC-033). 승인한 것만 사용자 화면에 나간다.
+// 관리자 모드: AI 절차 분류 라벨 검토 (DEC-037). 승인한 것만 사용자 화면에 나간다.
 // 라벨에는 질문 문장이 없다 — 낱말·절차 이름·단계 문구만 보인다.
 import { useCallback, useEffect, useState } from "react";
 import type { LabelStatus, ProcedureLabel } from "@/lib/procedure/labels";

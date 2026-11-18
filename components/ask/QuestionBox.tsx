@@ -1,7 +1,7 @@
 "use client";
 // 질문창 (Figma 05 "질문창", S-01): 질문 입력란 · 물어보기 버튼. F-001 → POST /api/v1/inquiries.
 // D+의 모드 전환 버튼(AI 질문 / 판례 검색)은 데모 범위 밖이라 뺐다.
-// AI 질문창(askTools)에는 입력란 아래에 답변 모드 선택(TierSlider, DEC-032)과 DeepSearch 버튼(DEC-034)을 둔다 — Figma에 없는 추가 요소.
+// AI 질문창(askTools)에는 입력란 아래에 답변 모드 선택(TierSlider, DEC-036)과 DeepSearch 버튼(DEC-038)을 둔다 — Figma에 없는 추가 요소.
 // 판례 검색창(/search)은 모델을 쓰지 않으므로 보이지 않는다.
 import { useId, type Ref } from "react";
 import { SaveToggle } from "./SaveToggle";

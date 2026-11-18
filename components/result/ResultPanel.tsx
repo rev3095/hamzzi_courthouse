@@ -461,7 +461,8 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
 }
 
 /**
- * 이번 분석이 쓴 판례 검색어. 무료·라이트는 조문 제목·분야 고정 낱말이고, 전체 파이프라인(pro-full)은 모델이 마스킹본에서 뽑은 낱말이다.
+ * 이번 분석이 쓴 판례 검색어. 무료는 조문 제목·분야 고정 낱말이고, 라이트는 여기에 질문 해석 호출이 뽑은 법률 용어(DEC-033,
+ * 개인정보·조문·사건번호·숫자·단정 표현 검사를 거친 것)가 더해지며, 전체 파이프라인(pro-full)은 모델이 마스킹본에서 뽑은 낱말이다.
  * 질문 문장 자체는 넣지 않고, 리서치 화면에서 검색할 때 서버가 개인정보 검사를 한 번 더 한다 (F-007)
  */
 export function researchKeywords(result: DemoAnalysisResult): string[] {

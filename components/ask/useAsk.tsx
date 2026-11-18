@@ -7,12 +7,13 @@ import { useState } from "react";
 import {
   confirmPii,
   createInquiry,
+  isUserDailyLimit,
   notifyQuotaChanged,
   rememberDeep,
   rememberQuestion,
   type ClientError,
 } from "@/lib/client/api";
-import { readSave } from "@/lib/client/auth";
+import { readSave } from "@/lib/client/save";
 import type { PiiFinding } from "@/lib/pii";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
@@ -69,7 +70,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       text,
       ...(sensitiveConsent && { sensitiveConsent: true }),
       ...(opts.parentInquiryId && { parentInquiryId: opts.parentInquiryId }),
-      // 로그인 사용자가 "내 기록에 남기기"를 켜 두었을 때만 (DEC-035). 서버가 비로그인 요청에서는 무시한다
+      // 로그인 사용자가 "내 기록에 남기기"를 켜 두었을 때만 (DEC-039). 서버가 비로그인 요청에서는 무시한다
       ...(readSave() && { save: true }),
     });
     setBusy(false);
@@ -77,7 +78,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       if (r.error.code === "CONSENT_REQUIRED") {
         const cats = r.error.details?.categories;
         setPending({ kind: "consent", text, deep, categories: Array.isArray(cats) ? cats : [] });
-      } else if (r.error.code === "LOGIN_REQUIRED") {
+      } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
         setPending({ kind: "login" });
       } else {

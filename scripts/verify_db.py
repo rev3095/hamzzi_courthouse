@@ -414,7 +414,7 @@ def ops(conn) -> None:
     check(scalar(conn, "select count(*) from cron.job where jobname = 'hz-retention-purge'") == 1,
           "pg_cron 매일 파기 작업 등록")
 
-    # DEC-032 주간 유료 예산은 단위로 센다 (가중 차감)
+    # DEC-036 주간 유료 예산은 단위로 센다 (가중 차감)
     wk = "verify-" + uuid.uuid4().hex
     hw = "public.hit_rate_limit_weighted"
     check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 80)", (wk,)) is True,
@@ -430,7 +430,7 @@ def ops(conn) -> None:
                        "'public.hit_rate_limit_weighted(text, text, int, interval, int)', 'execute')") is False,
           "가중 차감 함수는 anon이 실행할 수 없음")
 
-    # DEC-033 AI 절차 분류 라벨 — 서버 전용, track·steps 중 하나만, 상태 값 제한
+    # DEC-037 AI 절차 분류 라벨 — 서버 전용, track·steps 중 하나만, 상태 값 제한
     check(scalar(conn, "select relrowsecurity from pg_class where oid = 'public.procedure_labels'::regclass") is True,
           "procedure_labels RLS 켬")
     check(scalar(conn, "select count(*) from pg_policies where tablename = 'procedure_labels'") == 0,
@@ -454,7 +454,7 @@ def ops(conn) -> None:
            "values ('검증 라벨', array['검증낱말'], 'neighbor', 'live')")
     check(scalar(conn, "select column_default from information_schema.columns "
                        "where table_schema = 'public' and table_name = 'inquiries' and column_name = 'saved'") == "false",
-          "inquiries.saved 기본값 false (DEC-035)")
+          "inquiries.saved 기본값 false (DEC-039)")
     raises(conn, "낱말 없는 라벨 거부",
            "insert into public.procedure_labels (title, keywords, track) values ('검증 라벨', '{}', 'neighbor')")
 

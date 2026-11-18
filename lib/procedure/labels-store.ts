@@ -1,4 +1,4 @@
-// AI 절차 분류 라벨 저장소 (DEC-033, server-only, service_role). 질문 문장은 저장하지 않는다.
+// AI 절차 분류 라벨 저장소 (DEC-037, server-only, service_role). 질문 문장은 저장하지 않는다.
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import {

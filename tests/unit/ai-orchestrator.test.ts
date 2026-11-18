@@ -362,7 +362,7 @@ describe("DEC-014 프로토타입과 같은 검색 과정", () => {
 });
 
 describe("DEC-015 모드 스위치와 fallback", () => {
-  test("DEC-032 AI_MODE=free거나 키가 없으면 무료 모드, 그 밖에는 유료", async () => {
+  test("DEC-036 AI_MODE=free거나 키가 없으면 무료 모드, 그 밖에는 유료", async () => {
     const { aiMode } = await import("@/lib/ai/mode");
     expect(aiMode({})).toBe("free");
     expect(aiMode({ AI_MODE: "free", ANTHROPIC_API_KEY: "k" })).toBe("free");

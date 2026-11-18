@@ -52,14 +52,15 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ## 4. Phase 1 엔드포인트
 | 메서드 · 경로 | 인증 | 설명 | F-ID |
 |---|---|---|---|
-| POST `/inquiries` | anon(하루 3회, 관리자 모드 무제한)·user | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
+| POST `/inquiries` | anon(하루 `ANON_QUESTION_LIMIT`회 — 현재 5, DEC-031 · 관리자 모드 무제한)·user(Google 로그인 하루 `USER_QUESTION_LIMIT` 10회, DEC-035) | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
 | POST `/inquiries/{id}/pii-confirmation` | 소유자(anon 포함) | 마스킹 확인·민감정보 동의 | F-007 |
 | POST `/inquiries/{id}/analyze` | 소유자(anon 포함) | 구조화 + 검색 + 근거 요약 | F-002~F-006 |
 | PATCH `/inquiries/{id}/facts` | user 소유자 | 사실관계 요약 수정 | F-002 AC1 |
 | POST `/inquiries/{id}/answers` | user 소유자 | 추가 질문 답변 | F-002 AC2 |
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
-| GET `/me/quota` | anon·user | 오늘 남은 비로그인 질문 수(0~3), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024 |
-| GET `/me/inquiries` | user | 내 질문 기록(남기기로 한 질문, 마스킹본) | DEC-035 |
+| GET `/me/quota` | anon·user | 오늘 남은 질문 수(비로그인 0~`ANON_QUESTION_LIMIT` · Google 로그인 0~10), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024, DEC-035 |
+| GET `/me/inquiries` | user | 내 질문 기록(남기기로 한 질문, 마스킹본) | DEC-039 |
+| GET `/auth/callback` (API 밖, `app/auth/callback`) | 공개 | Google 로그인에서 돌아오는 주소. Supabase 코드를 세션 쿠키로 바꾸고 `next`(사이트 안 경로만, `safeNextPath`)로 보낸다. 실패하면 `/me?login=failed` | DEC-035 |
 | POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
 | GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
@@ -72,7 +73,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
-| GET `/admin/procedure-labels` · PATCH `/admin/procedure-labels/{id}` | 관리자 모드 | AI 절차 분류 라벨 조회·승인·거절 | DEC-033 |
+| GET `/admin/procedure-labels` · PATCH `/admin/procedure-labels/{id}` | 관리자 모드 | AI 절차 분류 라벨 조회·승인·거절 | DEC-037 |
 | GET `/health` | 공개 | 운영 점검: DB·법제처 도달 여부, Claude 키 유무(무과금) | 13 (OQ-ARC-09) |
 
 ### POST `/inquiries`
@@ -102,36 +103,35 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ```
 `acceptMasked: false`는 `400 VALIDATION_ERROR`(`details.reason: "resubmit_with_edits"`) — 내용을 고쳐 새로 제출한다. 분석 전 확인이 없으면 analyze가 `422 PII_CONFIRMATION_REQUIRED`. 민감정보 동의는 POST `/inquiries`에서 받는다.
 
-### GET `/me/inquiries` (DEC-035)
+### GET `/me/inquiries` (DEC-039)
 로그인 사용자가 `save: true`로 보낸 질문만, 최근 것부터 50건. 비로그인은 `401 UNAUTHENTICATED`.
 ```ts
 // 200
 { id: string; maskedText: string; status: "draft"|"need_info"|"analyzed"|"failed"; createdAt: string; followup: boolean }[]
 ```
 POST `/inquiries` 본문의 `save?: boolean`(선택)이 참이고 요청자가 로그인 사용자일 때만 기록에 남긴다. 비로그인·관리자 모드 요청에서는 무시한다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["save"]`).
-로그인 사용자의 analyze는 계정 하루 20회를 넘으면 `429 RATE_LIMITED`(`details.reason: "user_daily"`). 예시 질문은 세지 않는다.
+로그인 사용자의 하루 한도는 DEC-035(하루 10회)를 따른다.
 
-`GET /auth/callback?code=…&next=/경로` — Google 로그인에서 돌아오는 주소(API 밖, `NEXT_PUBLIC_GOOGLE_LOGIN=on`일 때만 동작). 코드를 세션 쿠키로 바꾸고 `next`(같은 사이트 경로만)로 보낸다. 실패하면 `?login=failed`만 붙인다.
 
 ### GET `/me/quota`
 ```ts
 // 200 — 조회만 한다. 쿠키 없는 첫 방문자에게 익명 세션을 만들지 않는다
 { anonymous: boolean;          // 로그인 사용자면 false
-  used: number | null;         // 오늘(한국 시간) 비로그인 사용 횟수 0~3 (로그인 사용자·관리자 모드 null)
-  limit: number | null;        // 3 (DEC-010, 하루 단위 DEC-024)
+  used: number | null;         // 오늘(한국 시간) 사용 횟수 — 비로그인 0~ANON_QUESTION_LIMIT(현재 5), Google 로그인 0~10 (관리자 모드 null)
+  limit: number | null;        // 비로그인 ANON_QUESTION_LIMIT(DEC-010·024·031), Google 로그인 USER_QUESTION_LIMIT 10(DEC-035)
   remaining: number | null;
-  loginRequired: boolean;      // 오늘 3회를 다 쓴 비로그인
+  loginRequired: boolean;      // 오늘 한도를 다 쓴 비로그인 (로그인 사용자는 항상 false — 한도 소진은 remaining 0)
   admin: boolean;              // 관리자 모드(DEC-024) — 횟수 제한 없음
-  ai: boolean }                // AI 답변이 켜져 있는지(DEC-032). false면 화면이 답변 모드 선택을 숨긴다
+  ai: boolean }                // AI 답변이 켜져 있는지(DEC-036). false면 화면이 답변 모드 선택을 숨긴다
 ```
 비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다. **예시 질문**(홈에 보이는 질문과 같은 문장, 공백·전각 차이 무시)은 저장된 분석을 재생하므로 `POST /inquiries`·`analyze` 모두 횟수를 보지 않고 차감도 하지 않는다(DEC-027) — 3회를 다 쓴 뒤에도 열 수 있다. 대신 같은 네트워크 1시간 30회까지(`429 RATE_LIMITED`, `reason: example_hourly`). 이어 묻기라도 문장이 예시와 같으면 맥락 없이 예시를 재생하고 세지 않는다.
 
 ### POST·DELETE `/admin/session` (DEC-024)
 ```ts
-// POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
-// 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · ADMIN_PASSCODE 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
+// POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE(또는 ADMIN_PASSWORD)와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
+// 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · 둘 다 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
 // DELETE → 쿠키 삭제, 200 { admin: false }. 본문·비밀번호는 로그에 남기지 않는다
-``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
+``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). Google 로그인 사용자(DEC-035)는 하루 10회(`USER_QUESTION_LIMIT`, 한국 시간 0시 초기화, 예시 질문 제외)로, 오늘 저장된 분석 결과 수(`model` ≠ `replay`)를 `POST /inquiries`·`analyze`가 모델 전에 세어 넘으면 `429 RATE_LIMITED`(`details.reason: "user_daily"`). 로그인 전에 같은 브라우저에서 만든 질문을 로그인 뒤 분석하면 분석 전에 그 행을 계정에 연결(`claimInquiryForUser`)해 이 한도에 넣는다. 차감 트랜잭션이 따로 없어 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로). 관리자 모드로 로그인하면 이 한도도 받지 않는다. 로그인 사용자는 같은 브라우저 익명 세션의 로그인 전 질문도 소유자로 본다.
 
 ### POST `/inquiries/{id}/analyze`
 ```ts
@@ -168,6 +168,7 @@ type DemoAnalysisResult = {
   outcome: "grounded" | "no_result_in_scope";       // 근거 자료가 없으면 no_result_in_scope (F-006)
   aiNotice: "AI 생성 · 법률 자문 아님";              // 고정 문구. LLM이 만들지 않음
   intent: { area: string; goal: string; laws: string[]; lawKeywords: string[] };
+  section?: string;                                 // DEC-033: 질문 해석 호출이 고정 목록(lib/procedure/sections.ts)에서 고른 절차 섹션 라벨. 타임라인 선택에만 쓴다. 없으면 화면이 규칙으로 정한다
   answer: { points: { text: string; source: string; quote: string;          // quote = 원문 그대로 20~60자. quote_mismatch면 "" (원문에 없는 구절은 내보내지 않음)
                       check: "verified" | "quote_mismatch" }[] };           // 출처 없음·재조회 실패·실존 미확인 문단은 제외
   articles: (StatuteRef & { title: string; used: boolean })[];             // 법령 탭
@@ -176,16 +177,16 @@ type DemoAnalysisResult = {
   trace: { round: 1|2|3; tool: "law" | "precedent"; query: string; added: string[] }[];   // AI가 더 찾아본 것
   recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[]; removed: number }; // verify_citations 결과(검증 탭). items는 남은 문단이 쓴(실존 확인된) 인용만, ok = 실존 미확인으로 뺀 문단이 없음, removed = 검증·1차 거르기에서 뺀 문단 수(내용은 내보내지 않음, DEC-014)
   searchScopeNote: string;
-  procedureHint?:                                   // DEC-033: 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만). 없으면 생략
+  procedureHint?:                                   // DEC-037: 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만). 없으면 생략
     | { kind: "track"; track: string }               // 검증해 둔 기존 타임라인 키
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };
 }
 ```
-- **요청 본문(선택, DEC-032)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro. 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
-- **요청 본문(선택, DEC-034)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
-- **요청 본문(선택, DEC-028)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
+- **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro. 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
+- **요청 본문(선택, DEC-038)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
+- **요청 본문(선택, DEC-028)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation"|"insult"|"assault"|"stalking"|"sex_crime"|"voice_phishing"|"crime_report"|"workplace_harassment"|"industrial_accident"|"domestic_violence"|"school_violence"|"medical"|"privacy"|"commercial_lease"|"respond_civil"|"respond_criminal"|"admin_appeal"|"debt_relief" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
 - **예시 답변 화면(DEC-028)**: 홈의 예시 카드는 이 API를 쓰지 않는다. `/examples/[id]`가 저장된 예시 분석(`mode: "replay"`와 같은 형식)을 빌드 때 정적으로 렌더링한다 — 질문 생성·분석·저장·횟수 차감 없음.
-- **무료 모드(기본, DEC-015)**: Claude를 부르지 않는다. 질문이 예시 질문과 같으면 `mode: "replay"`(저장된 검증 결과), 아니면 `mode: "search_only"`(법제처 조문·판례 목록, 답변 문단 없음). 저장·비로그인 차감은 유료 분석과 같다. 무료 모드는 `AI_MODE=free`이거나 API 키가 없거나 주간 예산을 넘었을 때다 — 그 밖에는 `tier`의 모델로 실제 분석을 한다(DEC-032).
+- **무료 모드(기본, DEC-015)**: Claude를 부르지 않는다. 질문이 예시 질문과 같으면 `mode: "replay"`(저장된 검증 결과), 아니면 `mode: "search_only"`(법제처 조문·판례 목록, 답변 문단 없음). 저장·비로그인 차감은 유료 분석과 같다. 무료 모드는 `AI_MODE=free`이거나 API 키가 없거나 주간 예산을 넘었을 때다 — 그 밖에는 `tier`의 모델로 실제 분석을 한다(DEC-036).
 - 이어 묻기면 부모 inquiry 사슬의 최근 3개 질문·답변을 맥락으로만 쓰고, 근거는 다시 검색한다 (Pro 모드).
 - 상태: `draft`·`failed`(재시도)만 분석한다. 이미 `analyzed`면 `409 INVALID_STATE`(횟수 이중 차감 방지). 실패하면 `failed`로 바뀐다.
 - 비로그인은 모델을 부르기 전에 세션 3회(`401 LOGIN_REQUIRED`)·IP 해시 24시간 상한(`429 RATE_LIMITED`)을 미리 보고, 최종 차감은 결과 저장과 한 트랜잭션(DB `finish_demo_analysis`)에서 한다.
@@ -256,13 +257,13 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 
 ### DELETE `/me/data`
 - 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
-- 로그인 사용자: `202 { status: "received", deletionRequestId }` — `deletion_requests` 접수, 처리 기한은 OQ-DM-03. 데모는 로그인을 열지 않는다(DEC-016).
+- 로그인 사용자: `202 { status: "received", deletionRequestId, deletedInquiries }` — 같은 브라우저 익명 세션의 로그인 전 질문은 바로 지우고(`deletedInquiries`), 계정 기록은 `deletion_requests` 접수(운영자 처리), 처리 기한은 OQ-DM-03 (DEC-035).
 - 레이트 리밋: IP 해시 1시간 30회.
 
 ### GET `/health`
-`200 | 503 { status: "ok" | "degraded", checks: { db: { ok, latencyMs }, lawApi: { ok, latencyMs, cached? } }, version: string, time, ai: { mode: "free" | "pro" | "pro-full", key: "ok" | "missing" | "invalid" | "error" } }` — 공통 형식(`data`)으로 감싸지 않는다(업타임 감시 도구용). 둘 다 닿으면 200, 아니면 503. 비밀값·오류 문구·본문은 내보내지 않는다. 법제처 확인은 인스턴스마다 5분 캐시. `ai`는 정보용(DEC-019): Claude 키가 있고 유효한지를 모델 정보 조회(토큰을 쓰지 않아 과금 없음)로만 확인하고 5분 캐시하며, 200/503 판정에는 넣지 않는다. `cache-control: no-store`. 운영 문서: `docs/reports/2026-11-01_운영_모니터링.md`.
+`200 | 503 { status: "ok" | "degraded", checks: { db: { ok, latencyMs }, lawApi: { ok, latencyMs, cached? } }, version: string, time, ai: { mode: "free" | "paid", key: "ok" | "missing" | "invalid" | "error" } }` — 공통 형식(`data`)으로 감싸지 않는다(업타임 감시 도구용). 둘 다 닿으면 200, 아니면 503. 비밀값·오류 문구·본문은 내보내지 않는다. 법제처 확인은 인스턴스마다 5분 캐시. `ai`는 정보용(DEC-019): Claude 키가 있고 유효한지를 모델 정보 조회(토큰을 쓰지 않아 과금 없음)로만 확인하고 5분 캐시하며, 200/503 판정에는 넣지 않는다. `cache-control: no-store`. 운영 문서: `docs/reports/2026-11-01_운영_모니터링.md`.
 
-### GET `/admin/procedure-labels` · PATCH `/admin/procedure-labels/{id}` (DEC-033)
+### GET `/admin/procedure-labels` · PATCH `/admin/procedure-labels/{id}` (DEC-037)
 관리자 모드 쿠키(`hz_admin`, DEC-024)가 없으면 `403 FORBIDDEN`. 라벨에는 질문 문장·개인정보가 없다.
 ```ts
 // GET 200

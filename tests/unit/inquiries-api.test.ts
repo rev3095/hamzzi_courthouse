@@ -2,7 +2,7 @@
 // F-001·F-007 질문 입력 API — DB·인증은 목으로 바꾸고 마스킹·동의·응답·로그를 본다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { type RequestLog, setLogSink } from "@/lib/api/log";
 
 const store = vi.hoisted(() => ({
@@ -11,6 +11,7 @@ const store = vi.hoisted(() => ({
   getOwnedInquiry: vi.fn(),
   markPiiConfirmed: vi.fn(),
   getAnonQuestionsUsed: vi.fn(),
+  getUserQuestionsUsed: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
 vi.mock("server-only", () => ({}));
@@ -55,6 +56,7 @@ beforeEach(() => {
   store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1" });
   store.createInquiry.mockResolvedValue({ id: INQ_ID, status: "draft" });
   store.getAnonQuestionsUsed.mockResolvedValue(0);
+  store.getUserQuestionsUsed.mockResolvedValue(0);
 });
 
 describe("POST /inquiries", () => {
@@ -185,6 +187,23 @@ describe("F-001 AC3 비로그인 하루 한도 (DEC-010, DEC-031)", () => {
     store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1" });
     expect((await post({ text: "사기를 당했어요" })).status).toBe(201);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+    expect(store.getUserQuestionsUsed).toHaveBeenCalledWith("u1");
+  });
+
+  test("DEC-035 Google 로그인 사용자가 하루 한도를 다 쓰면 저장하지 않고 429 user_daily", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1" });
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    const res = await post({ text: "사기를 당했어요" });
+    expect(res.status).toBe(429);
+    expect((await res.json()).error.details).toMatchObject({ reason: "user_daily" });
+    expect(store.createInquiry).not.toHaveBeenCalled();
+  });
+
+  test("DEC-035 관리자 모드로 로그인한 사용자는 하루 한도를 보지 않는다", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1", admin: true });
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    expect((await post({ text: "사기를 당했어요" })).status).toBe(201);
+    expect(store.getUserQuestionsUsed).not.toHaveBeenCalled();
   });
 });
 

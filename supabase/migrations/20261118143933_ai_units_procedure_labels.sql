@@ -1,7 +1,7 @@
--- DEC-032 답변 단계(Light·Pro·Pro Max) + DEC-033 AI 절차 분류 라벨 + DEC-035 내 질문 기록.
+-- DEC-036 답변 단계(Light·Pro·Pro Max) + DEC-037 AI 절차 분류 라벨 + DEC-039 내 질문 기록.
 --
 -- 1) hit_rate_limit_weighted — 주간 유료 예산을 건수가 아니라 단위($0.0015)로 센다.
---    단계마다 값이 달라(Light 1 · Pro 20 · Pro Max 80) 한 번에 여러 단위를 올려야 한다.
+--    단계마다 값이 달라(Light 1 · Pro 20 · Pro Max 94) 한 번에 여러 단위를 올려야 한다.
 --    기존 hit_rate_limit(1씩 세기)은 그대로 둔다. 카운터 키는 해시 또는 'global'만 (원본 IP 금지 그대로).
 create or replace function public.hit_rate_limit_weighted(
   p_bucket text,
@@ -40,7 +40,7 @@ $$;
 revoke execute on function public.hit_rate_limit_weighted(text, text, int, interval, int) from public, anon, authenticated;
 grant execute on function public.hit_rate_limit_weighted(text, text, int, interval, int) to service_role;
 
--- 2) procedure_labels — 규칙이 절차를 정하지 못한 질문을 AI가 분류한 결과 (DEC-033).
+-- 2) procedure_labels — 규칙이 절차를 정하지 못한 질문을 AI가 분류한 결과 (DEC-037).
 --    같은 낱말의 질문이 다시 오면 이 표를 먼저 보고 AI를 다시 부르지 않는다.
 --    개인정보 없음: 질문 문장은 저장하지 않는다. 일반 낱말(keywords)·절차 이름·단계 문구만 담고,
 --    서버가 저장 전에 숫자·개인정보 패턴을 검사한다 (lib/procedure/labels.ts).
@@ -62,7 +62,7 @@ create table public.procedure_labels (
 
 create index procedure_labels_status_idx on public.procedure_labels (status, created_at desc);
 
-comment on table public.procedure_labels is 'AI 절차 분류 라벨 (DEC-033). 개인정보·질문 문장 없음';
+comment on table public.procedure_labels is 'AI 절차 분류 라벨 (DEC-037). 개인정보·질문 문장 없음';
 
 -- 서버 전용: 정책을 두지 않고 service_role만 읽고 쓴다
 alter table public.procedure_labels enable row level security;
@@ -82,8 +82,8 @@ $$;
 revoke execute on function public.bump_procedure_label(uuid) from public, anon, authenticated;
 grant execute on function public.bump_procedure_label(uuid) to service_role;
 
--- 4) 내 질문 기록 (DEC-035). 로그인 사용자가 "기록에 남기기"를 고른 질문만 마이페이지 목록에 보인다.
+-- 4) 내 질문 기록 (DEC-039). 로그인 사용자가 "기록에 남기기"를 고른 질문만 마이페이지 목록에 보인다.
 --    새 개인정보는 없다 — 이미 있는 마스킹본 행에 표시 하나를 더할 뿐이고 보유 기간(expires_at)도 그대로다.
 alter table public.inquiries add column saved boolean not null default false;
-comment on column public.inquiries.saved is '로그인 사용자가 내 질문 기록에 남기기로 한 질문 (DEC-035)';
+comment on column public.inquiries.saved is '로그인 사용자가 내 질문 기록에 남기기로 한 질문 (DEC-039)';
 create index inquiries_saved_idx on public.inquiries (user_id, created_at desc) where saved;

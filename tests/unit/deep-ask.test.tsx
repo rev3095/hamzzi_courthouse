@@ -1,4 +1,4 @@
-// DEC-034 DeepSearch — 양식 합치기·보내기 전 점검(모델 없음)·입력 창 흐름
+// DEC-038 DeepSearch — 양식 합치기·보내기 전 점검(모델 없음)·입력 창 흐름
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { DeepAsk } from "@/components/ask/DeepAsk";
@@ -22,7 +22,7 @@ const FULL = {
   ask: "보증금을 돌려받으려면 어떻게 해야 하나요?",
 };
 
-describe("DEC-034 양식 합치기", () => {
+describe("DEC-038 양식 합치기", () => {
   test("칸 길이의 합은 질문 한도(2,000자) 안이다 — 자유 양식보다 입력이 길어지지 않는다", () => {
     const heads = DEEP_FIELDS.length * 14;
     expect(DEEP_FIELDS.reduce((n, f) => n + f.max, 0) + heads).toBeLessThanOrEqual(MAX_INPUT_CHARS);
@@ -36,7 +36,7 @@ describe("DEC-034 양식 합치기", () => {
   });
 });
 
-describe("DEC-034 보내기 전 점검 (규칙, 비용 0)", () => {
+describe("DEC-038 보내기 전 점검 (규칙, 비용 0)", () => {
   test("필요한 내용이 다 있으면 빠진 것이 없다", () => {
     expect(reviewDeep({ values: FULL })).toEqual({ missing: [], thin: false });
   });
@@ -76,7 +76,7 @@ describe("DEC-034 보내기 전 점검 (규칙, 비용 0)", () => {
   });
 });
 
-describe("DEC-034 분석 요청", () => {
+describe("DEC-038 분석 요청", () => {
   test("deep은 참·거짓만 받는다. 없으면 false", () => {
     expect(parseAnalyzeRequest("")).toEqual({ category: null, tier: null, deep: false });
     expect(parseAnalyzeRequest(JSON.stringify({ deep: true, tier: "max" }))).toEqual({
@@ -93,7 +93,7 @@ describe("DEC-034 분석 요청", () => {
   });
 });
 
-describe("DEC-034 입력 창", () => {
+describe("DEC-038 입력 창", () => {
   const open = (initialText = "") => {
     const onSubmit = vi.fn();
     render(

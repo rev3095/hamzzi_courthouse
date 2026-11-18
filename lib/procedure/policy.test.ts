@@ -3,6 +3,8 @@ import { isAssertive } from "@/lib/ai/policy";
 import { demoExamples, findExample, replayResult } from "@/lib/demo/policy";
 import { CATEGORY_LIST } from "./categories";
 import { LIFE_OFFICIAL, LIFE_STEPS, LIFE_TRACKS } from "./life-tracks";
+import { MORE_OFFICIAL, MORE_TRACKS } from "./more-tracks";
+import { SECTION_LABELS, parseSectionLabel } from "./sections";
 import {
   classifyCase,
   evidenceSummary,
@@ -120,7 +122,11 @@ describe("F-014 절차 단계 상수 (DEC-021)", () => {
 
   test("공식 안내 링크는 정부·법원·공공기관 https 주소만", () => {
     // 숫자가 든 공식 주소(소비자상담센터 1372)도 허용한다 (DEC-028)
-    for (const l of [...Object.values(OFFICIAL), ...Object.values(LIFE_OFFICIAL)])
+    for (const l of [
+      ...Object.values(OFFICIAL),
+      ...Object.values(LIFE_OFFICIAL),
+      ...Object.values(MORE_OFFICIAL),
+    ])
       expect(l.url).toMatch(/^https:\/\/([a-z0-9-]+\.)+(go\.kr|or\.kr|gov\.kr)$/);
   });
 });
@@ -204,11 +210,12 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
     expect(plan.note).toMatch(/배상명령|민사/);
   });
 
-  test("형법만 찾은 질문은 형사 안내", () => {
-    expect(classifyCase(bare(["형법"]), "돈을 뜯겼어요 처벌할 수 있나요")).toBe("criminal");
+  test("DEC-033 형법만 찾은 질문은 범죄 피해 고소 타임라인", () => {
+    expect(classifyCase(bare(["형법"]), "돈을 뜯겼어요 처벌할 수 있나요")).toBe("crime_report");
+    expect(procedurePlan(bare(["형법"]), "처벌할 수 있나요").kind).toBe("life_timeline");
   });
 
-  test("소장·지급명령을 받은 쪽(갚아야 하는 쪽)은 범위 밖 안내 — 돈 받는 쪽 타임라인을 보이지 않는다", () => {
+  test("DEC-033 소장·지급명령을 받은 쪽은 받은 쪽 대응 타임라인 — 돈 받는 쪽 타임라인을 보이지 않는다", () => {
     for (const q of [
       "대여금 소장을 받았어요. 돈을 갚아야 하나요?",
       "지급명령이 왔어요 돈을 갚아야 하나요",
@@ -216,12 +223,17 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
       "소송을 당했어요 대여금 갚으래요",
       "손해배상 청구 소장이 날아왔어요",
       "제가 피고가 됐는데 어떻게 하나요",
-      "돈을 갚으라는데 안 갚아도 되나요",
       "보증금 돌려달라는 내용증명을 받았어요",
     ]) {
-      expect(classifyCase(bare(["민법", "주택임대차보호법"]), q), q).toBe("defendant");
-      expect(procedurePlan(bare(["민법"]), q).kind, q).toBe("notice");
+      expect(classifyCase(bare(["민법", "주택임대차보호법"]), q), q).toBe("respond_civil");
+      const plan = procedurePlan(bare(["민법"]), q);
+      expect(plan.kind, q).toBe("life_timeline");
+      if (hasTimeline(plan)) expect(plan.recommended.key, q).toBe("check");
     }
+    // 서류를 받지 않은 갚을 쪽은 그대로 범위 밖 안내
+    const q = "돈을 갚으라는데 안 갚아도 되나요";
+    expect(classifyCase(bare(["민법"]), q)).toBe("defendant");
+    expect(procedurePlan(bare(["민법"]), q).kind).toBe("notice");
   });
 
   test("갚거나 돌려줘야 하는 쪽(빌린 쪽·임대인·사업주·계약금을 받은 쪽)에게 반대쪽 절차를 보이지 않는다", () => {
@@ -246,12 +258,126 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
     ).toBe("lease_deposit");
   });
 
-  test("고소·신고를 당했거나 사고를 낸 쪽은 피해자 타임라인 대신 수사 대응 안내", () => {
+  test("DEC-033 고소·신고를 당했거나 사고를 낸 쪽은 피해자 타임라인 대신 수사 대응 타임라인", () => {
     for (const q of ["교통사고를 냈는데 형사처벌 받나요", "사기로 신고당했어요", "고소당했어요"]) {
       const plan = procedurePlan(bare(["형법", "민법"]), q);
-      expect(plan.kind, q).toBe("notice");
-      if (plan.kind === "notice") expect(plan.caseType, q).toBe("accused");
+      expect(plan.caseType, q).toBe("respond_criminal");
+      if (hasTimeline(plan))
+        expect(
+          plan.steps.map((s) => s.key),
+          q,
+        ).toContain("interview");
     }
+  });
+
+  test("DEC-033 직접 들은 욕설·모욕은 온라인 절차가 아니라 대면 절차로 간다", () => {
+    for (const q of [
+      "오프라인으로 욕설 들은 거 고소하고 싶어요",
+      "사람들 앞에서 모욕을 당했어요",
+      "회식 자리에서 명예훼손 발언을 들었어요",
+      "전화로 쌍욕을 들었어요",
+    ]) {
+      const plan = procedurePlan(bare(["형법"]), q);
+      expect(plan.caseType, q).toBe("insult");
+      if (hasTimeline(plan)) {
+        expect(plan.title, q).not.toMatch(/온라인/);
+        expect(
+          plan.steps.map((s) => s.key),
+          q,
+        ).not.toContain("takedown");
+      }
+    }
+    for (const q of [
+      "인터넷 커뮤니티에 저를 모욕하는 글이 올라왔어요",
+      "단톡방에서 욕설을 들었어요",
+      "인스타 댓글로 명예훼손을 당했어요",
+    ]) {
+      expect(classifyCase(bare(["형법"]), q), q).toBe("defamation");
+    }
+  });
+
+  test("DEC-033 질문 문장이 있으면 섞여 온 법령 이름 하나로 섹션을 정하지 않는다", () => {
+    const q = "길에서 모르는 사람에게 욕설을 들었어요";
+    expect(classifyCase(bare(["형법", "근로기준법"]), q)).toBe("insult");
+    expect(classifyCase(bare(["근로기준법"]), "친구가 약속을 어겼어요")).toBe("other");
+    expect(classifyCase(bare(["도로교통법"]), "친구가 약속을 어겼어요")).toBe("other");
+    expect(
+      classifyCase(bare(["전자상거래 등에서의 소비자보호에 관한 법률"]), "친구가 약속을 어겼어요"),
+    ).toBe("other");
+    // 그 분야 낱말이 함께 있으면 법령 이름을 근거로 쓴다
+    expect(classifyCase(bare(["근로기준법"]), "회사에서 연차를 못 쓰게 해요")).toBe("wage");
+    // 질문 문장이 없을 때(다른 기기)는 법령 이름으로 정한다
+    expect(classifyCase(bare(["근로기준법"]), null)).toBe("wage");
+  });
+
+  test("DEC-033 추가 섹션: 뚜렷한 낱말이 있으면 그 타임라인으로 간다", () => {
+    const cases: [string, string][] = [
+      ["검사를 사칭한 보이스피싱에 속아 돈을 보냈어요", "voice_phishing"],
+      ["전 애인이 계속 찾아와서 스토킹을 해요", "stalking"],
+      ["술집에서 모르는 사람에게 맞았어요", "assault"],
+      ["직장 내 괴롭힘을 당하고 있어요", "workplace_harassment"],
+      ["공사장에서 일하다가 다쳤어요 산재 되나요", "industrial_accident"],
+      ["수술을 받고 부작용이 생겼어요 의료사고 같아요", "medical"],
+      ["아이가 학교폭력을 당했어요", "school_violence"],
+      ["남편이 저를 때려요 가정폭력이에요", "domestic_violence"],
+      ["쇼핑몰에서 개인정보가 유출됐대요", "privacy"],
+      ["영업정지 처분을 받았는데 억울해요", "admin_appeal"],
+      ["빚이 너무 많아서 개인회생을 알아보고 있어요", "debt_relief"],
+      ["상가 임대인이 재계약을 안 해주고 권리금도 못 받게 해요", "commercial_lease"],
+    ];
+    for (const [q, key] of cases) {
+      const plan = procedurePlan(bare(["민법"]), q);
+      expect(plan.caseType, q).toBe(key);
+      expect(plan.kind, q).toBe("life_timeline");
+    }
+    // 기존 섹션은 그대로: 차에 치인 사고는 교통사고, 상가 보증금은 일반 금전
+    expect(classifyCase(bare(["민법"]), "횡단보도에서 차에 치여 다쳤어요")).toBe("traffic");
+    expect(
+      classifyCase(bare(["상가건물임대차보호법", "민법"]), "상가 월세 보증금을 못 받았어요"),
+    ).toBe("money");
+  });
+
+  test("DEC-033 섹션 라벨: 고정 목록의 값만 받고, 라벨이 있으면 규칙보다 먼저 쓴다", () => {
+    expect(parseSectionLabel("insult")).toBe("insult");
+    expect(parseSectionLabel("아무 말")).toBeNull();
+    expect(parseSectionLabel(undefined)).toBeNull();
+    // 모든 타임라인 키가 라벨 목록에 있고, 목록에는 타임라인 키와 none만 있다
+    const keys = [...Object.keys(TRACKS), ...Object.keys(LIFE_TRACKS), "none"].sort();
+    expect([...SECTION_LABELS].sort()).toEqual(keys);
+    expect(Object.keys(MORE_TRACKS).every((k) => k in LIFE_TRACKS)).toBe(true);
+
+    const r = { ...bare(["형법", "근로기준법"]), mode: "ai" as const };
+    // 낱말로는 정할 수 없는 질문도 라벨로 정한다
+    expect(classifyCase({ ...r, section: "insult" }, "어제 일 때문에 너무 억울해요")).toBe(
+      "insult",
+    );
+    // 낱말 규칙이 온라인으로 본 질문도 라벨이 대면이면 대면
+    expect(classifyCase({ ...r, section: "insult" }, "명예훼손을 당했어요")).toBe("insult");
+    // 질문 문장이 없어도(다른 기기) 저장된 라벨로 정한다
+    expect(classifyCase({ ...r, section: "insult" }, null)).toBe("insult");
+    // none·목록 밖 값은 규칙으로
+    expect(classifyCase({ ...r, section: "none" }, "사람들 앞에서 모욕을 당했어요")).toBe("insult");
+    expect(classifyCase({ ...r, section: "win_rate" }, "월급을 못 받았어요")).toBe("wage");
+  });
+
+  test("DEC-033 규칙이 요구를 받는 쪽으로 본 질문은 요구하는 쪽 라벨을 받아들이지 않는다", () => {
+    const r = bare(["민법"]);
+    expect(classifyCase({ ...r, section: "money" }, "대여금 소장을 받았어요")).toBe(
+      "respond_civil",
+    );
+    expect(classifyCase({ ...r, section: "fraud" }, "사기로 고소당했어요")).toBe(
+      "respond_criminal",
+    );
+    expect(classifyCase({ ...r, section: "money" }, "친구한테 빌린 돈을 못 갚았어요")).toBe(
+      "defendant",
+    );
+    // 받는 쪽 라벨은 받아들인다
+    expect(classifyCase({ ...r, section: "debt_relief" }, "친구한테 빌린 돈을 못 갚았어요")).toBe(
+      "debt_relief",
+    );
+    expect(classifyCase({ ...r, section: "respond_criminal" }, "경찰에서 연락이 왔어요")).toBe(
+      "respond_criminal",
+    );
   });
 
   test("전세사기는 중고거래 사기가 아니라 보증금 타임라인 + 고소 별도 안내", () => {

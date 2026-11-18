@@ -13,7 +13,7 @@ const store = vi.hoisted(() => ({
 vi.mock("@/lib/inquiries/store", () => store);
 const lite = vi.hoisted(() => ({ runLiteAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/lite", () => lite);
-// 절차 분류 보조(DEC-033)는 tests/unit/procedure-labels.test.ts에서 따로 본다
+// 절차 분류 보조(DEC-037)는 tests/unit/procedure-labels.test.ts에서 따로 본다
 const hint = vi.hoisted(() => ({ procedureHintFor: vi.fn(async () => undefined) }));
 vi.mock("@/lib/inquiries/procedure-hint", () => hint);
 const free = vi.hoisted(() => ({ runFreeAnalysis: vi.fn() }));
@@ -42,7 +42,7 @@ const ANON = { kind: "anon" as const, anonSessionId: "anon-1" };
 const RESULT = { outcome: "grounded" };
 
 beforeEach(() => {
-  // 유료 경로: 키가 있고 AI_MODE=free가 아니다 (DEC-032). 무료 모드는 아래 describe에서 따로 본다
+  // 유료 경로: 키가 있고 AI_MODE=free가 아니다 (DEC-036). 무료 모드는 아래 describe에서 따로 본다
   vi.stubEnv("AI_MODE", "");
   vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
   vi.clearAllMocks();
@@ -75,7 +75,7 @@ describe("analyzeInquiry", () => {
     const out = await analyzeInquiry(INQ, ANON, new Headers());
     expect(calls).toEqual(["analyze", "verify", "finish"]);
     expect(out).toEqual({ resultId: "r-1", result: RESULT });
-    // 단계를 보내지 않으면 Pro (DEC-032)
+    // 단계를 보내지 않으면 Pro (DEC-036)
     expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
       { maskedText: "마스킹본", context: [{ question: "앞 질문", answer: "앞 답" }] },
       expect.objectContaining({ tier: "pro" }),
@@ -193,7 +193,7 @@ describe("DEC-015 무료 모드", () => {
   });
 });
 
-describe("DEC-032 사용자가 고른 단계로 답변한다", () => {
+describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
   const LITE_OUT = {
     draft: { answer: { points: [] } },
     evidence: {},
@@ -208,7 +208,7 @@ describe("DEC-032 사용자가 고른 단계로 답변한다", () => {
   test.each([
     ["light", 1],
     ["pro", 20],
-    ["max", 80],
+    ["max", 94],
   ] as const)("%s 단계는 주간 예산을 %i단위 쓰고 그 단계로 답변한다", async (tier, weight) => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier });
@@ -221,7 +221,7 @@ describe("DEC-032 사용자가 고른 단계로 답변한다", () => {
     expect(store.finishAnalysis).toHaveBeenCalled();
   });
 
-  test("DEC-033 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {
+  test("DEC-037 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     cite.verifyDraft.mockResolvedValue({
       result: { outcome: "grounded" },

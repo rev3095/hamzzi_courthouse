@@ -1,5 +1,5 @@
 "use client";
-// GET /api/v1/me/quota — 남은 비로그인 질문 수. 헤더·홈·이어 묻기가 한 저장소를 함께 본다.
+// GET /api/v1/me/quota — 오늘 남은 질문 수(비로그인·Google 로그인, DEC-035). 헤더·홈·이어 묻기가 한 저장소를 함께 본다.
 // 질문·분석 후(notifyQuotaChanged), 화면 주소가 바뀔 때, 탭으로 돌아올 때 서버 값을 다시 읽는다.
 import { usePathname } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";

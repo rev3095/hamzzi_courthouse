@@ -1,5 +1,5 @@
 "use client";
-// 답변 단계 선택 (DEC-032). 이 기기에만 기억한다 — 개인정보가 아닌 정해진 세 값 중 하나.
+// 답변 단계 선택 (DEC-036). 이 기기에만 기억한다 — 개인정보가 아닌 정해진 세 값 중 하나.
 // 질문창의 선택기(components/ask/TierSlider)와 분석 요청(lib/client/api analyzeStream)이 같은 값을 본다.
 import { useSyncExternalStore } from "react";
 import { DEFAULT_TIER, isTierId, type TierId } from "@/lib/ai/models";
