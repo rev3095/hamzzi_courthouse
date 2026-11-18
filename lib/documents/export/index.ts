@@ -39,7 +39,7 @@ export async function buildFile(
   }
   if (format === "hwpx") {
     const { toHwpx, HWPX_MIME } = await import("./hwpx");
-    return { data: toHwpx(blocks), mime: HWPX_MIME, filename };
+    return { data: toHwpx(blocks, meta), mime: HWPX_MIME, filename };
   }
   const { toPdf, PDF_MIME } = await import("./pdf");
   return { data: await toPdf(blocks, await loadFonts(), meta), mime: PDF_MIME, filename };
