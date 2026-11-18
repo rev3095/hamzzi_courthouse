@@ -152,8 +152,8 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("목록 밖 모델 이름(오타·Opus)은 가장 싼 Haiku로 돌아간다", async () => {
-    vi.stubEnv("AI_ANSWER_MODEL", "claude-opus-5-5");
+  test("목록 밖 모델 이름(오타·Fable)은 가장 싼 Haiku로 돌아간다", async () => {
+    vi.stubEnv("AI_ANSWER_MODEL", "claude-fable-5-2");
     const model = fakeModel();
     await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -161,6 +161,47 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     );
     expect(model.calls[0].model).toBe("claude-haiku-5-5");
     expect(model.calls[0].thinking).toEqual({ type: "disabled" });
+  });
+
+  test("DEC-031 AI_ANSWER_MODEL=claude-opus-5-5 — 생각 adaptive + effort medium, 출력 5,000토큰(생각 몫 포함)", async () => {
+    vi.stubEnv("AI_ANSWER_MODEL", "claude-opus-5-5");
+    const model = fakeModel();
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource() },
+    );
+    expect(model.calls).toHaveLength(1);
+    const p = model.calls[0];
+    expect(p.model).toBe("claude-opus-5-5");
+    expect(p.thinking).toEqual({ type: "adaptive" });
+    expect(p.output_config?.effort).toBe("medium");
+    expect(p.max_tokens).toBe(5_000);
+    // 질문 해석은 답변 모델과 상관없이 Haiku
+    expect(model.understand[0].model).toBe(UNDERSTAND_MODEL);
+    expect(out.model).toBe("claude-opus-5-5");
+  });
+
+  test("Opus 답변 시간 한도는 60초, 시간 초과면 오류 대신 AI 문단 없이 근거만", async () => {
+    const model = fakeModel({ fail: new ApiError("TIMEOUT", { stage: "answer" }) });
+    const create = vi.spyOn(model, "create");
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), answerModel: "claude-opus-5-5" },
+    );
+    const answerCall = create.mock.calls.find(([p]) => p.model === "claude-opus-5-5");
+    expect(answerCall?.[1].timeoutMs).toBe(60_000);
+    expect(out.costCapped).toBe(true);
+    expect(out.draft.answer.points).toHaveLength(0);
+    expect(out.evidence.list().length).toBeGreaterThan(0);
+  });
+
+  test("Opus 질문 1건 비용은 Opus 단가 (답변 입력 5,000 + 출력 400 = $0.028, 질문 해석 $0.0002), $0.14 이하", async () => {
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model: fakeModel(), lawSource: fakeSource(), answerModel: "claude-opus-5-5" },
+    );
+    expect(out.costUsd).toBeCloseTo(0.028 + UNDERSTAND_COST, 6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.14);
   });
 
   test("모델에 넘기는 조문은 6개까지 (이전 4개), 판례는 3건까지", () => {

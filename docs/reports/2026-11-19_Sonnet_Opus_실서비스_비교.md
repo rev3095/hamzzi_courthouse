@@ -49,10 +49,10 @@
 
 ## 4. 2026-11-19 Opus 비교 절차
 
-1. **코드 준비 (내일 모델 교체 때)** — 지금 `AI_ANSWER_MODEL` 허용 목록에는 Opus가 없다(생각을 끌 수 없어서). 넣으려면:
+1. **코드 준비 — 2026-11-19 완료** (`lib/ai/models.ts`, 상한 $0.14·출력 5,000·60초, [구조·비용 보고서](2026-11-19_모델별_구조_비용_보고서.md)). 배포 후 Vercel에 `AI_ANSWER_MODEL=claude-opus-5-5`를 넣고 재배포한다. 넣은 내용:
    - `lib/ai/models.ts` `ANSWER_MODELS`에 `claude-opus-5-5` 추가: 생각은 `adaptive`, effort `medium`(사용자 지정)
    - 라이트 경로가 effort를 `low`로 고정하고 출력 한도가 1,200토큰(`LITE_ANSWER_TOKENS`)이라, Opus는 생각 토큰까지 들어가도록 모델별 effort·출력 한도를 따로 둔다
-   - 1건 상한(`liteCapUsd`)과 주간 건수: 상한을 올리면 주간 $80 안에서 건수가 줄어든다(예: 상한 $0.15면 주 533건)
+   - 1건 상한(`liteCapUsd`) **$0.14**: 상한을 올리면 주간 $80 안에서 건수가 줄어든다(주 571건)
    - 단가: Opus 5.5 입력 $4 · 출력 $20 / 1M 토큰 (Sonnet의 2배). `lib/ai/cost.ts` `PRICES`에 추가
 2. **배포 후 실행 (1회, 유료)**: `node --env-file=<.env.local 경로> scripts/live-compare.mjs opus` → `evals/live-compare/2026-11-19_opus.json`
 3. 이 문서 2절 표 오른쪽 칸과 5절을 채운다. **받은 근거 목록이 Sonnet 때와 같은지 먼저 비교한다** — 법제처 검색 결과가 하루 사이 바뀌면(새 판례 등) 모델 차이와 섞인다.

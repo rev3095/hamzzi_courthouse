@@ -1,4 +1,4 @@
-// 라이트 답변 (AI_MODE=pro, DEC-020·026). 답변 모델은 AI_ANSWER_MODEL(기본 Sonnet 5.5 $0.03, Haiku 5.5 $0.0015) — lib/ai/models.ts.
+// 라이트 답변 (AI_MODE=pro, DEC-020·026). 답변 모델은 AI_ANSWER_MODEL(기본 Sonnet 5.5 $0.03, Opus 5.5 $0.14, Haiku 5.5 $0.0015) — lib/ai/models.ts.
 // ① 무료 법제처 검색(lib/demo freeSearch, LLM 없음) → ② 근거를 예산에 맞게 줄여 답변 1회 → (라우트가) 무료 인용 검증.
 // 의도 분석·재검색은 하지 않는다. 입력이 예산을 넘으면 근거를 하나씩 빼며 다시 잰다(토큰 세기는 무과금).
 // 예산 안에 못 맞추거나 답변이 출력 한도를 넘으면 AI 문단 없이 찾은 근거만 낸다 — 오류로 끝내지 않는다.
@@ -17,7 +17,7 @@ import {
   type ModelClient,
   type Usage,
 } from "./client";
-import { LITE_ANSWER_TOKENS, UNDERSTAND_TOKENS } from "./cost";
+import { UNDERSTAND_TOKENS } from "./cost";
 import { userMessage } from "./message";
 import { ANSWER_MODELS, answerModel, type AnswerModelId } from "./models";
 import {
@@ -51,7 +51,6 @@ const LITE_CASE_CHARS = 800;
  */
 export const LITE_MAX_ARTICLES = 6;
 const LITE_MAX_CASES = 3;
-const ANSWER_TIMEOUT_MS = 25_000;
 const UNDERSTAND_TIMEOUT_MS = 8_000;
 /** 질문 해석은 답변 모델과 상관없이 가장 싼 모델로 (라벨과 검색어만 뽑는다) */
 export const UNDERSTAND_MODEL = "claude-haiku-5-5";
@@ -170,12 +169,13 @@ export async function runLiteAnalysis(
           "answer",
           {
             model: answer.id,
-            max_tokens: LITE_ANSWER_TOKENS.max,
-            // 생각 끔 — Haiku는 disabled, Sonnet 5.5는 between_tools (effort low라 허용). 출력 길이를 고정해 상한을 지킨다
+            max_tokens: answer.tokens.max,
+            // 모델별 생각 설정 (models.ts): Haiku disabled, Sonnet 5.5 between_tools + effort low,
+            // Opus 5.5 adaptive + effort medium (생각을 끌 수 없어 출력 한도에 생각 몫을 둔다). 출력 한도로 상한을 지킨다
             thinking: answer.thinking,
             system: [{ type: "text", text: LITE_ANSWER_SYSTEM }],
             output_config: {
-              effort: "low",
+              effort: answer.effort,
               format: { type: "json_schema", schema: answerSchema(keys) },
             },
             messages: [
@@ -189,8 +189,8 @@ export async function runLiteAnalysis(
               },
             ],
           },
-          ANSWER_TIMEOUT_MS,
-          { minOutputTokens: LITE_ANSWER_TOKENS.min },
+          answer.timeoutMs,
+          { minOutputTokens: answer.tokens.min },
         );
         usage = addUsage(usage, res);
         const parsed = AnswerZ.safeParse(JSON.parse(textOf(res)));
@@ -203,11 +203,11 @@ export async function runLiteAnalysis(
           keys = keys.slice(0, -1);
           continue;
         }
-        // 예산 안에 못 맞춤 / 출력 한도 초과 / 형식 오류 → AI 문단 없이 근거만 (이미 쓴 비용은 기록)
+        // 예산 안에 못 맞춤 / 출력 한도 초과 / 형식 오류 / 시간 초과(생각이 긴 Opus) → AI 문단 없이 근거만 (이미 쓴 비용은 기록)
         if (
           e instanceof CostCapReached ||
           e instanceof SyntaxError ||
-          (e instanceof ApiError && e.code === "MODEL_FAILED")
+          (e instanceof ApiError && (e.code === "MODEL_FAILED" || e.code === "TIMEOUT"))
         ) {
           costCapped = true;
           break;

@@ -76,7 +76,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
   - `pro` = **라이트 답변**(DEC-020·026): 무료 법제처 검색 + 답변 1회. 답변 모델은 `AI_ANSWER_MODEL`
   - `pro-full` = 전체 파이프라인(의도·재검색·답변, DEC-019), 질문 1건 $0.015 상한. 명시할 때만
   - 유료 모드라도 예시 질문은 재생(비용 0). 유료 버전 보존 태그 `paid-ai-v1`
-- `AI_ANSWER_MODEL` 라이트 답변 모델 (DEC-026, lib/ai/models.ts). 없음 = **`claude-sonnet-5-5`**(질문 1건 **$0.03** 상한, 2026-11-18 결정) · `claude-haiku-5-5`($0.0015). 목록 밖 값은 Haiku로. Opus·Fable은 생각을 끌 수 없어 허용하지 않는다
+- `AI_ANSWER_MODEL` 라이트 답변 모델 (DEC-026, lib/ai/models.ts). 없음 = **`claude-sonnet-5-5`**(질문 1건 **$0.03** 상한, 2026-11-18 결정) · `claude-opus-5-5`($0.14, 생각 adaptive + effort medium, 출력 5,000·60초 — DEC-031 공모전 시연용) · `claude-haiku-5-5`($0.0015). 목록 밖 값은 Haiku로. Fable은 허용하지 않는다
 - `AI_WEEKLY_BUDGET_USD`(기본 **$80**, DEC-031 공모전 임시값 — 이전 $21) 유료 분석 주간 전체 금액 상한 — 하루 상한은 없다 (DEC-026, Max 월 $100 프로모션 크레딧을 다 쓸 수 있게). 건수 = 금액 ÷ 질문 1건 상한 → 라이트 Sonnet 주 2,666건. 넘으면 그 주는 무료 모드. 주간 창은 매주 토 09:00 KST 시작, 카운터는 8일 보관(마이그레이션 `20261117160154`). 예시 질문 재생은 세지 않는다
 - `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). `ADMIN_PASSWORD`라는 이름도 받는다(둘 다 있으면 `ADMIN_PASSCODE`). 둘 다 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
