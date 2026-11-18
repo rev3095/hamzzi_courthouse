@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl;
   const next = safeNextPath(url.searchParams.get("next"));
   const code = url.searchParams.get("code");
+  // 버튼을 켜지 않은 배포(NEXT_PUBLIC_GOOGLE_LOGIN)에서는 세션을 만들지 않는다 — 개인정보 고지도 켜질 때만 나온다
+  if (process.env.NEXT_PUBLIC_GOOGLE_LOGIN !== "1") return NextResponse.redirect(new URL("/me", url.origin));
   if (code) {
     try {
       const { error } = await (await createUserClient()).auth.exchangeCodeForSession(code);

@@ -89,6 +89,21 @@ export async function getUserQuestionsUsed(userId: string): Promise<number> {
   return count ?? 0;
 }
 
+/**
+ * 로그인 사용자가 로그인 전에 같은 브라우저에서 만든 질문을 분석할 때, 분석 전에 그 행을 계정에 연결한다 (DEC-035).
+ * 그래야 하루 한도(getUserQuestionsUsed는 user_id로 센다)를 피해 갈 수 없다. 이미 계정에 연결된 행은 건드리지 않는다
+ */
+export async function claimInquiryForUser(inquiryId: string, owner: Owner): Promise<void> {
+  if (owner.kind !== "user" || !owner.anonSessionId) return;
+  const { error } = await createServiceClient()
+    .from("inquiries")
+    .update({ user_id: owner.userId })
+    .eq("id", inquiryId)
+    .is("user_id", null)
+    .eq("anon_session_id", owner.anonSessionId);
+  if (error) throw new Error("inquiries 계정 연결 실패");
+}
+
 /** 비로그인 IP 해시 (원본 IP는 여기서 해시로만 바꾸고 버린다). production에서 솔트가 없으면 오류 */
 const anonIpHash = (headers: Headers) => requestIpHash(headers);
 

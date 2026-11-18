@@ -12,6 +12,7 @@ const store = vi.hoisted(() => ({
   getAnonQuestionsUsed: vi.fn(),
   getUserQuestionsUsed: vi.fn(),
   assertAnonIpAvailable: vi.fn(),
+  claimInquiryForUser: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
 const runner = vi.hoisted(() => ({ analyzeInquiry: vi.fn() }));
@@ -164,6 +165,17 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
     expect(store.assertAnonIpAvailable).not.toHaveBeenCalled();
     expect(store.getUserQuestionsUsed).toHaveBeenCalledWith("u-1");
+  });
+
+  test("DEC-035 로그인 전 질문을 로그인 뒤 분석하면 먼저 계정에 연결하고 계정 한도로 센다", async () => {
+    const owner = { kind: "user", userId: "u-1", anonSessionId: "anon-1" };
+    store.resolveOwner.mockResolvedValue(owner);
+    store.getOwnedInquiry.mockResolvedValue(inquiry({ user_id: null, anon_session_id: "anon-1" }));
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    expect((await call()).status).toBe(429);
+    expect(store.claimInquiryForUser).toHaveBeenCalledWith(INQ_ID, owner);
+    expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
   });
 
   test("DEC-035 Google 로그인 사용자가 하루 한도를 다 쓰면 모델 전에 429", async () => {

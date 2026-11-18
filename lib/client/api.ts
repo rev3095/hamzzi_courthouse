@@ -23,11 +23,11 @@ export type Quota = {
 };
 
 /** Google 로그인 사용자인지 (DEC-035). 서버가 판단한 값만 본다 */
-export const isSignedIn = (q: Quota | null) => q?.anonymous === false && !q.admin;
+export const isSignedIn = (q: Quota | null) => q?.anonymous === false;
 
 /** 오늘 질문을 더 할 수 없는지 — 비로그인은 로그인 필요, Google 로그인은 하루 한도 소진 (DEC-035) */
 export const isQuotaBlocked = (q: Quota | null) =>
-  q?.loginRequired === true || (isSignedIn(q) && q?.remaining === 0);
+  q?.loginRequired === true || (isSignedIn(q) && !q?.admin && q?.remaining === 0);
 
 /** Google 로그인 사용자의 하루 한도 소진 (429 RATE_LIMITED, reason user_daily — DEC-035) */
 export const isUserDailyLimit = (e: ClientError) =>

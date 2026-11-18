@@ -120,7 +120,7 @@ export type Quota = {
 export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
   if (owner?.admin) {
     return {
-      anonymous: true,
+      anonymous: owner.kind !== "user",
       used: null,
       limit: null,
       remaining: null,

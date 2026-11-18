@@ -16,7 +16,7 @@ export const DEMO_LIMIT_TEXT = `데모에서는 하루에 질문을 ${N}번까�
 /** 비로그인에게 Google 로그인으로 늘어나는 횟수를 알린다 (DEC-035) */
 export const LOGIN_MORE_TEXT = `Google로 로그인하면 하루에 ${U}번까지 질문할 수 있어요.`;
 export const USER_LIMIT_TITLE = `오늘 질문 ${U}번을 모두 썼어요`;
-export const USER_LIMIT_TEXT = `로그인하면 하루에 질문을 ${U}번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 ${U}번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요.`;
+export const USER_LIMIT_TEXT = `로그인한 계정은 하루에 질문을 ${U}번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 ${U}번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요.`;
 
 /** 한도 안내 문구 — 로그인 여부에 따라 */
 export function limitCopy(signedIn: boolean) {
