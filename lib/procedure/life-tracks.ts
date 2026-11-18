@@ -303,7 +303,7 @@ const BASE_LIFE_TRACKS: Record<BaseLifeTrackKey, LifeTrack> = {
         difficulty: "depends",
         prepare: ["고소장", "증거 자료", "작성자를 알고 있다면 그 정보"],
         cautions: [
-          "명예훼손과 모욕은 성립 요건과 고소 요건이 서로 달라요. 모욕은 피해자가 고소해야 수사가 진행되고, 고소할 수 있는 기간이 정해져 있어요.",
+          "명예훼손과 모욕은 성립 요건과 고소 요건이 서로 달라요. 모욕은 피해자의 고소가 있어야 재판에 넘길 수 있고, 고소할 수 있는 기간이 정해져 있어요.",
           "어떤 죄에 해당하는지는 수사기관과 법원이 판단해요.",
         ],
         links: [OFFICIAL.cyberPolice, OFFICIAL.police],
@@ -369,7 +369,7 @@ const BASE_LIFE_TRACKS: Record<BaseLifeTrackKey, LifeTrack> = {
         difficulty: "depends",
         prepare: ["고소장", "증거 자료", "상대방을 알 수 있는 정보"],
         cautions: [
-          "명예훼손과 모욕은 성립 요건과 고소 요건이 서로 달라요. 모욕은 피해자가 고소해야 수사가 진행되고, 고소할 수 있는 기간이 정해져 있어요.",
+          "명예훼손과 모욕은 성립 요건과 고소 요건이 서로 달라요. 모욕은 피해자의 고소가 있어야 재판에 넘길 수 있고, 고소할 수 있는 기간이 정해져 있어요.",
           "여러 사람이 듣거나 알 수 있는 상황이었는지가 쟁점이 될 수 있어요. 어떤 죄에 해당하는지는 수사기관과 법원이 판단해요.",
         ],
         links: [OFFICIAL.police],

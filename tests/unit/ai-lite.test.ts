@@ -351,4 +351,42 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
       expect(out.costUsd).toBeLessThanOrEqual(answerModel === "claude-haiku-5-5" ? 0.0015 : 0.03);
     }
   });
+
+  test("규칙 1·3·N1 조문·사건번호·숫자·단정 표현이 든 검색어는 버리고, 바꿔 쓴 문장은 결과에 싣지 않는다", async () => {
+    const { screenUnderstanding } = await import("@/lib/ai/policy");
+    const bad = screenUnderstanding({
+      section: "insult",
+      lawQuery: "형법 제311조 모욕죄 고소 절차",
+      caseQueries: [
+        "대법원 2015도1234 공연성",
+        "고소기간 6개월 모욕죄",
+        "100% 승소",
+        "모욕죄 공연성",
+      ],
+    });
+    expect(bad.lawQuery).toBeNull();
+    expect(bad.caseQueries).toEqual(["모욕죄 공연성"]);
+
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model: fakeModel(), lawSource: fakeSource(), ...HAIKU },
+    );
+    const keywords = out.draft.searches.map((x) => x.keyword);
+    expect(keywords).toContain("질문을 법률 용어로 바꾼 문장 (지능형 법령검색)");
+    expect(keywords.join(" ")).not.toContain("임대차 종료 후 보증금 미반환");
+  });
+
+  test("응답 없이 실패한 질문 해석도 쓴 비용으로 쳐서 답변과 합쳐 상한을 넘지 않는다", async () => {
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      {
+        model: fakeModel({ understandFail: new ApiError("TIMEOUT", { stage: "understand" }) }),
+        lawSource: fakeSource(),
+        ...HAIKU,
+      },
+    );
+    // 해석 계획 최대치(입력 1,500 + 출력 300 = $0.0003) + 답변 $0.0007
+    expect(out.costUsd).toBeCloseTo(0.001, 6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.0015);
+  });
 });

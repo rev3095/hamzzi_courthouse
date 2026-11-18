@@ -1,4 +1,5 @@
 # lib/pii — PII 필터 (F-007)
+
 탐지·마스킹. 원문은 요청 메모리에서만 처리하고 저장·로그 금지 (DEC-006).
 
 - `scanInput(raw)` → `{ maskedText, findings(유형·개수), sensitive(범주) }`. 일치한 값은 반환하지 않는다.

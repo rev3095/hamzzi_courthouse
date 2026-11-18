@@ -61,7 +61,11 @@ export function fillBlocks(
         blocks: wageAdvance(v),
       };
     case "dismissal-remedy":
-      return { title: "부당해고 구제신청서", basename: "부당해고구제신청서", blocks: dismissalRemedy(v) };
+      return {
+        title: "부당해고 구제신청서",
+        basename: "부당해고구제신청서",
+        blocks: dismissalRemedy(v),
+      };
     case "dismissal-review":
       return {
         title: "부당해고 구제 재심신청서",

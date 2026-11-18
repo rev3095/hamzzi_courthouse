@@ -160,8 +160,8 @@ const QUERY_MAX_CHARS = 120;
 const CASE_QUERY_MAX_CHARS = 30;
 
 /**
- * 모델이 만든 검색어를 그대로 밖(법제처)으로 보내지 않는다: 가림 표시를 지우고, 개인정보 패턴이 있거나
- * 너무 짧거나 길면 버린다. 버리면 호출 쪽이 질문 문장·조문 제목으로 찾는 기존 방식으로 돌아간다.
+ * 모델이 만든 검색어를 그대로 밖(법제처·화면)으로 보내지 않는다: 가림 표시를 지우고, 개인정보 패턴·조문이나
+ * 사건번호·숫자·단정 표현이 있거나 너무 짧거나 길면 버린다. 버리면 호출 쪽이 질문 문장·조문 제목으로 찾는 기존 방식으로 돌아간다.
  */
 export function screenUnderstanding(u: Understanding): {
   section: SectionLabel | null;
@@ -175,7 +175,15 @@ export function screenUnderstanding(u: Understanding): {
       .replace(/\s+/g, " ")
       .trim();
     if (t.length < 2 || t.length > max) return null;
-    return scanInput(t).findings.length > 0 ? null : t;
+    if (scanInput(t).findings.length > 0) return null;
+    // 검색어는 결과의 '검색한 키워드'로 화면에 나간다. 검증되지 않은 조문·사건번호(규칙 1), 단정 표현(N1),
+    // 숫자(규칙 3)가 든 것은 버린다 — 법제처에도 보내지 않는다
+    const cited = citationsIn(t);
+    if (cited.articles.length > 0 || cited.cases.length > 0) return null;
+    if (isAssertive(t) || /[0-9０-９]/.test(t)) return null;
+    const n = numberTokens(t);
+    if (n.digits.length > 0 || n.words.length > 0) return null;
+    return t;
   };
   const lawQuery = clean(u.lawQuery, QUERY_MAX_CHARS);
   const caseQueries: string[] = [];

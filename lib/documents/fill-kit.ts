@@ -39,7 +39,13 @@ export const lines = (s: string | undefined): Block[] =>
 export const numbered = (items: string[], from = 1): Block[] =>
   items.map((t, i) => p(`${from + i}. ${t.replace(/^\d+\s*[.)]\s*/, "")}`));
 
-export const party = (role: string, nameV: string, addr: string, phone?: string, rrn = true): Block[] => [
+export const party = (
+  role: string,
+  nameV: string,
+  addr: string,
+  phone?: string,
+  rrn = true,
+): Block[] => [
   p(`${role}  ${nameV}${rrn ? `  ${RRN}` : ""}`),
   p(`        주소  ${addr}`),
   ...(phone === undefined ? [] : [p(`        연락 가능한 전화번호  ${phone}`)]),
@@ -52,4 +58,3 @@ export const picked = (v: string | undefined, labels: Record<string, string>): s
     .map((k) => labels[k]);
 
 export const signDate = (v: V) => center(v.writtenOn ? formatDate(v.writtenOn) : BLANK_DATE);
-

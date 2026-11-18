@@ -79,17 +79,16 @@ const FAMILY_CONTEXT = /가족|부부|배우자|남편|아내|자녀|아이|부�
 const ANIMAL_CONTEXT = /강아지|고양이|반려|동물|개(가|를|에게|한테)|물렸|물림/;
 // 추가 섹션 낱말 (DEC-033)
 const DEBT_RELIEF_WORD =
-  /개인회생|개인파산|파산신청|면책|채무조정|워크아웃|빚(을|이)?(못갚|감당|너무많)|빚독촉|추심/;
-const ADMIN_WORD =
-  /영업정지|면허(가|를)?(취소|정지)|과태료|과징금|행정처분|행정심판|행정소송|이행강제금|처분(을|이)?(받|나왔|취소)/;
+  /개인회생|개인파산|파산신청|파산.*면책|채무조정|워크아웃|빚(을|이)?(못갚|감당|너무많)|빚독촉|추심(을|이)?(당|받|들어)/;
+// 과태료는 불복 절차(이의제기 → 법원 과태료 재판)가 달라 넣지 않는다. '처분' 한 낱말은 불기소·가처분과 겹쳐 쓰지 않는다
+const ADMIN_WORD = /영업정지|면허(가|를)?(취소|정지)|과징금|행정처분|행정심판|행정소송|이행강제금/;
 const SEX_CRIME_WORD = /성폭력|성폭행|성추행|강제추행|강간|불법촬영|몰카|디지털성범죄|성범죄/;
 const SCHOOL_VIOLENCE_WORD =
   /학교폭력|학폭|(학교|같은반|학생).*(따돌림|왕따|괴롭힘|폭행)|(따돌림|왕따).*(학교|학생)/;
 const DOMESTIC_VIOLENCE_WORD =
   /가정폭력|(남편|아내|배우자|아버지|어머니|부모|아빠|엄마)(이|가|에게|한테)?(저를|나를)?(때|폭행|맞)/;
-const STALKING_WORD = /스토킹|따라다니|계속찾아|집앞에(와|서)|접근금지|협박(을|당|받|해|하)/;
-const PHISHING_WORD =
-  /보이스피싱|피싱|스미싱|대포통장|(검사|검찰|경찰|금감원|은행)(을|를)?사칭|지급정지/;
+const STALKING_WORD = /스토킹|따라다니|계속찾아|집앞에(와|서)|접근금지|협박(을|당|받)/;
+const PHISHING_WORD = /보이스피싱|피싱|스미싱|(검사|검찰|경찰|금감원|은행)(을|를)?사칭/;
 const HARASSMENT_WORD =
   /직장내괴롭힘|직장괴롭힘|직장갑질|갑질|(상사|팀장|사장|선배)(이|가)?.*(괴롭|따돌)/;
 const INDUSTRIAL_WORD =
@@ -98,7 +97,8 @@ const MEDICAL_WORD =
   /의료사고|의료과실|오진|(수술|시술|진료|치료)(을|를)?(받고|받은뒤|후|하고).*(부작용|후유증|악화|사망|잘못)|수술이잘못/;
 const PRIVACY_WORD =
   /개인정보.*(유출|도용|침해|무단|털)|명의(를|가)?도용|신상(이|을)?(털|공개|유포)/;
-const ASSAULT_WORD = /폭행|상해|맞았|맞아서|때렸|때려|얻어맞|주먹|밀쳐|전치/;
+// '때렸다'는 누가 때렸는지 알 수 없어 넣지 않는다 (가해 쪽 질문에 피해자 절차를 보이지 않게)
+const ASSAULT_WORD = /폭행(을|당|피해)|맞았|맞아서|얻어맞|전치/;
 const COMMERCIAL_DISPUTE_WORD = /권리금|갱신|임대료|월세|나가라|나가래|계약해지|명도|재계약/;
 const CONSUMER_WORD =
   /환불|청약철회|반품|쇼핑몰|온라인몰|인터넷쇼핑|홈쇼핑|구독해지|이용권|헬스장|필라테스|학원비/;
@@ -123,10 +123,10 @@ export function classifyCase(
   const ruled = classifyByRules(r, question);
   const label = parseSectionLabel(r.section);
   if (label && label !== "none") {
-    if (!RESPONDENT_SIDE.has(ruled) || RESPONDENT_SIDE.has(label)) return label;
+    if (!RESPONDENT_RULED.has(ruled) || RESPONDENT_LABELS.has(label)) return label;
     return ruled;
   }
-  if (RESPONDENT_SIDE.has(ruled)) return ruled;
+  if (RESPONDENT_RULED.has(ruled)) return ruled;
   if (!category) return ruled;
   const hinted = CATEGORIES[category].track;
   if (ruled === "other" || ruled === "crime_report") return hinted;
@@ -135,14 +135,21 @@ export function classifyCase(
   return ruled;
 }
 
-/** 요구를 받는 쪽(수사를 받는 쪽·서류를 받은 쪽·갚아야 하는 쪽·처분을 받은 쪽)의 섹션 */
-const RESPONDENT_SIDE: ReadonlySet<CaseType> = new Set<CaseType>([
+/** 규칙이 요구를 받는 쪽(수사를 받는 쪽·서류를 받은 쪽·갚아야 하는 쪽)으로 본 결과 — 라벨·카테고리가 요구하는 쪽 타임라인으로 바꾸지 못한다 */
+const RESPONDENT_RULED: ReadonlySet<CaseType> = new Set<CaseType>([
   "respond_criminal",
   "respond_civil",
   "defendant",
+]);
+/** 위 경우에도 받아들이는 라벨 (받는 쪽의 절차) */
+const RESPONDENT_LABELS: ReadonlySet<CaseType> = new Set<CaseType>([
+  "respond_criminal",
+  "respond_civil",
   "debt_relief",
   "admin_appeal",
 ]);
+/** 형법만 찾은 질문을 범죄 피해 고소로 볼 낱말 (DEC-033: 법령 이름만으로 정하지 않는다) */
+const CRIME_REPORT_CONTEXT = /고소|신고|피해|당했|처벌|범죄/;
 
 function classifyByRules(r: Input, question: string | null): CaseType {
   const fixedIntent = r.mode === "replay" ? [r.intent.area, r.intent.goal] : [];
@@ -206,7 +213,9 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   if (INSULT_WORD.test(text)) return ONLINE_WORD.test(text) ? "defamation" : "insult";
 
   const civil = laws.has("민법") || laws.has("주택임대차보호법") || commercial;
-  if (laws.has("형법") && !civil) return "crime_report";
+  if (laws.has("형법") && !civil && (!hasQuestion || CRIME_REPORT_CONTEXT.test(text))) {
+    return "crime_report";
+  }
   return "other";
 }
 

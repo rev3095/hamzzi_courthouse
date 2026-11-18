@@ -25,7 +25,7 @@ export const SECTION_GUIDE: Record<SectionLabel, string> = {
   insult: "직접 만난 자리·전화 등 말이나 행동으로 당한 욕설·모욕·명예훼손 (온라인 글이 아님)",
   crime_report: "위에 없는 범죄 피해를 고소·신고하려는 경우 (절도·횡령·재물손괴 등)",
   assault: "맞거나 다친 폭행·상해 피해",
-  stalking: "반복되는 연락·접근(스토킹)이나 협박 피해",
+  stalking: "반복되는 연락·접근(스토킹)과 그에 따른 협박 피해",
   sex_crime: "성폭력·성추행·불법 촬영 등 성범죄 피해",
   domestic_violence: "배우자·부모 등 가족에게 당한 폭력",
   school_violence: "학생이 당한 학교폭력",
@@ -35,7 +35,8 @@ export const SECTION_GUIDE: Record<SectionLabel, string> = {
   medical: "진료·수술 뒤 피해가 생긴 의료사고",
   privacy: "개인정보 유출·명의 도용 피해",
   commercial_lease: "상가 임대차의 갱신·권리금·임대료·퇴거 분쟁 (상가 보증금만 못 받았으면 money)",
-  admin_appeal: "영업정지·면허 취소·과태료 같은 행정처분에 불복하려는 경우",
+  admin_appeal:
+    "영업정지·면허 취소·과징금 같은 행정처분에 불복하려는 경우 (과태료·불기소 처분은 아님)",
   debt_relief: "빚을 갚기 어려워 채무조정·개인회생·파산을 알아보는 경우",
   respond_civil: "소장·지급명령 같은 법원 서류를 받은 쪽 (민사 청구를 당함)",
   respond_criminal: "고소·신고를 당했거나 수사를 받는 쪽",

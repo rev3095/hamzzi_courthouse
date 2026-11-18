@@ -76,7 +76,10 @@ export async function freeSearch(
   deps.onStep?.({ stage: "search", message: FREE_STEP_MESSAGES.search });
 
   // ① 질문 문장으로 지능형 법령검색 (LLM 없이 자연어 → 조문)
-  const sentence = (deps.lawQuery && searchSentence(deps.lawQuery)) || searchSentence(maskedText);
+  // 질문 문장에 개인정보 모양이 남아 검색을 포기하는 경우에는 해석한 문장도 쓰지 않는다 (F-007)
+  const asked = searchSentence(maskedText);
+  const rewritten = asked && deps.lawQuery ? searchSentence(deps.lawQuery) : null;
+  const sentence = rewritten ?? asked;
   let articlesFailed = false;
   const articles = sentence
     ? await source.searchArticles(sentence, ARTICLES).catch(() => {
@@ -135,13 +138,13 @@ export async function freeSearch(
   });
 
   const searches = [
+    // 모델이 바꿔 쓴 문장 자체는 결과에 싣지 않는다 — 고정 문구만 (화면·DB에 질문 의역문을 남기지 않기)
     ...(sentence
       ? [
           {
-            keyword:
-              deps.lawQuery && sentence === searchSentence(deps.lawQuery)
-                ? `${sentence} (질문을 법률 용어로 바꾼 검색)`
-                : "질문 문장 (지능형 법령검색)",
+            keyword: rewritten
+              ? "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)"
+              : "질문 문장 (지능형 법령검색)",
             total: articles.length,
           },
         ]

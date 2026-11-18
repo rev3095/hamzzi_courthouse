@@ -32,7 +32,10 @@ export type MoreTrackKey =
 export type MoreTrack = Omit<Track, "key"> & { key: MoreTrackKey };
 
 export const MORE_OFFICIAL = {
-  safe: { label: "경찰청 안전Dream (학교·가정·성폭력 신고)", url: "https://www.safe182.go.kr" },
+  safe: {
+    label: "경찰청 안전Dream (아동·여성·장애인 경찰지원센터)",
+    url: "https://www.safe182.go.kr",
+  },
   stop: { label: "한국여성인권진흥원 (피해자 지원 안내)", url: "https://www.stop.or.kr" },
   fssPhishing: { label: "금융감독원 (보이스피싱 피해구제 안내)", url: "https://www.fss.or.kr" },
   comwelAccident: { label: "근로복지공단 (산재 보상)", url: "https://www.comwel.or.kr" },
@@ -190,7 +193,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "depends",
         ["고소장", "진단서와 증거 자료", "상대방을 알 수 있는 정보"],
         [
-          "폭행은 피해자가 처벌을 원하지 않으면 처벌하지 않는 죄예요. 다친 정도에 따라 적용되는 죄가 달라질 수 있어요.",
+          "단순 폭행은 피해자가 처벌을 원하지 않으면 재판에 넘기지 않아요. 다쳤거나 위험한 물건을 쓴 경우 등은 그렇지 않을 수 있어요.",
           "서로 때린 경우 상대방도 고소할 수 있어요.",
         ],
         [O.police],
@@ -204,7 +207,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "depends",
         ["치료비·일을 못 한 손해 자료", "합의서 (합의한다면)"],
         [
-          "합의는 의무가 아니에요. 합의서에 적는 내용에 따라 이후 청구가 제한될 수 있으니 문구를 확인하세요.",
+          "합의는 의무가 아니에요. 합의서에 적는 내용에 따라 이후 청구가 제한될 수 있고, 처벌을 원하지 않는다는 뜻은 한번 밝히면 되돌리기 어려우니 문구를 확인하세요.",
           "합의금 액수는 정해진 기준표가 없어요.",
         ],
         [O.klac],
@@ -245,7 +248,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "depends",
         ["피해 기록", "신분증"],
         [
-          "신고하면 경찰이 접근을 막는 조치를 할 수 있고, 법원이 더 강한 조치를 정할 수 있어요. 어떤 조치가 가능한지는 담당 경찰관에게 확인하세요.",
+          "스토킹에 해당하면 경찰이 접근을 막는 조치를 할 수 있고, 법원이 더 강한 조치를 정할 수 있어요. 어떤 조치가 가능한지는 담당 경찰관에게 확인하세요.",
           "어떤 죄에 해당하는지는 수사기관과 법원이 판단해요.",
         ],
         [O.police],
@@ -418,7 +421,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "self",
         ["피해 기록", "원하는 보호 조치 (분리 등)"],
         [
-          "학교에 신고하면 학교가 사안을 조사해요. 학교 밖 신고·상담 창구도 있어요.",
+          "학교에 신고하면 학교와 교육지원청이 사안을 조사해요. 학교 밖 신고·상담 창구도 있어요.",
           "가해 학생과의 분리 같은 보호 조치를 요청할 수 있어요.",
         ],
         [M.safe, M.moe],
@@ -465,7 +468,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "self",
         ["돈을 보낸 계좌와 받은 계좌 정보", "이체 일시와 금액"],
         [
-          "돈을 보낸 은행이나 받은 계좌의 은행 고객센터, 또는 경찰에 전화해 지급정지를 요청하세요.",
+          "돈을 보낸 은행이나 받은 계좌의 은행 고객센터, 또는 경찰에 전화해 지급정지를 요청하세요. 물건 거래를 가장한 사기는 이 제도 대상이 아닐 수 있으니 은행·경찰에 확인하세요.",
           "휴대전화에 앱을 깔게 했다면 다른 기기로 연락하세요.",
         ],
         [M.fssPhishing, O.police],
@@ -501,7 +504,7 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         ["내 이름으로 된 계좌·대출·휴대전화 개통 내역 확인"],
         [
           "개인정보가 넘어갔다면 내 이름으로 계좌나 대출이 새로 생기지 않았는지 확인하세요.",
-          "공인인증서·비밀번호를 바꾸고 악성 앱을 지우세요.",
+          "공동인증서·비밀번호를 바꾸고 악성 앱을 지우세요.",
         ],
         [M.fssPhishing, M.kisaPrivacy],
         "보이스피싱 뒤에 추가 피해를 막으려면 무엇을 확인해야 하나요?",
@@ -812,7 +815,9 @@ export const MORE_TRACKS: Record<MoreTrackKey, MoreTrack> = {
         "처분서·기한 확인",
         "self",
         ["처분서 (처분 내용·이유·불복 방법)", "처분서를 받은 날을 알 수 있는 자료"],
-        ["처분서에 불복 방법과 기한이 적혀 있어요. 기한이 지나면 다투기 어려워져요."],
+        [
+          "처분서에 불복 방법과 기한이 적혀 있어요. 기한이 지나면 다투기 어려워져요. 과태료는 불복 절차가 달라요 — 통지서에 적힌 이의제기 방법을 확인하세요.",
+        ],
         [M.simpan, O.klac],
         "행정처분을 받았을 때 처분서에서 무엇을 확인해야 하나요?",
       ),

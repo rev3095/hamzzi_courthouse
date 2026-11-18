@@ -134,4 +134,3 @@ export const interestFields = (servedLabel: string): Field[] => [
     when: { key: "interestFrom", value: "date" },
   },
 ];
-
