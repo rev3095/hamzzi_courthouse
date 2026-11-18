@@ -5,9 +5,11 @@
 // 문안은 lib/guide/topics.ts 고정 문안뿐이고 대화는 이 화면 메모리에만 있다(저장·로그 없음).
 // Figma에 없는 화면이라 브랜드 토큰(honey·ink·line)과 모서리 규칙을 따른다.
 // usePathname 같은 라우트 훅을 쓰지 않아 레이아웃에 바로 둘 수 있다 (cacheComponents).
+// 마이페이지(/me) 설정에서 끌 수 있다 — 이 브라우저에만 저장 (DEC-032, lib/client/prefs.ts).
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { HamzziFace, HamzziJudge } from "@/components/HamzziJudge";
+import { useGuideBotEnabled } from "@/lib/client/prefs";
 import {
   GREETING,
   GUIDE_NOTICE,
@@ -86,6 +88,9 @@ export function GuideBot() {
   /** 아래 빠른 질문: 처음·"처음 메뉴로" 뒤에는 메뉴 7개, 답한 뒤에는 그 답의 하위 질문 */
   const suggestions: readonly string[] = lastTopic ? (lastTopic.next ?? []) : MENU_IDS;
 
+  const enabled = useGuideBotEnabled();
+  if (!enabled) return null;
+
   return (
     <>
       <button
@@ -96,7 +101,7 @@ export function GuideBot() {
         aria-expanded={open}
         aria-label={open ? "햄찌 안내 창 닫기" : "햄찌 안내 열기 (AI 캐릭터)"}
         title="햄찌에게 물어보기"
-        className={`fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-16 items-center justify-center rounded-full border-2 shadow-[0_14px_36px_-12px_rgba(26,34,51,.55)] transition-transform hover:scale-105 sm:right-6 sm:bottom-6 ${
+        className={`fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-[52px] items-center justify-center rounded-full border-2 shadow-[0_14px_36px_-12px_rgba(26,34,51,.55)] transition-transform hover:scale-105 sm:right-6 sm:bottom-6 ${
           open ? "border-ink bg-ink text-white max-sm:hidden" : "border-honey-line bg-honey"
         }`}
       >
@@ -111,7 +116,7 @@ export function GuideBot() {
           </svg>
         ) : (
           <span className="overflow-hidden rounded-full">
-            <HamzziFace size={56} />
+            <HamzziFace size={46} />
           </span>
         )}
       </button>
@@ -123,7 +128,7 @@ export function GuideBot() {
           aria-modal="false"
           aria-labelledby="hz-guide-title"
           tabIndex={-1}
-          className="border-line fixed inset-0 z-40 flex flex-col overflow-hidden bg-white outline-none sm:inset-auto sm:right-6 sm:bottom-[6.5rem] sm:h-[min(620px,calc(100dvh-9rem))] sm:w-[380px] sm:rounded-[20px] sm:border sm:shadow-[0_24px_60px_-24px_rgba(26,34,51,.6)]"
+          className="border-line fixed inset-0 z-40 flex flex-col overflow-hidden bg-white outline-none sm:inset-auto sm:right-6 sm:bottom-[5.75rem] sm:h-[min(620px,calc(100dvh-8.5rem))] sm:w-[380px] sm:rounded-[20px] sm:border sm:shadow-[0_24px_60px_-24px_rgba(26,34,51,.6)]"
         >
           {/* 머리 */}
           <div className="bg-ink flex items-center gap-3 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-white sm:pt-3">
@@ -166,6 +171,13 @@ export function GuideBot() {
               <p className="text-muted text-[13px]">
                 햄찌는 AI 캐릭터예요 · 실제 판사·변호사가 아니에요
               </p>
+              <Link
+                href="/me"
+                onClick={closeForLink}
+                className="text-link text-[13px] underline underline-offset-2"
+              >
+                햄찌 버튼 끄기는 마이페이지에서
+              </Link>
             </div>
             <BotRow>
               <Bubble>

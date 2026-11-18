@@ -1,10 +1,12 @@
 "use client";
 // 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 검색(F-003, Figma에 없는 메뉴), 오늘 남은 질문 n/3(하루 3회, DEC-024) 또는 관리자 · 무제한.
 // 데모는 소셜 로그인을 열지 않아 로그인 버튼을 숨긴다 (무료 모드 유지 결정, 2026-11-01).
+// 맨 오른쪽 프로필 아이콘 → 마이페이지(/me): 로그인 자리(준비 중)·화면 설정 (DEC-032).
 // 범위 밖 메뉴(변호사 찾기·혼자 소송하기)와 다크 모드는 데모에서 숨긴다 (docs/07 결정 2).
 import Link from "next/link";
 import { Suspense } from "react";
 import { HamzziFace } from "./HamzziJudge";
+import { ProfileIcon } from "./me/MyPage";
 import { QuotaRouteSync, useQuota } from "./useQuota";
 
 export function SiteHeader() {
@@ -14,7 +16,7 @@ export function SiteHeader() {
       <Suspense fallback={null}>
         <QuotaRouteSync />
       </Suspense>
-      <div className="mx-auto flex h-[65px] max-w-[1120px] items-center justify-between gap-3 px-4 lg:h-[70px]">
+      <div className="mx-auto flex h-[65px] max-w-[1120px] items-center justify-between gap-2 px-4 sm:gap-3 lg:h-[70px]">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="햄찌법원 홈">
           <span className="rounded-card border-honey-line bg-honey flex size-11 items-center justify-center border">
             <HamzziFace size={36} />
@@ -26,7 +28,7 @@ export function SiteHeader() {
             BETA
           </span>
         </Link>
-        <nav aria-label="주요 메뉴" className="flex items-center gap-2">
+        <nav aria-label="주요 메뉴" className="flex items-center gap-1.5 sm:gap-2">
           <Link
             href="/search"
             className="text-ink border-honey-line bg-honey hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3 text-sm font-bold shadow-[0_1px_0_rgba(26,34,51,0.04)]"
@@ -51,10 +53,21 @@ export function SiteHeader() {
             </span>
           )}
           {quota?.anonymous && !quota.admin && quota.remaining !== null && (
-            <span className="text-muted text-[13px] whitespace-nowrap" data-testid="quota">
+            <span
+              className="text-muted text-[12px] whitespace-nowrap sm:text-[13px]"
+              data-testid="quota"
+            >
               {`오늘 남은 질문 ${quota.remaining}/${quota.limit}`}
             </span>
           )}
+          <Link
+            href="/me"
+            aria-label="마이페이지 (로그인·설정)"
+            title="마이페이지"
+            className="text-ink border-line hover:border-gold flex size-11 shrink-0 items-center justify-center rounded-full border bg-white"
+          >
+            <ProfileIcon size={20} />
+          </Link>
         </nav>
       </div>
     </header>
