@@ -1,7 +1,7 @@
 // 이용약관 초안 (PRD 10 고지, N1). 법무 검토 후 확정한다.
 import type { Metadata } from "next";
 import { PolicyPage, Section } from "@/components/PolicyPage";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 
 export const metadata: Metadata = { title: "이용약관 · 햄찌법원" };
 
@@ -22,6 +22,8 @@ export default function TermsPage() {
       <Section title="2. 데모 기간 이용 조건">
         <p>
           로그인하지 않고 하루에 질문을 {ANON_QUESTION_LIMIT}번(이어 묻기 포함)까지 할 수 있어요.
+          {process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1" &&
+            ` Google 계정으로 로그인하면 하루 ${USER_QUESTION_LIMIT}번까지 할 수 있어요(로그인은 Google로만 해요).`}
           같은 네트워크에서는 하루에 분석할 수 있는 횟수가 정해져 있어요. 분석에 실패한 시도는
           횟수에 세지 않아요.
         </p>

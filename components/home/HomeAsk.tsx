@@ -6,9 +6,10 @@
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
-import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { limitCopy } from "../LimitNotice";
 import { ExampleFeed, type FeedExample } from "../ask/ExampleFeed";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -32,7 +33,8 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const quota = useQuota();
   const { busy, error, send, modals, showLimit } = useAsk({ category });
-  const blocked = quota?.loginRequired === true;
+  const blocked = isQuotaBlocked(quota);
+  const signedIn = isSignedIn(quota);
   const current = category ? CATEGORIES[category] : null;
   const categoryExamples = current ? examples.filter((e) => current.examples.includes(e.id)) : [];
 
@@ -112,8 +114,8 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
         ) : (
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
-              ? DEMO_LIMIT_TEXT
-              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 ${ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요.`}
+              ? limitCopy(signedIn).body
+              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "로그인하면" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요.`}
           </p>
         )}
       </div>

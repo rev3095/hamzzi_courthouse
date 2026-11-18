@@ -5,12 +5,14 @@ import type { Metadata } from "next";
 import { DeleteMyData } from "@/components/DeleteMyData";
 import { PolicyPage, Section } from "@/components/PolicyPage";
 import { aiMode } from "@/lib/ai/mode";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 
 export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌법원" };
 
 export default function PrivacyPage() {
   const sendsToAi = aiMode() !== "free";
+  // Google 로그인(DEC-033)은 NEXT_PUBLIC_GOOGLE_LOGIN=1일 때만 열린다 — 켜져 있을 때만 고지한다
+  const googleLogin = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1";
   return (
     <PolicyPage current="/privacy" title="개인정보처리방침">
       <Section title="1. 처리하는 정보">
@@ -55,6 +57,15 @@ export default function PrivacyPage() {
           저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
           &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
         </p>
+        {googleLogin && (
+          <p>
+            로그인은 Google 계정으로만 할 수 있어요. Google로 로그인하면 인증 서비스(Supabase
+            Auth)가 Google에서 받은 계정 식별값·이메일 주소·이름·프로필 사진 주소를 저장하고, 로그인
+            상태는 브라우저 쿠키에 둬요. 햄찌법원은 이 정보를 질문 분석에 쓰지 않고, 질문을 계정에
+            연결하고 하루 질문 횟수(하루 {USER_QUESTION_LIMIT}번, 한국 시간 0시에 다시 채워져요)를
+            세는 데만 써요. 로그인하기 전에 같은 브라우저에서 한 질문도 로그인한 뒤 계속 볼 수 있어요.
+          </p>
+        )}
         <p>
           마이페이지에서 햄찌 안내 챗봇을 끄면 &lsquo;꺼짐&rsquo; 값 하나만 이 브라우저의
           저장소(localStorage)에 두고, 다시 켜면 지워요. 서버로 보내지 않고, 챗봇과 나눈 대화는
@@ -86,7 +97,13 @@ export default function PrivacyPage() {
         ) : (
           <p>지금은 AI 모델 제공자에게 질문을 보내지 않아요.</p>
         )}
-        <p>서비스는 Vercel(웹 서버)과 Supabase(데이터베이스)에서 운영해요.</p>
+        {googleLogin && (
+          <p>
+            Google로 로그인을 누르면 Google 로그인 화면으로 이동하고, 로그인을 마치면 Google이 위의
+            계정 정보를 Supabase로 보내요. Google에 질문 내용은 보내지 않아요.
+          </p>
+        )}
+        <p>서비스는 Vercel(웹 서버)과 Supabase(데이터베이스·로그인)에서 운영해요.</p>
       </Section>
       <Section title="4. 보관 기간과 삭제">
         <p>
@@ -98,6 +115,13 @@ export default function PrivacyPage() {
           남고 내용·IP 해시는 남지 않아요. 감사 기록의 보관 기간은 법무 검토 후 정해요. 지워도 남은
           질문 수는 되살아나지 않아요.
         </p>
+        {googleLogin && (
+          <p>
+            Google로 로그인한 상태에서 &lsquo;내 기록 삭제&rsquo;를 누르면 그 계정의 기록 삭제
+            요청이 접수되고 운영자가 처리해요. 계정 정보의 보관 기간과 처리 기한은 법무 검토 후
+            정해요.
+          </p>
+        )}
         <DeleteMyData />
       </Section>
       <Section title="5. 문의">
