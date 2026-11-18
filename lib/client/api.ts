@@ -170,6 +170,7 @@ export type DecisionRef = {
   dateLabel: string;
   hasDetail: boolean;
   sourceUrl: string | null;
+  agencySite?: { label: string; url: string } | null;
 };
 export type Listed<T> = {
   items: T[];

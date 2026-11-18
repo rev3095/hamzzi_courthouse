@@ -43,7 +43,9 @@ export default async function DocumentPage({
             · 절차 안내 · {spec.stepLabel}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <h1 className="font-display text-ink text-[26px] font-bold">{spec.title} 작성</h1>
+            <Suspense fallback={<DocTitle title={spec.title} writable={false} />}>
+              <GatedTitle title={spec.title} />
+            </Suspense>
             <span className="bg-cream text-label rounded-[6px] px-2 py-0.5 text-xs font-semibold">
               {PROCEDURE_NOTICE}
             </span>
@@ -114,6 +116,27 @@ export default async function DocumentPage({
         </article>
       </div>
     </main>
+  );
+}
+
+/** 작성기가 열려 있으면(게이트 승인 또는 관리자 미리보기) "작성", 안내만 보이면 "작성 안내" */
+async function canWrite(): Promise<boolean> {
+  const open = await getGate("legal_documents")
+    .then(isOpen)
+    .catch(() => false);
+  return open || (await isAdminRequest().catch(() => false));
+}
+
+async function GatedTitle({ title }: { title: string }) {
+  await connection();
+  return <DocTitle title={title} writable={await canWrite()} />;
+}
+
+function DocTitle({ title, writable }: { title: string; writable: boolean }) {
+  return (
+    <h1 className="font-display text-ink text-[26px] font-bold">
+      {title} {writable ? "작성" : "작성 안내"}
+    </h1>
   );
 }
 

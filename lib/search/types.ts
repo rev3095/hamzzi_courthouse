@@ -71,6 +71,8 @@ export type DecisionHit = {
   /** 법제처가 상세 조회를 주지 않는 종류는 false */
   hasDetail: boolean;
   sourceUrl: string | null;
+  /** 원문 주소가 없을 때 번호로 찾아볼 기관 공식 사이트 */
+  agencySite: { label: string; url: string } | null;
 };
 
 /** 결정문 상세. 요지 항목만 담고 이유·전문은 담지 않는다 (DEC-007과 같은 원칙) */

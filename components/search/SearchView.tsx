@@ -50,7 +50,7 @@ export const QUICK_QUERIES = [
   "부당해고",
   "전세 사기",
   "교통사고 손해배상",
-  "층간소음",
+  "층간소음 손해배상",
   "대여금 반환",
 ] as const;
 
@@ -67,6 +67,8 @@ type Item = {
   /** 첫 항목은 칩(법원·기관), 나머지는 날짜·번호 */
   tags: string[];
   sourceUrl: string | null;
+  /** 원문 주소가 없을 때 번호로 찾아볼 기관 공식 사이트 */
+  agencySite?: { label: string; url: string } | null;
   /** 자치법규만: 나란히 비교에 쓰는 번호 */
   compareId?: string;
 };
@@ -141,6 +143,7 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
         title: d.title,
         tags: tags(d.agency, d.decidedAt && `${d.dateLabel} ${dotDate(d.decidedAt)}`, d.refNo),
         sourceUrl: d.sourceUrl,
+        agencySite: d.agencySite ?? null,
       })),
     },
   };
@@ -384,6 +387,12 @@ export function SearchView() {
                       </Link>
                     )}
                     {c.sourceUrl && <OriginalLink url={c.sourceUrl} />}
+                    {!c.sourceUrl && c.agencySite && (
+                      <OriginalLink
+                        url={c.agencySite.url}
+                        label={`${c.agencySite.label} 사이트에서 번호로 찾기 ↗`}
+                      />
+                    )}
                     {c.compareId && (
                       <label className="text-muted inline-flex min-h-11 items-center gap-2 text-sm">
                         <input

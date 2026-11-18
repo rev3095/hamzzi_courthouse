@@ -51,8 +51,12 @@ type DomainSpec = {
   bodyField: string | null;
   /** 법제처가 상세 조회를 제공하지 않는 종류는 false (목록만) */
   hasDetail: boolean;
-  /** 국가법령정보센터 공개 주소. 실제로 열리는 것을 확인한 종류만 (2026-11-18). 조세심판·소청심사·권익위 특별행정심판·국세청 해석·영문 법령은 주소를 확인하지 못해 null */
+  /** 국가법령정보센터 공개 주소. 실제로 열리는 것을 확인한 종류만 (2026-11-18). 조세심판·소청심사·권익위 특별행정심판·국세청 해석·영문 법령은 국가법령정보센터 공개 주소가 없어 null */
   url: ((id: string) => string) | null;
+  /** 목록 행에 든 공식 원문 주소를 쓰는 종류 (국세청 해석·영문 법령, 2026-11-18 확인). 인증키(OC)가 든 주소는 쓰지 않는다 */
+  rowUrl?: (row: Record<string, unknown>) => string | null;
+  /** 원문 주소가 없을 때 번호로 찾아볼 기관 공식 사이트 (첫 화면 주소, 2026-11-18 열림 확인) */
+  agencySite?: { label: string; url: string };
   note: string;
 };
 
@@ -163,6 +167,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["재결요지", "재결요지"],
       ["관련법령", "관련법령"],
     ],
+    agencySite: { label: "조세심판원", url: "https://www.tt.go.kr/" },
     note: "조세심판원 재결례를 사건명으로 찾은 결과예요.",
   },
   appeal_review: {
@@ -176,6 +181,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["처분요지", "처분요지"],
       ["재결요지", "재결요지"],
     ],
+    agencySite: { label: "소청심사위원회", url: "https://sochung.mpm.go.kr/" },
     note: "소청심사위원회 재결례를 사건명으로 찾은 결과예요.",
   },
   acr_special: {
@@ -190,6 +196,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["재결요지", "재결요지"],
       ["관계법령", "관계법령"],
     ],
+    agencySite: { label: "국민권익위원회", url: "https://www.acrc.go.kr/" },
     note: "국민권익위원회 특별행정심판 재결례를 사건명으로 찾은 결과예요.",
   },
   customs: {
@@ -226,7 +233,14 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
     bodyField: null,
     hasDetail: false,
     url: null,
-    note: "국세청 법령해석을 안건명으로 찾은 결과예요. 법제처가 본문 조회를 제공하지 않아 목록만 보여 드려요.",
+    // 법제처가 목록에 주는 국세법령정보시스템 상세 주소 (korean-law-mcp customs-interpretations 참고)
+    rowUrl: (row) => {
+      const link = str(row["법령해석상세링크"]);
+      return link && /^https:\/\/taxlaw\.nts\.go\.kr\//.test(link) && !/[?&]OC=/i.test(link)
+        ? link
+        : null;
+    },
+    note: "국세청 법령해석을 안건명으로 찾은 결과예요. 법제처가 본문 조회를 제공하지 않아 목록만 보여 드려요. 원문은 국세법령정보시스템에서 열려요.",
   },
   ftc: {
     ...COMMITTEE,
@@ -345,6 +359,11 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
     bodyField: null,
     hasDetail: false,
     url: null,
+    // 상세링크에는 인증키가 들어 있어 그대로 쓰지 않고, 법령일련번호(MST)만 꺼내 국가법령정보센터 영문 화면 주소를 만든다
+    rowUrl: (row) => {
+      const mst = /[?&]MST=(\d+)/.exec(str(row["법령상세링크"]) ?? "")?.[1];
+      return mst ? `${LAW_GO}/LSW/eng/engLsInfoR.do?lsiSeq=${mst}` : null;
+    },
     note: "영문으로 번역된 법령을 영문 이름으로 찾은 결과예요. 목록만 보여 드려요.",
   },
 };
@@ -426,7 +445,8 @@ export function decisionHit(
     decidedAt,
     dateLabel: spec.dateLabel,
     hasDetail: spec.hasDetail,
-    sourceUrl: spec.url?.(id) ?? null,
+    sourceUrl: spec.url?.(id) ?? spec.rowUrl?.(row) ?? null,
+    agencySite: spec.agencySite ?? null,
   };
 }
 

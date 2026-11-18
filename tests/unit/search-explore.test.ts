@@ -411,6 +411,39 @@ describe("결정문 종류 전체 (lexdiff '판례·해석례 통합' 범위)", 
     );
   });
 
+  test("원문 주소: 국세청 해석은 국세법령정보시스템 주소, 영문 법령은 인증키를 뺀 국가법령정보센터 영문 화면, 조세심판 등은 기관 사이트", () => {
+    const nts = decisionHit("nts", {
+      법령해석일련번호: "99974",
+      안건명: "10년 이상 경작한 경우",
+      법령해석상세링크: "https://taxlaw.nts.go.kr/qt/USEQTA002P.do?ntstDcmId=010000000000101257",
+    });
+    expect(nts?.sourceUrl).toBe(
+      "https://taxlaw.nts.go.kr/qt/USEQTA002P.do?ntstDcmId=010000000000101257",
+    );
+    // 다른 곳·인증키가 든 주소는 쓰지 않는다
+    expect(
+      decisionHit("nts", {
+        법령해석일련번호: "1",
+        안건명: "가",
+        법령해석상세링크: "https://evil.example/x?OC=SECRET",
+      })?.sourceUrl,
+    ).toBeNull();
+    const eng = decisionHit("english_law", {
+      법령일련번호: "001194",
+      법령명영문: "ACT ON INTERNATIONAL JUDICIAL MUTUAL ASSISTANCE IN CIVIL MATTERS",
+      법령상세링크: "/DRF/lawService.do?OC=SECRET&target=elaw&MST=136693&type=HTML",
+    });
+    expect(eng?.sourceUrl).toBe("https://www.law.go.kr/LSW/eng/engLsInfoR.do?lsiSeq=136693");
+    expect(eng?.sourceUrl).not.toContain("SECRET");
+    const tt = decisionHit("tax_tribunal", {
+      특별행정심판재결례일련번호: "105794",
+      사건명: "양도소득세 감면",
+    });
+    expect(tt?.sourceUrl).toBeNull();
+    expect(tt?.agencySite).toEqual({ label: "조세심판원", url: "https://www.tt.go.kr/" });
+    expect(decisionHit("ftc", { 결정문일련번호: "8111", 사건명: "가" })?.agencySite).toBeNull();
+  });
+
   test("종류마다 다른 항목 이름·필드 이름·날짜 표기를 읽는다", async () => {
     const { decisionRows, looseDate } = await import("@/lib/search/explore");
     const xml = `<Ftc><totalCnt>1</totalCnt><ftc id="1"><결정문일련번호>8111</결정문일련번호><사건명><![CDATA[건설사 과징금 납부기한 연장 건]]></사건명><결정번호>의 결 제 2011 - 012호</결정번호><결정일자>2011.2.22.</결정일자><결정문상세링크>/DRF/lawService.do?OC=SECRET&amp;target=ftc</결정문상세링크></ftc></Ftc>`;
