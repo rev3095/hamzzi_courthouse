@@ -510,8 +510,8 @@ export function ResearchView() {
           <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
           <h1 className="font-display mt-1 text-[26px] font-bold">판례 리서치</h1>
           <p className="mt-1 text-sm text-white/75">
-            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문 3번과
-            따로 세요.
+            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문
+            횟수와 따로 세요.
           </p>
           <form
             role="search"

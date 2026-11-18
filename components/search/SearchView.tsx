@@ -232,7 +232,7 @@ export function SearchView() {
         </p>
         <h1 className="font-display text-ink mt-3 text-[28px] font-bold">판례·법령 검색</h1>
         <p className="text-muted mt-2 text-[15px] leading-relaxed">
-          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 3번과 따로 세요.
+          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 횟수와 따로 세요.
         </p>
         <div className="mt-5">
           {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
