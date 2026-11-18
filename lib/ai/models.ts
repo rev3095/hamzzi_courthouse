@@ -40,13 +40,14 @@ export function answerModel(env: Env = process.env): AnswerProfile {
 }
 
 /**
- * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 결정): **주간 $21만** (AI_WEEKLY_BUDGET_USD). 하루 상한은 두지 않는다.
- * 월 $100(Max 프로모션 크레딧, 결제 주기마다 들어오고 남으면 사라진다) ÷ 약 4.3주.
+ * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 결정): **주간 금액 하나만** (AI_WEEKLY_BUDGET_USD). 하루 상한은 두지 않는다.
+ * 기본 $80 — 공모전(2026-11-20) 대비 임시값 (DEC-031). 서비스 운영 때 다시 정한다(이전 $21 = 월 $100 ÷ 약 4.3주).
+ * 월 $100(Max 프로모션 크레딧, 결제 주기마다 들어오고 남으면 사라진다).
  * 한계: 주간 창(토 09:00 KST 시작)이 결제 주기와 어긋나면 한 주기(30일)에 창이 5~6개 걸칠 수 있어,
  * 많이 쓰는 경우 $100을 넘을 수 있다. 넘는 몫은 구매 크레딧에서 빠지고, 그것도 바닥나면(자동 충전 꺼짐) 요청이 멈춘다.
  * 프로모션 크레딧이 구매 크레딧보다 먼저 쓰인다(공식 문서).
  */
-export const DEFAULT_WEEKLY_BUDGET_USD = 21;
+export const DEFAULT_WEEKLY_BUDGET_USD = 80;
 
 const parseNonNegative = (v: string | undefined, parse: (s: string) => number) => {
   const n = parse(v ?? "");
@@ -63,7 +64,7 @@ const countFor = (budgetUsd: number, env: Env) =>
   Math.floor(budgetUsd / perQuestionCap(env) + 1e-9);
 
 /**
- * 유료 분석 주간 전체 건수 = AI_WEEKLY_BUDGET_USD(기본 $21) ÷ 질문 1건 상한. Sonnet 700건 · Haiku 14,000건 · pro-full 1,400건.
+ * 유료 분석 주간 전체 건수 = AI_WEEKLY_BUDGET_USD(기본 $80, DEC-031 임시) ÷ 질문 1건 상한. Sonnet 2,666건 · Haiku 53,333건 · pro-full 5,333건.
  * 분석과 문서 초안을 함께 센다. 모델을 비싼 쪽으로 바꿔도 주간 최대 금액이 늘지 않는다.
  * 한계: 카운터는 건수라서, 주 중간에 Sonnet → Haiku로 바꾸면 그 주만 상한이 다시 계산돼 조금 더 쓸 수 있다.
  */

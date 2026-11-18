@@ -16,7 +16,7 @@ export const GUIDE_NOTICE = "정해진 안내 · AI 생성 아님 · 법률 자�
  */
 export const GUIDE_LIMITS = {
   /** 비로그인 하루 질문 (DEC-024, ANON_QUESTION_LIMIT) */
-  anonDaily: 3,
+  anonDaily: 5,
   /** 같은 네트워크 24시간 분석 (DEC-024, ANON_IP_DAILY_LIMIT) */
   ipDaily: 10,
   /** 예시 질문 재생 1시간 (DEC-027, EXAMPLE_RATE) */

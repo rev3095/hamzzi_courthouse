@@ -5,7 +5,7 @@ import { STEP_MESSAGES, type StepEvent } from "@/lib/ai/policy";
 import { AI_NOTICE } from "@/lib/api/respond";
 import { MOOD_INFO, type MascotMood } from "@/lib/mascot/moods";
 import { HamzziBadge, HamzziJudge } from "../HamzziJudge";
-import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { DEMO_LIMIT_TEXT, DEMO_LIMIT_TITLE } from "../LimitNotice";
 import { Analyzing, NoResult, Problem } from "../result/ResultView";
 
 export type ContextKey =
@@ -17,7 +17,7 @@ export const CONTEXT_LABEL: Record<ContextKey, string> = {
   error: "오류 카드",
   noresult: "결과 없음",
   rate: "하루 상한",
-  limit: "질문 3번 안내",
+  limit: "질문 한도 안내",
   pii: "가린 문장 확인",
   result: "결과 머리 아이콘",
   bubble: "말풍선 카드",
@@ -108,7 +108,7 @@ export function MascotContext({ context, mood }: { context: ContextKey; mood: Ma
       return (
         <div className="flex justify-center py-6">
           <div className="rounded-panel border-line w-full max-w-[440px] border bg-white p-6 shadow-xl">
-            <p className="font-display text-ink text-xl font-bold">질문 3번을 모두 썼어요</p>
+            <p className="font-display text-ink text-xl font-bold">{DEMO_LIMIT_TITLE}</p>
             <div className="mt-3 flex justify-center">
               <HamzziJudge size={88} mood={mood} interactive={false} />
             </div>

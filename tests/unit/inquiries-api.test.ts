@@ -2,6 +2,7 @@
 // F-001·F-007 질문 입력 API — DB·인증은 목으로 바꾸고 마스킹·동의·응답·로그를 본다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { type RequestLog, setLogSink } from "@/lib/api/log";
 
 const store = vi.hoisted(() => ({
@@ -124,9 +125,9 @@ describe("POST /inquiries", () => {
   });
 });
 
-describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
-  test("F-001 AC3 3회를 쓴 비로그인은 401 LOGIN_REQUIRED이고 저장하지 않는다", async () => {
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+describe("F-001 AC3 비로그인 하루 한도 (DEC-010, DEC-031)", () => {
+  test("F-001 AC3 하루 한도를 쓴 비로그인은 401 LOGIN_REQUIRED이고 저장하지 않는다", async () => {
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await post({ text: "사기를 당했어요" });
     const body = await res.json();
     expect(res.status).toBe(401);
@@ -137,17 +138,17 @@ describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
     expect(store.createInquiry).not.toHaveBeenCalled();
   });
 
-  test("DEC-024 관리자 모드는 3회를 다 써도 접수하고 횟수를 읽지 않는다", async () => {
+  test("DEC-024 관리자 모드는 하루 한도를 다 써도 접수하고 횟수를 읽지 않는다", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1", admin: true });
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await post({ text: "사기를 당했어요" });
     expect(res.status).toBe(201);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
   });
 
-  test("DEC-027 예시 질문은 3회를 다 써도 접수하고 횟수를 읽지 않는다 (저장된 분석 재생)", async () => {
+  test("DEC-027 예시 질문은 하루 한도를 다 써도 접수하고 횟수를 읽지 않는다 (저장된 분석 재생)", async () => {
     const { demoExamples } = await import("@/lib/demo/policy");
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     // 공백 차이는 같은 예시로 본다
     const res = await post({ text: `  ${demoExamples()[0].question}  ` });
     expect(res.status).toBe(201);
@@ -169,7 +170,7 @@ describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
     expect(store.createInquiry).not.toHaveBeenCalled();
   });
 
-  test("예시가 아닌 질문은 예시 상한을 보지 않고 하루 3회를 본다", async () => {
+  test("예시가 아닌 질문은 예시 상한을 보지 않고 하루 한도를 본다", async () => {
     await post({ text: "사기를 당했어요" });
     expect(rate.assertRateLimit).not.toHaveBeenCalled();
     expect(store.getAnonQuestionsUsed).toHaveBeenCalled();

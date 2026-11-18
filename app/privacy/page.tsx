@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { DeleteMyData } from "@/components/DeleteMyData";
 import { PolicyPage, Section } from "@/components/PolicyPage";
 import { aiMode } from "@/lib/ai/mode";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 
 export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌법원" };
 
@@ -23,10 +24,12 @@ export default function PrivacyPage() {
           함께 저장해요.
         </p>
         <p>
-          로그인하지 않은 이용자는 브라우저 쿠키(hz_anon)로 질문 횟수(하루 3번, 한국 시간 0시에 다시 3번)를 세요. 운영자의 관리자 모드는 별도 쿠키(hz_admin)에 서명된 만료 시각만 담아요. 같은 네트워크에서
-          24시간 안에 분석할 수 있는 횟수를 세기 위해, 햄찌법원 데이터베이스에는 IP 주소 대신
-          비밀값을 섞어 바꾼 값(해시)만 저장해요. 이 값은 비밀값 없이는 IP 주소로 되돌리기 어려워요.
-          웹 서버·데이터베이스 운영 업체의 접속 기록에는 IP 주소가 남을 수 있어요.
+          로그인하지 않은 이용자는 브라우저 쿠키(hz_anon)로 질문 횟수(하루 {ANON_QUESTION_LIMIT}번,
+          한국 시간 0시에 다시 채워져요)를 세요. 운영자의 관리자 모드는 별도 쿠키(hz_admin)에 서명된
+          만료 시각만 담아요. 같은 네트워크에서 24시간 안에 분석할 수 있는 횟수를 세기 위해,
+          햄찌법원 데이터베이스에는 IP 주소 대신 비밀값을 섞어 바꾼 값(해시)만 저장해요. 이 값은
+          비밀값 없이는 IP 주소로 되돌리기 어려워요. 웹 서버·데이터베이스 운영 업체의 접속 기록에는
+          IP 주소가 남을 수 있어요.
         </p>
         <p>
           서비스 운영을 위해 요청 시각·처리 결과·오류 번호 같은 기록을 남기지만, 질문 내용은 기록에
@@ -43,12 +46,13 @@ export default function PrivacyPage() {
         </p>
         <p>
           결과 화면 맨 위에 질문을 다시 보여 드리기 위해 가린 문장을 이 브라우저 탭의 임시
-          저장소(sessionStorage)에 둬요. 탭을 닫으면 지워져요. 판례·법령 검색에서 마지막으로 찾은 검색어도
-          결과 글에 표시(하이라이트)하려고 같은 임시 저장소에 두고, 탭을 닫으면 지워져요.
+          저장소(sessionStorage)에 둬요. 탭을 닫으면 지워져요. 판례·법령 검색에서 마지막으로 찾은
+          검색어도 결과 글에 표시(하이라이트)하려고 같은 임시 저장소에 두고, 탭을 닫으면 지워져요.
         </p>
         <p>
-          검색 화면의 &lsquo;최근 본 자료&rsquo;와 판례 리서치의 &lsquo;보관함&rsquo;은 열어 보거나 담아 둔 판례·조문·결정문·자치법규·행정규칙의 제목과 주소만 이
-          브라우저의 저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
+          검색 화면의 &lsquo;최근 본 자료&rsquo;와 판례 리서치의 &lsquo;보관함&rsquo;은 열어 보거나
+          담아 둔 판례·조문·결정문·자치법규·행정규칙의 제목과 주소만 이 브라우저의
+          저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
           &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
         </p>
       </Section>

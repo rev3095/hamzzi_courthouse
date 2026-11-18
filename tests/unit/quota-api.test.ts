@@ -14,24 +14,24 @@ const get = () => GET(new Request("http://localhost/api/v1/me/quota"), undefined
 beforeEach(() => vi.clearAllMocks());
 
 describe("GET /me/quota", () => {
-  test("F-001 AC3 첫 방문자는 세션을 만들지 않고 3회 남음", async () => {
+  test("F-001 AC3 첫 방문자는 세션을 만들지 않고 하루 한도(5회, DEC-031) 남음", async () => {
     store.resolveOwner.mockResolvedValue(null);
     const res = await get();
     expect(res.status).toBe(200);
     expect((await res.json()).data).toEqual({
       anonymous: true,
       used: 0,
-      limit: 3,
-      remaining: 3,
+      limit: 5,
+      remaining: 5,
       loginRequired: false,
       admin: false,
     });
     expect(store.resolveOwner.mock.calls[0][1]).toEqual({ create: false });
   });
 
-  test("F-001 AC3 3회를 쓴 비로그인은 loginRequired", async () => {
+  test("F-001 AC3 한도를 다 쓴 비로그인은 loginRequired", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "a1" });
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(5);
     expect((await (await get()).json()).data).toMatchObject({ remaining: 0, loginRequired: true });
   });
 

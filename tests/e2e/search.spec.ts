@@ -71,7 +71,7 @@ test("판례 검색 → 상세 → 참조조문", async ({ page }) => {
   await expect(page.getByText("유사도")).toHaveCount(0);
   expect(queries).toEqual(["보증금 반환"]);
   // 검색은 질문 횟수를 쓰지 않는다
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 5/5");
 
   await page.getByRole("link", { name: "보증금반환" }).click();
   await expect(page.getByRole("heading", { name: "판시사항" })).toBeVisible();

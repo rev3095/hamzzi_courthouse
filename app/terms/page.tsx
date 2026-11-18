@@ -1,6 +1,7 @@
 // 이용약관 초안 (PRD 10 고지, N1). 법무 검토 후 확정한다.
 import type { Metadata } from "next";
 import { PolicyPage, Section } from "@/components/PolicyPage";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 
 export const metadata: Metadata = { title: "이용약관 · 햄찌법원" };
 
@@ -20,8 +21,9 @@ export default function TermsPage() {
       </Section>
       <Section title="2. 데모 기간 이용 조건">
         <p>
-          로그인하지 않고 질문을 3번(이어 묻기 포함)까지 할 수 있어요. 같은 네트워크에서는 하루에
-          분석할 수 있는 횟수가 정해져 있어요. 분석에 실패한 시도는 횟수에 세지 않아요.
+          로그인하지 않고 하루에 질문을 {ANON_QUESTION_LIMIT}번(이어 묻기 포함)까지 할 수 있어요.
+          같은 네트워크에서는 하루에 분석할 수 있는 횟수가 정해져 있어요. 분석에 실패한 시도는
+          횟수에 세지 않아요.
         </p>
         <p>데모 기간에는 기능과 횟수가 바뀌거나 서비스가 멈출 수 있어요.</p>
       </Section>

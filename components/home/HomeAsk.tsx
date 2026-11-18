@@ -6,6 +6,7 @@
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { DEMO_LIMIT_TEXT } from "../LimitNotice";
 import { ExampleFeed, type FeedExample } from "../ask/ExampleFeed";
@@ -112,7 +113,7 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
               ? DEMO_LIMIT_TEXT
-              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 3번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요."}
+              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 ${ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요.`}
           </p>
         )}
       </div>

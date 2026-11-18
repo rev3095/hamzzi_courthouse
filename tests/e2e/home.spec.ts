@@ -8,7 +8,7 @@ test("홈 페이지가 열린다", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("햄찌법원");
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 5/5");
   await expect(page.getByText("변호사 찾기")).toHaveCount(0);
 });
 
@@ -100,9 +100,9 @@ test("F-007 AC2 민감정보는 동의해야 다시 보낸다", async ({ page })
   expect(calls.create.map((c) => c.sensitiveConsent)).toEqual([undefined, true]);
 });
 
-test("DEC-010 4번째 질문은 데모 한도 안내", async ({ page }) => {
+test("DEC-010 한도를 넘는 질문은 데모 한도 안내", async ({ page }) => {
   await mockApi(page, {
-    quota: { used: 3, loginRequired: true },
+    quota: { used: 5, loginRequired: true },
     create: () => ({
       status: 401,
       body: {
@@ -112,11 +112,11 @@ test("DEC-010 4번째 질문은 데모 한도 안내", async ({ page }) => {
   });
   await page.goto("/");
   await expect(
-    page.getByText("데모에서는 하루에 질문을 3번까지 할 수 있어요", { exact: false }),
+    page.getByText("데모에서는 하루에 질문을 5번까지 할 수 있어요", { exact: false }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
   await page.getByRole("button", { name: "물어보기" }).click();
-  await expect(page.getByRole("dialog")).toContainText("질문 3번을 모두 썼어요");
+  await expect(page.getByRole("dialog")).toContainText("질문 5번을 모두 썼어요");
   await expect(page.getByRole("button", { name: "로그인" })).toHaveCount(0);
 });
 
@@ -205,16 +205,16 @@ test("접근성 예시 질문은 키보드로 고를 수 있다 (Tab·방향키�
 test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서버 값과 같다", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 5/5");
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
   await page.getByRole("button", { name: "물어보기" }).click();
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
-  await expect(page.getByText("오늘 남은 질문 2/3 · 심층 질문도 1번으로 세요")).toBeVisible();
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 4/5");
+  await expect(page.getByText("오늘 남은 질문 4/5 · 심층 질문도 1번으로 세요")).toBeVisible();
   await page.getByRole("link", { name: "새 질문" }).click();
   await page.waitForURL("**/");
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 4/5");
 });
 
 test("PRD 14 도움 여부 피드백: 네 → 의견 보내기", async ({ page }) => {

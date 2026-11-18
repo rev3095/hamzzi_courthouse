@@ -1,4 +1,4 @@
-// DEC-026 유료 분석 주간 상한 — tryAiQuota가 주간($21) 전체 카운터 하나만 센다(하루 상한 없음). DB는 가짜.
+// DEC-026 유료 분석 주간 상한 — tryAiQuota가 주간($80, DEC-031 임시) 전체 카운터 하나만 센다(하루 상한 없음). DB는 가짜.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -13,8 +13,8 @@ const PRO = { AI_MODE: "pro" };
 beforeEach(() => db.rpc.mockReset());
 
 describe("DEC-026 주간 상한만", () => {
-  test("주간 창 7일(ai_weekly, 라이트 Sonnet 700건). 하루 규칙은 없다", () => {
-    expect(aiWeeklyRule(PRO)).toEqual({ bucket: "ai_weekly", limit: 700, windowSeconds: 604_800 });
+  test("주간 창 7일(ai_weekly, 라이트 Sonnet 2,666건). 하루 규칙은 없다", () => {
+    expect(aiWeeklyRule(PRO)).toEqual({ bucket: "ai_weekly", limit: 2666, windowSeconds: 604_800 });
     expect("aiDailyRule" in rateLimit).toBe(false);
   });
 

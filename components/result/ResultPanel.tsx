@@ -20,6 +20,7 @@ import {
   type ProcedurePlan,
 } from "@/lib/procedure/policy";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 import { ProcedureTimeline } from "./ProcedureTimeline";
@@ -305,7 +306,7 @@ function NextSteps({
           <span>
             <span className="block text-base font-bold">내 상황으로 질문하기</span>
             <span className="text-muted mt-0.5 block text-[13px]">
-              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 3번에 세요
+              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 {ANON_QUESTION_LIMIT}번에 세요
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">

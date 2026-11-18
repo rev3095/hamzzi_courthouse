@@ -1,15 +1,17 @@
 "use client";
-// 3회 안내 (S-06 자리). 비로그인 3회를 다 쓰면 서버가 LOGIN_REQUIRED로 막는다 (DEC-005, DEC-010).
+// 하루 질문 한도 안내 (S-06 자리). 비로그인 하루 한도(ANON_QUESTION_LIMIT, DEC-031 임시 5회)를 다 쓰면 서버가 LOGIN_REQUIRED로 막는다 (DEC-005, DEC-010).
 // 데모는 무료 모드로 운영하고 소셜 로그인을 열지 않았다 — 로그인 버튼 대신 데모 한도를 그대로 알린다.
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziJudge } from "./HamzziJudge";
 import { Modal, SecondaryButton } from "./Modal";
 
-export const DEMO_LIMIT_TEXT =
-  "데모에서는 하루에 질문을 3번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 3번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요. 지금까지 받은 결과는 이 창에서 뒤로 가기로 다시 볼 수 있어요.";
+const N = ANON_QUESTION_LIMIT;
+export const DEMO_LIMIT_TITLE = `오늘 질문 ${N}번을 모두 썼어요`;
+export const DEMO_LIMIT_TEXT = `데모에서는 하루에 질문을 ${N}번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 ${N}번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요. 지금까지 받은 결과는 이 창에서 뒤로 가기로 다시 볼 수 있어요.`;
 
 export function LimitNotice({ onClose }: { onClose: () => void }) {
   return (
-    <Modal title="오늘 질문 3번을 모두 썼어요" onClose={onClose}>
+    <Modal title={DEMO_LIMIT_TITLE} onClose={onClose}>
       <div className="flex justify-center">
         <HamzziJudge size={88} interactive={false} mood="sorry" />
       </div>

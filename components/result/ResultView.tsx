@@ -18,7 +18,7 @@ import {
 import { moodForError } from "@/lib/mascot/moods";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { HamzziJudge } from "../HamzziJudge";
-import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { DEMO_LIMIT_TEXT, DEMO_LIMIT_TITLE } from "../LimitNotice";
 import { PrimaryButton, SecondaryButton } from "../Modal";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -283,7 +283,7 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
     body: "같은 네트워크에서는 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.",
   },
   LOGIN_REQUIRED: {
-    title: "오늘 질문 3번을 모두 썼어요",
+    title: DEMO_LIMIT_TITLE,
     body: DEMO_LIMIT_TEXT,
   },
   NOT_FOUND: {

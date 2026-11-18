@@ -72,25 +72,26 @@ describe("DEC-026 질문 1건 상한", () => {
   });
 });
 
-describe("DEC-026 주간 금액 상한 $21만 (하루 상한 없음, 2026-11-18 사용자 결정)", () => {
-  test("기본값 주간 $21 — 월 $100 프로모션 크레딧 ÷ 약 4.3주", () => {
-    expect(DEFAULT_WEEKLY_BUDGET_USD).toBe(21);
-    expect(DEFAULT_WEEKLY_BUDGET_USD * (30 / 7)).toBeLessThanOrEqual(100);
+describe("DEC-026 주간 금액 상한만 (하루 상한 없음, 2026-11-18 사용자 결정)", () => {
+  test("DEC-031 기본값 주간 $80 — 공모전 대비 임시값", () => {
+    expect(DEFAULT_WEEKLY_BUDGET_USD).toBe(80);
+    // 30일 최대 약 $343 — 월 $100 프로모션 크레딧을 넘을 수 있다(넘는 몫은 구매 크레딧). 서비스 운영 때 다시 낮춘다
   });
 
-  test("라이트 Sonnet: $21 ÷ $0.03 = 700건 (부동소수 오차로 699가 되지 않는다)", () => {
-    expect(weeklyAiLimit({ AI_MODE: "pro" })).toBe(700);
+  test("라이트 Sonnet: $80 ÷ $0.03 = 2,666건, $21이면 700건 (부동소수 오차로 699가 되지 않는다)", () => {
+    expect(weeklyAiLimit({ AI_MODE: "pro" })).toBe(2666);
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "21" })).toBe(700);
   });
 
-  test("라이트 Haiku 14,000건 · pro-full(Haiku 전체 $0.015) 1,400건 — 금액은 같다", () => {
-    expect(weeklyAiLimit({ AI_MODE: "pro", AI_ANSWER_MODEL: "claude-haiku-5-5" })).toBe(14_000);
+  test("라이트 Haiku 53,333건 · pro-full(Haiku 전체 $0.015) 5,333건 — 금액은 같다", () => {
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_ANSWER_MODEL: "claude-haiku-5-5" })).toBe(53_333);
     expect(COST_CAP_USD).toBe(0.015);
-    expect(weeklyAiLimit({ AI_MODE: "pro-full" })).toBe(1_400);
+    expect(weeklyAiLimit({ AI_MODE: "pro-full" })).toBe(5_333);
   });
 
   test("금액을 바꿀 수 있다. 0이면 유료 분석 없음, 잘못된 값은 기본값", () => {
     expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "6.3" })).toBe(210);
     expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "0" })).toBe(0);
-    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "abc" })).toBe(700);
+    expect(weeklyAiLimit({ AI_MODE: "pro", AI_WEEKLY_BUDGET_USD: "abc" })).toBe(2666);
   });
 });

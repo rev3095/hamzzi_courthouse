@@ -2,6 +2,7 @@
 // POST /inquiries/{id}/analyze (API.md 4.1 데모) — 저장소·분석 실행을 목으로 바꾸고 권한·상태·응답·SSE·로그를 본다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { type RequestLog, setLogSink } from "@/lib/api/log";
 import { AI_NOTICE } from "@/lib/api/respond";
 
@@ -116,8 +117,8 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(store.getOwnedInquiry).not.toHaveBeenCalled();
   });
 
-  test("DEC-010 3회를 다 쓴 비로그인은 모델을 부르기 전에 LOGIN_REQUIRED", async () => {
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+  test("DEC-010 하루 한도를 다 쓴 비로그인은 모델을 부르기 전에 LOGIN_REQUIRED", async () => {
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await call();
     expect(res.status).toBe(401);
     expect((await res.json()).error.code).toBe("LOGIN_REQUIRED");
@@ -126,7 +127,7 @@ describe("POST /inquiries/{id}/analyze", () => {
 
   test("DEC-024 관리자 모드는 횟수·IP 사전 검사 없이 분석한다", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1", admin: true });
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await call();
     expect(res.status).toBe(200);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
@@ -134,10 +135,10 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(runner.analyzeInquiry).toHaveBeenCalled();
   });
 
-  test("DEC-027 예시 질문은 3회를 다 써도 횟수·IP 사전 검사 없이 재생한다", async () => {
+  test("DEC-027 예시 질문은 하루 한도를 다 써도 횟수·IP 사전 검사 없이 재생한다", async () => {
     const { demoExamples } = await import("@/lib/demo/policy");
     store.getOwnedInquiry.mockResolvedValue(inquiry({ masked_text: demoExamples()[0].question }));
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await call();
     expect(res.status).toBe(200);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
@@ -235,7 +236,7 @@ describe("POST /inquiries/{id}/analyze", () => {
   });
 
   test("SSE 전 검사 오류는 일반 JSON 오류로 돌려준다", async () => {
-    store.getAnonQuestionsUsed.mockResolvedValue(3);
+    store.getAnonQuestionsUsed.mockResolvedValue(ANON_QUESTION_LIMIT);
     const res = await call("text/event-stream");
     expect(res.status).toBe(401);
     expect(res.headers.get("content-type")).toContain("application/json");

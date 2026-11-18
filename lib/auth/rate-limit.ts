@@ -23,7 +23,7 @@ export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, window
 
 /**
  * 유료(Claude) 분석 전체 상한 (DEC-019·020·026). 질문 1건 상한 × 건수 = 그 주 최대 비용 — lib/ai/models.ts.
- * 주간 $21만 둔다(라이트 Sonnet 700건, 2026-11-18 사용자 결정 — 하루 상한 없음). 분석과 문서 초안을 함께 센다.
+ * 주간 금액 하나만 둔다(기본 $80 = 라이트 Sonnet 2,666건, DEC-031 임시. 2026-11-18 사용자 결정 — 하루 상한 없음). 분석과 문서 초안을 함께 센다.
  * 주간 창은 date_bin 기준(2000-01-01 토요일 00:00 UTC) → 매주 토요일 09:00 KST에 새로 시작한다.
  * 주간 카운터 행은 파기 배치가 8일 동안 남긴다 (마이그레이션 20261117160154_ai_weekly_quota_retention.sql).
  */

@@ -10,7 +10,7 @@
 |---|---|
 | 방식 | Supabase Auth 세션 토큰 (`Authorization: Bearer <token>` 또는 보안 쿠키) · 소셜 로그인(Google 등) (DEC-004, DEC-005) |
 | 역할 | `anon`(비로그인) · `user` · `lawyer`(F-010 승인 후) · `admin` |
-| 비로그인 | 익명 세션 쿠키 + IP 해시로 **질문 3회**(이어 묻기 포함)까지 허용. 네 번째 질문·추가 질문 답변·사실관계 수정은 `401 LOGIN_REQUIRED` (DEC-005, DEC-010, F-001 AC3) |
+| 비로그인 | 익명 세션 쿠키 + IP 해시로 **하루 질문 5회**(이어 묻기 포함, DEC-031 공모전 임시값 — 이전 3회, `ANON_QUESTION_LIMIT`)까지 허용. 아래의 "3회"는 이 값으로 읽는다. 네 번째 질문·추가 질문 답변·사실관계 수정은 `401 LOGIN_REQUIRED` (DEC-005, DEC-010, F-001 AC3) |
 | 레이트 리밋 | 분석: 비로그인 세션 3회 + IP 해시 24시간 10회(DEC-010). 판례·조문 검색: IP 해시 1시간 목록 60회·상세 120회(DEC-017 제안). 피드백·기록 삭제: IP 해시 1시간 30회. 초과 시 `429 RATE_LIMITED` (`details.reason`) |
 | 멱등성 | 생성 POST는 `Idempotency-Key` 헤더 지원 (제안, OQ-API-03) |
 
@@ -290,7 +290,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
     missing: string[];                       // 더 적으면 좋은 사실(숫자 없는 짧은 질문, 최대 4개)
     ai: { used: true } | { used: false; reason: "free_mode"|"daily_limit"|"cost_cap"|"model_failed"|"no_facts" };
     notice: string | null;                   // AI 문장이 들어가면 AI_NOTICE
-    // reason "daily_limit" = 전체 유료 상한(DEC-026 이후 주간 $21)에 닿음. 이름은 호환 때문에 그대로 둔다
+    // reason "daily_limit" = 전체 유료 상한(DEC-026 주간 금액, DEC-031 기본 $80)에 닿음. 이름은 호환 때문에 그대로 둔다
 } }  // Cache-Control: no-store, 저장·로그 없음
 
 // GET /procedures (F-014)
