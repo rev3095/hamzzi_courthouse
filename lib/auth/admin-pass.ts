@@ -1,5 +1,5 @@
 // 관리자 모드(DEC-024) 순수 규칙 — 비밀번호 대조와 관리자 쿠키 서명·확인. 쿠키·환경변수는 admin-session.ts가 읽는다.
-// 비밀번호는 코드·저장소에 두지 않는다(공개 저장소). 서버 환경변수 ADMIN_PASSCODE로만 받는다.
+// 비밀번호는 코드·저장소에 두지 않는다(공개 저장소). 서버 환경변수 ADMIN_PASSCODE(또는 같은 뜻의 ADMIN_PASSWORD)로만 받는다.
 // 쿠키 값 = "<만료 시각 ms>.<HMAC>". 서명 키는 서버 비밀(SUPABASE_SERVICE_ROLE_KEY)과 비밀번호로 만든다 —
 // 비밀번호를 바꾸면 이전 쿠키는 모두 무효가 되고, 서버 비밀 없이는 쿠키를 만들 수 없다.
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
@@ -15,7 +15,8 @@ export type AdminSecrets = { passcode: string; serverSecret: string };
 
 /** 둘 다 있을 때만 관리자 모드를 쓸 수 있다 */
 export function adminSecrets(env: Record<string, string | undefined>): AdminSecrets | null {
-  const passcode = env.ADMIN_PASSCODE?.trim();
+  // 둘 다 있으면 ADMIN_PASSCODE를 쓴다
+  const passcode = env.ADMIN_PASSCODE?.trim() || env.ADMIN_PASSWORD?.trim();
   const serverSecret = env.SUPABASE_SERVICE_ROLE_KEY;
   return passcode && serverSecret ? { passcode, serverSecret } : null;
 }

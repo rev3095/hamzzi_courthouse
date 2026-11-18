@@ -114,8 +114,8 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 
 ### POST·DELETE `/admin/session` (DEC-024)
 ```ts
-// POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
-// 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · ADMIN_PASSCODE 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
+// POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE(또는 ADMIN_PASSWORD)와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
+// 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · 둘 다 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
 // DELETE → 쿠키 삭제, 200 { admin: false }. 본문·비밀번호는 로그에 남기지 않는다
 ``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
 

@@ -1,5 +1,5 @@
 // POST·DELETE /api/v1/admin/session — 관리자 모드 켜기·끄기 (DEC-024, API.md 2절).
-// 비밀번호는 서버 환경변수 ADMIN_PASSCODE와 대조한다(코드·저장소에 두지 않음). 본문·비밀번호는 로그에 남기지 않는다.
+// 비밀번호는 서버 환경변수 ADMIN_PASSCODE(또는 ADMIN_PASSWORD)와 대조한다(코드·저장소에 두지 않음). 본문·비밀번호는 로그에 남기지 않는다.
 // 짧은 비밀번호 대입을 막으려고 같은 네트워크 1시간 5번, 사이트 전체 하루 30번까지만 시도할 수 있다.
 import { ApiError } from "@/lib/api/errors";
 import { ok } from "@/lib/api/respond";
