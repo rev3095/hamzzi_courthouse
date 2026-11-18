@@ -1,9 +1,10 @@
 "use client";
 // 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 검색(F-003, Figma에 없는 메뉴), 오늘 남은 질문 n/3(하루 3회, DEC-024) 또는 관리자 · 무제한.
-// 데모는 소셜 로그인을 열지 않아 로그인 버튼을 숨긴다 (무료 모드 유지 결정, 2026-11-01).
+// Google 로그인·계정 메뉴(AuthMenu, DEC-035)는 NEXT_PUBLIC_GOOGLE_LOGIN=on일 때만 보인다. 꺼져 있으면 지금처럼 비로그인 전용(DEC-016).
 // 범위 밖 메뉴(변호사 찾기·혼자 소송하기)와 다크 모드는 데모에서 숨긴다 (docs/07 결정 2).
 import Link from "next/link";
 import { Suspense } from "react";
+import { AuthMenu } from "./AuthMenu";
 import { HamzziFace } from "./HamzziJudge";
 import { QuotaRouteSync, useQuota } from "./useQuota";
 
@@ -55,6 +56,7 @@ export function SiteHeader() {
               {`오늘 남은 질문 ${quota.remaining}/${quota.limit}`}
             </span>
           )}
+          <AuthMenu />
         </nav>
       </div>
     </header>

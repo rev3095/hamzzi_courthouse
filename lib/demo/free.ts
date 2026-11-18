@@ -27,6 +27,8 @@ export type FreeAnalysis = {
 const ARTICLES = 5;
 const CASES_PER_QUERY = 6;
 const CASE_DETAILS = 5;
+/** DeepSearch(DEC-034): 조문·판례 상세를 더 가져온다. 법제처 조회는 무료이고 모델에 넘길 때는 비용 상한이 다시 거른다 */
+const WIDE = { articles: 8, caseDetails: 7 } as const;
 
 export async function runFreeAnalysis(
   maskedText: string,
@@ -62,8 +64,16 @@ export type FreeSearch = {
 /** LLM 없이 법제처만으로 근거를 찾는다 (무료). 무료 모드와 라이트 답변(DEC-020)이 같이 쓴다 */
 export async function freeSearch(
   maskedText: string,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; caseHint?: string | null } = {},
+  deps: {
+    lawSource?: LawSource;
+    onStep?: (e: StepEvent) => void;
+    caseHint?: string | null;
+    /** DeepSearch: 조문 8·판례 상세 7건까지 */
+    wide?: boolean;
+  } = {},
 ): Promise<FreeSearch> {
+  const maxArticles = deps.wide ? WIDE.articles : ARTICLES;
+  const maxDetails = deps.wide ? WIDE.caseDetails : CASE_DETAILS;
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   deps.onStep?.({ stage: "search", message: FREE_STEP_MESSAGES.search });
 
@@ -71,7 +81,7 @@ export async function freeSearch(
   const sentence = searchSentence(maskedText);
   let articlesFailed = false;
   const articles = sentence
-    ? await source.searchArticles(sentence, ARTICLES).catch(() => {
+    ? await source.searchArticles(sentence, maxArticles).catch(() => {
         articlesFailed = true;
         return [];
       })
@@ -99,10 +109,10 @@ export async function freeSearch(
   // ③ 키워드 검색 판례가 모자라면 찾은 조문이 본문에 나오는 판례로 채운다 (DEC-029 탐색 확장, 조문 2개까지만 추가 조회)
   const citing: { keyword: string; total: number }[] = [];
   const explorer = source as Partial<LawExplorer>;
-  if (hits.length < CASE_DETAILS && explorer.casesCiting) {
+  if (hits.length < maxDetails && explorer.casesCiting) {
     const targets = articles.slice(0, 2);
     const extra = await Promise.allSettled(
-      targets.map((a) => explorer.casesCiting!(a.lawName, a.articleNo, CASE_DETAILS)),
+      targets.map((a) => explorer.casesCiting!(a.lawName, a.articleNo, maxDetails)),
     );
     extra.forEach((r, i) => {
       if (r.status !== "fulfilled") return;
@@ -118,7 +128,7 @@ export async function freeSearch(
       }
     });
   }
-  const picked = hits.slice(0, CASE_DETAILS);
+  const picked = hits.slice(0, maxDetails);
   const details = await Promise.allSettled(picked.map((h) => source.getCase(h.id)));
   const cases = picked.map((h, i) => {
     const d = details[i];

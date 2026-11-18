@@ -1,6 +1,7 @@
 // 인용 검증 순수 규칙 (F-005 AC2, DEC-009). 법제처 재조회 결과를 받아 최종 결과를 조립한다.
 // ① 출처가 그 요청의 근거인지 ② 인용 구절이 원문에 글자 그대로 있는지 ③ 출처·본문의 조문·사건번호가 실존하는지.
 // ①·③ 실패(실존 미확인 포함)는 문단을 빼고, ②만 실패하면 "확인 필요"(quote_mismatch)로 표시한다.
+import type { ProcedureHint } from "@/lib/procedure/labels";
 import { citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { CitationCheck } from "@/lib/search/types";
@@ -110,6 +111,8 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
     /** 검증·1차 거르기를 통과하지 못해 뺀 문단 수 (DEC-014). 뺀 문단 내용은 내보내지 않는다 */
     removed: number;
   };
+  /** 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만, DEC-033). 없으면 생략 */
+  procedureHint?: ProcedureHint;
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";

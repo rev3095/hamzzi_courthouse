@@ -94,7 +94,7 @@ let client: Anthropic | null = null;
 
 export function createModelClient(): ModelClient {
   // 무료 모드(기본)에서는 Claude 클라이언트를 만들지 않는다 — 별도 과금 차단의 마지막 방어선 (DEC-015)
-  if (aiMode() === "free") throw new Error("AI_MODE가 pro가 아니라 Claude를 부르지 않습니다");
+  if (aiMode() === "free") throw new Error("AI_MODE가 free라 Claude를 부르지 않습니다");
   client ??= new Anthropic({
     apiKey: required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY),
     // 재시도 없음 (DEC-020): 실패한 요청도 과금될 수 있어 같은 요청을 두 번 보내지 않는다

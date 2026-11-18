@@ -9,6 +9,7 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { DeepAsk } from "../ask/DeepAsk";
 import { ExampleFeed, type FeedExample } from "../ask/ExampleFeed";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -25,6 +26,7 @@ function urlCategory(): CategoryKey | null {
 
 export function HomeAsk({ examples }: { examples: FeedExample[] }) {
   const [text, setText] = useState("");
+  const [deepOpen, setDeepOpen] = useState(false);
   // undefined = 아직 고르지 않음(주소 값을 따른다), null = 고른 것을 해제
   const [picked, setPicked] = useState<CategoryKey | null | undefined>(undefined);
   const fromUrl = useSyncExternalStore(noSubscribe, urlCategory, () => null);
@@ -104,7 +106,20 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           busy={busy}
           placeholder={current?.placeholder}
           inputRef={inputRef}
+          askTools
+          onDeep={() => (blocked ? showLimit() : setDeepOpen(true))}
         />
+        {deepOpen && (
+          <DeepAsk
+            initialText={text}
+            busy={busy}
+            onClose={() => setDeepOpen(false)}
+            onSubmit={(q) => {
+              setDeepOpen(false);
+              void send(q, false, true);
+            }}
+          />
+        )}
         {error ? (
           <p role="alert" className="text-warn-text mt-3 text-center text-sm">
             {error}

@@ -15,6 +15,9 @@ const store = vi.hoisted(() => ({
 vi.mock("@/lib/inquiries/store", () => store);
 const runner = vi.hoisted(() => ({ analyzeInquiry: vi.fn() }));
 vi.mock("@/lib/inquiries/analyze", () => runner);
+// 로그인 사용자 하루 상한(DEC-035)은 tests/unit/login-history.test.ts에서 따로 본다
+const rate = vi.hoisted(() => ({ assertUserDaily: vi.fn() }));
+vi.mock("@/lib/auth/rate-limit", () => rate);
 
 const { POST } = await import("@/app/api/v1/inquiries/[id]/analyze/route");
 
@@ -87,7 +90,7 @@ describe("POST /inquiries/{id}/analyze", () => {
       { kind: "anon", anonSessionId: "anon-1" },
       expect.any(Headers),
       undefined,
-      { category: null },
+      { category: null, tier: null, deep: false },
     );
   });
 
@@ -99,7 +102,7 @@ describe("POST /inquiries/{id}/analyze", () => {
       expect.anything(),
       expect.any(Headers),
       undefined,
-      { category: "family" },
+      { category: "family", tier: null, deep: false },
     );
   });
 

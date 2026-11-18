@@ -1,4 +1,5 @@
 // 질문(inquiry) 입력·확인 규칙 (F-001 AC2, F-007). 순수 함수 — DB·인증과 분리해 테스트한다.
+import { isTierId, type TierId } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
 import { scanInput } from "@/lib/pii";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
@@ -11,6 +12,8 @@ export type CreateRequest = {
   text: string;
   sensitiveConsent: boolean;
   parentInquiryId: string | null;
+  /** 내 질문 기록에 남기기 (DEC-035). 로그인 사용자에게만 적용된다 */
+  save: boolean;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -29,6 +32,9 @@ export function parseCreateRequest(body: unknown): CreateRequest {
   ) {
     throw new ApiError("VALIDATION_ERROR", { fields: ["parentInquiryId"] });
   }
+  if (b.save !== undefined && typeof b.save !== "boolean") {
+    throw new ApiError("VALIDATION_ERROR", { fields: ["save"] });
+  }
   if (!b.text.trim()) throw new ApiError("EMPTY_INPUT");
   if (b.text.length > MAX_INPUT_CHARS) {
     throw new ApiError("VALIDATION_ERROR", {
@@ -41,6 +47,7 @@ export function parseCreateRequest(body: unknown): CreateRequest {
     text: b.text,
     sensitiveConsent: b.sensitiveConsent === true,
     parentInquiryId: typeof b.parentInquiryId === "string" ? b.parentInquiryId : null,
+    save: b.save === true,
   };
 }
 
@@ -277,8 +284,12 @@ export function parseFeedbackRequest(body: unknown): {
  * POST /inquiries/{id}/analyze 본문 (DEC-028). 본문이 없으면 카테고리 없음.
  * category는 홈 카테고리 버튼의 정해진 값만 받는다 — 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다.
  */
-export function parseAnalyzeRequest(raw: string): { category: CategoryKey | null } {
-  if (!raw.trim()) return { category: null };
+export function parseAnalyzeRequest(raw: string): {
+  category: CategoryKey | null;
+  tier: TierId | null;
+  deep: boolean;
+} {
+  if (!raw.trim()) return { category: null, tier: null, deep: false };
   let body: unknown;
   try {
     body = JSON.parse(raw);
@@ -286,7 +297,15 @@ export function parseAnalyzeRequest(raw: string): { category: CategoryKey | null
     throw new ApiError("VALIDATION_ERROR", { reason: "invalid_json" });
   }
   const b = (body ?? {}) as Record<string, unknown>;
-  if (b.category === undefined || b.category === null) return { category: null };
-  if (!isCategoryKey(b.category)) throw new ApiError("VALIDATION_ERROR", { fields: ["category"] });
-  return { category: b.category };
+  // 답변 단계(DEC-032): 정해진 세 값만 받는다. 없으면 서버 기본값(Pro)
+  const tier = b.tier ?? null;
+  if (tier !== null && !isTierId(tier))
+    throw new ApiError("VALIDATION_ERROR", { fields: ["tier"] });
+  const category = b.category ?? null;
+  if (category !== null && !isCategoryKey(category))
+    throw new ApiError("VALIDATION_ERROR", { fields: ["category"] });
+  // DeepSearch(DEC-034): 같은 비용 상한 안에서 근거를 더 넓게 넘겨 본다
+  if (b.deep !== undefined && typeof b.deep !== "boolean")
+    throw new ApiError("VALIDATION_ERROR", { fields: ["deep"] });
+  return { category, tier, deep: b.deep === true };
 }

@@ -414,6 +414,50 @@ def ops(conn) -> None:
     check(scalar(conn, "select count(*) from cron.job where jobname = 'hz-retention-purge'") == 1,
           "pg_cron 매일 파기 작업 등록")
 
+    # DEC-032 주간 유료 예산은 단위로 센다 (가중 차감)
+    wk = "verify-" + uuid.uuid4().hex
+    hw = "public.hit_rate_limit_weighted"
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 80)", (wk,)) is True,
+          "가중 차감: 80단위 — 상한 100 안")
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 20)", (wk,)) is True,
+          "가중 차감: 80 + 20 = 100 — 상한까지 허용")
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 1)", (wk,)) is False,
+          "가중 차감: 상한을 넘으면 false")
+    check(scalar(conn, "select hits from public.rate_limit_hits where key_hash = %s", (wk,)) == 100,
+          "가중 차감: 넘은 요청은 카운터에 남기지 않음")
+    raises(conn, "가중치 0은 거부", f"select {hw}('ai_units', %s, 100, interval '7 days', 0)", (wk,))
+    check(scalar(conn, "select has_function_privilege('anon', "
+                       "'public.hit_rate_limit_weighted(text, text, int, interval, int)', 'execute')") is False,
+          "가중 차감 함수는 anon이 실행할 수 없음")
+
+    # DEC-033 AI 절차 분류 라벨 — 서버 전용, track·steps 중 하나만, 상태 값 제한
+    check(scalar(conn, "select relrowsecurity from pg_class where oid = 'public.procedure_labels'::regclass") is True,
+          "procedure_labels RLS 켬")
+    check(scalar(conn, "select count(*) from pg_policies where tablename = 'procedure_labels'") == 0,
+          "procedure_labels 정책 없음 (서버 전용)")
+    check(scalar(conn, "select has_table_privilege('anon', 'public.procedure_labels', 'select')") is False
+          and scalar(conn, "select has_table_privilege('authenticated', 'public.procedure_labels', 'select')") is False,
+          "procedure_labels는 anon·로그인 사용자가 읽을 수 없음")
+    lid = scalar(conn, "insert into public.procedure_labels (title, keywords, track) "
+                       "values ('검증 라벨', array['검증낱말'], 'neighbor') returning id")
+    check(scalar(conn, "select status from public.procedure_labels where id = %s", (lid,)) == "pending",
+          "라벨 기본 상태는 pending")
+    conn.execute("select public.bump_procedure_label(%s)", (lid,))
+    check(scalar(conn, "select hits from public.procedure_labels where id = %s", (lid,)) == 1, "라벨 사용 횟수 올림")
+    raises(conn, "track과 steps를 함께 넣을 수 없음",
+           "insert into public.procedure_labels (title, keywords, track, steps) "
+           "values ('검증 라벨', array['검증낱말'], 'neighbor', '[]'::jsonb)")
+    raises(conn, "track·steps 둘 다 없으면 거부",
+           "insert into public.procedure_labels (title, keywords) values ('검증 라벨', array['검증낱말'])")
+    raises(conn, "정해지지 않은 상태 값 거부",
+           "insert into public.procedure_labels (title, keywords, track, status) "
+           "values ('검증 라벨', array['검증낱말'], 'neighbor', 'live')")
+    check(scalar(conn, "select column_default from information_schema.columns "
+                       "where table_schema = 'public' and table_name = 'inquiries' and column_name = 'saved'") == "false",
+          "inquiries.saved 기본값 false (DEC-035)")
+    raises(conn, "낱말 없는 라벨 거부",
+           "insert into public.procedure_labels (title, keywords, track) values ('검증 라벨', '{}', 'neighbor')")
+
 
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")

@@ -96,10 +96,11 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | sensitive_consent_at | timestamptz null | 민감정보 별도 동의(F-007 AC2) |
 | structured | jsonb | `{facts[], inferred[], to_confirm[], issues[], case_type}` `[PII-M]` |
 | user_edited | bool | F-002 AC1 수정 여부 |
+| saved | bool | 로그인 사용자가 "내 기록에 남기기"로 보낸 질문 (DEC-035, 기본 false). 마이페이지 목록에만 쓴다 — 보유 기간은 그대로 |
 | status | enum(`draft`,`need_info`,`analyzed`,`failed`) | |
 | expires_at | timestamptz | 보유 기간 = OQ-DM-03 |
 
-인덱스: `(user_id, created_at desc)`, `(anon_session_id)`, `(expires_at)`.
+인덱스: `(user_id, created_at desc)`, `(anon_session_id)`, `(expires_at)`, `(user_id, created_at desc) where saved`(DEC-035).
 제약: `user_id`와 `anon_session_id` 중 하나는 반드시 존재. 같은 `anon_session_id`의 분석 완료 inquiry는 3건까지, 이어 묻기 포함 (DEC-010, 서버에서 검사).
 원문 저장이 나중에 필요해지면: 새 결정(DEC) + 별도 동의 + 암호화 컬럼 추가 마이그레이션으로만 도입한다 (DEC-006).
 
@@ -194,12 +195,30 @@ DB 함수 `finish_demo_analysis(inquiry, anon_session|null, ip_hash, 상한…, 
 ### `rate_limit_hits` — 레이트 리밋 카운터 **(데모 운영)**
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_weekly`(7일 창, DEC-026) 등 (lib/auth/rate-limit.ts) |
+| bucket | text | `search`·`lookup`·`write`·`example`(예시 재생 1시간, DEC-027)·`ai_units`(7일 창, 주간 유료 예산 단위, DEC-026·032 — 이전 `ai_weekly`)·`user_daily`(로그인 사용자 하루 20회, 키는 사용자 ID 해시, DEC-035) 등 (lib/auth/rate-limit.ts) |
 | key_hash | text | HMAC(IP, `ANON_IP_SALT`) 등 해시만. 원본 IP 저장 안 함 |
 | window_start | timestamptz | 고정 창 시작 (`date_bin`) |
 | hits | int | |
 
 PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용(정책 없음). DB 함수 `hit_rate_limit(bucket, key, 상한, 기간)` → 한 번 세고 상한 안이면 true (행 단위 upsert로 원자적). 질문 3회(DEC-010)와 별개 (DEC-017 제안).
+
+DB 함수 `hit_rate_limit_weighted(bucket, key, 상한, 기간, 가중치)`는 한 번에 여러 단위를 올린다 — 주간 유료 예산을 단계별 금액으로 세기 위해서다(DEC-032, 마이그레이션 `20261118143933`).
+
+### `procedure_labels` — AI 절차 분류 라벨 (DEC-033) **(데모)**
+규칙이 절차를 정하지 못한 질문을 AI가 분류한 결과. 같은 낱말의 질문이 다시 오면 모델을 부르지 않고 이 표를 쓴다. **개인정보·질문 문장 없음**(서버가 저장 전에 숫자·개인정보 패턴을 검사).
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| title | text | 절차 이름 (2~40자) |
+| keywords | text[] | 질문에서 찾을 일반 낱말 1~5개 (이름·숫자 금지) |
+| track | text null | 검증해 둔 기존 타임라인 키. `steps`와 둘 중 하나만 |
+| steps | jsonb null | AI가 제안한 단계 초안 `[{label, difficulty, prepare[], cautions[]}]`. 빈 배열 = 절차 미정 |
+| status | text | `pending`·`approved`·`rejected`. 모두 `pending`으로 저장되고, 승인된 것만 다른 질문에 쓰인다 |
+| hits | int | 사용 횟수 (`bump_procedure_label`) |
+| created_at · reviewed_at | timestamptz | |
+
+인덱스 `(status, created_at desc)`. 서버 전용(RLS 켬, 정책 없음, service_role만). 보유 기간 없음(개인정보가 아닌 운영 데이터).
 
 ### `deletion_requests` (9.2)
 `id, user_id, requested_at, completed_at, scope jsonb, status(enum: received/processing/completed)`

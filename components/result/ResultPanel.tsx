@@ -19,6 +19,7 @@ import {
   recommendText,
   type ProcedurePlan,
 } from "@/lib/procedure/policy";
+import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
@@ -116,7 +117,9 @@ export function ResultPanel({
             </p>
             <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
             <p className="text-muted mt-1 text-[13px]">
-              {PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.
+              {plan.byAi
+                ? `${result.aiNotice} · ${AI_PROCEDURE_NOTE}`
+                : `${PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.`}
             </p>
           </div>
         </>

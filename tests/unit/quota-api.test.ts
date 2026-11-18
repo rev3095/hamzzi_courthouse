@@ -25,6 +25,7 @@ describe("GET /me/quota", () => {
       remaining: 5,
       loginRequired: false,
       admin: false,
+      ai: false,
     });
     expect(store.resolveOwner.mock.calls[0][1]).toEqual({ create: false });
   });
@@ -44,6 +45,7 @@ describe("GET /me/quota", () => {
       remaining: null,
       loginRequired: false,
       admin: false,
+      ai: false,
     });
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
   });
@@ -57,6 +59,7 @@ describe("GET /me/quota", () => {
       remaining: null,
       loginRequired: false,
       admin: true,
+      ai: false,
     });
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
   });

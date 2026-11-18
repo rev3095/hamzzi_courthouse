@@ -445,6 +445,7 @@ function FollowUp({
           label="심층 질문하기"
           placeholder="이 사건에 대해 더 물어보세요"
           inputRef={inputRef}
+          askTools
         />
       </div>
       {error ? (

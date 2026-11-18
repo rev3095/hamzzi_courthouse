@@ -22,7 +22,7 @@ import {
 import { scanInput } from "@/lib/pii";
 
 export const POST = withRoute(async (req, _ctx, scope) => {
-  const { text, sensitiveConsent, parentInquiryId } = parseCreateRequest(await readJson(req));
+  const { text, sensitiveConsent, parentInquiryId, save } = parseCreateRequest(await readJson(req));
   const scan = scanInput(text);
   assertSensitiveConsent(scan.sensitive, sensitiveConsent);
 
@@ -39,7 +39,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     assertParentAnalyzed(await getOwnedInquiry(parentInquiryId, owner));
   }
 
-  const { id, status } = await createInquiry(owner, scan, sensitiveConsent, parentInquiryId);
+  const { id, status } = await createInquiry(owner, scan, sensitiveConsent, parentInquiryId, save);
 
   return ok(
     {

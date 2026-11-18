@@ -76,13 +76,12 @@ function fakeModel(opts: { tokens?: (p: CreateParams) => number; fail?: unknown 
   return model;
 }
 
-const HAIKU = { answerModel: "claude-haiku-5-5" as const };
+const HAIKU = { tier: "light" as const };
 
-describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
+describe("DEC-032 단계별 답변 모델", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  test("AI_ANSWER_MODEL이 없으면 Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
-    vi.stubEnv("AI_ANSWER_MODEL", "");
+  test("단계를 주지 않으면 Pro = Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -100,7 +99,7 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
   test("Sonnet 질문 1건 비용은 Sonnet 단가로 계산하고 $0.03 이하 (입력 5,000 + 출력 400 = $0.014)", async () => {
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model: fakeModel(), lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+      { model: fakeModel(), lawSource: fakeSource(), tier: "pro" },
     );
     expect(out.costUsd).toBeCloseTo(0.014, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.03);
@@ -110,22 +109,38 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     const model = fakeModel({ tokens: () => 20_000 });
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model, lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+      { model, lawSource: fakeSource(), tier: "pro" },
     );
     expect(model.calls).toHaveLength(0);
     expect(out.costCapped).toBe(true);
     expect(out.costUsd).toBe(0);
   });
 
-  test("목록 밖 모델 이름(오타·Opus)은 가장 싼 Haiku로 돌아간다", async () => {
-    vi.stubEnv("AI_ANSWER_MODEL", "claude-opus-5-5");
+  test("Pro Max = Opus 5.5 — 생각 설정을 보내지 않고(끌 수 없음), 생각 + 답변을 4,000토큰으로 묶는다. 비용은 $0.12 이하", async () => {
     const model = fakeModel();
-    await runLiteAnalysis(
+    const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model, lawSource: fakeSource() },
+      { model, lawSource: fakeSource(), tier: "max" },
     );
-    expect(model.calls[0].model).toBe("claude-haiku-5-5");
-    expect(model.calls[0].thinking).toEqual({ type: "disabled" });
+    const p = model.calls[0];
+    expect(p.model).toBe("claude-opus-5-5");
+    expect("thinking" in p).toBe(false);
+    expect(p.output_config?.effort).toBe("low");
+    expect(p.max_tokens).toBe(4_000);
+    // 입력 5,000 × $4 + 출력 400 × $20 = $0.028
+    expect(out.costUsd).toBeCloseTo(0.028, 6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.12);
+    expect(out.model).toBe("claude-opus-5-5");
+  });
+
+  test("Pro Max 상한을 넘을 입력(40,000토큰 = $0.16)이면 부르지 않는다", async () => {
+    const model = fakeModel({ tokens: () => 40_000 });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), tier: "max" },
+    );
+    expect(model.calls).toHaveLength(0);
+    expect(out.costCapped).toBe(true);
   });
 
   test("모델에 넘기는 조문은 6개까지 (이전 4개), 판례는 3건까지", () => {
@@ -139,6 +154,10 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     expect(LITE_MAX_ARTICLES).toBe(6);
     expect(statutes).toHaveLength(6);
     expect(keys.length - statutes.length).toBe(3);
+    // DeepSearch(DEC-034): 조문 8·판례 4건까지 넘겨 본다
+    const deep = liteEvidenceKeys(evidence, { articles: 8, cases: 4 });
+    expect(deep.filter((k) => k.startsWith("law:"))).toHaveLength(8);
+    expect(deep).toHaveLength(12);
   });
 });
 

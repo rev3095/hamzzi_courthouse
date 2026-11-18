@@ -3,6 +3,14 @@
 // 결과(승패·처벌)를 판정하지 않고, 단계와 난이도 라벨만 고른다 (DEC-002, 절대 규칙 2).
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { CATEGORIES, type CategoryKey } from "./categories";
+import {
+  AI_PROCEDURE_NOTE,
+  CUSTOM_NOTE,
+  CUSTOM_REASON,
+  CUSTOM_SECTION,
+  customSteps,
+  parseHint,
+} from "./labels";
 import { LIFE_TRACKS, type LifeTrack, type LifeTrackKey } from "./life-tracks";
 import {
   DIFFICULTY_LABEL,
@@ -22,6 +30,7 @@ type NoticeType = Exclude<CaseType, TrackKey | LifeTrackKey>;
 
 type Input = Pick<DemoAnalysisResult, "intent" | "articles"> & {
   mode?: DemoAnalysisResult["mode"];
+  procedureHint?: DemoAnalysisResult["procedureHint"];
 };
 
 const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
@@ -79,7 +88,11 @@ export function classifyCase(
   category?: CategoryKey | null,
 ): CaseType {
   const ruled = classifyByRules(r, question);
-  if (!category) return ruled;
+  // 규칙도 카테고리도 정하지 못했을 때만, 저장해 둔 AI 분류 라벨이 가리키는 기존 타임라인을 쓴다 (DEC-033)
+  if (!category) {
+    const hint = ruled === "other" ? parseHint(r.procedureHint) : null;
+    return hint?.kind === "track" ? hint.track : ruled;
+  }
   const hinted = CATEGORIES[category].track;
   if (ruled === "other" || ruled === "criminal") return hinted;
   // 일반 금전 절차는 생활 분쟁 섹션(가족·상속·소비자·명예훼손)을 골랐을 때만 바꾼다 (상가 보증금 등은 그대로)
@@ -137,6 +150,8 @@ type TimelineFields = {
   reason: string;
   /** 함께 알아 둘 별도 절차 (형사·민사가 겹칠 때 등) */
   note: string | null;
+  /** 규칙이 아니라 AI 분류 라벨(DEC-033)로 정해진 안내 — 화면이 AI 고지를 붙인다 */
+  byAi: boolean;
 };
 
 /**
@@ -146,6 +161,8 @@ type TimelineFields = {
 export type ProcedurePlan =
   | ({ kind: "timeline"; caseType: TrackKey } & TimelineFields)
   | ({ kind: "life_timeline"; caseType: LifeTrackKey } & TimelineFields)
+  // AI가 초안을 쓰고 운영자가 승인한 단계 (DEC-033). 서식·공식 창구 연결은 없다
+  | ({ kind: "custom_timeline"; caseType: "custom" } & TimelineFields)
   | {
       kind: "notice";
       caseType: NoticeType;
@@ -183,11 +200,14 @@ const WAGE_DISMISSAL_NOTE =
   "해고 자체가 부당하다고 다투려면 노동위원회 구제신청이 따로 있고, 신청할 수 있는 기간이 정해져 있어요.";
 const CRIMINAL_NOTE = "사기 등 형사 고소를 함께 생각하신다면, 고소는 이 민사 절차와 따로 진행돼요.";
 
-export type TimelinePlan = Extract<ProcedurePlan, { kind: "timeline" | "life_timeline" }>;
+export type TimelinePlan = Extract<
+  ProcedurePlan,
+  { kind: "timeline" | "life_timeline" | "custom_timeline" }
+>;
 
 /** 타임라인을 보이는 안내인지 (기존 섹션·생활 분쟁 섹션) */
 export function hasTimeline(plan: ProcedurePlan): plan is TimelinePlan {
-  return plan.kind === "timeline" || plan.kind === "life_timeline";
+  return plan.kind !== "notice";
 }
 
 const FAMILY_SUPPORT_NOTE =
@@ -200,6 +220,7 @@ export function procedurePlan(
   category?: CategoryKey | null,
 ): ProcedurePlan {
   const caseType = classifyCase(r, question, category);
+  const byAi = caseType !== classifyCase({ ...r, procedureHint: undefined }, question, category);
   if (caseType in LIFE_TRACKS) {
     const track: LifeTrack = LIFE_TRACKS[caseType as LifeTrackKey];
     const text = norm(question ?? "");
@@ -213,6 +234,7 @@ export function procedurePlan(
       reason: track.reason,
       note:
         track.note ?? (track.key === "family" && /양육비/.test(text) ? FAMILY_SUPPORT_NOTE : null),
+      byAi,
     };
   }
   if (caseType in TRACKS) {
@@ -231,9 +253,27 @@ export function procedurePlan(
       recommended: track.steps.find((s) => s.key === track.recommended)!,
       reason: track.reason,
       note: track.note ?? extraNote(track.key, text, civilTrack && lawNames.has("형법")),
+      byAi,
     };
   }
   const type = caseType as NoticeType;
+  if (type === "other" && !category) {
+    const hint = parseHint(r.procedureHint);
+    if (hint?.kind === "custom") {
+      const steps = customSteps(hint.steps);
+      return {
+        kind: "custom_timeline",
+        caseType: "custom",
+        section: CUSTOM_SECTION,
+        title: hint.title,
+        steps,
+        recommended: steps[0],
+        reason: CUSTOM_REASON,
+        note: CUSTOM_NOTE,
+        byAi: true,
+      };
+    }
+  }
   return { kind: "notice", caseType: type, ...NOTICE[type] };
 }
 
@@ -254,6 +294,9 @@ export const NOTICE_TEXTS: string[] = [
   WAGE_DISMISSAL_NOTE,
   CRIMINAL_NOTE,
   FAMILY_SUPPORT_NOTE,
+  CUSTOM_REASON,
+  CUSTOM_NOTE,
+  AI_PROCEDURE_NOTE,
 ];
 
 /**

@@ -1,11 +1,11 @@
-// 질문 1건 분석 실행 (P5, API.md 4.1 데모). 무료 모드(기본): 재생·법제처 검색 전용 / Pro 모드: 분석(lib/ai) → 인용 검증(lib/citations).
+// 질문 1건 분석 실행 (P5, API.md 4.1 데모). 무료 모드: 재생·법제처 검색 전용 / 유료: 사용자가 고른 단계로 답변(lib/ai) → 인용 검증(lib/citations).
 // 어느 쪽이든 횟수 차감·저장은 한 트랜잭션 (DEC-010, DEC-015).
 // 근거 모음(EvidenceSet)은 이 함수 안에서만 쓰고 저장하지 않는다 (DEC-007).
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
 import { tryAiQuota } from "@/lib/auth/rate-limit";
 import { runLiteAnalysis } from "@/lib/ai/lite";
-import { runDemoAnalysis } from "@/lib/ai/orchestrator";
+import { tierOf, type TierId } from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
@@ -19,6 +19,7 @@ import {
   type InquiryRow,
   type Owner,
 } from "./store";
+import { procedureHintFor } from "./procedure-hint";
 
 /** 라우트 maxDuration(120초) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-014, 목표 p95 ≤ 90초) */
 export const ANALYSIS_BUDGET_MS = 100_000;
@@ -28,7 +29,7 @@ export async function analyzeInquiry(
   owner: Owner,
   headers: Headers,
   onStep?: (e: StepEvent) => void,
-  opts: { category?: CategoryKey | null } = {},
+  opts: { category?: CategoryKey | null; tier?: TierId | null; deep?: boolean } = {},
 ): Promise<{ resultId: string; result: DemoAnalysisResult }> {
   // 홈 카테고리(DEC-028)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
   const caseHint = opts.category ? CATEGORIES[opts.category].caseQuery : null;
@@ -39,10 +40,19 @@ export async function analyzeInquiry(
     // 넘으면 그 주는 무료 모드로 처리한다 — 운영자 최대 비용 고정.
     // 비로그인 하루 3회 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7).
     // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
-    const mode = aiMode();
+    // 주간 예산은 단계 가중치만큼 차감한다 (DEC-032: Light 1 · Pro 20 · Pro Max 80단위)
+    const tier = tierOf(opts.tier);
     const example = findExample(inquiry.masked_text) !== null;
-    if (mode === "free" || example || !(await tryAiQuota())) {
+    if (aiMode() === "free" || example || !(await tryAiQuota(tier.weight))) {
       const free = await runFreeAnalysis(inquiry.masked_text, { onStep, caseHint });
+      // 저장해 둔 절차 라벨만 본다 (모델 없음, DEC-033). 예시 재생은 규칙으로 이미 정해져 있다
+      if (free.model !== "replay") {
+        const hint = await procedureHintFor(free.result, inquiry.masked_text, {
+          category: opts.category,
+          allowAi: false,
+        });
+        if (hint) free.result.procedureHint = hint;
+      }
       const resultId = await finishAnalysis(
         {
           inquiryId: inquiry.id,
@@ -62,19 +72,21 @@ export async function analyzeInquiry(
     }
 
     const context = await loadFollowupContext(inquiry.parent_inquiry_id, owner);
-    // pro = 라이트 답변 1회 (DEC-020·026: AI_ANSWER_MODEL, 기본 Sonnet 5.5 $0.03 / Haiku 5.5 $0.0015)
-    // pro-full = 전체 Haiku 파이프라인 $0.015 (DEC-019)
-    const analysis =
-      mode === "pro-full"
-        ? await runDemoAnalysis(
-            { maskedText: inquiry.masked_text, context },
-            { onStep, budgetMs: ANALYSIS_BUDGET_MS },
-          )
-        : await runLiteAnalysis({ maskedText: inquiry.masked_text, context }, { onStep, caseHint });
+    // 무료 법제처 검색 + 답변 1회. 답변 모델만 단계에 따라 다르다 (DEC-020·026·032)
+    const analysis = await runLiteAnalysis(
+      { maskedText: inquiry.masked_text, context },
+      { onStep, caseHint, tier: tier.id, deep: opts.deep === true },
+    );
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep,
       screened: analysis.dropped.length,
     });
+    // 규칙이 절차를 정하지 못한 질문만: 저장된 라벨 → 없으면 Haiku 분류 1회 후 저장 (DEC-033)
+    const hint = await procedureHintFor(verified.result, inquiry.masked_text, {
+      category: opts.category,
+      allowAi: true,
+    });
+    if (hint) verified.result.procedureHint = hint;
 
     // 질문 1회는 분석이 성공했을 때 센다 (DEC-010). 차감·저장·상태 변경은 한 트랜잭션 —
     // 상한에 걸리거나 저장이 실패하면 결과도 차감도 남지 않는다

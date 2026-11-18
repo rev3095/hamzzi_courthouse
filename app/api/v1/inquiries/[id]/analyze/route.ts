@@ -6,6 +6,7 @@ import { ok } from "@/lib/api/respond";
 import { withRoute } from "@/lib/api/route";
 import { sseResponse } from "@/lib/api/sse";
 import { ERROR_STATUS } from "@/lib/api/errors";
+import { assertUserDaily } from "@/lib/auth/rate-limit";
 import { findExample } from "@/lib/demo/policy";
 import { analyzeInquiry } from "@/lib/inquiries/analyze";
 import {
@@ -30,8 +31,8 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
-  // 본문은 선택: 홈 카테고리(DEC-028). 검증 실패는 소유자 확인 전에 400
-  const { category } = parseAnalyzeRequest(await req.text());
+  // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-032)·DeepSearch(DEC-034). 검증 실패는 소유자 확인 전에 400
+  const { category, tier, deep } = parseAnalyzeRequest(await req.text());
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
@@ -45,9 +46,17 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
     assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
     await assertAnonIpAvailable(req.headers);
   }
+  // 로그인 사용자는 비로그인 하루 한도 대신 계정 하루 상한을 받는다 (DEC-035). 예시 질문은 세지 않는다
+  if (owner.kind === "user" && findExample(inquiry.masked_text) === null) {
+    await assertUserDaily(owner.userId);
+  }
 
   if (!wantsEventStream(req)) {
-    const out = await analyzeInquiry(inquiry, owner, req.headers, undefined, { category });
+    const out = await analyzeInquiry(inquiry, owner, req.headers, undefined, {
+      category,
+      tier,
+      deep,
+    });
     return ok({ status: "analyzed", ...out }, scope.requestId);
   }
 
@@ -57,6 +66,8 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
     async (send) => {
       const out = await analyzeInquiry(inquiry, owner, req.headers, (e) => send("step", e), {
         category,
+        tier,
+        deep,
       });
       send("result", { status: "analyzed", ...out });
     },

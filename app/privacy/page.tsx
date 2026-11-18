@@ -1,5 +1,5 @@
 // 개인정보처리방침 초안 (F-007, DEC-006, DEC-010). 실제 처리 방식(코드)과 같게 쓰고, 법무 검토 후 확정한다.
-// 3절은 분석 모드(AI_MODE, DEC-015·020)에 따라 바뀐다 — pro·pro-full이면 마스킹본이 AI 모델 제공자(Anthropic)로 간다.
+// 3절은 분석 모드(lib/ai/mode, DEC-015·032)에 따라 바뀐다 — 유료(AI_MODE=free가 아니고 키가 있음)면 마스킹본이 AI 모델 제공자(Anthropic)로 간다.
 // 환경변수는 빌드 때 읽으므로 AI_MODE를 바꾸면 재배포해야 이 문서도 바뀐다.
 import type { Metadata } from "next";
 import { DeleteMyData } from "@/components/DeleteMyData";

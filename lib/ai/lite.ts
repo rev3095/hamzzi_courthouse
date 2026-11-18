@@ -1,10 +1,11 @@
-// 라이트 답변 (AI_MODE=pro, DEC-020·026). 답변 모델은 AI_ANSWER_MODEL(기본 Sonnet 5.5 $0.03, Haiku 5.5 $0.0015) — lib/ai/models.ts.
+// 답변 1회 분석 (DEC-020·026·032). 답변 모델은 사용자가 고른 단계(Light Haiku $0.0015 · Pro Sonnet $0.03 · Pro Max Opus $0.12) — lib/ai/models.ts.
 // ① 무료 법제처 검색(lib/demo freeSearch, LLM 없음) → ② 근거를 예산에 맞게 줄여 답변 1회 → (라우트가) 무료 인용 검증.
 // 의도 분석·재검색은 하지 않는다. 입력이 예산을 넘으면 근거를 하나씩 빼며 다시 잰다(토큰 세기는 무과금).
 // 예산 안에 못 맞추거나 답변이 출력 한도를 넘으면 AI 문단 없이 찾은 근거만 낸다 — 오류로 끝내지 않는다.
 import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import { freeSearch } from "@/lib/demo/free";
+import { DEEP_EVIDENCE } from "@/lib/inquiries/deep";
 import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import {
@@ -17,9 +18,8 @@ import {
   type ModelClient,
   type Usage,
 } from "./client";
-import { LITE_ANSWER_TOKENS } from "./cost";
 import { userMessage } from "./message";
-import { ANSWER_MODELS, answerModel, type AnswerModelId } from "./models";
+import { tierOf, type TierId } from "./models";
 import {
   AnswerZ,
   STEP_MESSAGES,
@@ -48,7 +48,6 @@ const LITE_CASE_CHARS = 800;
  */
 export const LITE_MAX_ARTICLES = 6;
 const LITE_MAX_CASES = 3;
-const ANSWER_TIMEOUT_MS = 25_000;
 
 export type LiteAnalysisOutput = {
   draft: DemoDraft;
@@ -63,11 +62,14 @@ export type LiteAnalysisOutput = {
 };
 
 /** 답변 모델에 넘길 근거 키 순서: 조문 먼저, 그다음 요지가 있는 판례 */
-export function liteEvidenceKeys(evidence: EvidenceSet): string[] {
+export function liteEvidenceKeys(
+  evidence: EvidenceSet,
+  max: { articles: number; cases: number } = { articles: LITE_MAX_ARTICLES, cases: LITE_MAX_CASES },
+): string[] {
   const citable = new Set(citableKeys(evidence));
   const items = evidence.list().filter((i) => citable.has(i.key));
-  const statutes = items.filter((i) => i.kind === "statute").slice(0, LITE_MAX_ARTICLES);
-  const cases = items.filter((i) => i.kind === "case").slice(0, LITE_MAX_CASES);
+  const statutes = items.filter((i) => i.kind === "statute").slice(0, max.articles);
+  const cases = items.filter((i) => i.kind === "case").slice(0, max.cases);
   return [...statutes, ...cases].map((i) => i.key);
 }
 
@@ -89,23 +91,24 @@ export async function runLiteAnalysis(
     model?: ModelClient;
     lawSource?: LawSource;
     onStep?: (e: StepEvent) => void;
-    /** 답변 모델. 기본은 AI_ANSWER_MODEL (lib/ai/models.ts) */
-    answerModel?: AnswerModelId;
-    /** 질문 1건 상한. 기본은 답변 모델의 liteCapUsd */
+    /** 사용자가 고른 단계. 없으면 Pro (lib/ai/models.ts DEFAULT_TIER) */
+    tier?: TierId;
+    /** 질문 1건 상한. 기본은 단계의 capUsd */
     costCapUsd?: number;
     /** 홈 카테고리의 고정 판례 검색어 (DEC-028) */
     caseHint?: string | null;
+    /** DeepSearch (DEC-034): 근거를 조문 8·판례 4건까지 넘겨 본다. 비용 상한은 그대로라 넘으면 뒤에서부터 뺀다 */
+    deep?: boolean;
   } = {},
 ): Promise<LiteAnalysisOutput> {
-  const answer = deps.answerModel
-    ? { id: deps.answerModel, ...ANSWER_MODELS[deps.answerModel] }
-    : answerModel();
+  const tier = tierOf(deps.tier);
   const context = input.context ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   const found = await freeSearch(input.maskedText, {
     lawSource: source,
     onStep: deps.onStep,
     caseHint: deps.caseHint,
+    wide: deps.deep,
   });
 
   const evidence = new EvidenceSet();
@@ -118,13 +121,10 @@ export async function runLiteAnalysis(
   let costCapped = false;
   let spent = 0;
 
-  let keys = liteEvidenceKeys(evidence);
+  let keys = liteEvidenceKeys(evidence, deps.deep ? DEEP_EVIDENCE : undefined);
   if (keys.length > 0) {
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
-    const model = withCostCap(
-      deps.model ?? createModelClient(),
-      deps.costCapUsd ?? answer.liteCapUsd,
-    );
+    const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.capUsd);
     // 예산을 넘으면 마지막 근거를 하나 빼고 다시 잰다 (토큰 세기는 무과금, 생성 호출은 하지 않음)
     for (;;) {
       try {
@@ -132,10 +132,11 @@ export async function runLiteAnalysis(
           model,
           "answer",
           {
-            model: answer.id,
-            max_tokens: LITE_ANSWER_TOKENS.max,
-            // 생각 끔 — Haiku는 disabled, Sonnet 5.5는 between_tools (effort low라 허용). 출력 길이를 고정해 상한을 지킨다
-            thinking: answer.thinking,
+            model: tier.model,
+            // Pro Max(Opus)는 생각을 끌 수 없어 max_tokens가 생각 + 답변을 함께 묶는다. 그래서 한도가 더 크다
+            max_tokens: tier.answerTokens.max,
+            // 생각 끔 — Haiku는 disabled, Sonnet 5.5는 between_tools (effort low라 허용). Opus는 넣지 않는다(adaptive)
+            ...(tier.thinking && { thinking: tier.thinking }),
             system: [{ type: "text", text: LITE_ANSWER_SYSTEM }],
             output_config: {
               effort: "low",
@@ -152,8 +153,8 @@ export async function runLiteAnalysis(
               },
             ],
           },
-          ANSWER_TIMEOUT_MS,
-          { minOutputTokens: LITE_ANSWER_TOKENS.min },
+          tier.timeoutMs,
+          { minOutputTokens: tier.answerTokens.min },
         );
         usage = addUsage(usage, res);
         const parsed = AnswerZ.safeParse(JSON.parse(textOf(res)));
@@ -200,7 +201,7 @@ export async function runLiteAnalysis(
     evidence,
     dropped,
     usage,
-    model: answer.id,
+    model: tier.model,
     promptVersion: LITE_PROMPT_VERSION,
     costUsd: spent,
     costCapped,

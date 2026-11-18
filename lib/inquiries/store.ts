@@ -93,6 +93,7 @@ export async function createInquiry(
   scan: InputScan,
   sensitiveConsent: boolean,
   parentInquiryId: string | null = null,
+  save = false,
 ) {
   const db = createServiceClient();
   const now = new Date();
@@ -107,6 +108,8 @@ export async function createInquiry(
       sensitive_consent_at: consentAt,
       parent_inquiry_id: parentInquiryId,
       status: "draft",
+      // 내 질문 기록(DEC-035)은 로그인 사용자만. 비로그인·관리자 모드 질문은 남기지 않는다
+      ...(save && owner.kind === "user" && { saved: true }),
     })
     .select("id")
     .single<{ id: string }>();
@@ -355,4 +358,39 @@ export async function requestUserDeletion(userId: string): Promise<string> {
     .single<{ id: string }>();
   if (error || !data) throw new Error("deletion_requests 저장 실패");
   return data.id;
+}
+
+export type SavedInquiry = {
+  id: string;
+  maskedText: string;
+  status: InquiryRow["status"];
+  createdAt: string;
+  followup: boolean;
+};
+
+/** 내 질문 기록 (DEC-035): 로그인 사용자가 남기기로 한 질문, 최근 것부터 50건. 마스킹본만 돌려준다 */
+export async function listSavedInquiries(userId: string): Promise<SavedInquiry[]> {
+  const { data, error } = await createServiceClient()
+    .from("inquiries")
+    .select("id, masked_text, status, created_at, parent_inquiry_id")
+    .eq("user_id", userId)
+    .eq("saved", true)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error("inquiries 조회 실패");
+  return (
+    data as {
+      id: string;
+      masked_text: string;
+      status: InquiryRow["status"];
+      created_at: string;
+      parent_inquiry_id: string | null;
+    }[]
+  ).map((r) => ({
+    id: r.id,
+    maskedText: r.masked_text,
+    status: r.status,
+    createdAt: r.created_at,
+    followup: r.parent_inquiry_id !== null,
+  }));
 }

@@ -1,7 +1,11 @@
 "use client";
 // 질문창 (Figma 05 "질문창", S-01): 질문 입력란 · 물어보기 버튼. F-001 → POST /api/v1/inquiries.
 // D+의 모드 전환 버튼(AI 질문 / 판례 검색)은 데모 범위 밖이라 뺐다.
+// AI 질문창(askTools)에는 입력란 아래에 답변 모드 선택(TierSlider, DEC-032)과 DeepSearch 버튼(DEC-034)을 둔다 — Figma에 없는 추가 요소.
+// 판례 검색창(/search)은 모델을 쓰지 않으므로 보이지 않는다.
 import { useId, type Ref } from "react";
+import { SaveToggle } from "./SaveToggle";
+import { TierSlider } from "./TierSlider";
 
 export const MAX_QUESTION_CHARS = 2000; // lib/inquiries/policy MAX_INPUT_CHARS와 같다
 
@@ -14,6 +18,8 @@ export function QuestionBox({
   label = "질문",
   size = "lg",
   inputRef,
+  askTools = false,
+  onDeep,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -24,6 +30,10 @@ export function QuestionBox({
   size?: "lg" | "md";
   /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "심층 질문하기") */
   inputRef?: Ref<HTMLTextAreaElement>;
+  /** AI 질문창이면 답변 모드 선택을 보인다 */
+  askTools?: boolean;
+  /** DeepSearch 창 열기. 있으면 답변 모드 옆에 버튼을 보인다 */
+  onDeep?: () => void;
 }) {
   const id = useId();
   return (
@@ -72,6 +82,39 @@ export function QuestionBox({
           <span className="sr-only lg:not-sr-only lg:text-[15px] lg:font-semibold">물어보기</span>
         </button>
       </div>
+      {askTools && <SaveToggle />}
+      {askTools && (
+        <div className="border-line mx-1 mt-1 flex flex-wrap items-center justify-between gap-x-3 border-t">
+          <div className="min-w-0 flex-1">
+            <TierSlider />
+          </div>
+          {onDeep && (
+            <button
+              type="button"
+              onClick={onDeep}
+              disabled={busy}
+              className="border-gold-line bg-cream text-ink hover:border-gold mr-2 mb-1.5 flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-semibold disabled:opacity-60"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.6" />
+                <path
+                  d="M10.5 10.5L14 14"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M7 5v4M5 7h4"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </svg>
+              DeepSearch
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
