@@ -41,12 +41,12 @@ describe("DEC-036 단계 고르기", () => {
 });
 
 describe("DEC-036 질문 1건 상한", () => {
-  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.14를 넘지 않는다", () => {
+  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.15를 넘지 않는다", () => {
     for (const id of TIER_IDS) {
       expect(PRICES[TIERS[id].model]).toBeDefined();
-      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.14);
+      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.15);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.0015, 0.03, 0.14]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.0015, 0.03, 0.15]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -85,10 +85,10 @@ describe("DEC-036 질문 1건 상한", () => {
 });
 
 describe("DEC-036 주간 예산은 단위로 센다 (하루 상한 없음)", () => {
-  test("가중치 = 그 단계의 질문 1건 상한 ÷ 단위 금액 (올림)", () => {
+  test("가중치 × 단위 금액 = 그 단계의 질문 1건 상한", () => {
     expect(BUDGET_UNIT_USD).toBe(0.0015);
     for (const id of TIER_IDS) {
-      expect(TIERS[id].weight).toBe(Math.ceil(TIERS[id].capUsd / BUDGET_UNIT_USD - 1e-9));
+      expect(TIERS[id].weight * BUDGET_UNIT_USD).toBeCloseTo(TIERS[id].capUsd, 10);
     }
     expect(HELPER_WEIGHT).toBe(1);
   });

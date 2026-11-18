@@ -1,7 +1,7 @@
 -- DEC-036 답변 단계(Light·Pro·Pro Max) + DEC-037 AI 절차 분류 라벨 + DEC-039 내 질문 기록.
 --
 -- 1) hit_rate_limit_weighted — 주간 유료 예산을 건수가 아니라 단위($0.0015)로 센다.
---    단계마다 값이 달라(Light 1 · Pro 20 · Pro Max 94) 한 번에 여러 단위를 올려야 한다.
+--    단계마다 값이 달라(Light 1 · Pro 20 · Pro Max 100) 한 번에 여러 단위를 올려야 한다.
 --    기존 hit_rate_limit(1씩 세기)은 그대로 둔다. 카운터 키는 해시 또는 'global'만 (원본 IP 금지 그대로).
 create or replace function public.hit_rate_limit_weighted(
   p_bucket text,

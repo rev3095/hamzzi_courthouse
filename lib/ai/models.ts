@@ -12,8 +12,8 @@ type Env = Record<string, string | undefined>;
  * - effort: Light·Pro는 low, Pro Max는 medium.
  * - capUsd: 질문 1건 Claude 비용 상한(질문 해석 Haiku 포함). 입력 약 9,000토큰 + answerTokens.max 출력 정가 기준
  *   (Haiku $0.0009+$0.0006 · Sonnet $0.018+$0.012 · Opus $0.036+$0.10).
- *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서). Opus $0.14는 상한이고 실측 전이다(추정 $0.05~0.09).
- * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위를 올림한 값이어야 한다 (단위 테스트가 확인)
+ *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서). Opus $0.15는 상한이고 실측 전이다(추정 $0.05~0.09).
+ * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위와 같아야 한다 (단위 테스트가 확인)
  */
 export const TIERS = {
   light: {
@@ -41,10 +41,10 @@ export const TIERS = {
     model: "claude-opus-5-5",
     thinking: { type: "adaptive" },
     effort: "medium",
-    capUsd: 0.14,
+    capUsd: 0.15,
     answerTokens: { max: 5_000, min: 2_000 },
     timeoutMs: 60_000,
-    weight: 94,
+    weight: 100,
   },
 } as const;
 
@@ -74,7 +74,7 @@ export const DEFAULT_WEEKLY_BUDGET_USD = 80;
 
 /**
  * 주간 예산을 세는 단위 (DEC-036). 단계가 섞여도 금액이 맞도록 건수가 아니라 단위로 센다:
- * Light 1 · Pro 20 · Pro Max 94($0.14 ÷ 단위 올림) · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
+ * Light 1 · Pro 20 · Pro Max 100 · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
  */
 export const BUDGET_UNIT_USD = 0.0015;
 /** 문서 초안(DEC-023)·절차 분류(DEC-037) 1건. 둘 다 Haiku $0.0015 이하 */

@@ -76,8 +76,8 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
   - 없음/그 밖의 값 = **유료**: 사용자가 고른 단계로 답변. 단, `ANTHROPIC_API_KEY`가 없으면 무료(CI·키 없는 개발 환경 보호)
   - 로컬 `.env.local`에 키가 있으면 로컬에서도 실제 질문이 과금된다 — 로컬에서 화면만 볼 때는 `AI_MODE=free`
   - 유료 모드라도 예시 질문은 재생(비용 0). 유료 버전 보존 태그 `paid-ai-v1`
-- 답변 단계 (DEC-036, lib/ai/models.ts `TIERS`): **Light** Haiku 5.5 $0.0015 · **Pro** Sonnet 5.5 $0.03(기본) · **Pro Max** Opus 5.5 $0.14(effort medium, 실측 전). 질문창 아래 슬라이더(components/ask/TierSlider)로 고르고 이 기기에만 기억한다(`hz:tier`)
-- `AI_WEEKLY_BUDGET_USD`(기본 **$80**, DEC-031 공모전 임시값 — 이전 $21) 유료 분석 주간 전체 금액 상한 — 하루 상한은 없다 (DEC-026, Max 월 $100 프로모션 크레딧을 다 쓸 수 있게). 건수가 아니라 **단위($0.0015)**로 센다(DEC-036): Light 1 · Pro 20 · Pro Max 94 · 문서 초안·절차 분류 1 → $80 = 53,333단위. 넘으면 그 주는 무료 모드. 주간 창은 매주 토 09:00 KST 시작, 카운터는 8일 보관(마이그레이션 `20261117160154`), 가중 차감 함수는 마이그레이션 `20261118143933`. 예시 질문 재생은 세지 않는다
+- 답변 단계 (DEC-036, lib/ai/models.ts `TIERS`): **Light** Haiku 5.5 $0.0015 · **Pro** Sonnet 5.5 $0.03(기본) · **Pro Max** Opus 5.5 $0.15(effort medium, 실측 전). 질문창 아래 슬라이더(components/ask/TierSlider)로 고르고 이 기기에만 기억한다(`hz:tier`)
+- `AI_WEEKLY_BUDGET_USD`(기본 **$80**, DEC-031 공모전 임시값 — 이전 $21) 유료 분석 주간 전체 금액 상한 — 하루 상한은 없다 (DEC-026, Max 월 $100 프로모션 크레딧을 다 쓸 수 있게). 건수가 아니라 **단위($0.0015)**로 센다(DEC-036): Light 1 · Pro 20 · Pro Max 100 · 문서 초안·절차 분류 1 → $80 = 53,333단위. 넘으면 그 주는 무료 모드. 주간 창은 매주 토 09:00 KST 시작, 카운터는 8일 보관(마이그레이션 `20261117160154`), 가중 차감 함수는 마이그레이션 `20261118143933`. 예시 질문 재생은 세지 않는다
 - `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). `ADMIN_PASSWORD`라는 이름도 받는다(둘 다 있으면 `ADMIN_PASSCODE`). 둘 다 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
 - `NEXT_PUBLIC_GOOGLE_LOGIN` `1`이면 Google 로그인 버튼을 켠다(DEC-035). 빌드 때 들어가므로 바꾸면 다시 배포. Supabase에 Google 공급자·돌아올 주소를 먼저 설정한다 — `?next=`가 붙으므로 허용 주소는 `https://<도메인>/auth/callback**`처럼 와일드카드로. 꺼져 있으면 `/auth/callback`도 세션을 만들지 않는다
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다

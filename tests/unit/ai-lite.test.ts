@@ -152,7 +152,7 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 5,000토큰으로 묶는다. 비용은 $0.14 이하", async () => {
+  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 5,000토큰으로 묶는다. 비용은 $0.15 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -165,7 +165,7 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(p.max_tokens).toBe(5_000);
     // 답변: 입력 5,000 × $4 + 출력 400 × $20 = $0.028 (+ 질문 해석 Haiku 몫)
     expect(out.costUsd).toBeGreaterThanOrEqual(0.028);
-    expect(out.costUsd).toBeLessThanOrEqual(0.14);
+    expect(out.costUsd).toBeLessThanOrEqual(0.15);
     expect(out.model).toBe("claude-opus-5-5");
   });
 

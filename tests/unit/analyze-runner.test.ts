@@ -208,7 +208,7 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
   test.each([
     ["light", 1],
     ["pro", 20],
-    ["max", 94],
+    ["max", 100],
   ] as const)("%s 단계는 주간 예산을 %i단위 쓰고 그 단계로 답변한다", async (tier, weight) => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier });
