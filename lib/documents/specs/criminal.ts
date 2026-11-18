@@ -251,7 +251,7 @@ export const CRIMINAL_SPECS = {
       "피해 금액을 보여 주는 자료(이체 내역 등)를 첨부할 수 있어요.",
       "같은 피해로 다른 민사소송이 진행 중이면 배상명령을 신청할 수 없어요.",
     ],
-    links: [OFFICIAL.proSe, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
     officialForms: [{ name: "[형사] 배상명령 신청서", source: COURT_SOURCE, url: SCOURT_FORMS }],
     basis: ["소송촉진 등에 관한 특례법 제25조·제26조(배상신청)"],
     draftFields: "배상의 대상과 그 내용",

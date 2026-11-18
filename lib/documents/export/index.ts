@@ -14,7 +14,7 @@ export const EXPORT_FORMATS: {
     value: "hwpx",
     label: "한글 (HWPX)",
     ext: "hwpx",
-    note: "한글·한컴오피스에서 열어요 (실험 기능)",
+    note: "한글·한컴오피스에서 열어요",
   },
   { value: "docx", label: "워드 (DOCX)", ext: "docx", note: "MS 워드·한글·구글 문서에서 열어요" },
   { value: "pdf", label: "PDF", ext: "pdf", note: "고칠 수 없는 인쇄용 문서예요" },

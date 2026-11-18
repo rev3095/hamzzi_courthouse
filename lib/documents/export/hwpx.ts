@@ -1,4 +1,4 @@
-// 블록 → 한글 문서(.hwpx, OWPML) — 의존성 없이 직접 만든다 (DEC-025, 실험 기능).
+// 블록 → 한글 문서(.hwpx, OWPML) — 의존성 없이 직접 만든다 (DEC-025). 한컴오피스 한글 2022에서 서식 14종이 열리고 글자가 같은 것을 확인했다 (2026-11-18).
 // 구조는 한글 문서 표준(OWPML)을 따른다: 글자는 <hp:run><hp:t>, 쪽 설정(secPr)은 첫 문단의 첫 run 안,
 // 패키지 첫 항목은 무압축 mimetype("application/hwp+zip"). 뼈대는 hwpx-mcp-server가 만든 빈 문서 구조와 같게 맞췄다.
 // (이전에 쓰던 hwpx-js는 글자를 비표준 <hp:runText>에 넣어 한글·hwpx 도구에서 빈 문서로 읽혔다.)
@@ -92,7 +92,8 @@ const SEC_PR =
 
 const para = (id: number, b: Block, prefix = "") => {
   const look = LOOK[b.kind];
-  const text = b.kind === "blank" ? "" : xmlEscape(b.text.replace(/\n/g, " "));
+  // 문단 안의 줄바꿈은 한글의 강제 줄 나눔으로 (한글 2022에서 확인)
+  const text = b.kind === "blank" ? "" : b.text.split("\n").map(xmlEscape).join("<hp:lineBreak/>");
   return (
     `<hp:p id="${id}" paraPrIDRef="${look.para}" styleIDRef="0" pageBreak="0" columnBreak="0" merged="0">` +
     `<hp:run charPrIDRef="${look.char}">${prefix}<hp:t>${text}</hp:t></hp:run></hp:p>`

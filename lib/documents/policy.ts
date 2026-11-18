@@ -155,7 +155,7 @@ export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
       "등기신청수수료·등록면허세·수입인지·송달료를 내야 해요. 금액은 법원 서식의 유의사항과 법원 안내에서 확인하세요.",
       "신청서를 냈다고 바로 등기되는 것은 아니에요. 등기사항증명서에 임차권등기가 적힌 것을 확인한 뒤 이사하는 것이 안전해요.",
     ],
-    links: [OFFICIAL.ecfs, OFFICIAL.proSe, OFFICIAL.iros],
+    links: [OFFICIAL.ecfs, OFFICIAL.iros],
     officialForms: [
       { name: "[신청] 주택임차권등기명령신청서", source: COURT_SOURCE, url: SCOURT_FORMS },
       {
@@ -319,7 +319,7 @@ export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
       "인지대·송달료는 법원 서식의 유의사항과 법원 안내 기준으로 내요.",
       "계약서·송금 내역 같은 자료를 첨부서류로 함께 내요.",
     ],
-    links: [OFFICIAL.ecfs, OFFICIAL.proSe],
+    links: [OFFICIAL.ecfs],
     officialForms: [
       {
         name: "[민사] 지급명령신청서(일반) [전산양식A2330]",
@@ -428,7 +428,7 @@ export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
       "관할 법원과 인지대·송달료는 법원 안내(나홀로소송·전자소송)에서 확인해요.",
       "법원 사이트의 공식 서식과 작성례를 함께 참고하세요.",
     ],
-    links: [OFFICIAL.proSe, OFFICIAL.ecfs, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
     officialForms: [{ name: "[민사] 소장", source: COURT_SOURCE, url: SCOURT_FORMS }],
     basis: ["민사소송법 제249조(소장의 기재사항)"],
     draftFields: "사건명·청구원인·입증방법",

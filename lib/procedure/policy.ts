@@ -163,7 +163,7 @@ const NOTICE: Record<NoticeType, { title: string; body: string; links: OfficialL
   defendant: {
     title: "갚거나 돌려줘야 하는 쪽의 대응은 이 안내 범위 밖이에요",
     body: "절차 타임라인은 돈이나 권리를 요구하는 쪽을 기준으로 해요. 소장·지급명령 같은 서류를 받았다면 적힌 기간 안에 답변서·이의신청 등을 내야 할 수 있어요. 받은 서류와 법원 안내를 먼저 확인하고, 필요하면 전문가와 상담하세요.",
-    links: [OFFICIAL.proSe, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
   },
   accused: {
     title: "수사를 받는 쪽의 대응은 이 안내 범위 밖이에요",
@@ -173,7 +173,7 @@ const NOTICE: Record<NoticeType, { title: string; body: string; links: OfficialL
   other: {
     title: "이 질문에 맞는 절차 안내를 정하지 못했어요",
     body: "어떤 절차에 해당하는지 판단하기 어려워 절차 타임라인을 생략했어요. 아래 세부 내용에서 찾은 법령·판례를 확인해 주세요.",
-    links: [OFFICIAL.proSe, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
   },
 };
 
