@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const store = vi.hoisted(() => ({
   resolveOwner: vi.fn(),
   getAnonQuestionsUsed: vi.fn(),
+  getUserQuestionsUsed: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
 
@@ -35,16 +36,18 @@ describe("GET /me/quota", () => {
     expect((await (await get()).json()).data).toMatchObject({ remaining: 0, loginRequired: true });
   });
 
-  test("로그인 사용자는 비로그인 횟수가 없다", async () => {
+  test("DEC-035 Google 로그인 사용자는 하루 10회 기준 남은 횟수", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1" });
+    store.getUserQuestionsUsed.mockResolvedValue(4);
     expect((await (await get()).json()).data).toEqual({
       anonymous: false,
-      used: null,
-      limit: null,
-      remaining: null,
+      used: 4,
+      limit: 10,
+      remaining: 6,
       loginRequired: false,
       admin: false,
     });
+    expect(store.getUserQuestionsUsed).toHaveBeenCalledWith("u1");
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
   });
 

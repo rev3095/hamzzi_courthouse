@@ -50,7 +50,20 @@ describe("DELETE /me/data", () => {
     store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u-1" });
     const res = await call();
     expect(res.status).toBe(202);
-    expect((await res.json()).data).toEqual({ status: "received", deletionRequestId: "del-1" });
+    expect((await res.json()).data).toEqual({
+      status: "received",
+      deletionRequestId: "del-1",
+      deletedInquiries: 0,
+    });
+    expect(store.deleteAnonData).not.toHaveBeenCalled();
+  });
+
+  test("DEC-035 로그인 사용자는 같은 브라우저의 로그인 전 질문도 바로 지운다", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u-1", anonSessionId: "anon-1" });
+    const res = await call();
+    expect(res.status).toBe(202);
+    expect(store.deleteAnonData.mock.calls[0][0]).toBe("anon-1");
+    expect((await res.json()).data).toMatchObject({ status: "received", deletedInquiries: 2 });
   });
 
   test("레이트 리밋 초과 429 — 지우지 않는다", async () => {

@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   confirmPii,
   createInquiry,
+  isUserDailyLimit,
   notifyQuotaChanged,
   rememberQuestion,
   type ClientError,
@@ -73,7 +74,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       if (r.error.code === "CONSENT_REQUIRED") {
         const cats = r.error.details?.categories;
         setPending({ kind: "consent", text, categories: Array.isArray(cats) ? cats : [] });
-      } else if (r.error.code === "LOGIN_REQUIRED") {
+      } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
         setPending({ kind: "login" });
       } else {

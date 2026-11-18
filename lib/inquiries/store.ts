@@ -14,6 +14,7 @@ import {
   ANON_IP_WINDOW_MS,
   ANON_QUESTION_LIMIT,
   countsAnonQuota,
+  kstDayStartIso,
   questionsUsedToday,
   type FinishResult,
   type Owner,
@@ -29,13 +30,19 @@ export type { Owner } from "./policy";
 
 // service_role로 쓰므로 소유권은 여기서 직접 확인한다 (RLS 우회 — DATA_MODEL 6절).
 
-/** 요청자. 로그인 사용자 우선, 아니면 익명 세션. create면 익명 세션을 새로 만든다. */
+/**
+ * 요청자. 로그인 사용자 우선, 아니면 익명 세션. create면 익명 세션을 새로 만든다.
+ * 로그인 사용자에게는 이 브라우저의 기존 익명 세션(있으면)을 붙여 로그인 전 질문도 계속 보게 한다 — 새로 만들지는 않는다 (DEC-035)
+ */
 export async function resolveOwner(
   scope: RequestScope,
   opts: { create: boolean },
 ): Promise<Owner | null> {
   const actor = await getActor(scope);
-  if (actor) return { kind: "user", userId: actor.userId };
+  if (actor) {
+    const owner: Owner = { kind: "user", userId: actor.userId, anonSessionId: await getAnonSessionId() };
+    return (await isAdminRequest()) ? { ...owner, admin: true } : owner;
+  }
   const anonSessionId = opts.create ? await ensureAnonSession() : await getAnonSessionId();
   if (!anonSessionId) return null;
   return (await isAdminRequest())
@@ -65,6 +72,36 @@ export async function getAnonQuestionsUsed(anonSessionId: string): Promise<numbe
     .maybeSingle<{ questions_used: number; quota_day: string | null }>();
   if (error) throw new Error("anon_sessions 조회 실패");
   return data ? questionsUsedToday(data.questions_used, data.quota_day) : 0;
+}
+
+/**
+ * 로그인 사용자가 오늘(한국 시간) 쓴 질문 수 (DEC-035) — 오늘 저장된 분석 결과 수. 예시 질문 재생(model "replay")은 세지 않는다.
+ * 모델 호출 전 사전 검사용이라 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로 받는다)
+ */
+export async function getUserQuestionsUsed(userId: string): Promise<number> {
+  const { count, error } = await createServiceClient()
+    .from("analysis_results")
+    .select("id, inquiries!inner(user_id)", { count: "exact", head: true })
+    .eq("inquiries.user_id", userId)
+    .neq("model", "replay")
+    .gte("created_at", kstDayStartIso());
+  if (error) throw new Error("analysis_results 조회 실패");
+  return count ?? 0;
+}
+
+/**
+ * 로그인 사용자가 로그인 전에 같은 브라우저에서 만든 질문을 분석할 때, 분석 전에 그 행을 계정에 연결한다 (DEC-035).
+ * 그래야 하루 한도(getUserQuestionsUsed는 user_id로 센다)를 피해 갈 수 없다. 이미 계정에 연결된 행은 건드리지 않는다
+ */
+export async function claimInquiryForUser(inquiryId: string, owner: Owner): Promise<void> {
+  if (owner.kind !== "user" || !owner.anonSessionId) return;
+  const { error } = await createServiceClient()
+    .from("inquiries")
+    .update({ user_id: owner.userId })
+    .eq("id", inquiryId)
+    .is("user_id", null)
+    .eq("anon_session_id", owner.anonSessionId);
+  if (error) throw new Error("inquiries 계정 연결 실패");
 }
 
 /** 비로그인 IP 해시 (원본 IP는 여기서 해시로만 바꾸고 버린다). production에서 솔트가 없으면 오류 */

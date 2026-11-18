@@ -1,4 +1,4 @@
-// 마이페이지 (DEC-032): 헤더 오른쪽 위 프로필 아이콘으로 연다. 로그인 자리(준비 중)·햄찌 안내 챗봇 끄기·내 기록.
+// 마이페이지 (DEC-032): 헤더 오른쪽 위 프로필 아이콘으로 연다. Google 로그인(DEC-035)·햄찌 안내 챗봇 끄기·내 기록.
 import type { Metadata } from "next";
 import { MyPage } from "@/components/me/MyPage";
 

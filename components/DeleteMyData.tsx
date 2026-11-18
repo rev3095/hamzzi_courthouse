@@ -2,13 +2,16 @@
 // 내 기록 지우기 (PRD 9.2, DELETE /api/v1/me/data). 이 브라우저(익명 세션)의 질문·결과·피드백을 지운다.
 // 감사 로그(행위·세션 ID만)가 남고, 남은 질문 수는 되살아나지 않는다 (DEC-018 제안).
 import { useState } from "react";
-import { deleteMyData, forgetQuestions, notifyQuotaChanged } from "@/lib/client/api";
+import { deleteMyData, forgetQuestions, isSignedIn, notifyQuotaChanged } from "@/lib/client/api";
 import { Modal, PrimaryButton, SecondaryButton } from "./Modal";
+import { useQuota } from "./useQuota";
 
 export function DeleteMyData() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Google 로그인(DEC-035): 계정 기록은 바로 지우지 않고 삭제 요청을 접수한다
+  const signedIn = isSignedIn(useQuota());
 
   async function run() {
     setBusy(true);
@@ -27,7 +30,7 @@ export function DeleteMyData() {
     notifyQuotaChanged();
     setMessage(
       r.data.status === "received"
-        ? "삭제 요청을 받았어요."
+        ? "로그인 전 질문은 지웠고, 계정 기록 삭제 요청을 받았어요. 운영자가 처리해요."
         : `질문 ${r.data.deletedInquiries ?? 0}건과 그 결과를 지웠어요.`,
     );
   }
@@ -35,7 +38,9 @@ export function DeleteMyData() {
   return (
     <div id="delete" className="rounded-card border-line border bg-white p-5">
       <p className="text-ink text-[15px]">
-        이 브라우저에서 보낸 질문과 결과를 지금 바로 지울 수 있어요.
+        {signedIn
+          ? "계정에 연결된 질문과 결과는 삭제 요청을 받아 운영자가 지워요. 로그인 전에 이 브라우저에서 보낸 질문은 바로 지워요."
+          : "이 브라우저에서 보낸 질문과 결과를 지금 바로 지울 수 있어요."}
       </p>
       <SecondaryButton className="mt-3" onClick={() => setOpen(true)}>
         내 기록 지우기
@@ -46,8 +51,9 @@ export function DeleteMyData() {
       {open && (
         <Modal title="내 기록을 지울까요?" onClose={() => setOpen(false)}>
           <p className="text-muted text-[15px] leading-relaxed">
-            이 브라우저에서 보낸 질문(가린 문장)과 결과·피드백을 모두 지워요. 지우면 되돌릴 수
-            없어요. 남은 질문 수는 그대로예요.
+            {signedIn
+              ? "로그인 전에 이 브라우저에서 보낸 질문(가린 문장)과 결과·피드백은 바로 지우고, 계정에 연결된 기록은 삭제 요청을 접수해요. 지우면 되돌릴 수 없어요. 남은 질문 수는 그대로예요."
+              : "이 브라우저에서 보낸 질문(가린 문장)과 결과·피드백을 모두 지워요. 지우면 되돌릴 수 없어요. 남은 질문 수는 그대로예요."}
           </p>
           <div className="mt-5 flex flex-col gap-2">
             <PrimaryButton disabled={busy} onClick={() => void run()}>

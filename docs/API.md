@@ -52,13 +52,14 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ## 4. Phase 1 엔드포인트
 | 메서드 · 경로 | 인증 | 설명 | F-ID |
 |---|---|---|---|
-| POST `/inquiries` | anon(하루 3회, 관리자 모드 무제한)·user | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
+| POST `/inquiries` | anon(하루 `ANON_QUESTION_LIMIT`회 — 현재 5, DEC-031 · 관리자 모드 무제한)·user(Google 로그인 하루 `USER_QUESTION_LIMIT` 10회, DEC-035) | 문제 입력·이어 묻기, PII 탐지 | F-001, F-007 |
 | POST `/inquiries/{id}/pii-confirmation` | 소유자(anon 포함) | 마스킹 확인·민감정보 동의 | F-007 |
 | POST `/inquiries/{id}/analyze` | 소유자(anon 포함) | 구조화 + 검색 + 근거 요약 | F-002~F-006 |
 | PATCH `/inquiries/{id}/facts` | user 소유자 | 사실관계 요약 수정 | F-002 AC1 |
 | POST `/inquiries/{id}/answers` | user 소유자 | 추가 질문 답변 | F-002 AC2 |
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
-| GET `/me/quota` | anon·user | 오늘 남은 비로그인 질문 수(0~3), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024 |
+| GET `/me/quota` | anon·user | 오늘 남은 질문 수(비로그인 0~`ANON_QUESTION_LIMIT` · Google 로그인 0~10), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024, DEC-035 |
+| GET `/auth/callback` (API 밖, `app/auth/callback`) | 공개 | Google 로그인에서 돌아오는 주소. Supabase 코드를 세션 쿠키로 바꾸고 `next`(사이트 안 경로만, `safeNextPath`)로 보낸다. 실패하면 `/me?login=failed` | DEC-035 |
 | POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
 | GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |
 | GET `/cases/{id}` | 공개/user | 판례 상세 | F-003 AC3 |
@@ -104,10 +105,10 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ```ts
 // 200 — 조회만 한다. 쿠키 없는 첫 방문자에게 익명 세션을 만들지 않는다
 { anonymous: boolean;          // 로그인 사용자면 false
-  used: number | null;         // 오늘(한국 시간) 비로그인 사용 횟수 0~3 (로그인 사용자·관리자 모드 null)
-  limit: number | null;        // 3 (DEC-010, 하루 단위 DEC-024)
+  used: number | null;         // 오늘(한국 시간) 사용 횟수 — 비로그인 0~ANON_QUESTION_LIMIT(현재 5), Google 로그인 0~10 (관리자 모드 null)
+  limit: number | null;        // 비로그인 ANON_QUESTION_LIMIT(DEC-010·024·031), Google 로그인 USER_QUESTION_LIMIT 10(DEC-035)
   remaining: number | null;
-  loginRequired: boolean;      // 오늘 3회를 다 쓴 비로그인
+  loginRequired: boolean;      // 오늘 한도를 다 쓴 비로그인 (로그인 사용자는 항상 false — 한도 소진은 remaining 0)
   admin: boolean }             // 관리자 모드(DEC-024) — 횟수 제한 없음
 ```
 비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다. **예시 질문**(홈에 보이는 질문과 같은 문장, 공백·전각 차이 무시)은 저장된 분석을 재생하므로 `POST /inquiries`·`analyze` 모두 횟수를 보지 않고 차감도 하지 않는다(DEC-027) — 3회를 다 쓴 뒤에도 열 수 있다. 대신 같은 네트워크 1시간 30회까지(`429 RATE_LIMITED`, `reason: example_hourly`). 이어 묻기라도 문장이 예시와 같으면 맥락 없이 예시를 재생하고 세지 않는다.
@@ -117,7 +118,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 // POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE(또는 ADMIN_PASSWORD)와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
 // 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · 둘 다 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
 // DELETE → 쿠키 삭제, 200 { admin: false }. 본문·비밀번호는 로그에 남기지 않는다
-``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). 로그인 사용자 사용량 제한은 미정(PRD 11).
+``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). Google 로그인 사용자(DEC-035)는 하루 10회(`USER_QUESTION_LIMIT`, 한국 시간 0시 초기화, 예시 질문 제외)로, 오늘 저장된 분석 결과 수(`model` ≠ `replay`)를 `POST /inquiries`·`analyze`가 모델 전에 세어 넘으면 `429 RATE_LIMITED`(`details.reason: "user_daily"`). 로그인 전에 같은 브라우저에서 만든 질문을 로그인 뒤 분석하면 분석 전에 그 행을 계정에 연결(`claimInquiryForUser`)해 이 한도에 넣는다. 차감 트랜잭션이 따로 없어 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로). 관리자 모드로 로그인하면 이 한도도 받지 않는다. 로그인 사용자는 같은 브라우저 익명 세션의 로그인 전 질문도 소유자로 본다.
 
 ### POST `/inquiries/{id}/analyze`
 ```ts
@@ -238,7 +239,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 
 ### DELETE `/me/data`
 - 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
-- 로그인 사용자: `202 { status: "received", deletionRequestId }` — `deletion_requests` 접수, 처리 기한은 OQ-DM-03. 데모는 로그인을 열지 않는다(DEC-016).
+- 로그인 사용자: `202 { status: "received", deletionRequestId, deletedInquiries }` — 같은 브라우저 익명 세션의 로그인 전 질문은 바로 지우고(`deletedInquiries`), 계정 기록은 `deletion_requests` 접수(운영자 처리), 처리 기한은 OQ-DM-03 (DEC-035).
 - 레이트 리밋: IP 해시 1시간 30회.
 
 ### GET `/health`

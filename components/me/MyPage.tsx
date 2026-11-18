@@ -1,16 +1,28 @@
 "use client";
-// 마이페이지 (DEC-032): 프로필(로그인 자리) + 화면 설정 + 내 기록.
-// 로그인은 아직 만들지 않았다 — 버튼 자리만 두고 비활성으로 둔다(DEC-016 데모 비로그인 운영은 그대로).
+// 마이페이지 (DEC-032·033): 프로필(Google 로그인) + 화면 설정 + 내 기록.
+// 로그인은 Google 계정으로만 한다(DEC-035). NEXT_PUBLIC_GOOGLE_LOGIN이 꺼져 있으면 버튼은 "준비 중" 비활성.
+// 로그인 여부는 서버가 판단한 /me/quota 값만 본다. 이메일·이름은 이 화면에 싣지 않는다.
 // 설정은 이 브라우저에만 저장한다(lib/client/prefs.ts). 개인정보 입력을 받지 않는다.
 import Link from "next/link";
+import { useState, useSyncExternalStore } from "react";
+import { isSignedIn } from "@/lib/client/api";
+import { GOOGLE_LOGIN_ENABLED, signOut } from "@/lib/client/login";
 import { setGuideBotEnabled, useGuideBotEnabled } from "@/lib/client/prefs";
+import { GoogleLoginButton, LOGIN_MORE_TEXT } from "../LimitNotice";
 import { useQuota } from "../useQuota";
+
+const noSubscribe = () => () => {};
+/** /auth/callback이 실패하면 /me?login=failed로 돌려보낸다 */
+const loginFailed = () => new URLSearchParams(window.location.search).get("login") === "failed";
 
 const card = "rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-7 lg:py-7";
 
 export function MyPage() {
   const quota = useQuota();
   const botOn = useGuideBotEnabled();
+  const signedIn = isSignedIn(quota);
+  const failed = useSyncExternalStore(noSubscribe, loginFailed, () => false);
+  const [signOutFailed, setSignOutFailed] = useState(false);
 
   return (
     <div className="mx-auto w-full max-w-[560px] space-y-5 px-4 py-10">
@@ -23,28 +35,51 @@ export function MyPage() {
           </span>
           <div className="min-w-0">
             <h2 id="me-profile" className="text-ink text-lg font-bold">
-              {quota?.admin ? "관리자 모드" : "로그인하지 않았어요"}
+              {quota?.admin
+                ? "관리자 모드"
+                : signedIn
+                  ? "Google 계정으로 로그인했어요"
+                  : "로그인하지 않았어요"}
             </h2>
             <p className="text-muted text-sm" data-testid="me-quota">
               {quota?.admin
                 ? "이 브라우저는 질문 횟수 제한 없이 쓸 수 있어요."
-                : quota?.anonymous && quota.remaining !== null
+                : quota && quota.remaining !== null
                   ? `오늘 남은 질문 ${quota.remaining}/${quota.limit}`
                   : "로그인 없이 쓰고 있어요."}
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          disabled
-          aria-describedby="me-login-note"
-          className="rounded-button bg-ink mt-5 min-h-11 w-full px-5 text-[15px] font-semibold text-white disabled:opacity-50"
-        >
-          로그인 (준비 중)
-        </button>
-        <p id="me-login-note" className="text-muted mt-2 text-[13px]">
-          로그인 기능은 준비 중이에요. 지금은 로그인 없이 쓸 수 있어요.
-        </p>
+        {failed && !signedIn && (
+          <p role="alert" className="text-warn-text mt-4 text-[13px]">
+            Google 로그인을 마치지 못했어요. 다시 시도해 주세요.
+          </p>
+        )}
+        {signedIn ? (
+          <div className="mt-5 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={async () => setSignOutFailed(!(await signOut()))}
+              className="rounded-button border-line text-ink min-h-11 w-full border bg-white px-5 text-[15px] font-semibold"
+            >
+              로그아웃
+            </button>
+            {signOutFailed && (
+              <p role="alert" className="text-warn-text text-[13px]">
+                로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-col gap-2">
+            <GoogleLoginButton next="/me" />
+            <p id="me-login-note" className="text-muted text-[13px] leading-relaxed">
+              {GOOGLE_LOGIN_ENABLED
+                ? `로그인은 Google 계정으로만 할 수 있어요. ${LOGIN_MORE_TEXT}`
+                : "로그인 기능은 준비 중이에요. 지금은 로그인 없이 쓸 수 있어요."}
+            </p>
+          </div>
+        )}
       </section>
 
       <section aria-labelledby="me-settings" className={card}>

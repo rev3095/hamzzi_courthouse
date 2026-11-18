@@ -37,7 +37,7 @@ describe("마이페이지 (DEC-032)", () => {
 
   test("로그인 자리는 준비 중이라 눌리지 않고, 오늘 남은 질문을 보여 준다", async () => {
     render(<MyPage />);
-    const login = screen.getByRole("button", { name: "로그인 (준비 중)" }) as HTMLButtonElement;
+    const login = screen.getByRole("button", { name: "Google 로그인 (준비 중)" }) as HTMLButtonElement;
     expect(login.disabled).toBe(true);
     expect((await screen.findByTestId("me-quota")).textContent).toBe("오늘 남은 질문 4/5");
     // 개인정보 입력을 받지 않는다
