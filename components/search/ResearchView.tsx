@@ -40,6 +40,15 @@ const KINDS: { kind: Kind; label: string }[] = [
   { kind: "ordinances", label: "자치법규" },
   { kind: "admin_rules", label: "행정규칙" },
 ];
+const PRIMARY_KINDS: Kind[] = [
+  "cases",
+  "interpretation",
+  "constitutional",
+  "admin_appeal",
+  "tax_tribunal",
+  "ordinances",
+  "admin_rules",
+];
 const LABEL = Object.fromEntries(KINDS.map((k) => [k.kind, k.label])) as Record<Kind, string>;
 
 export type Row = {
@@ -443,6 +452,9 @@ export function ResearchView() {
   const [to, setTo] = useState("");
   const [sort, setSort] = useState<Sort>("source");
   const listRef = useRef<HTMLUListElement>(null);
+  const [more, setMore] = useState(false);
+  const expanded = more || !PRIMARY_KINDS.includes(tab);
+  const visibleKinds = expanded ? KINDS : KINDS.filter((k) => PRIMARY_KINDS.includes(k.kind));
 
   const submit = async (kind: Kind = tab, value: string = text) => {
     const q = value.trim();
@@ -539,12 +551,8 @@ export function ResearchView() {
               검색
             </button>
           </form>
-          <div
-            role="tablist"
-            aria-label="자료 종류"
-            className="mt-4 flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap"
-          >
-            {KINDS.map((k) => (
+          <div role="tablist" aria-label="자료 종류" className="mt-4 flex flex-wrap gap-1.5">
+            {visibleKinds.map((k) => (
               <button
                 key={k.kind}
                 type="button"
@@ -561,6 +569,15 @@ export function ResearchView() {
                 {k.label}
               </button>
             ))}
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setMore(!expanded)}
+              disabled={expanded && !PRIMARY_KINDS.includes(tab)}
+              className="min-h-11 rounded-[8px] px-3 text-sm font-semibold text-white/80 underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {expanded ? "접기" : `더 보기 +${KINDS.length - PRIMARY_KINDS.length}`}
+            </button>
           </div>
         </div>
       </div>

@@ -12,34 +12,19 @@ test("홈 페이지가 열린다", async ({ page }) => {
   await expect(page.getByText("변호사 찾기")).toHaveCount(0);
 });
 
-test("DEC-012·DEC-015 예시 질문을 누르면 재생 결과가 보인다 (AI 고지·출처·탭)", async ({
+test("DEC-012·DEC-028 예시를 누르면 예시 답변 화면이 바로 열린다 (질문 횟수에 세지 않음, AI 고지)", async ({
   page,
 }) => {
   const calls = await mockApi(page);
   const ex = demoExamples()[0];
-  const result = replayOf(ex.question);
   await page.goto("/");
-  await page.getByRole("button", { name: new RegExp(ex.question.slice(0, 12)) }).click();
-  await page.waitForURL(`**/inquiries/${INQ}`);
+  await page.getByRole("link", { name: `예시 답변 보기: ${ex.question}` }).click();
+  await page.waitForURL(`**/examples/${ex.id}`);
 
-  await expect(page.getByText(AI_NOTICE, { exact: true })).toBeVisible();
-  await expect(page.getByText(`“${ex.question}”`)).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("문제로 보여요");
-  // 기존 답변·법령·판례·검증 탭은 '세부 내용'에 접혀 있다 (DEC-021 답변 요약형)
-  await page.getByText("세부 내용", { exact: true }).click();
-  await expect(page.getByText("검증됨").first()).toBeVisible();
-  await expect(page.getByText("출처: 법제처 국가법령정보센터")).toBeVisible();
-  expect(calls.create[0]).toEqual({ text: ex.question });
-
-  await page.getByRole("tab", { name: /^판례/ }).click();
-  await expect(page.getByText(result.cases[0].caseNo).first()).toBeVisible();
-  await page.getByRole("tab", { name: /^법령/ }).click();
-  await expect(page.getByText(result.articles[0].lawName).first()).toBeVisible();
-  await page.getByRole("tab", { name: "검증" }).click();
-  await expect(
-    page.getByText(`인용 ${result.recheck.items.length}건을 법제처에서 다시 조회했어요`),
-  ).toBeVisible();
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");
+  await expect(page.getByText(AI_NOTICE, { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(ex.question, { exact: false }).first()).toBeVisible();
+  // 질문 생성·분석 API를 부르지 않는다
+  expect(calls.create).toHaveLength(0);
 });
 
 test("F-007 개인정보가 보이면 가린 문장을 확인한 뒤 분석한다", async ({ page }) => {
@@ -202,28 +187,27 @@ test("접근성 예시 질문은 키보드로 고를 수 있다 (Tab·방향키�
   const second = page.getByRole("tab", { name: "임대차" });
   await expect(second).toBeFocused();
   await expect(second).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel").getByRole("button")).toHaveCount(3);
+  await expect(page.getByRole("tabpanel").getByRole("link")).toHaveCount(3);
   await page.keyboard.press("End");
   await page.keyboard.press("Home");
   await expect(all).toBeFocused();
   // 선택된 탭 하나만 Tab 순서에 있고, 다음 Tab은 첫 예시 카드
   await page.keyboard.press("Tab");
-  const card = page.getByRole("tabpanel").getByRole("button").first();
+  const card = page.getByRole("tabpanel").getByRole("link").first();
   await expect(card).toBeFocused();
   expect(await card.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
   await page.keyboard.press("Enter");
-  await page.waitForURL(`**/inquiries/${INQ}`);
-  expect(calls.create[0]).toEqual({ text: demoExamples()[0].question });
+  await page.waitForURL("**/examples/**");
+  // 예시는 질문을 만들지 않는다 (DEC-028)
+  expect(calls.create).toHaveLength(0);
 });
 
 test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서버 값과 같다", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
-  await page
-    .getByRole("button", { name: /예시 질문으로 시작/ })
-    .first()
-    .click();
+  await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
+  await page.getByRole("button", { name: "물어보기" }).click();
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 2/3");

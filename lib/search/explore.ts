@@ -51,7 +51,7 @@ type DomainSpec = {
   bodyField: string | null;
   /** 법제처가 상세 조회를 제공하지 않는 종류는 false (목록만) */
   hasDetail: boolean;
-  /** 국가법령정보센터 공개 주소. 확인된 종류만 */
+  /** 국가법령정보센터 공개 주소. 실제로 열리는 것을 확인한 종류만 (2026-11-18). 조세심판·소청심사·권익위 특별행정심판·국세청 해석·영문 법령은 주소를 확인하지 못해 null */
   url: ((id: string) => string) | null;
   note: string;
 };
@@ -87,7 +87,7 @@ const INSTITUTION_RULE = {
   sections: [] as [string, string][],
   bodyField: null,
   hasDetail: false,
-  url: (id: string) => `${LAW_GO}/LSW/admRulInfoP.do?admRulSeq=${encodeURIComponent(id)}`,
+  url: (id: string) => `${LAW_GO}/LSW/schlPubRulInfoP.do?schlPubRulSeq=${encodeURIComponent(id)}`,
 };
 
 /** lexdiff README의 "판례·해석례 통합"과 같은 범위: 법제처 Open API가 주는 결정문 종류 (판례는 /cases) */
@@ -150,7 +150,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
     ],
     bodyField: null,
     hasDetail: true,
-    url: null,
+    url: (id) => `${LAW_GO}/LSW/deccInfoP.do?deccSeq=${encodeURIComponent(id)}`,
     note: "행정심판 재결례를 사건명으로 찾은 결과예요.",
   },
   tax_tribunal: {
@@ -241,6 +241,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["주문", "주문"],
       ["결정요지", "결정요지"],
     ],
+    url: (id) => `${LAW_GO}/LSW/ftcInfoP.do?ftcSeq=${encodeURIComponent(id)}`,
     note: "공정거래위원회 결정문을 사건명으로 찾은 결과예요.",
   },
   pipc: {
@@ -256,6 +257,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["주문", "주문"],
       ["결정요지", "결정요지"],
     ],
+    url: (id) => `${LAW_GO}/LSW/ppcInfoP.do?ppcSeq=${encodeURIComponent(id)}`,
     note: "개인정보보호위원회 결정문을 안건명으로 찾은 결과예요.",
   },
   nlrc: {
@@ -272,6 +274,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["판정요지", "판정요지"],
       ["판정결과", "판정결과"],
     ],
+    url: (id) => `${LAW_GO}/LSW/nlrcInfoP.do?nlrcSeq=${encodeURIComponent(id)}`,
     note: "노동위원회 결정문을 제목으로 찾은 결과예요.",
   },
   acr: {
@@ -288,6 +291,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
       ["주문", "주문"],
       ["결정요지", "결정요지"],
     ],
+    url: (id) => `${LAW_GO}/LSW/acrInfoP.do?acrSeq=${encodeURIComponent(id)}`,
     note: "국민권익위원회 결정문을 제목으로 찾은 결과예요.",
   },
   treaty: {
@@ -303,7 +307,7 @@ export const DECISION_DOMAINS: Record<DecisionDomain, DomainSpec> = {
     sections: [],
     bodyField: null,
     hasDetail: false,
-    url: null,
+    url: (id) => `${LAW_GO}/LSW/trtyInfoP.do?trtySeq=${encodeURIComponent(id)}`,
     note: "조약을 이름으로 찾은 결과예요. 목록만 보여 드려요.",
   },
   school: {
@@ -467,7 +471,11 @@ export function decisionDetail(
   const fromBody = sections.length === 0 && spec.bodyField !== null;
   const excerpt = fromBody ? bodyExcerpt(str(row[spec.bodyField!])) : null;
   if (excerpt) sections.push({ section: "본문 일부", text: excerpt });
-  return { ...hit, sections, fromBody: fromBody && excerpt !== null };
+  const portal = str(row["관세법령정보포털원문링크"]);
+  const sourceUrl =
+    hit.sourceUrl ??
+    (portal && /^https:\/\//.test(portal) && !/[?&]OC=/i.test(portal) ? portal : null);
+  return { ...hit, sourceUrl, sections, fromBody: fromBody && excerpt !== null };
 }
 
 export function decisionListResponse(domain: DecisionDomain, hits: DecisionHit[]) {
