@@ -51,7 +51,9 @@ const started = Date.now();
 const created = await call("/inquiries", { text: question });
 if (created.piiConfirmationRequired)
   await call(`/inquiries/${created.id}/pii-confirmation`, { acceptMasked: true });
-const analyzed = await call(`/inquiries/${created.id}/analyze`);
+// 답변 단계(DEC-036): 라벨로 고른다 — haiku = light, sonnet = pro, opus = max. 그 밖의 라벨은 서버 기본값(Pro)
+const tier = { haiku: "light", sonnet: "pro", opus: "max" }[label];
+const analyzed = await call(`/inquiries/${created.id}/analyze`, tier ? { tier } : {});
 const elapsedMs = Date.now() - started;
 
 // 모델·토큰은 응답에 없어서 DB에서 읽는다 (읽기만, 배포 사이트와 같은 DB)

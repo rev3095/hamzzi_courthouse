@@ -1,0 +1,211 @@
+{
+  "label": "opus",
+  "at": "2026-11-18T20:40:53.908Z",
+  "site": "https://hamzzi-courthouse.vercel.app",
+  "question": "전세 계약 기간이 끝났는데 집주인이 다음 세입자를 구해야 보증금을 돌려줄 수 있다고 해요. 저는 다음 달에 이사해야 하는데 어떻게 해야 하나요?",
+  "inquiryId": "9d5a8d5a-784a-41da-a7e8-29640eecad05",
+  "resultId": "d043739d-460f-4626-9052-7796fa9861d2",
+  "elapsedMs": 28091,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10761,
+    "tokens_out": 2100,
+    "latency_ms": 25531,
+    "citations_total": 4,
+    "citations_removed": 0
+  },
+  "costUsdEstimate": 0.08504,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "주택임대차보호법",
+        "민간임대주택에 관한 특별법 시행령",
+        "전세사기피해자 지원 및 주거안정에 관한 특별법",
+        "민간임대주택에 관한 특별법",
+        "한국주택금융공사법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "주택임대차 보증금 반환 동시이행",
+        "임차인 명도 보증금 반환 임대인 의무",
+        "대항력 등"
+      ]
+    },
+    "section": "lease_deposit",
+    "answer": {
+      "points": [
+        {
+          "text": "계약이 끝났더라도 다음 달에 이사하실 때는 대항력을 먼저 확인하시는 것이 좋습니다. 주택임대차보호법 제3조 제1항에 따르면, 임차인이 집을 넘겨받고 주민등록을 마치면 그 다음 날부터 제3자에게도 임차권을 주장할 수 있습니다. 이 보호는 보증금을 돌려받기 전까지 중요한 의미가 있습니다.",
+          "source": "law:주택임대차보호법:제3조",
+          "quote": "주택의 인도(引渡)와 주민등록을 마친 때에는 그 다음 날부터 제삼자에 대하여 효력이 생긴다",
+          "check": "verified"
+        },
+        {
+          "text": "대법원은 집 점유와 주민등록이라는 대항요건을 계속 유지해야 대항력이 유지된다고 보았습니다. 이 판례 사안에서는 임차인이 이사한 뒤에야 임차권등기가 마쳐졌습니다. 법원은 등기 전에 점유를 잃었다면 경매로 집을 산 사람에게 임차권을 주장할 수 없다고 판단했습니다. 그래서 등기가 마쳐졌는지 확인한 뒤 이사하는 것이 중요해 보입니다.",
+          "source": "case:2024다326398",
+          "quote": "대항요건은 대항력 취득 시에만 갖추면 충분한 것이 아니라 대항력을 유지하기 위하여서도",
+          "check": "verified"
+        },
+        {
+          "text": "주택도시보증공사의 전세보증금반환보증에 가입하셨는지는 사연에 나와 있지 않습니다. 만약 가입하셨다면 참고할 판례가 있습니다. 대법원은 임차인이 집을 넘겨줄 의무와 공사가 보증채무를 이행할 의무를 서로 동시에 이행할 관계로 보았습니다. 그래서 집을 넘겨주거나 넘겨주겠다고 제공하기 전까지는 공사가 지체책임을 지지 않는다고 판단했습니다.",
+          "source": "case:2026다201978",
+          "quote": "임차목적물 인도의무와 주택도시보증공사의 보증채무 이행의무는 동시이행관계에 있으므로",
+          "check": "verified"
+        },
+        {
+          "text": "집주인이 등록된 민간임대사업자인 경우에 해당하는 규정도 있습니다. 보증금 반환 소송에서 승소가 확정되었거나 주택임대차분쟁조정위원회의 조정이 성립되었는데도 보증금을 반환하지 않으면, 이를 임대사업자 등록 말소 사유로 정하고 있습니다. 조정이나 소송 같은 절차가 있다는 점도 함께 참고하실 수 있습니다.",
+          "source": "law:민간임대주택에관한특별법시행령:제5조",
+          "quote": "주택임대차분쟁조정위원회가 작성한 조정안을 각 당사자가 수락하여 조정이 성립되었으나",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:주택임대차보호법:제3조",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제3조",
+        "title": "대항력 등",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민간임대주택에관한특별법시행령:제5조",
+        "lawName": "민간임대주택에 관한 특별법 시행령",
+        "articleNo": "제5조",
+        "title": "임대사업자 등록의 말소",
+        "effectiveFrom": "2026-02-26",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EA%B0%84%EC%9E%84%EB%8C%80%EC%A3%BC%ED%83%9D%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C5%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:전세사기피해자지원및주거안정에관한특별법:제3조",
+        "lawName": "전세사기피해자 지원 및 주거안정에 관한 특별법",
+        "articleNo": "제3조",
+        "title": "전세사기피해자의 요건",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%84%B8%EC%82%AC%EA%B8%B0%ED%94%BC%ED%95%B4%EC%9E%90%20%EC%A7%80%EC%9B%90%20%EB%B0%8F%20%EC%A3%BC%EA%B1%B0%EC%95%88%EC%A0%95%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민간임대주택에관한특별법:제6조",
+        "lawName": "민간임대주택에 관한 특별법",
+        "articleNo": "제6조",
+        "title": "임대사업자 등록의 말소",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EA%B0%84%EC%9E%84%EB%8C%80%EC%A3%BC%ED%83%9D%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C6%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:한국주택금융공사법시행령:제22조",
+        "lawName": "한국주택금융공사법 시행령",
+        "articleNo": "제22조",
+        "title": "신용보증채무의 이행",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%9C%EA%B5%AD%EC%A3%BC%ED%83%9D%EA%B8%88%EC%9C%B5%EA%B3%B5%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C22%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "622971",
+        "caseNo": "2026다201978",
+        "caseName": "보증금반환",
+        "court": "대법원",
+        "decidedAt": "2026-06-24",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622971",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "622837",
+        "caseNo": "2025나8154",
+        "caseName": "기타(금전)",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2025-12-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622837",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "605771",
+        "caseNo": "2024다326398",
+        "caseName": "임대차보증금반환[주택 임차인의 점유 상실 후 마쳐진 임차권등기의 대항력이 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-04-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=605771",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "622129",
+        "caseNo": "2024가단610297(본소), 2024가단632648(반소)",
+        "caseName": "건물인도(본소)·보증금반환(반소)",
+        "court": "수원지방법원",
+        "decidedAt": "2025-06-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622129",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "622979",
+        "caseNo": "2024구단60339",
+        "caseName": "양도소득세부과처분취소",
+        "court": "서울행정법원",
+        "decidedAt": "2024-12-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622979",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "주택임대차 보증금 반환 동시이행",
+        "total": 6
+      },
+      {
+        "keyword": "임차인 명도 보증금 반환 임대인 의무",
+        "total": 6
+      },
+      {
+        "keyword": "대항력 등",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "주택임대차보호법 제3조",
+          "exists": true
+        },
+        {
+          "citation": "2024다326398",
+          "exists": true
+        },
+        {
+          "citation": "2026다201978",
+          "exists": true
+        },
+        {
+          "citation": "민간임대주택에 관한 특별법 시행령 제5조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}
