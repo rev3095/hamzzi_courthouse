@@ -1,5 +1,6 @@
 "use client";
-// 마이페이지 (DEC-032·033): 프로필(Google 로그인) + 화면 설정 + 내 기록.
+// 마이페이지 (DEC-032·035): 프로필(Google 로그인) + 화면 설정 + 내 기록.
+// 로그인 상태와 관리자 모드(DEC-024)는 따로 보여 준다 — 둘 다 켜져 있으면 둘 다 표시.
 // 로그인은 Google 계정으로만 한다(DEC-035). NEXT_PUBLIC_GOOGLE_LOGIN이 꺼져 있으면 버튼은 "준비 중" 비활성.
 // 로그인 여부는 서버가 판단한 /me/quota 값만 본다. 이메일·이름은 이 화면에 싣지 않는다.
 // 설정은 이 브라우저에만 저장한다(lib/client/prefs.ts). 개인정보 입력을 받지 않는다.
@@ -36,15 +37,19 @@ export function MyPage() {
           </span>
           <div className="min-w-0">
             <h2 id="me-profile" className="text-ink text-lg font-bold">
-              {quota?.admin
-                ? "관리자 모드"
-                : signedIn
-                  ? "Google 계정으로 로그인했어요"
-                  : "로그인하지 않았어요"}
+              {signedIn ? "Google 계정으로 로그인했어요" : "로그인하지 않았어요"}
             </h2>
+            {quota?.admin && (
+              <span
+                data-testid="me-admin"
+                className="bg-honey text-ink mt-1 inline-block rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
+              >
+                관리자 모드
+              </span>
+            )}
             <p className="text-muted text-sm" data-testid="me-quota">
               {quota?.admin
-                ? "이 브라우저는 질문 횟수 제한 없이 쓸 수 있어요."
+                ? "관리자 모드라 이 브라우저는 질문 횟수 제한 없이 쓸 수 있어요."
                 : quota && quota.remaining !== null
                   ? `오늘 남은 질문 ${quota.remaining}/${quota.limit}`
                   : "로그인 없이 쓰고 있어요."}
