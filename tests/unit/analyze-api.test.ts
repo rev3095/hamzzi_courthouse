@@ -2,7 +2,7 @@
 // POST /inquiries/{id}/analyze (API.md 4.1 데모) — 저장소·분석 실행을 목으로 바꾸고 권한·상태·응답·SSE·로그를 본다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { type RequestLog, setLogSink } from "@/lib/api/log";
 import { AI_NOTICE } from "@/lib/api/respond";
 
@@ -10,6 +10,7 @@ const store = vi.hoisted(() => ({
   resolveOwner: vi.fn(),
   getOwnedInquiry: vi.fn(),
   getAnonQuestionsUsed: vi.fn(),
+  getUserQuestionsUsed: vi.fn(),
   assertAnonIpAvailable: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
@@ -71,6 +72,7 @@ beforeEach(() => {
   store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "anon-1" });
   store.getOwnedInquiry.mockResolvedValue(inquiry());
   store.getAnonQuestionsUsed.mockResolvedValue(0);
+  store.getUserQuestionsUsed.mockResolvedValue(0);
   store.assertAnonIpAvailable.mockResolvedValue(undefined);
   runner.analyzeInquiry.mockResolvedValue({ resultId: "r-1", result: RESULT });
 });
@@ -161,6 +163,15 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect((await call()).status).toBe(200);
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
     expect(store.assertAnonIpAvailable).not.toHaveBeenCalled();
+    expect(store.getUserQuestionsUsed).toHaveBeenCalledWith("u-1");
+  });
+
+  test("DEC-035 Google 로그인 사용자가 하루 한도를 다 쓰면 모델 전에 429", async () => {
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u-1" });
+    store.getOwnedInquiry.mockResolvedValue(inquiry({ user_id: "u-1", anon_session_id: null }));
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    expect((await call()).status).toBe(429);
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
   });
 
   test("F-007 AC1 마스킹 확인 전이면 422 PII_CONFIRMATION_REQUIRED", async () => {

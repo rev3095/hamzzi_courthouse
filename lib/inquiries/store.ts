@@ -32,7 +32,7 @@ export type { Owner } from "./policy";
 
 /**
  * 요청자. 로그인 사용자 우선, 아니면 익명 세션. create면 익명 세션을 새로 만든다.
- * 로그인 사용자에게는 이 브라우저의 기존 익명 세션(있으면)을 붙여 로그인 전 질문도 계속 보게 한다 — 새로 만들지는 않는다 (DEC-033)
+ * 로그인 사용자에게는 이 브라우저의 기존 익명 세션(있으면)을 붙여 로그인 전 질문도 계속 보게 한다 — 새로 만들지는 않는다 (DEC-035)
  */
 export async function resolveOwner(
   scope: RequestScope,
@@ -75,7 +75,7 @@ export async function getAnonQuestionsUsed(anonSessionId: string): Promise<numbe
 }
 
 /**
- * 로그인 사용자가 오늘(한국 시간) 쓴 질문 수 (DEC-033) — 오늘 저장된 분석 결과 수. 예시 질문 재생(model "replay")은 세지 않는다.
+ * 로그인 사용자가 오늘(한국 시간) 쓴 질문 수 (DEC-035) — 오늘 저장된 분석 결과 수. 예시 질문 재생(model "replay")은 세지 않는다.
  * 모델 호출 전 사전 검사용이라 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로 받는다)
  */
 export async function getUserQuestionsUsed(userId: string): Promise<number> {

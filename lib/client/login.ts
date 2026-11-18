@@ -1,5 +1,5 @@
 "use client";
-// Google 로그인·로그아웃 (DEC-033). 로그인 방법은 Google 하나뿐이다 — 다른 공급자는 화면·서버 어디에도 두지 않는다.
+// Google 로그인·로그아웃 (DEC-035). 로그인 방법은 Google 하나뿐이다 — 다른 공급자는 화면·서버 어디에도 두지 않는다.
 // NEXT_PUBLIC_GOOGLE_LOGIN=1일 때만 버튼이 켜진다(Supabase에 Google 공급자를 켜기 전에 배포해도 깨지지 않게).
 // 돌아갈 주소에는 현재 경로만 담는다 — 검색어·질문은 주소에 두지 않는다.
 import { safeNextPath } from "@/lib/auth/next-path";

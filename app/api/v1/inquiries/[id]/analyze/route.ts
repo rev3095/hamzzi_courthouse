@@ -48,7 +48,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
     assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
     await assertAnonIpAvailable(req.headers);
   } else if (countsUserQuota(owner) && findExample(inquiry.masked_text) === null) {
-    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-033) — 모델 호출 전에 오늘 분석 수를 본다
+    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035) — 모델 호출 전에 오늘 분석 수를 본다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
 

@@ -1,6 +1,6 @@
 "use client";
 // 마이페이지 (DEC-032·033): 프로필(Google 로그인) + 화면 설정 + 내 기록.
-// 로그인은 Google 계정으로만 한다(DEC-033). NEXT_PUBLIC_GOOGLE_LOGIN이 꺼져 있으면 버튼은 "준비 중" 비활성.
+// 로그인은 Google 계정으로만 한다(DEC-035). NEXT_PUBLIC_GOOGLE_LOGIN이 꺼져 있으면 버튼은 "준비 중" 비활성.
 // 로그인 여부는 서버가 판단한 /me/quota 값만 본다. 이메일·이름은 이 화면에 싣지 않는다.
 // 설정은 이 브라우저에만 저장한다(lib/client/prefs.ts). 개인정보 입력을 받지 않는다.
 import Link from "next/link";

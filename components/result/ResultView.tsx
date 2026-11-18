@@ -318,7 +318,7 @@ export function Problem({
   onConfirmPii: () => void;
 }) {
   // INTERNAL_ERROR 등은 고정 문구만 (예외 내용 표시 금지)
-  // 로그인 사용자의 하루 한도(DEC-033)는 네트워크 상한과 다른 안내
+  // 로그인 사용자의 하루 한도(DEC-035)는 네트워크 상한과 다른 안내
   const text = (isUserDailyLimit(error) ? limitCopy(true) : PROBLEM_TEXT[error.code]) ?? {
     title: "일시적인 오류가 발생했어요",
     body: "잠시 후 다시 시도해 주세요.",

@@ -1,6 +1,6 @@
 "use client";
 // 하루 질문 한도 안내 (S-06 자리). 비로그인 하루 한도(ANON_QUESTION_LIMIT, DEC-031 임시 5회)를 다 쓰면 서버가 LOGIN_REQUIRED로 막는다 (DEC-005, DEC-010).
-// Google 로그인(DEC-033)이 켜져 있으면 비로그인에게 Google 로그인 버튼을 보여 준다. 로그인 사용자는 하루 USER_QUESTION_LIMIT회.
+// Google 로그인(DEC-035)이 켜져 있으면 비로그인에게 Google 로그인 버튼을 보여 준다. 로그인 사용자는 하루 USER_QUESTION_LIMIT회.
 import { useState } from "react";
 import { isSignedIn } from "@/lib/client/api";
 import { GOOGLE_LOGIN_ENABLED, signInWithGoogle } from "@/lib/client/login";
@@ -13,7 +13,7 @@ const N = ANON_QUESTION_LIMIT;
 const U = USER_QUESTION_LIMIT;
 export const DEMO_LIMIT_TITLE = `오늘 질문 ${N}번을 모두 썼어요`;
 export const DEMO_LIMIT_TEXT = `데모에서는 하루에 질문을 ${N}번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 ${N}번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요. 지금까지 받은 결과는 이 창에서 뒤로 가기로 다시 볼 수 있어요.`;
-/** 비로그인에게 Google 로그인으로 늘어나는 횟수를 알린다 (DEC-033) */
+/** 비로그인에게 Google 로그인으로 늘어나는 횟수를 알린다 (DEC-035) */
 export const LOGIN_MORE_TEXT = `Google로 로그인하면 하루에 ${U}번까지 질문할 수 있어요.`;
 export const USER_LIMIT_TITLE = `오늘 질문 ${U}번을 모두 썼어요`;
 export const USER_LIMIT_TEXT = `로그인하면 하루에 질문을 ${U}번까지 할 수 있어요(이어 묻기 포함). 내일 0시(한국 시간)에 다시 ${U}번이 생겨요. 예시 질문은 횟수와 상관없이 언제든 볼 수 있어요.`;
@@ -44,7 +44,7 @@ export function LimitNotice({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Google 로그인 버튼 (DEC-033). 로그인 방법은 이것 하나뿐이다. 꺼져 있으면(NEXT_PUBLIC_GOOGLE_LOGIN) "준비 중" 비활성 */
+/** Google 로그인 버튼 (DEC-035). 로그인 방법은 이것 하나뿐이다. 꺼져 있으면(NEXT_PUBLIC_GOOGLE_LOGIN) "준비 중" 비활성 */
 export function GoogleLoginButton({ next }: { next?: string }) {
   const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
   if (!GOOGLE_LOGIN_ENABLED) {

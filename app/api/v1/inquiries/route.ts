@@ -36,7 +36,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     if (findExample(scan.maskedText) !== null) await assertRateLimit(EXAMPLE_RATE, req.headers);
     else assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
   } else if (countsUserQuota(owner) && findExample(scan.maskedText) === null) {
-    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-033). 예시 질문은 세지 않는다
+    // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035). 예시 질문은 세지 않는다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
 

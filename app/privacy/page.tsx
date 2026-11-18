@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌�
 
 export default function PrivacyPage() {
   const sendsToAi = aiMode() !== "free";
-  // Google 로그인(DEC-033)은 NEXT_PUBLIC_GOOGLE_LOGIN=1일 때만 열린다 — 켜져 있을 때만 고지한다
+  // Google 로그인(DEC-035)은 NEXT_PUBLIC_GOOGLE_LOGIN=1일 때만 열린다 — 켜져 있을 때만 고지한다
   const googleLogin = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1";
   return (
     <PolicyPage current="/privacy" title="개인정보처리방침">

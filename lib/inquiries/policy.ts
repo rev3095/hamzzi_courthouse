@@ -68,13 +68,13 @@ export function questionsUsedToday(
 export const ANON_IP_DAILY_LIMIT = 10;
 export const ANON_IP_WINDOW = "24 hours";
 export const ANON_IP_WINDOW_MS = 24 * 60 * 60 * 1000;
-/** LOGIN_REQUIRED details.loginProviders — Google 로그인만 연다 (DEC-005, DEC-033) */
+/** LOGIN_REQUIRED details.loginProviders — Google 로그인만 연다 (DEC-005, DEC-035) */
 export const LOGIN_PROVIDERS = ["google"];
 
-// --- 로그인 사용자 질문 횟수 (DEC-033) ---------------------------------------------------------
+// --- 로그인 사용자 질문 횟수 (DEC-035) ---------------------------------------------------------
 /**
  * Google 로그인 사용자 하루 질문 횟수 (이어 묻기 포함, 예시 질문 제외). 한국 시간 0시에 다시 센다.
- * 10회 — 2026-11-18 사용자 결정 (DEC-033). 화면 문구도 이 값을 쓴다
+ * 10회 — 2026-11-18 사용자 결정 (DEC-035). 화면 문구도 이 값을 쓴다
  */
 export const USER_QUESTION_LIMIT = 10;
 
@@ -116,7 +116,7 @@ export type Quota = {
   admin: boolean;
 };
 
-/** GET /me/quota. 오늘(한국 시간) 쓴 횟수 — 비로그인 ANON_QUESTION_LIMIT, Google 로그인 USER_QUESTION_LIMIT (DEC-033) */
+/** GET /me/quota. 오늘(한국 시간) 쓴 횟수 — 비로그인 ANON_QUESTION_LIMIT, Google 로그인 USER_QUESTION_LIMIT (DEC-035) */
 export function quotaView(owner: Owner | null, questionsUsed: number): Quota {
   if (owner?.admin) {
     return {
@@ -170,7 +170,7 @@ export function assertSensitiveConsent(sensitive: SensitiveCategory[], consent: 
 
 /**
  * admin: 관리자 모드(DEC-024, 비밀번호 쿠키) — 하루 질문 횟수·IP 상한을 받지 않는다.
- * 로그인 사용자의 anonSessionId: 같은 브라우저에서 로그인 전에 한 질문 — 로그인 뒤에도 계속 볼 수 있게 (DEC-033)
+ * 로그인 사용자의 anonSessionId: 같은 브라우저에서 로그인 전에 한 질문 — 로그인 뒤에도 계속 볼 수 있게 (DEC-035)
  */
 export type Owner =
   | { kind: "user"; userId: string; anonSessionId?: string | null; admin?: boolean }
@@ -180,7 +180,7 @@ export type Owner =
 export const countsAnonQuota = (owner: Owner): owner is { kind: "anon"; anonSessionId: string } =>
   owner.kind === "anon" && owner.admin !== true;
 
-/** 로그인 사용자 하루 횟수 제한을 받는 소유자인지 (관리자 모드는 제외, DEC-033) */
+/** 로그인 사용자 하루 횟수 제한을 받는 소유자인지 (관리자 모드는 제외, DEC-035) */
 export const countsUserQuota = (owner: Owner): owner is { kind: "user"; userId: string } =>
   owner.kind === "user" && owner.admin !== true;
 

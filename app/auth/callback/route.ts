@@ -1,4 +1,4 @@
-// GET /auth/callback — Google 로그인에서 돌아오는 주소 (DEC-033). Supabase가 준 일회용 코드를 세션 쿠키로 바꾸고
+// GET /auth/callback — Google 로그인에서 돌아오는 주소 (DEC-035). Supabase가 준 일회용 코드를 세션 쿠키로 바꾸고
 // 원래 보던 화면(사이트 안 경로만)으로 보낸다. 코드·토큰·이메일은 로그에 남기지 않는다(F-007).
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/next-path";
