@@ -36,6 +36,20 @@
 | `life-tracks.ts` | 새 섹션 타임라인 `LIFE_TRACKS`: 가족·이혼(`family`)·상속(`inheritance`)·소비자·환불(`consumer`)·명예훼손·온라인(`defamation`). 공식 서식 작성기와 잇지 않는다(`document` 없음)  |
 
 - `procedurePlan`은 새 섹션이면 `kind: "life_timeline"`을 낸다(기존 섹션은 `timeline`). 화면은 `hasTimeline(plan)`으로 둘 다 타임라인으로 그린다. 종류를 나눈 까닭: 문서 초안(lib/documents)이 기존 섹션 키(`TrackKey`)만 다루므로 그쪽 타입을 바꾸지 않기 위해서.
-- `classifyCase(r, question, category?)`: 규칙이 먼저다. 카테고리는 규칙 결과가 `other`·`criminal`이면 그 카테고리 타임라인으로, `money`면 생활 분쟁 섹션을 골랐을 때만 바꾼다. `accused`·`defendant`는 바꾸지 않는다.
+- `classifyCase(r, question, category?)`: 질문 해석 라벨(`r.section`, DEC-033)이 있으면 그 섹션, 없으면 규칙이다. 카테고리는 라벨이 없고 규칙 결과가 `other`·`crime_report`이면 그 카테고리 타임라인으로, `money`면 생활 분쟁 섹션을 골랐을 때만 바꾼다. 규칙이 요구를 받는 쪽(`respond_criminal`·`respond_civil`·`defendant`·`debt_relief`·`admin_appeal`)으로 본 질문은 카테고리로 바꾸지 않고, 라벨도 받는 쪽 라벨일 때만 따른다.
 - 자유 질문 규칙 낱말: 이혼·양육비·재산분할 → `family`, 상속·유산·유류분·한정승인 → `inheritance`, 명예훼손·모욕·악플·허위사실 → `defamation`(셋은 해고·임금보다 먼저), 환불·청약철회·반품·쇼핑몰 → `consumer`(사기 다음).
 - 테스트: `categories.test.ts`(분류·카테고리 보조), `policy.test.ts`(새 섹션·카테고리 문구도 숫자·단정·승패 표현 검사).
+
+## 섹션 라벨 · 추가 타임라인 (DEC-033)
+
+| 파일 | 책임 |
+|---|---|
+| `sections.ts` | 절차 섹션 라벨 목록 `SECTION_LABELS`(모든 타임라인 키 + `none`), 모델에 보여 줄 한 줄 설명 `SECTION_GUIDE`, 목록 밖 값을 버리는 `parseSectionLabel` |
+| `more-tracks.ts` | 추가 타임라인 16개 `MORE_TRACKS`(범죄 피해 고소·폭행·스토킹·성범죄·가정폭력·학교폭력·보이스피싱·직장 내 괴롭힘·산재·의료사고·개인정보·상가 임대차·행정처분 불복·채무조정·소장이나 지급명령을 받았을 때·고소나 신고를 당했을 때)와 공식 창구 `MORE_OFFICIAL`. `LIFE_TRACKS`에 합쳐진다 |
+
+- 라벨은 라이트 답변의 질문 해석 호출(lib/ai/lite.ts)이 고르고 분석 결과 `section`에 저장된다. 모델은 **어느 섹션인지만** 고른다 — 단계 문구·난이도·링크는 전부 이 폴더의 고정 문안이다.
+- 새 타임라인을 더하면 `SECTION_GUIDE`에 설명을 꼭 더한다(`policy.test.ts`가 타임라인 키와 라벨 목록이 같은지 본다).
+- 명예훼손·모욕: 온라인 낱말(`ONLINE_WORD`)이 있으면 `defamation`, 없으면 직접 들은 말 `insult`.
+- 찾은 법령 이름으로 섹션을 정하는 조건(노동·교통사고·소비자·가족·동물)은 질문 문장이 있으면 그 분야 낱말이 함께 있을 때만 쓴다. 질문 문장이 없을 때(다른 기기에서 결과를 열 때)는 법령 이름으로 정한다.
+- 법률 검토 전 참고용이다. 문구를 고치면 숫자·단정·승패 표현 검사(`policy.test.ts`)가 그대로 걸린다.
+

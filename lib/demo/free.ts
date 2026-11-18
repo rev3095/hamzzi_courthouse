@@ -62,13 +62,21 @@ export type FreeSearch = {
 /** LLM 없이 법제처만으로 근거를 찾는다 (무료). 무료 모드와 라이트 답변(DEC-020)이 같이 쓴다 */
 export async function freeSearch(
   maskedText: string,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; caseHint?: string | null } = {},
+  deps: {
+    lawSource?: LawSource;
+    onStep?: (e: StepEvent) => void;
+    caseHint?: string | null;
+    /** 질문 해석 호출(DEC-033)이 법률 용어로 바꿔 쓴 검색 문장. 있으면 질문 문장 대신 쓴다 */
+    lawQuery?: string | null;
+    /** 질문 해석 호출이 뽑은 판례 검색어 */
+    caseQueries?: string[];
+  } = {},
 ): Promise<FreeSearch> {
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   deps.onStep?.({ stage: "search", message: FREE_STEP_MESSAGES.search });
 
   // ① 질문 문장으로 지능형 법령검색 (LLM 없이 자연어 → 조문)
-  const sentence = searchSentence(maskedText);
+  const sentence = (deps.lawQuery && searchSentence(deps.lawQuery)) || searchSentence(maskedText);
   let articlesFailed = false;
   const articles = sentence
     ? await source.searchArticles(sentence, ARTICLES).catch(() => {
@@ -79,7 +87,8 @@ export async function freeSearch(
 
   // ② 찾은 조문 제목으로 판례 검색 → 중복 제거 → 상세
   // 홈 카테고리(DEC-028)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다
-  const queries = withCaseHint(caseQueriesFrom(articles), deps.caseHint);
+  const understood = deps.caseQueries ?? [];
+  const queries = withCaseHint(caseQueriesFrom(articles), deps.caseHint, 3, understood);
   const caseResults = await Promise.allSettled(
     queries.map((q) => source.searchCases(q, CASES_PER_QUERY)),
   );
@@ -90,7 +99,7 @@ export async function freeSearch(
   const hits: CaseHit[] = [];
   const lists = caseResults.map((r) => (r.status === "fulfilled" ? r.value : []));
   // 카테고리 검색어가 있으면 검색어마다 번갈아 고른다 — 한 검색어 결과가 상세 조회 자리를 다 차지하지 않게
-  const ordered = deps.caseHint ? interleave(lists) : lists.flat();
+  const ordered = deps.caseHint || understood.length > 0 ? interleave(lists) : lists.flat();
   for (const h of ordered) {
     if (seen.has(h.id)) continue;
     seen.add(h.id);
@@ -126,7 +135,17 @@ export async function freeSearch(
   });
 
   const searches = [
-    ...(sentence ? [{ keyword: "질문 문장 (지능형 법령검색)", total: articles.length }] : []),
+    ...(sentence
+      ? [
+          {
+            keyword:
+              deps.lawQuery && sentence === searchSentence(deps.lawQuery)
+                ? `${sentence} (질문을 법률 용어로 바꾼 검색)`
+                : "질문 문장 (지능형 법령검색)",
+            total: articles.length,
+          },
+        ]
+      : []),
     ...queries.map((q, i) => {
       const r = caseResults[i];
       return { keyword: q, total: r.status === "fulfilled" ? r.value.length : 0 };

@@ -17,12 +17,15 @@ import {
   type ModelClient,
   type Usage,
 } from "./client";
-import { LITE_ANSWER_TOKENS } from "./cost";
+import { LITE_ANSWER_TOKENS, UNDERSTAND_TOKENS } from "./cost";
 import { userMessage } from "./message";
 import { ANSWER_MODELS, answerModel, type AnswerModelId } from "./models";
 import {
   AnswerZ,
   STEP_MESSAGES,
+  UNDERSTAND_SCHEMA,
+  UnderstandZ,
+  screenUnderstanding,
   answerSchema,
   assembleDraft,
   citableKeys,
@@ -35,9 +38,9 @@ import {
   type FollowupTurn,
   type StepEvent,
 } from "./policy";
-import { LITE_ANSWER_SYSTEM } from "./prompts";
+import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-18";
+export const LITE_PROMPT_VERSION = "lite-2026-11-18-understand";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -49,6 +52,9 @@ const LITE_CASE_CHARS = 800;
 export const LITE_MAX_ARTICLES = 6;
 const LITE_MAX_CASES = 3;
 const ANSWER_TIMEOUT_MS = 25_000;
+const UNDERSTAND_TIMEOUT_MS = 8_000;
+/** 질문 해석은 답변 모델과 상관없이 가장 싼 모델로 (라벨과 검색어만 뽑는다) */
+export const UNDERSTAND_MODEL = "claude-haiku-5-5";
 
 export type LiteAnalysisOutput = {
   draft: DemoDraft;
@@ -102,17 +108,52 @@ export async function runLiteAnalysis(
     : answerModel();
   const context = input.context ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
+  // 질문 해석과 답변이 질문 1건 상한 하나를 함께 쓴다 (해석이 쓴 만큼 답변 몫이 줄어든다)
+  const model = withCostCap(
+    deps.model ?? createModelClient(),
+    deps.costCapUsd ?? answer.liteCapUsd,
+  );
+  let usage: Usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
+
+  // ⓪ 질문 해석 (DEC-033): 섹션 라벨 + 법률 용어 검색어. 실패하면 질문 문장으로 찾는 기존 방식 그대로 간다
+  let understood: ReturnType<typeof screenUnderstanding> | null = null;
+  deps.onStep?.({ stage: "intent", message: STEP_MESSAGES.understand });
+  try {
+    const res = await callModel(
+      model,
+      "understand",
+      {
+        model: UNDERSTAND_MODEL,
+        max_tokens: UNDERSTAND_TOKENS.max,
+        thinking: ANSWER_MODELS[UNDERSTAND_MODEL].thinking,
+        system: [{ type: "text", text: UNDERSTAND_SYSTEM }],
+        output_config: { format: { type: "json_schema", schema: UNDERSTAND_SCHEMA } },
+        messages: [{ role: "user", content: userMessage(input.maskedText, context) }],
+      },
+      UNDERSTAND_TIMEOUT_MS,
+      { minOutputTokens: UNDERSTAND_TOKENS.min },
+    );
+    usage = addUsage(usage, res);
+    const parsed = UnderstandZ.safeParse(JSON.parse(textOf(res)));
+    if (parsed.success) understood = screenUnderstanding(parsed.data);
+  } catch (e) {
+    // 상한·시간 초과·형식 오류·모델 오류 모두 해석 없이 계속한다 (오류로 끝내지 않는다)
+    if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
+      throw e;
+  }
+
   const found = await freeSearch(input.maskedText, {
     lawSource: source,
     onStep: deps.onStep,
     caseHint: deps.caseHint,
+    lawQuery: understood?.lawQuery,
+    caseQueries: understood?.caseQueries,
   });
 
   const evidence = new EvidenceSet();
   for (const a of found.articles) evidence.addArticle(a);
   for (const c of found.cases) evidence.addCase(c);
 
-  let usage: Usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
   let points: DraftPoint[] = [];
   let dropped: DropReason[] = [];
   let costCapped = false;
@@ -121,10 +162,6 @@ export async function runLiteAnalysis(
   let keys = liteEvidenceKeys(evidence);
   if (keys.length > 0) {
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
-    const model = withCostCap(
-      deps.model ?? createModelClient(),
-      deps.costCapUsd ?? answer.liteCapUsd,
-    );
     // 예산을 넘으면 마지막 근거를 하나 빼고 다시 잰다 (토큰 세기는 무과금, 생성 호출은 하지 않음)
     for (;;) {
       try {
@@ -178,8 +215,8 @@ export async function runLiteAnalysis(
         throw e;
       }
     }
-    spent = model.spentUsd();
   }
+  spent = model.spentUsd();
 
   const draft = assembleDraft({
     maskedText: input.maskedText,
@@ -194,6 +231,7 @@ export async function runLiteAnalysis(
     evidence,
     searches: found.searches,
     trace: [],
+    section: understood?.section,
   });
   return {
     draft,

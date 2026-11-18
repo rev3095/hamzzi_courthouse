@@ -3,9 +3,12 @@
 // 정보통신 등)이고, 판례 사건 종류(가사·민사·형사)는 검색 범위 설명에만 쓴다 (docs/research/06).
 // steps.ts(기존 섹션)와 규칙이 같다: LLM 없음, 기간·비용 숫자 없음(절대 규칙 3), 단정·승패 표현 없음(절대 규칙 2),
 // 공식 기관 링크만. 문서 작성(document)은 달지 않는다 — 공식 서식 작성기(lib/documents)는 기존 섹션만 다룬다.
+import { MORE_TRACKS, type MoreTrackKey } from "./more-tracks";
 import { OFFICIAL, type OfficialLink, type ProcedureStep, type Track } from "./steps";
 
-export type LifeTrackKey = "family" | "inheritance" | "consumer" | "defamation";
+type BaseLifeTrackKey = "family" | "inheritance" | "consumer" | "defamation" | "insult";
+/** 생활 분쟁 섹션(DEC-028) + 추가 타임라인(DEC-033, more-tracks.ts) */
+export type LifeTrackKey = BaseLifeTrackKey | MoreTrackKey;
 
 export type LifeTrack = Omit<Track, "key"> & { key: LifeTrackKey };
 
@@ -37,7 +40,7 @@ const SUIT: ProcedureStep = {
   question: "소송을 하면 소장에는 무엇을 적고 어떤 절차를 거치나요?",
 };
 
-export const LIFE_TRACKS: Record<LifeTrackKey, LifeTrack> = {
+const BASE_LIFE_TRACKS: Record<BaseLifeTrackKey, LifeTrack> = {
   family: {
     key: "family",
     section: "가족·이혼",
@@ -332,7 +335,73 @@ export const LIFE_TRACKS: Record<LifeTrackKey, LifeTrack> = {
       },
     ],
   },
+
+  // 대면(오프라인) 욕설·모욕·명예훼손 (DEC-033). 온라인 섹션(defamation)과 증거·삭제 요청 단계가 달라 따로 둔다
+  insult: {
+    key: "insult",
+    section: "명예훼손·모욕",
+    title: "직접 들은 욕설·모욕·명예훼손 피해",
+    recommended: "evidence",
+    reason:
+      "직접 들은 말이나 행동으로 피해를 본 상황으로 보여서, 기억이 흐려지기 전에 증거를 정리하는 단계부터 안내해요.",
+    note: "상대방을 형사 고소하는 절차와 손해배상을 청구하는 민사 절차는 따로 진행돼요.",
+    steps: [
+      {
+        key: "evidence",
+        label: "증거 정리",
+        difficulty: "self",
+        prepare: [
+          "언제·어디서·누가 있는 자리에서 어떤 말을 들었는지 적은 메모",
+          "내가 참여한 대화의 녹음이나 영상",
+          "그 자리에 있던 사람(목격자)의 연락처",
+          "이후 주고받은 문자·메신저 내용",
+        ],
+        cautions: [
+          "내가 참여하지 않은 다른 사람들끼리의 대화를 몰래 녹음하면 다른 법적 문제가 생길 수 있어요.",
+          "같이 맞서 욕설을 하면 상대방도 고소할 수 있으니 주의하세요.",
+        ],
+        links: [OFFICIAL.police, OFFICIAL.klac],
+        question: "직접 들은 욕설이나 모욕은 어떤 증거를 남겨 두어야 하나요?",
+      },
+      {
+        key: "report",
+        label: "고소",
+        difficulty: "depends",
+        prepare: ["고소장", "증거 자료", "상대방을 알 수 있는 정보"],
+        cautions: [
+          "명예훼손과 모욕은 성립 요건과 고소 요건이 서로 달라요. 모욕은 피해자가 고소해야 수사가 진행되고, 고소할 수 있는 기간이 정해져 있어요.",
+          "여러 사람이 듣거나 알 수 있는 상황이었는지가 쟁점이 될 수 있어요. 어떤 죄에 해당하는지는 수사기관과 법원이 판단해요.",
+        ],
+        links: [OFFICIAL.police],
+        shortcut: OFFICIAL.police,
+        question: "직접 들은 욕설이나 모욕은 어떻게 고소하나요?",
+      },
+      {
+        key: "investigation",
+        label: "수사",
+        difficulty: "depends",
+        prepare: ["수사기관의 출석·자료 요청에 낼 자료", "목격자 진술에 도움이 될 자료"],
+        cautions: ["진행 상황은 담당 수사관에게 확인하세요."],
+        links: [OFFICIAL.police],
+        question: "고소한 뒤 수사는 어떻게 진행되나요?",
+      },
+      {
+        key: "civil",
+        label: "손해배상 청구",
+        difficulty: "expert",
+        prepare: ["소장 (청구취지·청구원인)", "증거와 피해 자료"],
+        cautions: [
+          "형사 절차와 따로 정신적 손해(위자료) 배상을 민사로 청구할 수 있어요.",
+          "쟁점이 복잡해 전문가 상담을 권해요.",
+        ],
+        links: [OFFICIAL.ecfs, OFFICIAL.klac],
+        question: "모욕·명예훼손 피해 배상은 어떻게 청구하나요?",
+      },
+    ],
+  },
 };
+
+export const LIFE_TRACKS: Record<LifeTrackKey, LifeTrack> = { ...BASE_LIFE_TRACKS, ...MORE_TRACKS };
 
 /** 생활 분쟁 타임라인의 모든 단계 (검사용) */
 export const LIFE_STEPS: ProcedureStep[] = Object.values(LIFE_TRACKS).flatMap((t) => t.steps);

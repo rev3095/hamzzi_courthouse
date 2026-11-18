@@ -8,6 +8,7 @@ import { z } from "zod";
 import { AI_NOTICE } from "@/lib/api/respond";
 import { articlesIn, caseNumbersIn, stripCitations } from "@/lib/citations/patterns";
 import { scanInput } from "@/lib/pii";
+import { SECTION_LABELS, parseSectionLabel, type SectionLabel } from "@/lib/procedure/sections";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 
@@ -52,6 +53,7 @@ export type StepEvent = { stage: Stage; message: string; added?: string[] };
 
 export const STEP_MESSAGES = {
   intent: "질문 의도를 분석하고 있어요",
+  understand: "질문을 읽고 어떤 문제인지 살펴보고 있어요",
   search: "관련 법령과 판례를 찾고 있어요",
   agent: "근거를 더 찾아보고 있어요",
   answer: "찾은 근거로 답변을 쓰고 있어요",
@@ -117,6 +119,77 @@ export const AnswerZ = z.object({
   points: z.array(z.object({ text: z.string(), source: z.string(), quote: z.string() })),
 });
 export type DraftPoint = z.infer<typeof AnswerZ>["points"][number];
+
+/**
+ * 질문 해석 (DEC-033): 검색 전에 Haiku 1회로 절차 섹션 라벨과 법률 용어 검색어를 뽑는다.
+ * 라벨은 고정 목록에서만 고르고(목록 밖 값은 null), 검색어는 개인정보 검사를 거친 것만 쓴다.
+ */
+export const UnderstandZ = z.object({
+  section: z.unknown().transform((v) => parseSectionLabel(v)),
+  lawQuery: z.string(),
+  caseQueries: z.array(z.string()),
+});
+export type Understanding = z.infer<typeof UnderstandZ>;
+
+/** 고정 객체라 요청마다 같다 */
+export const UNDERSTAND_SCHEMA = {
+  type: "object",
+  properties: {
+    section: {
+      type: "string",
+      enum: SECTION_LABELS,
+      description: "질문에 적힌 사실로 고른 절차 섹션 라벨 하나",
+    },
+    lawQuery: {
+      type: "string",
+      description:
+        "법령 검색에 넣을 한 문장. 질문의 사실과 알고 싶은 것을 법률 용어로 바꿔 쓴다 (예: 여러 사람 앞에서 욕설을 들은 모욕 피해의 고소 절차). 개인정보 없이",
+    },
+    caseQueries: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "판례 검색어. 판결문에 쓰이는 법률 용어 조합, 각각 낱말 두세 개 (예: 모욕죄 공연성)",
+    },
+  },
+  required: ["section", "lawQuery", "caseQueries"],
+  additionalProperties: false,
+} as const;
+
+const QUERY_MAX_CHARS = 120;
+const CASE_QUERY_MAX_CHARS = 30;
+
+/**
+ * 모델이 만든 검색어를 그대로 밖(법제처)으로 보내지 않는다: 가림 표시를 지우고, 개인정보 패턴이 있거나
+ * 너무 짧거나 길면 버린다. 버리면 호출 쪽이 질문 문장·조문 제목으로 찾는 기존 방식으로 돌아간다.
+ */
+export function screenUnderstanding(u: Understanding): {
+  section: SectionLabel | null;
+  lawQuery: string | null;
+  caseQueries: string[];
+} {
+  const clean = (s: string, max: number) => {
+    const t = s
+      .normalize("NFKC")
+      .replace(/\[[^\]]*\]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (t.length < 2 || t.length > max) return null;
+    return scanInput(t).findings.length > 0 ? null : t;
+  };
+  const lawQuery = clean(u.lawQuery, QUERY_MAX_CHARS);
+  const caseQueries: string[] = [];
+  for (const q of u.caseQueries) {
+    const t = clean(q, CASE_QUERY_MAX_CHARS);
+    if (t && !caseQueries.includes(t)) caseQueries.push(t);
+    if (caseQueries.length >= 2) break;
+  }
+  return {
+    section: u.section,
+    lawQuery: lawQuery && lawQuery.length >= 5 ? lawQuery : null,
+    caseQueries,
+  };
+}
 
 /** 출처는 이번 요청의 근거 키 중 하나만 고를 수 있다 (enum). 키가 요청마다 달라 이 스키마는 캐시하지 않는다 */
 export function answerSchema(keys: string[]) {
@@ -350,6 +423,11 @@ export type DemoDraft = {
   outcome: "grounded" | "no_result_in_scope";
   aiNotice: typeof AI_NOTICE;
   intent: { area: string; goal: string; laws: string[]; lawKeywords: string[] };
+  /**
+   * 절차 섹션 라벨 (DEC-033). 질문 해석 호출이 고정 목록에서 고른 값 — 타임라인 선택에만 쓴다.
+   * 없음(생략) = 모델을 부르지 않았거나 라벨을 못 받음 → 규칙(lib/procedure classifyCase)으로 정한다
+   */
+  section?: SectionLabel;
   answer: { points: DraftPoint[] };
   articles: {
     id: string;
@@ -409,6 +487,7 @@ export function assembleDraft(input: {
   evidence: EvidenceSet;
   searches: SearchRecord[];
   trace: TraceRecord[];
+  section?: SectionLabel | null;
 }): DemoDraft {
   const used = new Set(input.points.map((p) => p.source));
   const articles: DemoDraft["articles"] = [];
@@ -443,6 +522,7 @@ export function assembleDraft(input: {
     outcome: input.points.length > 0 ? "grounded" : "no_result_in_scope",
     aiNotice: AI_NOTICE,
     intent: screenIntent(input.intent, input.maskedText, input.evidence),
+    ...(input.section ? { section: input.section } : {}),
     answer: { points: input.points },
     articles,
     cases,

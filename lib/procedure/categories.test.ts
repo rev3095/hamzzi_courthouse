@@ -60,8 +60,8 @@ describe("DEC-028 홈 카테고리 버튼", () => {
   });
 
   test("새 섹션도 고소를 당한 쪽·서류를 받은 쪽은 피해자 타임라인을 보이지 않는다", () => {
-    expect(classifyCase(bare(["형법"]), "명예훼손으로 고소당했어요")).toBe("accused");
-    expect(classifyCase(bare(["민법"]), "양육비 청구 소장을 받았어요")).toBe("defendant");
+    expect(classifyCase(bare(["형법"]), "명예훼손으로 고소당했어요")).toBe("respond_criminal");
+    expect(classifyCase(bare(["민법"]), "양육비 청구 소장을 받았어요")).toBe("respond_civil");
   });
 
   test("중고거래 사기는 소비자 섹션이 아니라 사기 타임라인", () => {
@@ -77,8 +77,8 @@ describe("DEC-028 홈 카테고리 버튼", () => {
     // 규칙이 정한 섹션이 있으면 카테고리보다 규칙이 먼저
     expect(classifyCase(bare(["근로기준법"]), "월급을 못 받았어요", "consumer")).toBe("wage");
     // 수사를 받는 쪽·서류를 받은 쪽은 카테고리를 골라도 범위 밖 안내
-    expect(classifyCase(bare(["형법"]), "고소당했어요", "defamation")).toBe("accused");
-    expect(classifyCase(bare(["민법"]), "소장을 받았어요", "loan")).toBe("defendant");
+    expect(classifyCase(bare(["형법"]), "고소당했어요", "defamation")).toBe("respond_criminal");
+    expect(classifyCase(bare(["민법"]), "소장을 받았어요", "loan")).toBe("respond_civil");
     // 일반 금전 절차는 생활 분쟁 섹션을 골랐을 때만 바꾼다
     expect(classifyCase(bare(["상가건물임대차보호법"]), "상가 보증금을 못 받았어요", "lease")).toBe(
       "money",

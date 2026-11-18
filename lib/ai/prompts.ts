@@ -1,6 +1,7 @@
 // 데모 분석 프롬프트와 도구 정의 (PRD 8.1·8.2·8.3). 프롬프트 캐시가 맞도록 요청마다 바뀌는 값을 넣지 않는다.
 // 사용자 질문은 항상 마스킹본이다. 프롬프트 버전을 바꾸면 PROMPT_VERSION을 올린다 (analysis_results.prompt_version).
 import type Anthropic from "@anthropic-ai/sdk";
+import { SECTION_GUIDE_TEXT } from "@/lib/procedure/sections";
 
 export const PROMPT_VERSION = "demo-2026-10-22-parity-2";
 
@@ -38,6 +39,18 @@ export const ANSWER_SYSTEM = `${COMMON}
 - 조문에 "다만", "제외한다", "그러하지 아니하다" 같은 단서·예외가 있으면 그 예외도 함께 적습니다. 예외를 빼고 일반화하지 않습니다.
 - 이전 대화가 주어지면 맥락으로만 참고합니다. 근거는 이번 목록만 씁니다.
 - 쉬운 말로, 존댓말로 씁니다.`;
+
+/** 질문 해석 (DEC-033): 검색 전에 섹션 라벨과 검색어만 뽑는다. 답변·판단·숫자는 쓰지 않는다 */
+export const UNDERSTAND_SYSTEM = `${COMMON}
+
+할 일: 질문을 읽고 세 가지만 뽑습니다. 답변은 쓰지 않습니다.
+(1) section: 사용자의 상황이 아래 절차 섹션 중 어디에 해당하는지 하나. 질문(이전 대화가 있으면 그 사연 포함)에 적힌 사실로만 고릅니다.
+- 사용자가 어느 쪽인지 봅니다. 고소·신고를 당했거나 수사를 받는 쪽이면 respond_criminal, 소장·지급명령 같은 서류를 받은 쪽이면 respond_civil입니다.
+- 온라인 글·메시지 때문인지 직접 들은 말 때문인지처럼 섹션을 가르는 사실이 질문에 없으면 추측하지 않습니다. 맞는 섹션이 없거나 알 수 없으면 none입니다.
+${SECTION_GUIDE_TEXT}
+(2) lawQuery: 법령 검색에 넣을 한 문장. 질문의 사실과 알고 싶은 것을 법률 용어로 바꿔 씁니다.
+(3) caseQueries: 판례 검색어 1~2개. 판결문에 실제로 쓰이는 법률 용어 조합이고 각각 낱말 두세 개입니다.
+- 검색어에 사람 이름·연락처·주소·날짜·금액 같은 개인 정보를 넣지 않습니다.`;
 
 /** 라이트 답변 (DEC-020, 질문 1건 $0.0015): 출력이 1,200토큰 안에 끝나도록. 규칙은 ANSWER_SYSTEM과 같다 */
 export const LITE_ANSWER_SYSTEM = `${COMMON}
