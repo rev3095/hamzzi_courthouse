@@ -30,6 +30,7 @@ import {
   rememberSearch,
   searchErrorText,
 } from "./parts";
+import { KindTabs } from "./KindTabs";
 import { addPin, clearPins, removePin, usePins, useRecent } from "./recent";
 
 type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
@@ -39,15 +40,6 @@ const KINDS: { kind: Kind; label: string }[] = [
   ...DECISION_TABS.map((d) => ({ kind: d.domain as Kind, label: d.label })),
   { kind: "ordinances", label: "자치법규" },
   { kind: "admin_rules", label: "행정규칙" },
-];
-const PRIMARY_KINDS: Kind[] = [
-  "cases",
-  "interpretation",
-  "constitutional",
-  "admin_appeal",
-  "tax_tribunal",
-  "ordinances",
-  "admin_rules",
 ];
 const LABEL = Object.fromEntries(KINDS.map((k) => [k.kind, k.label])) as Record<Kind, string>;
 
@@ -452,9 +444,6 @@ export function ResearchView() {
   const [to, setTo] = useState("");
   const [sort, setSort] = useState<Sort>("source");
   const listRef = useRef<HTMLUListElement>(null);
-  const [more, setMore] = useState(false);
-  const expanded = more || !PRIMARY_KINDS.includes(tab);
-  const visibleKinds = expanded ? KINDS : KINDS.filter((k) => PRIMARY_KINDS.includes(k.kind));
 
   const submit = async (kind: Kind = tab, value: string = text) => {
     const q = value.trim();
@@ -551,33 +540,18 @@ export function ResearchView() {
               검색
             </button>
           </form>
-          <div role="tablist" aria-label="자료 종류" className="mt-4 flex flex-wrap gap-1.5">
-            {visibleKinds.map((k) => (
-              <button
-                key={k.kind}
-                type="button"
-                role="tab"
-                aria-selected={tab === k.kind}
-                onClick={() => {
-                  setTab(k.kind);
-                  if (text.trim() && state.kind !== "idle") void submit(k.kind);
-                }}
-                className={`min-h-11 rounded-[8px] px-3.5 text-sm font-semibold ${
-                  tab === k.kind ? "text-ink bg-white" : "bg-white/10 text-white hover:bg-white/20"
-                }`}
-              >
-                {k.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              aria-expanded={expanded}
-              onClick={() => setMore(!expanded)}
-              disabled={expanded && !PRIMARY_KINDS.includes(tab)}
-              className="min-h-11 rounded-[8px] px-3 text-sm font-semibold text-white/80 underline-offset-2 hover:underline disabled:opacity-50"
-            >
-              {expanded ? "접기" : `더 보기 +${KINDS.length - PRIMARY_KINDS.length}`}
-            </button>
+          <div className="mt-4">
+            {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+            <KindTabs
+              kinds={KINDS}
+              value={tab}
+              label="자료 종류"
+              variant="dark"
+              onChange={(k) => {
+                setTab(k);
+                if (text.trim() && state.kind !== "idle") void submit(k);
+              }}
+            />
           </div>
         </div>
       </div>

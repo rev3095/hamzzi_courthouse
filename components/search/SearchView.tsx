@@ -18,6 +18,7 @@ import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
+import { KindTabs } from "./KindTabs";
 import {
   Highlighted,
   OriginalLink,
@@ -39,17 +40,6 @@ const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   })),
   { kind: "ordinances", label: "자치법규", placeholder: "예: 출산장려금, 주차장 설치" },
   { kind: "admin_rules", label: "행정규칙", placeholder: "예: 임대차, 최저임금 고시" },
-];
-
-/** 먼저 보이는 종류. 나머지는 '더 보기'를 눌러야 나온다 (모바일에서 탭이 길어지지 않게) */
-const PRIMARY_KINDS: Kind[] = [
-  "cases",
-  "interpretation",
-  "constitutional",
-  "admin_appeal",
-  "tax_tribunal",
-  "ordinances",
-  "admin_rules",
 ];
 
 /** 판례 탭의 자주 찾는 검색어. 누르면 바로 검색한다 */
@@ -188,10 +178,6 @@ export function SearchView() {
   const [state, setState] = useState<State>({ kind: "idle" });
   const [picked, setPicked] = useState<string[]>([]);
   const spec = KINDS.find((k) => k.kind === tab)!;
-  const [more, setMore] = useState(false);
-  // 고른 종류가 '더 보기' 안에 있으면 접지 않는다
-  const expanded = more || !PRIMARY_KINDS.includes(tab);
-  const visibleKinds = expanded ? KINDS : KINDS.filter((k) => PRIMARY_KINDS.includes(k.kind));
 
   // 검색어는 주소(?q=)에 두지 않는다 — 브라우저 기록·접속 기록에 남지 않게 (F-007)
   const submit = async (kind: Kind = tab, input: string = text) => {
@@ -245,35 +231,17 @@ export function SearchView() {
         <p className="text-muted mt-2 text-[15px] leading-relaxed">
           판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 3번과 따로 세요.
         </p>
-        <div role="tablist" aria-label="검색 종류" className="mt-5 flex flex-wrap gap-2">
-          {visibleKinds.map((k) => (
-            <button
-              key={k.kind}
-              type="button"
-              role="tab"
-              aria-selected={tab === k.kind}
-              onClick={() => {
-                setTab(k.kind);
-                if (text.trim() && state.kind !== "idle") void submit(k.kind);
-              }}
-              className={`flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold ${
-                tab === k.kind
-                  ? "border-gold bg-cream text-ink"
-                  : "border-line text-muted hover:border-gold bg-white"
-              }`}
-            >
-              {k.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            aria-expanded={expanded}
-            onClick={() => setMore(!expanded)}
-            disabled={expanded && !PRIMARY_KINDS.includes(tab)}
-            className="text-link flex min-h-11 items-center px-2 text-sm font-semibold underline-offset-2 hover:underline disabled:opacity-50"
-          >
-            {expanded ? "접기" : `더 보기 +${KINDS.length - PRIMARY_KINDS.length}`}
-          </button>
+        <div className="mt-5">
+          {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+          <KindTabs
+            kinds={KINDS}
+            value={tab}
+            label="검색 종류"
+            onChange={(k) => {
+              setTab(k);
+              if (text.trim() && state.kind !== "idle") void submit(k);
+            }}
+          />
         </div>
         <div className="mt-4 max-w-[820px]">
           <QuestionBox
