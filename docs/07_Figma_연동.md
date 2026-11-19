@@ -71,7 +71,10 @@ Figma에 프레임이 없다. `components/search/KindTabs.tsx`(/search·/researc
 4. S-01 예시 답변 피드: 33건, 분야 칩 = 카테고리 28개 + 전체 (`components/ask/ExampleFeed.tsx`).
 5. S-19 관리자 AI 절차 분류 라벨 (DEC-037, `components/AdminLabels.tsx`): 내부 화면.
 
-디자인 결정 필요 (02 메모에 표시): 모바일 사건 구조도(최소 폭 640px라 가로 스크롤), 모바일 분야 칩 29개가 약 8~9줄로 늘어나는 배치, 새 요소의 05 Components 등록.
+디자인 결정 (2026-11-19, 사용자 승인 · 추천안). Figma 02 메모를 "결정됨"으로 바꾸고 코드에 반영했다.
+1. 사건 구조 좁은 화면(md 768px 미만): 그림 대신 세로 목록 — '이 사건'(쟁점·근거 수) → 당사자 칩 → 쟁점 번호 목록(근거 n개) → '확인할 사실 n개 — 아래 목록에 있어요.' 가로 스크롤을 없앴다. md 이상은 사건 구조도 그림 그대로 (`DeepMapView.tsx` `MindmapCompact`).
+2. 예시 답변 분야 칩 좁은 화면(lg 미만): '전체' + 예시가 많은 분야 5개만 보이고 나머지는 점선 '더 보기 N'으로 펼친다('접기'로 닫음). 고른 분야는 접혀 있어도 보인다. 검색 종류 탭 시안 A와 같은 방식 (`ExampleFeed.tsx` `primaryAreas`).
+3. 05 Components에 새 컴포넌트 세트 9개 등록: 답변 모드 슬라이더(`단계`) · 버튼 · DeepSearch(`상태`) · 토글 · 기록 저장(`상태`) · 탭 · DeepSearch 입력 방식(`선택`) · 입력 칸 · DeepSearch(`필수`) · 점검 안내 · DeepSearch(`정도`) · 칩 · 분야 탭(`상태`) · 사건 구조 · 좁은 화면 목록 · 카드 · 절차 분류 라벨 (관리자)(`상태`). 설명에 DEC·코드 위치를 적었다.
 
 ### 탐색 화면 세부 결정 (2026-11-18, 사용자 승인 · 추천안)
 Figma 02 메모(S-16 · S-17)를 "결정됨"으로 바꿨다. 둘 다 지금 코드 동작 그대로라 코드 변경은 없다.
@@ -93,7 +96,7 @@ Figma 변수는 컬렉션 `hz tokens`(모드 `light`)에 있고, 각 변수의 W
 
 | Figma 변수 | code syntax | 코드 (app/globals.css) | Tailwind |
 |---|---|---|---|
-| `color/bg` … `color/success-text` (11개) | `var(--bg)` … | `:root`의 `--bg` … | `bg-bg`, `text-ink`, `border-line` … (`@theme inline`의 `--color-*`) |
+| `color/bg` … `color/success-text` (11개) + `color/honey-line` · `gold-line` · `label` · `link` · `soft` · `note` · `note-line` · `warn-text` · `success-bg` (9개, 2026-11-19 추가) | `var(--bg)` … | `:root`의 `--bg` … | `bg-bg`, `text-ink`, `border-line` … (`@theme inline`의 `--color-*`) |
 | `radius/panel` · `card` · `button` | `var(--radius-panel)` … | `@theme inline`의 `--radius-*` | `rounded-panel`, `rounded-card`, `rounded-button` |
 | Text Styles `display/*`, `accent/*`, `body/*`, `caption` | — | `app/layout.tsx`의 `next/font` 변수 + 유틸리티 | `font-display`, `font-accent`, `font-sans` |
 
@@ -103,7 +106,7 @@ Figma 변수는 컬렉션 `hz tokens`(모드 `light`)에 있고, 각 변수의 W
 - 글자 크기 15·14·12 등 기존 Text Style에 없는 텍스트 75개는 스타일 없이 남아 있다 (2026-10-22). 구현 때는 크기·굵기를 그대로 읽어 쓰고, 스타일을 추가할지는 사용자가 정한다.
 
 ### 3.1 컴포넌트 대응 (05 Components)
-- 컴포넌트 세트는 10개다: 헤더 · 푸터 · 법적 고지 · 약속 배너 · 질문창 · 마스코트(햄찌 판사) · 칩·예시 질문 · 카드(근거 판례·항목) · 절차 단계(`상태=현재/예정`) · AI 고지 문단 등. 정확한 목록과 이름은 05 페이지가 기준이다. 변형 `기기=desktop/mobile`은 코드에서 같은 컴포넌트의 반응형 스타일로 구현한다(컴포넌트를 둘로 나누지 않는다).
+- 컴포넌트 세트는 10개다: 헤더 · 푸터 · 법적 고지 · 약속 배너 · 질문창 · 마스코트(햄찌 판사) · 칩·예시 질문 · 카드(근거 판례·항목) · 절차 단계(`상태=현재/예정`) · AI 고지 문단 등. 2026-11-19에 질문 도구·DeepSearch 세트 9개를 더했다(1절 '질문 도구·DeepSearch 화면' 3). 정확한 목록과 이름은 05 페이지가 기준이다. 변형 `기기=desktop/mobile`은 코드에서 같은 컴포넌트의 반응형 스타일로 구현한다(컴포넌트를 둘로 나누지 않는다).
 - 각 컴포넌트의 설명(description)에 F-ID와 코드 위치가 적혀 있다. 구현할 때 그 경로(`components/…`)에 만들고, 변형 속성 이름을 props 이름으로 쓴다. 경로를 바꾸면 Figma 설명도 같이 고친다.
 - "기능 소개(CORE)"처럼 숨기기로 결정한 기능의 컴포넌트는 Figma에 남아 있어도 구현하지 않는다 (1절 화면 구조 결정 2).
 - Code Connect는 쓸 수 없으므로(Organization 이상) 이 설명이 컴포넌트 ↔ 코드 대응표 역할을 한다.

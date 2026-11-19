@@ -44,6 +44,60 @@ export function issueSources(map: DeepMap, result: Result): string[][] {
 const W = 760;
 const LINE = 17;
 
+/** 좁은 화면(md 미만) 사건 구조: 그림 대신 세로 목록 (2026-11-19 사용자 승인 — 가로 스크롤 없이) */
+function MindmapCompact({ map, sources }: { map: DeepMap; sources: string[][] }) {
+  return (
+    <div
+      role="group"
+      aria-label={`사건 구조: 당사자 ${map.parties.length}, 쟁점 ${map.issues.length}, 확인할 사실 ${map.unknowns.length}`}
+      className="flex flex-col gap-3 px-2 md:hidden"
+    >
+      <p className="rounded-card bg-ink px-4 py-3 text-white">
+        <span className="text-[16px] font-bold">이 사건</span>
+        <span className="ml-2 text-[13px]">
+          쟁점 {map.issues.length} · 근거 {new Set(sources.flat()).size}
+        </span>
+      </p>
+      {map.parties.length > 0 && (
+        <div>
+          <p className="text-muted text-xs font-semibold">당사자</p>
+          <ul className="mt-1.5 flex flex-wrap gap-1.5">
+            {map.parties.map((p) => (
+              <li
+                key={p.label}
+                className="border-line text-ink rounded-full border bg-white px-3 py-1 text-[13px] font-semibold"
+              >
+                {p.role ? `${p.label} · ${p.role}` : p.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div>
+        <p className="text-muted text-xs font-semibold">쟁점</p>
+        <ol className="mt-1.5 flex flex-col gap-1.5">
+          {map.issues.map((issue, i) => (
+            <li
+              key={i}
+              className="rounded-card border-gold-line bg-cream text-ink border px-3 py-2 text-[14px] font-semibold"
+            >
+              {i + 1}. {issue.title}
+              <span className="text-link block text-xs font-normal">
+                근거 {sources[i].length}개
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      {map.unknowns.length > 0 && (
+        <p className="text-muted text-[13px]">
+          확인할 사실 {map.unknowns.length}개 — 아래 목록에 있어요.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] }) {
   // 오른쪽: 쟁점(아래에 근거 이름). 왼쪽: 당사자, 그 아래 확인할 사실
   const right = map.issues.map((issue, i) => {
@@ -101,12 +155,12 @@ function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] }) {
   );
 
   return (
-    <div className="overflow-x-auto">
+    <div className="hidden md:block">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={`사건 구조도: 당사자 ${map.parties.length}, 쟁점 ${map.issues.length}, 확인할 사실 ${map.unknowns.length}`}
-        className="h-auto w-full min-w-[640px]"
+        className="h-auto w-full"
       >
         <g fill="none" strokeWidth="1.5">
           {R.map((n, i) => (
@@ -218,6 +272,7 @@ export function DeepMapView({ result }: { result: Result }) {
       </header>
 
       <div className="px-2 py-3 sm:px-4">
+        <MindmapCompact map={map} sources={sources} />
         <Mindmap map={map} sources={sources} />
       </div>
 
