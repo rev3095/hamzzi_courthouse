@@ -31,8 +31,8 @@ const JUDGING =
   /승률|승소|패소|이길|이깁|질\s*거|성공\s*(확률|가능)|가능성|확률|유리|불리|합법|적법|불법|위법(이|은|하지)?\s*아니|위반(이|은|하지)?\s*아니|문제(가)?\s*없|걸리지\s*않|안\s*걸|괜찮(아|습)|보장(합|해)|무료\s*상담|최저가|변호사\s*필요\s*없/;
 
 describe("햄찌 안내 문안 (DEC-030)", () => {
-  test("메뉴는 7개이고 모두 문안이 있다", () => {
-    expect(MENU_IDS).toHaveLength(7);
+  test("메뉴는 8개이고 모두 문안이 있다", () => {
+    expect(MENU_IDS).toHaveLength(8);
     for (const id of MENU_IDS) expect(guideTopic(id), id).toBeDefined();
   });
 
@@ -94,6 +94,27 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     );
     expect(pricing.join(" ")).toContain("요금을 받지 않아요");
     for (const s of pricing) expect(s, s).not.toMatch(/\d|\$|달러|만\s*원/);
+  });
+
+  test("기능 안내: 답변 모드는 요금제가 아니고 무료이며, 실제 모델 이름·유불리를 말하지 않는다 (DEC-036·041)", () => {
+    const tiers = guideTopic("features-tiers")!.lines.join(" ");
+    expect(tiers).toContain("요금제가 아니라");
+    expect(tiers).toContain("무료");
+    const features = [
+      "features",
+      "features-tiers",
+      "features-deep",
+      "features-examples",
+      "features-history",
+    ]
+      .map((id) => guideTopic(id)!.lines.join(" "))
+      .join(" ");
+    // 화면에는 실제 모델 이름을 싣지 않는다 (TierSlider와 같은 기준)
+    expect(features).not.toMatch(/Haiku|Sonnet|Opus|Claude/);
+    // 모드별 정확도·품질을 약속하지 않는다
+    expect(features).not.toMatch(/정확|더 좋은|더 나은|품질/);
+    expect(guideTopic("features-deep")!.lines.join(" ")).toContain("판단하지 않아요");
+    expect(guideTopic("features-deep")!.lines.join(" ")).toContain("질문 한 번으로");
   });
 
   test("절대 규칙 3: 숫자는 코드 상수·공식 기준 값뿐이다", () => {

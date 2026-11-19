@@ -39,6 +39,7 @@ export const guideEmail = () => EMAIL_PARTS.join("@");
 
 export const MENU_IDS = [
   "rules",
+  "features",
   "terms",
   "pricing",
   "lawyer-act",
@@ -133,7 +134,59 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     links: [PRIVACY],
   },
 
-  // ── ② 이용약관 ───────────────────────────────────────────
+  // ── ② 기능 안내 (DEC-036·038·039·041) ─────────────────────
+  features: {
+    label: "기능 안내",
+    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041",
+    lines: [
+      "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 내 질문 기록이 있어요.",
+    ],
+    next: ["features-tiers", "features-deep", "features-examples", "features-history"],
+  },
+  "features-tiers": {
+    label: "Light · Pro · Pro Max는 뭐예요?",
+    source: "DEC-036 · components/ask/TierSlider.tsx",
+    lines: [
+      "질문창 아래에서 답변 모드를 골라요. 요금제가 아니라 답변을 쓰는 AI 모델을 고르는 것이고, 지금은 어느 모드든 무료예요.",
+      "세 모드 모두 법제처에서 찾은 조문·판례를 근거로 답하고, 답변을 쓰는 모델만 달라요. Light는 가장 빠른 모델, Pro는 기본 모델, Pro Max는 답하기 전에 더 오래 생각하는 모델이에요.",
+      "고른 모드는 이 기기에만 기억해요. 운영자가 AI 답변을 꺼 둔 동안에는 모드 선택이 보이지 않아요. 비용 상한에 닿은 동안에는 어느 모드를 골라도 법제처 검색 결과만 보여 드려요.",
+    ],
+    next: ["features-deep", "pricing"],
+  },
+  "features-deep": {
+    label: "DeepSearch는 언제 써요?",
+    source: "DEC-038 · DEC-041",
+    lines: [
+      "여러 사정이 얽힌 사연은 질문창 아래 답변 모드 옆의 DeepSearch 버튼으로 물어보세요. 양식(있었던 일·상대방·지금까지 한 일·가지고 있는 자료·알고 싶은 것)이나 직접 입력으로 적어요.",
+      "보내기 전에 시점·상대방처럼 빠진 내용이 있는지 알려 드려요. 적은 내용이 맞는지나 사건이 어떻게 될지는 판단하지 않아요.",
+      "AI 답변이 켜져 있으면 결과에 쟁점별 답변과 사건 구조도·사실관계 흐름·쟁점별 근거·확인할 사실이 함께 나와요. 사연을 정리하지 못하면 일반 답변으로 보여 드려요. 그림에는 적어 주신 사실만 담아요.",
+      "DeepSearch도 질문 한 번으로 세요. 창에 적는 중인 내용은 브라우저에 따로 저장하지 않고, 보낸 뒤에는 일반 질문처럼 가린 문장만 저장해요.",
+    ],
+    links: [{ href: "/examples/deep-lease-01", label: "DeepSearch 예시 보기" }],
+    next: ["features-tiers", "rules"],
+  },
+  "features-examples": {
+    label: "예시 답변은 어디서 봐요?",
+    source: "DEC-027 · DEC-028",
+    lines: [
+      "홈의 카테고리를 고르면 그 분야의 예시 질문과 답변을 볼 수 있어요.",
+      "예시는 미리 분석해 두고 인용을 확인한 답변을 다시 보여 드리는 거라 질문 횟수에 들어가지 않아요.",
+    ],
+    links: [{ href: "/#examples", label: "예시 질문 보기" }],
+    next: ["rules-examples"],
+  },
+  "features-history": {
+    label: "내 질문 기록은 어떻게 남겨요?",
+    source: "DEC-039 · DEC-035",
+    lines: [
+      "Google로 로그인하면 질문창 아래에 '내 기록에 남기기'가 보여요. 켜고 보낸 질문과 답변만 마이페이지의 '내 질문 기록'에 모여요.",
+      "예시 질문과 관리자 모드로 보낸 질문은 기록 남기기를 켜도 남지 않아요. 가린 문장과 답변만 보관하고, 보관 기간은 다른 기록과 같아요.",
+    ],
+    links: [{ href: "/me", label: "마이페이지" }],
+    next: ["roadmap-login", "rules-privacy"],
+  },
+
+  // ── ③ 이용약관 ───────────────────────────────────────────
   terms: {
     label: "이용약관",
     source: "app/terms 1~4절",
@@ -181,7 +234,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     ],
   },
 
-  // ── ③ 요금제 ─────────────────────────────────────────────
+  // ── ④ 요금제 ─────────────────────────────────────────────
   pricing: {
     label: "요금제",
     source: "PRD 10·11장 · F-013 · DEC-001",
@@ -189,7 +242,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "지금 햄찌법원은 이용자에게 요금을 받지 않아요.",
       "결제·과금 기능은 없고, 법률 검토가 끝나기 전에는 만들거나 열지 않아요. 정해진 요금제나 가격도 아직 없어요.",
     ],
-    next: ["pricing-future", "pricing-cost"],
+    next: ["pricing-future", "pricing-cost", "features-tiers"],
   },
   "pricing-future": {
     label: "나중에는 유료가 되나요?",
@@ -202,14 +255,14 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   },
   "pricing-cost": {
     label: "운영 비용은 누가 내요?",
-    source: "DEC-015 · DEC-026",
+    source: "DEC-015 · DEC-026 · DEC-040",
     lines: [
-      "AI 답변을 켠 기간에는 그 비용을 운영자가 내고, 일주일에 쓸 수 있는 금액에 상한을 두어요. 상한에 닿으면 그 주에는 AI 답변 없이 법제처 검색 결과만 보여 드려요.",
+      "AI 답변 비용은 운영자가 내고, 정해 둔 기간에 쓸 수 있는 금액에 상한을 두어요. 상한에 닿으면 그 기간에는 AI 답변 없이 법제처 검색 결과만 보여 드려요.",
       "예시 질문은 미리 분석해 둔 답변이라 비용이 들지 않아요.",
     ],
   },
 
-  // ── ④ 변호사법과 이 사이트 ──────────────────────────────────
+  // ── ⑤ 변호사법과 이 사이트 ──────────────────────────────────
   // 위법 여부를 판단하지 않는다. 운영 사실(DEC-001, F-013, 게이트)과 검토 대상 조항 이름만 쓴다.
   "lawyer-act": {
     label: "변호사법과 이 사이트",
@@ -248,7 +301,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     next: ["roadmap"],
   },
 
-  // ── ⑤ 변호사 연결(중계) 방식 ────────────────────────────────
+  // ── ⑥ 변호사 연결(중계) 방식 ────────────────────────────────
   matching: {
     label: "변호사 연결 방식",
     source: "PRD 1·4장 · F-008~F-012 · N5 · DEC-001",
@@ -289,7 +342,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     links: [PRIVACY],
   },
 
-  // ── ⑥ 앞으로의 운영 방안 ───────────────────────────────────
+  // ── ⑦ 앞으로의 운영 방안 ───────────────────────────────────
   roadmap: {
     label: "앞으로의 운영 방안",
     source: "PRD 0절 · 6장 로드맵",
@@ -330,7 +383,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     links: [SOURCES],
   },
 
-  // ── ⑦ 개발자 연락처 ──────────────────────────────────────
+  // ── ⑧ 개발자 연락처 ──────────────────────────────────────
   contact: {
     label: "개발자 연락처",
     source: "사용자 요청 2026-11-18 · app/privacy 5절",
