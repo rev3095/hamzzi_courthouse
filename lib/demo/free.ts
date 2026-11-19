@@ -27,7 +27,7 @@ export type FreeAnalysis = {
 const ARTICLES = 5;
 const CASES_PER_QUERY = 6;
 const CASE_DETAILS = 5;
-const HINT_ARTICLES = 4;
+const HINT_ARTICLES = 3;
 /** DeepSearch(DEC-038): 조문·판례 상세를 더 가져온다. 법제처 조회는 무료이고 모델에 넘길 때는 비용 상한이 다시 거른다 */
 const WIDE = { articles: 8, caseDetails: 7 } as const;
 
@@ -101,7 +101,8 @@ export async function freeSearch(
         return [];
       })
     : [];
-  // 카테고리의 기본 조문을 앞에 둔다 (조문 넷까지 — 법제처 무료 조회). 가져오지 못한 것은 건너뛴다
+  // 카테고리의 기본 조문을 앞에 둔다 (조문 셋까지 — 법제처 무료 조회). 가져오지 못한 것은 건너뛴다.
+  // 기본 조문은 자연어 검색 결과의 자리를 빼앗지 않고 더해진다 — 답변 모델에는 앞에서부터 정해진 수만 넘어간다
   const wanted = (deps.lawHints ?? [])
     .flatMap((h) => h.articleNos.map((no) => [h.lawName, no] as const))
     .slice(0, HINT_ARTICLES);
@@ -111,9 +112,9 @@ export async function freeSearch(
       ).flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []))
     : [];
   const articleIds = new Set<string>();
-  const articles = [...hinted, ...searched]
-    .filter((a) => (articleIds.has(a.id) ? false : (articleIds.add(a.id), true)))
-    .slice(0, maxArticles);
+  const articles = [...hinted, ...searched].filter((a) =>
+    articleIds.has(a.id) ? false : (articleIds.add(a.id), true),
+  );
 
   // ② 찾은 조문 제목으로 판례 검색 → 중복 제거 → 상세
   // 홈 카테고리(DEC-028)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다

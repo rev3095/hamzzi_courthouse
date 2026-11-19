@@ -60,7 +60,8 @@ export type Category = {
   caseKinds: string;
   /**
    * 무료 법제처 조문 검색에 더하는 고정 법령과 조문 번호. 일상 낱말로 묻는 분야는 자연어 법령 검색이
-   * 엉뚱한 조문을 가져와서(2026-11-19 예시 생성: 빌려준 돈·폭행 상해), 그 분야의 기본 조문을 먼저 가져온다
+   * 엉뚱한 조문을 가져와서(2026-11-19 예시 생성: 빌려준 돈·폭행 상해), 그 분야의 기본 조문을 먼저 가져온다.
+   * 카테고리마다 셋까지. 조문이 실제로 있는지는 tests/live/law-hints.live.test.ts가 법제처 무료 조회로 확인한다
    */
   lawHints?: LawHint[];
   /** 이 카테고리의 예시 답변 (lib/demo/examples.json id) */
@@ -86,6 +87,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "lease_deposit",
     caseQuery: "임대차보증금",
     caseKinds: "민사",
+    lawHints: [{ lawName: "주택임대차보호법", articleNos: ["제3조", "제3조의3", "제6조"] }],
     examples: ["lease-01", "lease-02", "lease-03", "deep-lease-01"],
   },
   deposit: {
@@ -98,6 +100,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "contract_deposit",
     caseQuery: "계약금",
     caseKinds: "민사",
+    lawHints: [{ lawName: "민법", articleNos: ["제565조", "제398조"] }],
     examples: ["deposit-01", "deposit-02"],
   },
   labor: {
@@ -115,6 +118,10 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "wage",
     caseQuery: "임금",
     caseKinds: "민사·행정",
+    lawHints: [
+      { lawName: "근로기준법", articleNos: ["제36조", "제43조"] },
+      { lawName: "근로자퇴직급여 보장법", articleNos: ["제9조"] },
+    ],
     examples: ["wage-02", "trap-number"],
   },
   fraud: {
@@ -130,6 +137,10 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "fraud",
     caseQuery: "사기",
     caseKinds: "형사·민사",
+    lawHints: [
+      { lawName: "형법", articleNos: ["제347조"] },
+      { lawName: "민법", articleNos: ["제750조"] },
+    ],
     examples: ["fraud-01"],
   },
   traffic: {
@@ -142,6 +153,11 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "traffic",
     caseQuery: "손해배상(자)",
     caseKinds: "민사",
+    lawHints: [
+      { lawName: "교통사고처리 특례법", articleNos: ["제3조"] },
+      { lawName: "자동차손해배상 보장법", articleNos: ["제3조"] },
+      { lawName: "민법", articleNos: ["제750조"] },
+    ],
     examples: ["other-01"],
   },
   neighbor: {
@@ -154,6 +170,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "neighbor",
     caseQuery: "생활방해",
     caseKinds: "민사",
+    lawHints: [{ lawName: "민법", articleNos: ["제217조", "제758조", "제750조"] }],
     examples: ["trap-vague"],
   },
   loan: {
@@ -183,6 +200,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "family",
     caseQuery: "이혼",
     caseKinds: "가사",
+    lawHints: [{ lawName: "민법", articleNos: ["제840조", "제837조", "제839조의2"] }],
     examples: ["family-01"],
   },
   inheritance: {
@@ -196,6 +214,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "inheritance",
     caseQuery: "상속재산분할",
     caseKinds: "가사·민사",
+    lawHints: [{ lawName: "민법", articleNos: ["제1019조", "제1028조", "제1041조"] }],
     examples: ["inheritance-01"],
   },
   consumer: {
@@ -209,6 +228,9 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "consumer",
     caseQuery: "청약철회",
     caseKinds: "민사",
+    lawHints: [
+      { lawName: "전자상거래 등에서의 소비자보호에 관한 법률", articleNos: ["제17조", "제18조"] },
+    ],
     examples: ["consumer-01"],
   },
   defamation: {
@@ -222,6 +244,13 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "defamation",
     caseQuery: "명예훼손",
     caseKinds: "형사·민사",
+    lawHints: [
+      { lawName: "형법", articleNos: ["제307조"] },
+      {
+        lawName: "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+        articleNos: ["제70조", "제44조의2"],
+      },
+    ],
     examples: ["defamation-01"],
   },
   // ── 추가 섹션 (DEC-034): 추가 타임라인(more-tracks.ts)과 대면 모욕 ──
@@ -239,6 +268,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "insult",
     caseQuery: "모욕 공연성",
     caseKinds: "형사·민사",
+    lawHints: [{ lawName: "형법", articleNos: ["제311조", "제312조"] }],
     examples: ["insult-01"],
   },
   assault: {
@@ -254,7 +284,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseKinds: "형사·민사",
     lawHints: [
       { lawName: "형법", articleNos: ["제257조", "제260조"] },
-      { lawName: "민법", articleNos: ["제750조", "제751조"] },
+      { lawName: "민법", articleNos: ["제750조"] },
     ],
     examples: ["assault-01"],
   },
@@ -269,6 +299,9 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "stalking",
     caseQuery: "스토킹범죄",
     caseKinds: "형사",
+    lawHints: [
+      { lawName: "스토킹범죄의 처벌 등에 관한 법률", articleNos: ["제2조", "제9조", "제18조"] },
+    ],
     examples: ["stalking-01"],
   },
   sex_crime: {
@@ -282,6 +315,10 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "sex_crime",
     caseQuery: "강제추행",
     caseKinds: "형사·민사",
+    lawHints: [
+      { lawName: "성폭력범죄의 처벌 등에 관한 특례법", articleNos: ["제14조", "제27조"] },
+      { lawName: "형법", articleNos: ["제298조"] },
+    ],
     examples: ["sex-crime-01"],
   },
   voice_phishing: {
@@ -298,6 +335,12 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "voice_phishing",
     caseQuery: "전기통신금융사기",
     caseKinds: "형사·민사",
+    lawHints: [
+      {
+        lawName: "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+        articleNos: ["제3조", "제4조"],
+      },
+    ],
     examples: ["voice-phishing-01"],
   },
   crime_report: {
@@ -310,6 +353,10 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "crime_report",
     caseQuery: "고소",
     caseKinds: "형사",
+    lawHints: [
+      { lawName: "형사소송법", articleNos: ["제223조", "제237조"] },
+      { lawName: "형법", articleNos: ["제355조"] },
+    ],
     examples: ["crime-report-01"],
   },
   workplace_harassment: {
@@ -323,6 +370,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "workplace_harassment",
     caseQuery: "직장 내 괴롭힘",
     caseKinds: "민사·행정",
+    lawHints: [{ lawName: "근로기준법", articleNos: ["제76조의2", "제76조의3"] }],
     examples: ["workplace-harassment-01"],
   },
   industrial_accident: {
@@ -336,6 +384,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "industrial_accident",
     caseQuery: "업무상 재해",
     caseKinds: "행정·민사",
+    lawHints: [{ lawName: "산업재해보상보험법", articleNos: ["제37조", "제41조", "제36조"] }],
     examples: ["industrial-accident-01"],
   },
   domestic_violence: {
@@ -349,6 +398,12 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "domestic_violence",
     caseQuery: "가정폭력",
     caseKinds: "가사·형사",
+    lawHints: [
+      {
+        lawName: "가정폭력범죄의 처벌 등에 관한 특례법",
+        articleNos: ["제8조", "제29조", "제55조의2"],
+      },
+    ],
     examples: ["domestic-violence-01"],
   },
   school_violence: {
@@ -365,6 +420,9 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "school_violence",
     caseQuery: "학교폭력",
     caseKinds: "행정·민사",
+    lawHints: [
+      { lawName: "학교폭력예방 및 대책에 관한 법률", articleNos: ["제16조", "제17조", "제20조"] },
+    ],
     examples: ["school-violence-01"],
   },
   medical: {
@@ -377,6 +435,11 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "medical",
     caseQuery: "의료과실 손해배상",
     caseKinds: "민사",
+    lawHints: [
+      { lawName: "의료법", articleNos: ["제24조의2"] },
+      { lawName: "민법", articleNos: ["제750조"] },
+      { lawName: "의료사고 피해구제 및 의료분쟁 조정 등에 관한 법률", articleNos: ["제27조"] },
+    ],
     examples: ["medical-01"],
   },
   privacy: {
@@ -393,6 +456,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "privacy",
     caseQuery: "개인정보 유출 손해배상",
     caseKinds: "민사·형사",
+    lawHints: [{ lawName: "개인정보 보호법", articleNos: ["제34조", "제39조", "제39조의2"] }],
     examples: ["privacy-01"],
   },
   commercial_lease: {
@@ -405,6 +469,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "commercial_lease",
     caseQuery: "권리금 회수 방해",
     caseKinds: "민사",
+    lawHints: [{ lawName: "상가건물 임대차보호법", articleNos: ["제10조", "제10조의4", "제3조"] }],
     examples: ["commercial-lease-01"],
   },
   respond_civil: {
@@ -418,6 +483,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "respond_civil",
     caseQuery: "지급명령 이의신청",
     caseKinds: "민사",
+    lawHints: [{ lawName: "민사소송법", articleNos: ["제470조", "제256조", "제257조"] }],
     examples: ["respond-civil-01"],
   },
   respond_criminal: {
@@ -430,6 +496,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "respond_criminal",
     caseQuery: "피의자신문",
     caseKinds: "형사",
+    lawHints: [{ lawName: "형사소송법", articleNos: ["제244조의3", "제243조의2", "제200조"] }],
     examples: ["respond-criminal-01"],
   },
   admin_appeal: {
@@ -443,6 +510,10 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "admin_appeal",
     caseQuery: "처분 취소",
     caseKinds: "행정",
+    lawHints: [
+      { lawName: "행정심판법", articleNos: ["제27조", "제30조"] },
+      { lawName: "행정소송법", articleNos: ["제20조"] },
+    ],
     examples: ["admin-appeal-01"],
   },
   debt_relief: {
@@ -456,6 +527,9 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "debt_relief",
     caseQuery: "개인회생",
     caseKinds: "민사",
+    lawHints: [
+      { lawName: "채무자 회생 및 파산에 관한 법률", articleNos: ["제588조", "제611조", "제624조"] },
+    ],
     examples: ["debt-relief-01"],
   },
 };

@@ -120,3 +120,30 @@ describe("DEC-028 홈 카테고리 버튼", () => {
     expect(hasTimeline(plan) && plan.note).toMatch(/양육비 이행 확보/);
   });
 });
+
+describe("카테고리 기본 조문 (DEC-041 검색 보강)", () => {
+  test("모든 카테고리에 기본 조문이 하나에서 셋까지 있고, 법령 이름과 조문 번호 꼴이 맞다", () => {
+    for (const c of CATEGORY_LIST) {
+      const nos = (c.lawHints ?? []).flatMap((h) => h.articleNos);
+      expect(nos.length, c.key).toBeGreaterThanOrEqual(1);
+      expect(nos.length, c.key).toBeLessThanOrEqual(3);
+      for (const h of c.lawHints ?? []) {
+        expect(h.lawName, c.key).toMatch(/(법|법률|령|규칙)$/);
+        for (const no of h.articleNos) expect(no, c.key).toMatch(/^제\d+조(의\d+)?$/);
+      }
+    }
+  });
+
+  test("기록해 둔 후보(evals/examples-gen/law-hints.json)와 같다 — 법제처 실존 확인은 tests/live/law-hints.live.test.ts", async () => {
+    const { default: expected } = await import("../../evals/examples-gen/law-hints.json");
+    for (const c of CATEGORY_LIST) {
+      const mine = (c.lawHints ?? []).flatMap((h) =>
+        h.articleNos.map((no) => `${h.lawName} ${no}`),
+      );
+      const want = (expected.hints as unknown as Record<string, string[][]>)[c.key].map(
+        ([law, no]) => `${law} ${no}`,
+      );
+      expect(mine.sort(), c.key).toEqual(want.sort());
+    }
+  });
+});
