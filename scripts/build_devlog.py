@@ -2,6 +2,7 @@
 # 입력: docs/devlog/data.json (세션·날짜별 기록) + git log(main) + docs/PRD.md 16.2 결정 로그
 # 출력: docs/devlog.md (GitHub에서 읽는 글 버전) · docs/devlog/index.html (브라우저로 여는 디자인 버전, 데이터 포함 한 파일)
 # 기록을 더할 때는 data.json의 entries에 항목을 더하고 다시 실행한다. 공개 저장소이므로 이메일·IP·키·실명은 넣지 않는다.
+import base64
 import datetime as dt
 import json
 import pathlib
@@ -93,7 +94,7 @@ def build_md(data, commits, decs):
         "결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.\n"
     )
     L.append(
-        "- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 저장소를 받아 브라우저로 연다.\n"
+        "- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).\n"
         "- 원본: 각 세션의 대화 기록을 읽고 요약했다. 측정하지 않은 값은 \"추정\", 확인하지 못한 것은 그렇다고 적었다.\n"
         "- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `python -X utf8 scripts/build_devlog.py`.\n"
     )
@@ -172,6 +173,10 @@ def build_html(data, commits, decs):
     js = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
     tpl = (ROOT / "scripts" / "devlog_template.html").read_text(encoding="utf-8")
     OUT_HTML.parent.mkdir(parents=True, exist_ok=True)
+    # 햄찌 판사 그림을 data URI로 넣어 이 파일 하나만 다른 PC로 옮기거나 게시해도 그대로 보이게 한다
+    mascot = ROOT / "public" / "mascot" / "hamzzi-judge.webp"
+    src = "data:image/webp;base64," + base64.b64encode(mascot.read_bytes()).decode() if mascot.exists() else ""
+    tpl = tpl.replace("__MASCOT__", src)
     OUT_HTML.write_text(tpl.replace("/*__DATA__*/null", js), encoding="utf-8", newline="\n")
 
 

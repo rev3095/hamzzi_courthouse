@@ -2,7 +2,7 @@
 
 2026-10-18 ~ 2026-11-19 동안 세션 11개가 남긴 작업 기록 398건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
-- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 저장소를 받아 브라우저로 연다.
+- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - 원본: 각 세션의 대화 기록을 읽고 요약했다. 측정하지 않은 값은 "추정", 확인하지 못한 것은 그렇다고 적었다.
 - 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `python -X utf8 scripts/build_devlog.py`.
 
@@ -726,6 +726,7 @@
 | DEC-040 | 기간 예산 — 2026-11-25까지 $95, 실제 비용 차감 (2026-11-19 사용자 결정, DEC-026·031·036 일부 변경) |
 | DEC-041 | DeepSearch 특화 — 구조화 → 쟁점별 검색 → 쟁점별 답변 → 시각자료 (2026-11-19 사용자 요청, DEC-038 확장) |
 | DEC-042 | 질문 해석을 복수 라벨·동적 예시로 (2026-11-19 사용자 요청, DEC-033·037 확장) |
+| DEC-043 | 절차 섹션 4개 추가 (2026-11-19 사용자 결정) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -841,11 +842,18 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 137개 (병합 제외)</summary>
+<details><summary>main 커밋 144개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
-| [`348ed33`](https://github.com/rev3095/hamzzi_courthouse/commit/348ed33) | 2026-11-19 21:10 | docs: devlog에 11-19 저녁 결과 반영 — 리디자인 결정 3건·3회 문구 정리·PR 10 병합·예시 33건 재검증·앱 보고서·질문 해석 복수 라벨 (기록 398건) |
+| [`6b72f57`](https://github.com/rev3095/hamzzi_courthouse/commit/6b72f57) | 2026-11-19 21:32 | docs: devlog 디자인 버전을 한 파일로 — 햄찌 판사 그림을 data URI로 넣어 다른 PC·게시에서도 그대로 보이게, 주소 #탭 이동 지원 |
+| [`855ece9`](https://github.com/rev3095/hamzzi_courthouse/commit/855ece9) | 2026-11-19 21:32 | feat: 안내 챗봇에 절차 안내 항목 추가, 예시 안내를 새 분야에 맞춤 (DEC-030, DEC-042, DEC-043) |
+| [`c730089`](https://github.com/rev3095/hamzzi_courthouse/commit/c730089) | 2026-11-19 21:30 | docs: Figma 01·02에 카테고리 32개·함께 살펴볼 절차 반영 기록 (F-014, DEC-042, DEC-043) |
+| [`3ce72c7`](https://github.com/rev3095/hamzzi_courthouse/commit/3ce72c7) | 2026-11-19 21:29 | docs: 구조·비용 보고서에 질문 해석 비용 변경과 DeepSearch 단계별 실측 반영 (F-006, DEC-033, DEC-041) |
+| [`57267b3`](https://github.com/rev3095/hamzzi_courthouse/commit/57267b3) | 2026-11-19 21:21 | feat: 절차 섹션 4개 추가(부동산 경매·부동산 등기·과태료·영업신고) + 공개 질문 400건 추가 라벨링 (F-014, DEC-021, DEC-028, DEC-042, DEC-043) |
+| [`05b42fe`](https://github.com/rev3095/hamzzi_courthouse/commit/05b42fe) | 2026-11-19 21:15 | feat: 편집기 발표 자료 디자인 탭을 최신 발표 자료(2026-11-15판 9장)로 — 빈자리·해결·법과 수익·계획·약속 장 추가 |
+| [`c2cce7d`](https://github.com/rev3095/hamzzi_courthouse/commit/c2cce7d) | 2026-11-19 21:10 | docs: 예시 33건 법제처 재검증 결과를 보고서에 반영 (F-005, DEC-027) |
+| [`3d21fb4`](https://github.com/rev3095/hamzzi_courthouse/commit/3d21fb4) | 2026-11-19 21:10 | docs: devlog에 11-19 저녁 결과 반영 — 리디자인 결정 3건·3회 문구 정리·PR 10 병합·예시 33건 재검증·앱 보고서·질문 해석 복수 라벨 (기록 398건) |
 | [`7eb1fe3`](https://github.com/rev3095/hamzzi_courthouse/commit/7eb1fe3) | 2026-11-19 21:02 | feat: 질문 해석을 복수 라벨·온/오프라인·새 라벨 제안·동적 예시로 + 공개 질문 400건 Haiku 라벨링 + LLM 구조 보고서 (F-014, DEC-033, DEC-037, DEC-042) |
 | [`3153783`](https://github.com/rev3095/hamzzi_courthouse/commit/3153783) | 2026-11-19 20:55 | docs: 개발 아카이브 devlog — 세션 11개(하위 세션 계층 포함)·기록 390건, 날짜→세션 순 + 디자인 HTML(검색·필터·세션 트리·결정·커밋 색인) |
 | [`9ef25bb`](https://github.com/rev3095/hamzzi_courthouse/commit/9ef25bb) | 2026-11-19 20:55 | test: 예시 답변 33건 전부를 법제처 실호출로 재검증 — 인용 실존·구절 원문 일치·숫자 출처 (F-005, DEC-027) |

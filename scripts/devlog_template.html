@@ -147,7 +147,7 @@ footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);f
       <p class="lede" id="lede"></p>
       <div class="stats" id="stats"></div>
     </div>
-    <div class="mascot"><img src="../../public/mascot/hamzzi-judge.webp" alt="햄찌 판사" onerror="this.parentNode.style.display='none'"></div>
+    <div class="mascot"><img src="__MASCOT__" alt="햄찌 판사" onerror="this.parentNode.style.display='none'"></div>
   </div>
 </header>
 
@@ -245,7 +245,8 @@ $("#tabs").addEventListener("click",ev=>{const b=ev.target.closest("button");if(
   document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
   document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+b.dataset.k));
   history.replaceState(null,"","#"+b.dataset.k);});
-if(location.hash){const b=document.querySelector(`#tabs button[data-k="${location.hash.slice(1)}"]`);b&&b.click();}
+function fromHash(){const b=document.querySelector(`#tabs button[data-k="${location.hash.slice(1)}"]`);b&&b.getAttribute("aria-selected")!=="true"&&b.click();}
+fromHash();window.addEventListener("hashchange",fromHash);
 
 // 종류 체크
 $("#kinds").innerHTML=Object.entries(KIND).map(([k,l])=>`<label><input type="checkbox" value="${k}" checked>${l}</label>`).join("");
