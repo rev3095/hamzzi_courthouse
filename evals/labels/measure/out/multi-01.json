@@ -1,0 +1,199 @@
+{
+  "id": "multi-01",
+  "question": "팀장이 회사 단체 대화방에 제 험담을 올렸어요. 항의했더니 저를 해고했고 밀린 월급도 주지 않아요. 무엇부터 해야 하나요?",
+  "at": "2026-11-19T11:59:28.652Z",
+  "elapsedMs": 12306,
+  "meta": {
+    "model": "claude-sonnet-5-5",
+    "prompt_version": "lite-2026-11-19-multilabel",
+    "tokens_in": 6277,
+    "tokens_out": 754,
+    "latency_ms": 11815
+  },
+  "costUsdUpperEstimate": 0.04019,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "근로기준법 시행령",
+        "근로기준법",
+        "근로감독관규정"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "직장 내 괴롭힘 명예훼손",
+        "부당해고 임금 체불",
+        "권한의 위임"
+      ]
+    },
+    "section": "workplace_harassment",
+    "relatedSections": [
+      "defamation",
+      "wage"
+    ],
+    "channel": "both",
+    "answer": {
+      "points": [
+        {
+          "text": "단체 대화방 험담은 직장 내 괴롭힘 문제로 볼 여지가 있고, 근로기준법은 누구든 괴롭힘 발생 사실을 사용자에게 신고할 수 있다고 정합니다. 사용자는 신고를 받으면 지체 없이 객관적인 조사를 해야 합니다. 대화방 캡처 등 증거를 먼저 보관해 두세요.",
+          "source": "law:근로기준법:제76조의3",
+          "quote": "직장 내 괴롭힘 발생 사실을 알게 된 경우 그 사실을 사용자에게 신고할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "해고에는 예고 절차가 필요합니다. 사용자는 적어도 30일 전에 예고하거나, 예고하지 않았다면 30일분 이상의 통상임금을 지급해야 합니다. 다만 계속 근로기간이 3개월 미만이면 이 규정이 적용되지 않는 등 예외가 있습니다. 해고 통보 방식과 시점을 기록해 두세요.",
+          "source": "law:근로기준법:제26조",
+          "quote": "적어도 30일 전에 예고를 하여야 하고",
+          "check": "verified"
+        },
+        {
+          "text": "밀린 월급 미지급 등 법 위반 사실은 고용노동부장관이나 근로감독관에게 통보할 수 있습니다. 사용자는 이 통보를 이유로 해고나 그 밖의 불리한 처우를 하지 못합니다. 항의 직후 해고된 경위도 신고 때 함께 설명하면 도움이 됩니다.",
+          "source": "law:근로기준법:제104조",
+          "quote": "근로자는 그 사실을 고용노동부장관이나 근로감독관에게 통보할 수 있다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:근로기준법시행령:제59조",
+        "lawName": "근로기준법 시행령",
+        "articleNo": "제59조",
+        "title": "권한의 위임",
+        "effectiveFrom": "2025-10-23",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C59%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제76조의3",
+        "lawName": "근로기준법",
+        "articleNo": "제76조의3",
+        "title": "직장 내 괴롭힘 발생 시 조치",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C76%EC%A1%B0%EC%9D%983",
+        "used": true
+      },
+      {
+        "id": "law:근로기준법:제26조",
+        "lawName": "근로기준법",
+        "articleNo": "제26조",
+        "title": "해고의 예고",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C26%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:근로기준법:제104조",
+        "lawName": "근로기준법",
+        "articleNo": "제104조",
+        "title": "감독 기관에 대한 신고",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C104%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:근로감독관규정:제2조",
+        "lawName": "근로감독관규정",
+        "articleNo": "제2조",
+        "title": "당연직 근로감독관",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B0%90%EB%8F%85%EA%B4%80%EA%B7%9C%EC%A0%95/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "618517",
+        "caseNo": "2024나22197",
+        "caseName": "해고무효확인",
+        "court": "수원고등법원",
+        "decidedAt": "2025-06-18",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618517",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "606249",
+        "caseNo": "2019구합88446",
+        "caseName": "증여세부과처분취소",
+        "court": "서울행정법원",
+        "decidedAt": "2021-05-28",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606249",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "424212",
+        "caseNo": "2022두56616",
+        "caseName": "재산세경정거부처분취소(업무 권한 위임한 경우 경정청구는 처분한 행정청)",
+        "court": "대법원",
+        "decidedAt": "2022-12-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=424212",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "238575",
+        "caseNo": "2021누63022",
+        "caseName": "신분보장등조치결정취소소송",
+        "court": "서울고등법원",
+        "decidedAt": "2023-01-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238575",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "227759",
+        "caseNo": "2019노578, 2019노1210(병합)",
+        "caseName": "특정경제범죄가중처벌등에관한법률위반(사기)·자본시장과금융투자업에관한법률위반·근로기준법위반·근로자퇴직급여보장법위반·위계공무집행방해",
+        "court": "서울고등법원",
+        "decidedAt": "2020-12-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=227759",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "직장 내 괴롭힘 명예훼손",
+        "total": 5
+      },
+      {
+        "keyword": "부당해고 임금 체불",
+        "total": 6
+      },
+      {
+        "keyword": "권한의 위임",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "근로기준법 제76조의3",
+          "exists": true
+        },
+        {
+          "citation": "근로기준법 제26조",
+          "exists": true
+        },
+        {
+          "citation": "근로기준법 제104조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

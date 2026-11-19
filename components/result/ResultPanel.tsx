@@ -9,7 +9,7 @@ import { rememberSearch } from "../search/parts";
 import Link from "next/link";
 import { useState } from "react";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
-import type { CategoryKey } from "@/lib/procedure/categories";
+import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import {
   difficultyLabel,
   evidenceSummary,
@@ -129,6 +129,8 @@ export function ResultPanel({
       ) : (
         <TypeNotice plan={plan} />
       )}
+
+      <RelatedSections result={result} />
 
       <Details result={result} />
 
@@ -645,4 +647,42 @@ function Trace({ result }: { result: DemoAnalysisResult }) {
 
 function Empty({ text }: { text: string }) {
   return <p className="text-muted text-[15px]">{text}</p>;
+}
+
+/**
+ * 함께 살펴볼 절차 (DEC-042): 질문 해석이 이 사연에 함께 걸려 있다고 본 다른 절차 섹션.
+ * 누르면 그 분야를 고른 채 홈 질문창으로 간다 — 따로 물어야 그 절차의 근거와 타임라인을 받는다.
+ * 어느 절차가 유리한지는 말하지 않는다 (절대 규칙 2).
+ */
+function RelatedSections({ result }: { result: DemoAnalysisResult }) {
+  const related = (result.relatedSections ?? [])
+    .map((label) => CATEGORY_LIST.find((c) => c.track === label))
+    .filter((c) => c !== undefined);
+  if (related.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="related-sections-title"
+      className="rounded-card border-line mt-6 border px-5 py-4"
+    >
+      <h2 id="related-sections-title" className="text-ink text-[15px] font-bold">
+        함께 살펴볼 절차
+      </h2>
+      <p className="text-muted mt-1 text-[13px] leading-relaxed">
+        {result.aiNotice} · 적어 주신 사연에 다른 절차도 함께 걸려 있을 수 있어요. 위 안내는 가장
+        먼저 물으신 문제 기준이에요.
+      </p>
+      <ul className="mt-2.5 flex flex-wrap gap-2">
+        {related.map((c) => (
+          <li key={c.key}>
+            <Link
+              href={`/?category=${c.key}#ask`}
+              className="border-gold-line text-ink hover:border-gold flex min-h-11 items-center rounded-full border bg-white px-4 text-sm font-semibold"
+            >
+              {c.label} 따로 물어보기
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }

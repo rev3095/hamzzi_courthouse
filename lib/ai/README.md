@@ -62,6 +62,16 @@
 
 `doc-draft.ts` `draftFacts`: 질문 마스킹본만 받아 Haiku 1회로 "있었던 일" 문장(최대 8개)과 더 적을 내용(최대 4개)을 JSON으로 받는다. 1건 **$0.0015** 상한(`DOC_DRAFT_COST_CAP_USD`, 출력 900토큰). 문장 거르기는 `lib/documents/draft.ts` `screenFacts`(사연에 없는 숫자·가림 표시, 단정 표현, 법률 판단 낱말, 법령·판례 언급이면 뺌). 예산 초과·모델 실패·남은 문장 없음은 오류가 아니라 `ok: false`로 끝내고 재시도하지 않는다. 테스트: `tests/unit/doc-draft.test.ts`.
 
+### 질문 해석 — 복수 라벨·동적 예시 (DEC-033·042)
+
+`lite.ts`의 첫 호출(Haiku, 출력 450토큰, 지시문 캐시): `section`(주된 절차 섹션) · `others`(함께 걸린 절차, 최대 2) · `channel`(online·offline·both·unknown) · `newLabel`(맞는 섹션이 없을 때의 새 섹션 제안) · `lawQuery` · `caseQueries`.
+
+- `label-bank.ts`: 직접 쓴 라벨 예시 96개(홈 카테고리 문장 + 복합 사례)에서 질문과 글자가 겹치는 것을 넷까지 골라 `<비슷한_질문_라벨_예시>`로 붙인다. 모델·임베딩을 쓰지 않는다. 기계가 라벨링한 공개 질문은 사람이 확인하기 전에는 넣지 않는다.
+- `policy.ts` `screenUnderstanding`: others는 주된 섹션·none·중복을 빼고 둘까지, 새 라벨은 섹션이 none일 때만 받고 이름은 숫자·단정 표현·개인정보가 없어야 하며 낱말은 질문에 있어야 한다.
+- 결과에는 `relatedSections`·`channel`로 실리고, 새 라벨은 `lib/inquiries/procedure-hint.ts` `saveLabelProposal`이 승인 대기로 저장한다.
+- 라벨링 데이터·결과: `evals/labels/` (법제처 생활법령 질문 400개, Haiku 라벨 400건 $0.058). 방법론: `docs/reports/2026-11-19_햄찌법원_LLM_만들기_RAG_하네스.md`.
+- 테스트: `tests/unit/label-bank.test.tsx`, `tests/unit/ai-lite.test.ts`.
+
 ### DeepSearch 심층 분석 (DEC-041)
 
 `deep.ts` `runDeepAnalysis`: ① 사건 구조화(Haiku 1회, 출력 2,000토큰 — 당사자·사실 순서·쟁점·확인할 사실, `DEEP_STRUCT_SYSTEM`) → ② 쟁점별 검색(쟁점마다 `findArticles` + 사연 전체 `freeSearch` wide, 법제처 무료) → ③ 쟁점별 답변(고른 단계 모델 1회, `DEEP_ANSWER_SYSTEM`, 문단마다 쟁점 번호) → 라우트가 인용 검증 → `buildDeepMap`으로 화면용 사건 구조.

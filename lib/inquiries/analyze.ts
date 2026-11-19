@@ -21,7 +21,7 @@ import {
   type InquiryRow,
   type Owner,
 } from "./store";
-import { procedureHintFor } from "./procedure-hint";
+import { procedureHintFor, saveLabelProposal } from "./procedure-hint";
 
 /** 라우트 maxDuration(120초) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-014, 목표 p95 ≤ 90초) */
 export const ANALYSIS_BUDGET_MS = 100_000;
@@ -107,9 +107,12 @@ export async function analyzeInquiry(
       );
     }
     // 규칙이 절차를 정하지 못한 질문만: 저장된 라벨 → 없으면 Haiku 분류 1회 후 저장 (DEC-037)
+    // 질문 해석이 새 섹션을 제안했으면 그것을 저장하고 분류 호출은 다시 하지 않는다 (같은 일을 두 번 하지 않기, DEC-042)
+    const proposal = "newLabel" in analysis ? analysis.newLabel : null;
+    if (proposal) await saveLabelProposal(proposal, inquiry.masked_text);
     const hint = await procedureHintFor(verified.result, inquiry.masked_text, {
       category: opts.category,
-      allowAi: true,
+      allowAi: !proposal,
     });
     if (hint) verified.result.procedureHint = hint;
 

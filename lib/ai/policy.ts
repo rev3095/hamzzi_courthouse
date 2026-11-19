@@ -4,6 +4,7 @@
 // - 검색어 PII 재검사 (F-007): 모델이 만든 검색어도 법제처로 보내기 전에 다시 본다
 // - 답변 문단 1차 거르기: 근거 키 밖 출처, 단정 표현(N1), 원문에 없는 숫자 (절대 규칙 1·2·3)
 // - 검증 전 초안 조립. 인용 검증(원문 대조·재조회)은 lib/citations(P4)가 한다
+import { cleanKeywords, isCleanText } from "@/lib/procedure/labels";
 import { z } from "zod";
 import { AI_NOTICE } from "@/lib/api/respond";
 import { articlesIn, caseNumbersIn, stripCitations } from "@/lib/citations/patterns";
@@ -126,6 +127,16 @@ export type DraftPoint = z.infer<typeof AnswerZ>["points"][number];
  */
 export const UnderstandZ = z.object({
   section: z.unknown().transform((v) => parseSectionLabel(v)),
+  // DEC-042: 함께 걸린 절차(최대 2)·일이 벌어진 곳·새 라벨 제안. 형식이 어긋나면 없는 것으로 본다
+  others: z
+    .array(z.unknown())
+    .catch([])
+    .transform((list) => list.map((v) => parseSectionLabel(v))),
+  channel: z.enum(["online", "offline", "both", "unknown"]).catch("unknown"),
+  newLabel: z
+    .object({ title: z.string(), keywords: z.array(z.string()) })
+    .nullable()
+    .catch(null),
   lawQuery: z.string(),
   caseQueries: z.array(z.string()),
 });
@@ -140,6 +151,38 @@ export const UNDERSTAND_SCHEMA = {
       enum: SECTION_LABELS,
       description: "질문에 적힌 사실로 고른 절차 섹션 라벨 하나",
     },
+    others: {
+      type: "array",
+      items: { type: "string", enum: SECTION_LABELS },
+      description:
+        "주된 섹션 말고 이 사연에 함께 걸린 절차 섹션. 없으면 빈 배열, 많아도 둘. none은 넣지 않는다",
+    },
+    channel: {
+      type: "string",
+      enum: ["online", "offline", "both", "unknown"],
+      description:
+        "일이 벌어진 곳: online(글·메신저·거래 플랫폼·전화 사기), offline(직접 만난 자리), both, 알 수 없으면 unknown",
+    },
+    newLabel: {
+      anyOf: [
+        { type: "null" },
+        {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "새 절차 섹션 이름 (예: 행정심판 청구)" },
+            keywords: {
+              type: "array",
+              items: { type: "string" },
+              description: "이 유형을 다시 알아볼 일반 낱말 1~3개. 질문에 그대로 나온 낱말",
+            },
+          },
+          required: ["title", "keywords"],
+          additionalProperties: false,
+        },
+      ],
+      description:
+        "section이 none일 때만: 기존 섹션에 없는 새 유형이면 이름을 제안한다. 그 밖에는 null",
+    },
     lawQuery: {
       type: "string",
       description:
@@ -152,7 +195,7 @@ export const UNDERSTAND_SCHEMA = {
         "판례 검색어. 판결문에 쓰이는 법률 용어 조합, 각각 낱말 두세 개 (예: 모욕죄 공연성)",
     },
   },
-  required: ["section", "lawQuery", "caseQueries"],
+  required: ["section", "others", "channel", "newLabel", "lawQuery", "caseQueries"],
   additionalProperties: false,
 } as const;
 
@@ -163,8 +206,16 @@ const CASE_QUERY_MAX_CHARS = 30;
  * 모델이 만든 검색어를 그대로 밖(법제처·화면)으로 보내지 않는다: 가림 표시를 지우고, 개인정보 패턴·조문이나
  * 사건번호·숫자·단정 표현이 있거나 너무 짧거나 길면 버린다. 버리면 호출 쪽이 질문 문장·조문 제목으로 찾는 기존 방식으로 돌아간다.
  */
-export function screenUnderstanding(u: Understanding): {
+export function screenUnderstanding(
+  u: Understanding,
+  maskedText = "",
+): {
   section: SectionLabel | null;
+  /** 함께 걸린 절차 섹션 (주된 섹션·none·중복 제외, 최대 2) */
+  others: SectionLabel[];
+  channel: "online" | "offline" | "both" | "unknown";
+  /** 기존 섹션에 없는 새 유형 제안. 문구 검사를 통과한 것만 (운영자 승인 전에는 화면에 쓰지 않는다) */
+  newLabel: { title: string; keywords: string[] } | null;
   lawQuery: string | null;
   caseQueries: string[];
 } {
@@ -192,8 +243,23 @@ export function screenUnderstanding(u: Understanding): {
     if (t && !caseQueries.includes(t)) caseQueries.push(t);
     if (caseQueries.length >= 2) break;
   }
+  const others: SectionLabel[] = [];
+  for (const o of u.others) {
+    if (o && o !== "none" && o !== u.section && !others.includes(o)) others.push(o);
+    if (others.length >= 2) break;
+  }
+  // 새 라벨은 맞는 섹션이 없을 때만 받는다. 이름은 숫자·단정 표현·개인정보가 없어야 하고, 낱말은 질문에 실제로 있어야 한다
+  let newLabel: { title: string; keywords: string[] } | null = null;
+  if (u.newLabel && (u.section === null || u.section === "none")) {
+    const title = u.newLabel.title.normalize("NFKC").replace(/\s+/g, " ").trim();
+    const keywords = cleanKeywords(u.newLabel.keywords, maskedText);
+    if (isCleanText(title, 30) && keywords.length > 0) newLabel = { title, keywords };
+  }
   return {
     section: u.section,
+    others,
+    channel: u.channel,
+    newLabel,
     lawQuery: lawQuery && lawQuery.length >= 5 ? lawQuery : null,
     caseQueries,
   };
@@ -436,6 +502,10 @@ export type DemoDraft = {
    * 없음(생략) = 모델을 부르지 않았거나 라벨을 못 받음 → 규칙(lib/procedure classifyCase)으로 정한다
    */
   section?: SectionLabel;
+  /** 함께 걸린 절차 섹션 (DEC-042, 최대 2). 화면이 "함께 살펴볼 절차"로 보여 준다 */
+  relatedSections?: SectionLabel[];
+  /** 일이 벌어진 곳 (DEC-042). 알 수 없으면 생략 */
+  channel?: "online" | "offline" | "both";
   answer: { points: DraftPoint[] };
   articles: {
     id: string;
@@ -496,6 +566,8 @@ export function assembleDraft(input: {
   searches: SearchRecord[];
   trace: TraceRecord[];
   section?: SectionLabel | null;
+  relatedSections?: SectionLabel[];
+  channel?: "online" | "offline" | "both" | "unknown";
 }): DemoDraft {
   const used = new Set(input.points.map((p) => p.source));
   const articles: DemoDraft["articles"] = [];
@@ -531,6 +603,8 @@ export function assembleDraft(input: {
     aiNotice: AI_NOTICE,
     intent: screenIntent(input.intent, input.maskedText, input.evidence),
     ...(input.section ? { section: input.section } : {}),
+    ...(input.relatedSections?.length ? { relatedSections: input.relatedSections } : {}),
+    ...(input.channel && input.channel !== "unknown" ? { channel: input.channel } : {}),
     answer: { points: input.points },
     articles,
     cases,

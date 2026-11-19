@@ -42,3 +42,30 @@ export async function procedureHintFor(
     return undefined;
   }
 }
+
+/**
+ * 질문 해석이 제안한 새 절차 섹션을 승인 대기로 저장한다 (DEC-042). 같은 낱말의 라벨이 이미 있으면 사용 횟수만 올린다.
+ * 단계 문구가 없는 "이름만 있는" 라벨이라 승인해도 화면에 나가지 않는다 — 어떤 섹션이 빠져 있는지 운영자가 보는 용도다.
+ * 실패해도 분석 결과를 막지 않는다.
+ */
+export async function saveLabelProposal(
+  proposal: { title: string; keywords: string[] },
+  maskedText: string,
+): Promise<void> {
+  try {
+    const known = matchLabel(await activeLabels(), maskedText);
+    if (known) {
+      await bumpLabel(known.id);
+      return;
+    }
+    await insertLabel({
+      title: proposal.title,
+      keywords: proposal.keywords,
+      track: null,
+      steps: [],
+      status: "pending",
+    });
+  } catch {
+    // 저장하지 못해도 답변은 그대로 나간다
+  }
+}

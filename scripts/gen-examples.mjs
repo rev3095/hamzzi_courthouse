@@ -18,7 +18,8 @@ if (!passcode) {
   console.error("GEN_ADMIN_PASSCODE가 없습니다.");
   process.exit(2);
 }
-const DIR = "evals/examples-gen";
+// GEN_DIR로 질문·결과 폴더를 바꿀 수 있다 (예: 측정용 evals/labels/measure)
+const DIR = process.env.GEN_DIR ?? "evals/examples-gen";
 const OUT = `${DIR}/out`;
 mkdirSync(OUT, { recursive: true });
 // 넷째 인자: 쉼표로 나눈 id 목록 (주면 그 질문만 실행한다)
@@ -90,7 +91,8 @@ for (const q of questions) {
       await call(`/inquiries/${created.id}/pii-confirmation`, { acceptMasked: true });
     // 모델 호출은 여기 한 번뿐이다
     const analyzed = await call(`/inquiries/${created.id}/analyze`, {
-      tier: "max",
+      // 기본은 Pro Max. 질문에 tier가 있으면 그 단계로 (비교 측정용)
+      tier: q.tier ?? "max",
       category: q.category,
       // DeepSearch(DEC-041) 예시는 구조화 + 쟁점별 답변으로 분석한다 (상한 2배)
       ...(q.deep && { deep: true }),

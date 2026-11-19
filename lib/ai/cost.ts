@@ -29,7 +29,7 @@ export const LITE_ANSWER_TOKENS = { max: 1_200, min: 700 } as const;
  * 질문 해석 (DEC-033): 검색 전에 Haiku 1회로 섹션 라벨과 검색어를 뽑는다. 출력은 짧은 JSON이라 300토큰이면 충분하다.
  * 정가 기준 입력 약 2,000토큰($0.0002) + 출력 300토큰($0.00015) — 질문 1건 상한(라이트 답변과 같은 상한) 안에서 쓴다
  */
-export const UNDERSTAND_TOKENS = { max: 300, min: 120 } as const;
+export const UNDERSTAND_TOKENS = { max: 450, min: 150 } as const;
 
 /** 문서 초안 도우미(DEC-023) 1건 상한 — 라이트와 같은 $0.0015. 사연 정리만 하므로 출력이 짧다 */
 export const DOC_DRAFT_COST_CAP_USD = 0.0015;

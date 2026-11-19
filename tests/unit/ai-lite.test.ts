@@ -276,7 +276,7 @@ describe("DEC-020 라이트 답변 (Haiku)", () => {
 });
 
 describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색어)", () => {
-  test("답변 모델과 상관없이 Haiku로 1회, 생각 끔, 출력 300토큰 이하 — 라벨은 결과에 싣는다", async () => {
+  test("답변 모델과 상관없이 Haiku로 1회, 생각 끔, 출력 450토큰 이하 — 라벨은 결과에 싣는다", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -288,7 +288,7 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
     expect(p.model).toBe("claude-haiku-5-5");
     expect(p.thinking).toEqual({ type: "disabled" });
     expect(p.tools).toBeUndefined();
-    expect(p.max_tokens).toBeLessThanOrEqual(300);
+    expect(p.max_tokens).toBeLessThanOrEqual(450);
     expect(out.draft.section).toBe("lease_deposit");
     // 질문 해석 + 답변 1회, 그 밖의 호출 없음
     expect(model.calls).toHaveLength(1);
@@ -390,6 +390,9 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
     const { screenUnderstanding } = await import("@/lib/ai/policy");
     const bad = screenUnderstanding({
       section: "insult",
+      others: [],
+      channel: "unknown",
+      newLabel: null,
       lawQuery: "형법 제311조 모욕죄 고소 절차",
       caseQueries: [
         "대법원 2015도1234 공연성",
@@ -419,8 +422,8 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
         ...HAIKU,
       },
     );
-    // 해석 계획 최대치(입력 1,500 + 출력 300 = $0.0003) + 답변 $0.0007
-    expect(out.costUsd).toBeCloseTo(0.001, 6);
+    // 해석 계획 최대치(입력 1,500 + 출력 450 = $0.000375, DEC-042로 출력 한도 300 → 450) + 답변 $0.0007
+    expect(out.costUsd).toBeCloseTo(0.001075, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.0015);
   });
 });

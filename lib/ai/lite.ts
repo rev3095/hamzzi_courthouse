@@ -19,6 +19,7 @@ import {
   type Usage,
 } from "./client";
 import { UNDERSTAND_TOKENS } from "./cost";
+import { examplesBlock } from "./label-bank";
 import { userMessage } from "./message";
 import { tierOf, type TierId } from "./models";
 import {
@@ -41,7 +42,7 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-19-lawname";
+export const LITE_PROMPT_VERSION = "lite-2026-11-19-multilabel";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -66,6 +67,8 @@ export type LiteAnalysisOutput = {
   costUsd: number;
   /** 예산·출력 한도 때문에 AI 문단 없이 근거만 냈다 */
   costCapped: boolean;
+  /** 질문 해석이 제안한 새 절차 섹션 (DEC-042). 저장만 하고 운영자 승인 전에는 화면에 쓰지 않는다 */
+  newLabel?: { title: string; keywords: string[] } | null;
 };
 
 /** 답변 모델에 넘길 근거 키 순서: 조문 먼저, 그다음 요지가 있는 판례 */
@@ -128,16 +131,25 @@ export async function runLiteAnalysis(
         model: UNDERSTAND_MODEL,
         max_tokens: UNDERSTAND_TOKENS.max,
         thinking: { type: "disabled" },
-        system: [{ type: "text", text: UNDERSTAND_SYSTEM }],
+        // 지시문·라벨 목록은 요청마다 같아 캐시에서 싸게 다시 읽는다 (DEC-042)
+        system: [{ type: "text", text: UNDERSTAND_SYSTEM, cache_control: { type: "ephemeral" } }],
         output_config: { format: { type: "json_schema", schema: UNDERSTAND_SCHEMA } },
-        messages: [{ role: "user", content: userMessage(input.maskedText, context) }],
+        // 비슷한 질문의 라벨 예시를 골라 붙인다 (DEC-042 — 미세조정 대신 매번 관련 예시를 보여 준다)
+        messages: [
+          {
+            role: "user",
+            content: [examplesBlock(input.maskedText), userMessage(input.maskedText, context)]
+              .filter(Boolean)
+              .join("\n\n"),
+          },
+        ],
       },
       UNDERSTAND_TIMEOUT_MS,
       { minOutputTokens: UNDERSTAND_TOKENS.min },
     );
     usage = addUsage(usage, res);
     const parsed = UnderstandZ.safeParse(JSON.parse(textOf(res)));
-    if (parsed.success) understood = screenUnderstanding(parsed.data);
+    if (parsed.success) understood = screenUnderstanding(parsed.data, input.maskedText);
   } catch (e) {
     // 상한·시간 초과·형식 오류·모델 오류 모두 해석 없이 계속한다 (오류로 끝내지 않는다)
     if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
@@ -237,6 +249,8 @@ export async function runLiteAnalysis(
     searches: found.searches,
     trace: [],
     section: understood?.section,
+    relatedSections: understood?.others,
+    channel: understood?.channel,
   });
   return {
     draft,
@@ -247,5 +261,6 @@ export async function runLiteAnalysis(
     promptVersion: LITE_PROMPT_VERSION,
     costUsd: spent,
     costCapped,
+    newLabel: understood?.newLabel ?? null,
   };
 }
