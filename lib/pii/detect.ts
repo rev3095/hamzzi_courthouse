@@ -45,7 +45,10 @@ const NOT_NAMES = new Set(
     "병원 은행 보험사 경찰 검찰 법원 판사 검사 변호사 노무사 법무사 세무사 상대방 상대 사장 대표 직원 " +
     "선생 선배 후배 친구 동생 형님 누나 언니 오빠 아빠 엄마 남친 여친 전남친 전여친 이번 이전 이후 정말 진짜 " +
     "한번 한달 오늘 어제 내일 지금 나중 전화 문자 계약 계약금 보증금 월세 임금 월급 퇴직금 사기 고소장 " +
-    "지난 지난달 작년 올해 이미 아직 우리 저희 그쪽 이쪽 하루 일단 유리 불리 피해 피해자 가해자"
+    "지난 지난달 작년 올해 이미 아직 우리 저희 그쪽 이쪽 하루 일단 유리 불리 피해 피해자 가해자 " +
+    // 관계어 뒤에 자주 오는 사건 낱말 (예: "직원 정규직", "남편 이혼", "사장 임금체불")
+    "이혼 정규직 비정규직 전입 전출 고용 고용주 이직 구직 구인 지원금 신용 조정 하청 차용 " +
+    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난"
   ).split(" "),
 );
 // 이름 뒤에 붙는 말(호칭·조사). 긴 것부터 떼어 본다.
@@ -53,6 +56,9 @@ const NAME_TAILS = [
   "에게서", "한테서", "에게", "한테", "께서", "이랑", "하고", "으로", "에서", "과의", "와의",
   "이가", "이는", "이를", "이한테", "이에게", "은", "는", "이", "가", "의", "에", "도", "를", "을",
   "과", "와", "랑", "로", "씨", "님", "이에요", "예요", "입니다", "이고", "이며",
+  "이라고", "라고", "이라는", "라는",
+  // 한 글자 어미도 떼어 본다: "이름은 김민수고", "가해자 김민수요", "친구 이상윤아"
+  "고", "요", "면", "야", "며", "아", "이요", "이야", "이면",
 ].sort((a, b) => b.length - a.length); // prettier-ignore
 const HONORIFIC = "씨|님|군|양|선생님|사장님|대표님|과장님|부장님|팀장님|대리님|실장님|기사님";
 // 바로 뒤에 이름이 오기 쉬운 관계·역할어
@@ -60,16 +66,59 @@ const RELATIONS =
   "친구|남편|아내|와이프|동생|형|누나|언니|오빠|사장|집주인|임대인|임차인|세입자|상대방|판매자|구매자|" +
   "상사|동료|남자친구|여자친구|전남친|전여친|채무자|채권자|가해자|피해자|원고|피고|고소인|피고소인|직원|대표";
 
-const isNameCandidate = (s: string) =>
+// --- 이름이 아닌 활용형 ----------------------------------------------------
+// '구해야'·'고소하려면'처럼 성씨 글자로 시작하는 동사·형용사 활용형을 이름으로 보지 않는다.
+// 이름(성 뒤 글자)에 거의 쓰이지 않는 형태만 고른다 — '하은'·'하라'·'민서'·'은지' 같은 이름은 남긴다.
+// 과거·미래 표지 글자
+const VERB_MARK = /[했았었였겠됐셨갔왔봤줬랬켰웠렀졌]/;
+// 이름 끝에 오지 않는 연결·종결 어미
+const VERB_ENDINGS = [
+  "해야", "해서", "해도", "해요", "해줘", "하면", "하고", "하는", "하려", "하러", "하자", "하지",
+  "한다", "한대", "할게", "할까", "합니", "됩니", "줘서", "줘야", "와서", "가서", "봐서", "돼서",
+  "라고", "래요", "대요", "는데", "지만", "니까", "려고", "려면", "는지", "으면", "으니", "잖아",
+  "거든", "더니", "도록",
+]; // prettier-ignore
+// 성 + 한 글자 동사 어간 ('구해', '구하' + 는)
+const VERB_STEM_ONE = "하해했할합";
+// '이혼' + 하다, '주장' + 하는처럼 낱말 + 하다
+const VERB_AFTER_NOUN = "하해했되돼";
+
+function looksLikeVerb(s: string): boolean {
+  const given = s.slice(1);
+  if (VERB_MARK.test(given)) return true;
+  if (given.length === 1) return VERB_STEM_ONE.includes(given);
+  if (VERB_ENDINGS.some((e) => given.endsWith(e))) return true;
+  // 앞 두 글자가 일반 낱말이면: 4글자는 복합어('임금체불'), 3글자는 낱말 + 하다('주장하')만 거른다.
+  // 3글자 이름('이상윤'·'한도윤'·'이하은')은 앞 두 글자가 낱말이어도 남긴다.
+  if (NOT_NAMES.has(s.slice(0, 2))) {
+    if (s.length === 4 || VERB_AFTER_NOUN.includes(s[2])) return true;
+  }
+  return false;
+}
+
+const isNameShape = (s: string) =>
   s.length >= 2 && s.length <= 4 && SURNAMES.includes(s[0]) && !NOT_NAMES.has(s);
+// 호칭 앞('김미려 씨')은 이름이 거의 확실해 활용형 검사를 하지 않는다. 관계어·"이름은" 뒤에만 쓴다.
+const isNameCandidate = (s: string) => isNameShape(s) && !looksLikeVerb(s);
+
+// 관계어 뒤에 띄어 쓴 조사만 온 경우: "사장 한테서", "친구 하고", "남편 이랑은"
+// 겹친 조사는 아래 조합만 본다 — '이가은'(이 + 가은)처럼 조사로 시작하는 이름을 놓치지 않게.
+const PARTICLE_HEADS = ["한테", "하고", "이랑", "에게", "께서", "이한테", "이에게"];
+const isParticle = (s: string) =>
+  NAME_TAILS.includes(s) ||
+  PARTICLE_HEADS.some(
+    (t) => s.startsWith(t) && ["도", "는", "은", "서"].includes(s.slice(t.length)),
+  );
 
 /** '김지은은' 같은 낱말에서 조사·호칭을 떼고 이름으로 보이는 부분을 고른다. */
 function nameStem(token: string): string | null {
-  if (NOT_NAMES.has(token)) return null;
+  if (NOT_NAMES.has(token) || isParticle(token)) return null;
   for (const tail of NAME_TAILS) {
     if (token.endsWith(tail) && token.length > tail.length) {
       const stem = token.slice(0, -tail.length);
       if (NOT_NAMES.has(stem)) return null;
+      // 긴 꼬리를 뗀 앞부분이 활용형이면 낱말 전체가 활용형이다: '구하라고' = '구하' + '라고'
+      if (isNameShape(stem) && looksLikeVerb(stem)) return null;
       if (isNameCandidate(stem)) return stem;
     }
   }
@@ -80,7 +129,7 @@ function findNames(text: string): Set<string> {
   const names = new Set<string>();
   // 1) 이름 + 호칭: "김철수 씨", "이영희님"
   for (const m of text.matchAll(new RegExp(`([가-힣]{2,4})\\s?(?:${HONORIFIC})`, "g"))) {
-    if (isNameCandidate(m[1])) names.add(m[1]);
+    if (isNameShape(m[1])) names.add(m[1]);
   }
   // 2) 관계·역할어 + 이름: "친구 박민수한테", "집주인 최영호가"
   for (const m of text.matchAll(
