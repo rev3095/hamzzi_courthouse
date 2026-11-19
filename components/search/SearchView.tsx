@@ -1,5 +1,5 @@
 "use client";
-// 검색 화면 /search (F-003, DEC-029 제안). 질문 3회와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
+// 검색 화면 /search (F-003, DEC-029 제안). 하루 질문 횟수와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
 // 종류 탭: 판례 · 법령해석례 · 헌재 결정례 · 조세심판 재결례 · 관세청 해석 · 자치법규 · 행정규칙.
 // "민법 750조"·사건번호처럼 대상이 분명한 입력은 목록 대신 그 조문·판례로 바로 간다.
 // 검색 패널(출처·자주 찾는 검색어·검색 요령)과 결과 카드(건수·칩·19px 제목·자리표시)는 F-003 가독성 개편(e08a9e2) 구성을 따른다.
@@ -14,10 +14,11 @@ import {
   type ClientError,
   type DecisionDomain,
 } from "@/lib/client/api";
-import { directTarget } from "@/lib/search/explore";
+import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
+import { KindTabs } from "./KindTabs";
 import {
   Highlighted,
   OriginalLink,
@@ -32,10 +33,11 @@ type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
 
 const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "cases", label: "판례", placeholder: "예: 임대차 보증금 반환, 민법 750조, 2023다12345" },
-  { kind: "interpretation", label: "법령해석례", placeholder: "예: 임대차, 공공임대주택" },
-  { kind: "constitutional", label: "헌재 결정례", placeholder: "예: 임대차보호법, 재산권" },
-  { kind: "tax_tribunal", label: "조세심판 재결례", placeholder: "예: 양도소득세, 증여" },
-  // 관세청 해석(customs)은 법제처 인증키에 대상 승인이 없어 결과가 오지 않는다(2026-11-18 확인). 승인 뒤 탭을 다시 연다 — API는 그대로 둔다
+  ...DECISION_TABS.map((d) => ({
+    kind: d.domain as Kind,
+    label: d.label,
+    placeholder: d.placeholder,
+  })),
   { kind: "ordinances", label: "자치법규", placeholder: "예: 출산장려금, 주차장 설치" },
   { kind: "admin_rules", label: "행정규칙", placeholder: "예: 임대차, 최저임금 고시" },
 ];
@@ -48,7 +50,7 @@ export const QUICK_QUERIES = [
   "부당해고",
   "전세 사기",
   "교통사고 손해배상",
-  "층간소음",
+  "층간소음 손해배상",
   "대여금 반환",
 ] as const;
 
@@ -65,6 +67,8 @@ type Item = {
   /** 첫 항목은 칩(법원·기관), 나머지는 날짜·번호 */
   tags: string[];
   sourceUrl: string | null;
+  /** 원문 주소가 없을 때 번호로 찾아볼 기관 공식 사이트 */
+  agencySite?: { label: string; url: string } | null;
   /** 자치법규만: 나란히 비교에 쓰는 번호 */
   compareId?: string;
 };
@@ -134,10 +138,12 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
       ...r.data,
       items: r.data.items.map((d) => ({
         key: d.id,
-        href: `/decisions/${d.domain}/${d.id}?from=search`,
+        // 법제처가 본문 조회를 주지 않는 종류(국세청 해석)는 목록만
+        href: d.hasDetail ? `/decisions/${d.domain}/${d.id}?from=search` : null,
         title: d.title,
-        tags: tags(d.agency, dotDate(d.decidedAt), d.refNo),
+        tags: tags(d.agency, d.decidedAt && `${d.dateLabel} ${dotDate(d.decidedAt)}`, d.refNo),
         sourceUrl: d.sourceUrl,
+        agencySite: d.agencySite ?? null,
       })),
     },
   };
@@ -226,32 +232,19 @@ export function SearchView() {
         </p>
         <h1 className="font-display text-ink mt-3 text-[28px] font-bold">판례·법령 검색</h1>
         <p className="text-muted mt-2 text-[15px] leading-relaxed">
-          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 3번과 따로 세요.
+          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 횟수와 따로 세요.
         </p>
-        <div
-          role="tablist"
-          aria-label="검색 종류"
-          className="mt-5 flex gap-2 overflow-x-auto pb-1 whitespace-nowrap"
-        >
-          {KINDS.map((k) => (
-            <button
-              key={k.kind}
-              type="button"
-              role="tab"
-              aria-selected={tab === k.kind}
-              onClick={() => {
-                setTab(k.kind);
-                if (text.trim() && state.kind !== "idle") void submit(k.kind);
-              }}
-              className={`flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold ${
-                tab === k.kind
-                  ? "border-gold bg-cream text-ink"
-                  : "border-line text-muted hover:border-gold bg-white"
-              }`}
-            >
-              {k.label}
-            </button>
-          ))}
+        <div className="mt-5">
+          {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+          <KindTabs
+            kinds={KINDS}
+            value={tab}
+            label="검색 종류"
+            onChange={(k) => {
+              setTab(k);
+              if (text.trim() && state.kind !== "idle") void submit(k);
+            }}
+          />
         </div>
         <div className="mt-4 max-w-[820px]">
           <QuestionBox
@@ -394,6 +387,12 @@ export function SearchView() {
                       </Link>
                     )}
                     {c.sourceUrl && <OriginalLink url={c.sourceUrl} />}
+                    {!c.sourceUrl && c.agencySite && (
+                      <OriginalLink
+                        url={c.agencySite.url}
+                        label={`${c.agencySite.label} 사이트에서 번호로 찾기 ↗`}
+                      />
+                    )}
                     {c.compareId && (
                       <label className="text-muted inline-flex min-h-11 items-center gap-2 text-sm">
                         <input

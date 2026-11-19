@@ -1,13 +1,16 @@
 "use client";
-// 홈 질문 영역 (S-01): 질문창 → 카테고리 버튼(DEC-028) → 예시 답변 피드. 3회를 다 쓰면 누를 때 데모 한도 안내 (S-06 자리).
+// 홈 질문 영역 (S-01): 질문창 → 카테고리 버튼(DEC-028) → 예시 답변 피드. 하루 횟수를 다 쓰면 누를 때 데모 한도 안내 (S-06 자리).
 // 카테고리를 고르면 질문창 위에 안내·문장 시작·그 분야 예시 답변이 나온다. 보내기는 지금처럼 질문 1번으로 센다(DEC-024).
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
+import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
+import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
-import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { DeepAsk } from "../ask/DeepAsk";
+import { limitCopy } from "../LimitNotice";
 import { ExampleFeed, type FeedExample } from "../ask/ExampleFeed";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -24,6 +27,7 @@ function urlCategory(): CategoryKey | null {
 
 export function HomeAsk({ examples }: { examples: FeedExample[] }) {
   const [text, setText] = useState("");
+  const [deepOpen, setDeepOpen] = useState(false);
   // undefined = 아직 고르지 않음(주소 값을 따른다), null = 고른 것을 해제
   const [picked, setPicked] = useState<CategoryKey | null | undefined>(undefined);
   const fromUrl = useSyncExternalStore(noSubscribe, urlCategory, () => null);
@@ -31,7 +35,8 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const quota = useQuota();
   const { busy, error, send, modals, showLimit } = useAsk({ category });
-  const blocked = quota?.loginRequired === true;
+  const blocked = isQuotaBlocked(quota);
+  const signedIn = isSignedIn(quota);
   const current = category ? CATEGORIES[category] : null;
   const categoryExamples = current ? examples.filter((e) => current.examples.includes(e.id)) : [];
 
@@ -103,7 +108,20 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           busy={busy}
           placeholder={current?.placeholder}
           inputRef={inputRef}
+          askTools
+          onDeep={() => (blocked ? showLimit() : setDeepOpen(true))}
         />
+        {deepOpen && (
+          <DeepAsk
+            initialText={text}
+            busy={busy}
+            onClose={() => setDeepOpen(false)}
+            onSubmit={(q) => {
+              setDeepOpen(false);
+              void send(q, false, true);
+            }}
+          />
+        )}
         {error ? (
           <p role="alert" className="text-warn-text mt-3 text-center text-sm">
             {error}
@@ -111,8 +129,8 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
         ) : (
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
-              ? DEMO_LIMIT_TEXT
-              : "이름·전화번호 같은 개인정보는 빼고 적어 주세요. 데모에서는 하루 3번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요."}
+              ? limitCopy(signedIn).body
+              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요.`}
           </p>
         )}
       </div>

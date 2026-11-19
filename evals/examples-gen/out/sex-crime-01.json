@@ -1,0 +1,195 @@
+{
+  "id": "sex-crime-01",
+  "category": "sex_crime",
+  "question": "지하철에서 누군가 제 몸을 몰래 촬영하는 것을 알아챘어요. 촬영한 사람은 현장에서 붙잡혔어요. 피해자로서 앞으로 어떤 절차를 밟게 되고 어떤 보호를 받을 수 있나요?",
+  "at": "2026-11-19T03:46:04.066Z",
+  "elapsedMs": 25163,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 11373,
+    "tokens_out": 2044,
+    "latency_ms": 24701
+  },
+  "costUsdUpperEstimate": 0.08637,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "성폭력범죄의 처벌 등에 관한 특례법",
+        "공소청 인권보호사무규칙",
+        "전기통신사업법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "강제추행",
+        "카메라등이용촬영 피해자 고소",
+        "성폭력범죄 피해자 보호 신변안전조치"
+      ]
+    },
+    "section": "sex_crime",
+    "answer": {
+      "points": [
+        {
+          "text": "수사·재판 과정에서 피해자를 면담할 때는 인격과 사생활이 침해되지 않도록 주의하고, 편안한 면담환경을 만들며 면담 횟수는 필요한 만큼만 하도록 규정되어 있습니다. 피해사실이 다른 사람에게 노출되지 않도록 하고, 필요하면 재판 비공개를 법원에 요청하도록 정하고 있습니다.",
+          "source": "law:공소청인권보호사무규칙:제56조",
+          "quote": "피해자가 편안한 상태에서 진술할 수 있는 면담환경을 조성하고",
+          "check": "verified"
+        },
+        {
+          "text": "만약 촬영물이 인터넷 등에서 유통되는 것이 확인되면, 경찰은 지체 없이 심의위원회나 서비스 제공자에게 삭제·접속차단을 요청하고 그 절차를 피해자에게 안내하도록 되어 있습니다. 또 재차 피해 위험이 현저하면 신변보호 조치도 규정되어 있습니다. 질문에 유포 사실은 없으므로 해당 시에 적용됩니다.",
+          "source": "law:성폭력범죄의처벌등에관한특례법:제23조의2",
+          "quote": "해당 촬영물등에 대한 삭제 또는 접속차단 등의 조치를 하여줄 것을 요청하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "불법촬영물 신고·삭제요청은 성폭력피해상담소나 한국여성인권진흥원 같은 기관을 통해서도 할 수 있도록 정해져 있습니다. 이런 기관에 도움을 요청하는 방법도 함께 알아보실 수 있습니다.",
+          "source": "law:전기통신사업법시행령:제30조의5",
+          "quote": "「양성평등기본법」 제46조의2제1항에 따른 한국여성인권진흥원",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:성폭력범죄의처벌등에관한특례법:제23조의2",
+        "lawName": "성폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제23조의2",
+        "title": "디지털 성범죄의 피해확대 방지 및 피해자 보호 등을 위한 조치",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%B1%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C23%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:성폭력범죄의처벌등에관한특례법:제14조",
+        "lawName": "성폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제14조",
+        "title": "카메라 등을 이용한 촬영",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%B1%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C14%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:공소청인권보호사무규칙:제56조",
+        "lawName": "공소청 인권보호사무규칙",
+        "articleNo": "제56조",
+        "title": "성폭력 등 피해자의 보호",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%86%8C%EC%B2%AD%20%EC%9D%B8%EA%B6%8C%EB%B3%B4%ED%98%B8%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C56%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:전기통신사업법시행령:제30조의5",
+        "lawName": "전기통신사업법 시행령",
+        "articleNo": "제30조의5",
+        "title": "불법촬영물 등의 신고 및 삭제요청 등",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EC%82%AC%EC%97%85%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C30%EC%A1%B0%EC%9D%985",
+        "used": true
+      },
+      {
+        "id": "law:공소청인권보호사무규칙:제30조",
+        "lawName": "공소청 인권보호사무규칙",
+        "articleNo": "제30조",
+        "title": "압수ㆍ수색ㆍ검증 적법성 등 심사",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%86%8C%EC%B2%AD%20%EC%9D%B8%EA%B6%8C%EB%B3%B4%ED%98%B8%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C30%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "623713",
+        "caseNo": "2026도2156",
+        "caseName": "재물손괴·강제추행",
+        "court": "대법원",
+        "decidedAt": "2026-07-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623713",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "606353",
+        "caseNo": "2024고합24",
+        "caseName": "준강제추행·성폭력범죄의처벌등에관한특례법위반(카메라등이용촬영·반포등)·감금·강간·스토킹범죄의처벌등에관한법률위반·협박",
+        "court": "수원지방법원 성남지원",
+        "decidedAt": "2024-05-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606353",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "241993",
+        "caseNo": "2024도11629",
+        "caseName": "무고·위계공무집행방해(인정된죄명:경범죄처벌법위반)[허위로 112신고를 한 행위가 위계공무집행방해죄의 위계에 해당하는지 여부가 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2024-11-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=241993",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "618653",
+        "caseNo": "2025도16559",
+        "caseName": "강제추행[현역 군인에 대하여 성폭력처벌법 제16조 제2항 단서가 정한 이수명령을 부과할 수 없는 특별한 사정이 있다고 보아 이수명령을 병과하지 아니한 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-04-02",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618653",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "237973",
+        "caseNo": "2022노257, 2022전노32(병합)",
+        "caseName": "아동·청소년의성보호에관한법률위반(위계등유사성행위)·아동·청소년의성보호에관한법률위반(성매수등)·아동·청소년의성보호에관한법률위반(성착취물제작·배포등)·성폭력범죄의처벌등에관한특례법위반(카메라등이용촬영·반포등)·미성년자의제강간·미성년자의제유사강간·아동복지법위반(아동에대한음행강요·매개·성희롱등)·성매매알선등행위의처벌에관한법률위반(성매매)·부착명령",
+        "court": "서울고등법원(춘천)",
+        "decidedAt": "2023-06-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=237973",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "강제추행",
+        "total": 6
+      },
+      {
+        "keyword": "카메라등이용촬영 피해자 고소",
+        "total": 6
+      },
+      {
+        "keyword": "성폭력범죄 피해자 보호 신변안전조치",
+        "total": 3
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": false,
+      "items": [
+        {
+          "citation": "공소청 인권보호사무규칙 제56조",
+          "exists": true
+        },
+        {
+          "citation": "성폭력범죄의 처벌 등에 관한 특례법 제23조의2",
+          "exists": true
+        },
+        {
+          "citation": "전기통신사업법 시행령 제30조의5",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    }
+  }
+}

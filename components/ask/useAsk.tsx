@@ -1,16 +1,19 @@
 "use client";
 // 질문 보내기 흐름 (F-001, F-007, DEC-010): 입력 → POST /inquiries → (민감정보 동의 S-02b) → (가린 문장 확인 S-02a)
-// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 3회를 다 쓰면 데모 한도 안내(S-06 자리).
+// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 하루 횟수를 다 쓰면 데모 한도 안내(S-06 자리).
 // 원문은 입력란에만 있고 브라우저에 저장하지 않는다. 저장하는 것은 서버가 돌려준 마스킹본뿐 (DEC-006).
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   confirmPii,
   createInquiry,
+  isUserDailyLimit,
   notifyQuotaChanged,
+  rememberDeep,
   rememberQuestion,
   type ClientError,
 } from "@/lib/client/api";
+import { readSave } from "@/lib/client/save";
 import type { PiiFinding } from "@/lib/pii";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
@@ -18,7 +21,7 @@ import { Modal, PrimaryButton, SecondaryButton } from "../Modal";
 
 type Pending =
   | { kind: "none" }
-  | { kind: "consent"; text: string; categories: string[] }
+  | { kind: "consent"; text: string; deep: boolean; categories: string[] }
   | { kind: "pii"; id: string; findings: PiiFinding[]; maskedText: string }
   | { kind: "login" };
 
@@ -56,7 +59,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
     router.push(`/inquiries/${id}`);
   };
 
-  async function send(text: string, sensitiveConsent = false) {
+  async function send(text: string, sensitiveConsent = false, deep = false) {
     setError(null);
     if (!text.trim()) {
       setError("내용을 적어 주세요.");
@@ -67,13 +70,15 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       text,
       ...(sensitiveConsent && { sensitiveConsent: true }),
       ...(opts.parentInquiryId && { parentInquiryId: opts.parentInquiryId }),
+      // 로그인 사용자가 "내 기록에 남기기"를 켜 두었을 때만 (DEC-039). 서버가 비로그인 요청에서는 무시한다
+      ...(readSave() && { save: true }),
     });
     setBusy(false);
     if (!r.ok) {
       if (r.error.code === "CONSENT_REQUIRED") {
         const cats = r.error.details?.categories;
-        setPending({ kind: "consent", text, categories: Array.isArray(cats) ? cats : [] });
-      } else if (r.error.code === "LOGIN_REQUIRED") {
+        setPending({ kind: "consent", text, deep, categories: Array.isArray(cats) ? cats : [] });
+      } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
         setPending({ kind: "login" });
       } else {
@@ -82,6 +87,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       return;
     }
     rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
+    if (deep) rememberDeep(r.data.id);
     if (r.data.piiConfirmationRequired) {
       setPending({
         kind: "pii",
@@ -116,9 +122,9 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
         categories={pending.categories}
         busy={busy}
         onAccept={() => {
-          const text = pending.text;
+          const { text, deep } = pending;
           close();
-          void send(text, true);
+          void send(text, true, deep);
         }}
         onClose={close}
       />

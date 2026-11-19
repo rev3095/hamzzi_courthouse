@@ -2,6 +2,7 @@
 import type { Page, Route } from "@playwright/test";
 import { AI_NOTICE } from "../../lib/api/respond";
 import type { DemoAnalysisResult } from "../../lib/citations/policy";
+import { ANON_QUESTION_LIMIT } from "../../lib/inquiries/policy";
 import { demoExamples, findExample, replayResult, SEARCH_ONLY_NOTE } from "../../lib/demo/policy";
 
 export const INQ = "11111111-1111-4111-8111-111111111111";
@@ -69,8 +70,8 @@ export async function mockApi(page: Page, opts: MockOptions = {}) {
       data: {
         anonymous: true,
         used: analyzed ? used + 1 : used,
-        limit: 3,
-        remaining: 3 - (analyzed ? used + 1 : used),
+        limit: ANON_QUESTION_LIMIT,
+        remaining: ANON_QUESTION_LIMIT - (analyzed ? used + 1 : used),
         loginRequired: opts.quota?.loginRequired ?? false,
       },
     }),

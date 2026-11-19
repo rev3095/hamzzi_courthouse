@@ -18,7 +18,7 @@ import {
   type ClientError,
   type DecisionDomain,
 } from "@/lib/client/api";
-import { directTarget } from "@/lib/search/explore";
+import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import {
@@ -30,15 +30,14 @@ import {
   rememberSearch,
   searchErrorText,
 } from "./parts";
+import { KindTabs } from "./KindTabs";
 import { addPin, clearPins, removePin, usePins, useRecent } from "./recent";
 
 type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
 
 const KINDS: { kind: Kind; label: string }[] = [
   { kind: "cases", label: "판례" },
-  { kind: "interpretation", label: "법령해석례" },
-  { kind: "constitutional", label: "헌재 결정례" },
-  { kind: "tax_tribunal", label: "조세심판 재결례" },
+  ...DECISION_TABS.map((d) => ({ kind: d.domain as Kind, label: d.label })),
   { kind: "ordinances", label: "자치법규" },
   { kind: "admin_rules", label: "행정규칙" },
 ];
@@ -57,15 +56,12 @@ export type Row = {
   sourceUrl: string | null;
 };
 
-const DATE_WORD: Record<Kind, string> = {
+const DATE_WORD = {
   cases: "선고",
-  interpretation: "회신",
-  constitutional: "종국",
-  tax_tribunal: "의결",
-  customs: "회신",
   ordinances: "시행",
   admin_rules: "시행",
-};
+  ...Object.fromEntries(DECISION_TABS.map((d) => [d.domain, d.dateLabel])),
+} as Record<Kind, string>;
 
 /** 인용 표기: 법제처가 준 기관·날짜·번호를 이어 붙이기만 한다 (예: 대법원 2021. 3. 11. 선고 2020다12345) */
 export function citationLine(r: Pick<Row, "kind" | "title" | "org" | "date" | "refNo">): string {
@@ -178,7 +174,8 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Found>> {
       rows: r.data.items.map((d) => ({
         kind,
         id: d.id,
-        href: `/decisions/${d.domain}/${d.id}?from=search`,
+        // 법제처가 본문 조회를 주지 않는 종류(국세청 해석)는 목록만
+        href: d.hasDetail ? `/decisions/${d.domain}/${d.id}?from=search` : null,
         title: d.title,
         org: d.agency,
         date: d.decidedAt,
@@ -216,7 +213,8 @@ async function loadPreview(row: Row): Promise<ApiResult<PreviewData>> {
         }
       : r;
   }
-  if (row.kind === "admin_rules") return { ok: true, data: { sections: [], statutes: [] } };
+  if (row.kind === "admin_rules" || !row.href)
+    return { ok: true, data: { sections: [], statutes: [] } };
   const r = await getDecision(row.kind, row.id);
   return r.ok ? { ok: true, data: { sections: r.data.sections, statutes: [] } } : r;
 }
@@ -512,8 +510,8 @@ export function ResearchView() {
           <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
           <h1 className="font-display mt-1 text-[26px] font-bold">판례 리서치</h1>
           <p className="mt-1 text-sm text-white/75">
-            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문 3번과
-            따로 세요.
+            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문
+            횟수와 따로 세요.
           </p>
           <form
             role="search"
@@ -542,28 +540,18 @@ export function ResearchView() {
               검색
             </button>
           </form>
-          <div
-            role="tablist"
-            aria-label="자료 종류"
-            className="mt-4 flex gap-1.5 overflow-x-auto pb-1 whitespace-nowrap"
-          >
-            {KINDS.map((k) => (
-              <button
-                key={k.kind}
-                type="button"
-                role="tab"
-                aria-selected={tab === k.kind}
-                onClick={() => {
-                  setTab(k.kind);
-                  if (text.trim() && state.kind !== "idle") void submit(k.kind);
-                }}
-                className={`min-h-11 rounded-[8px] px-3.5 text-sm font-semibold ${
-                  tab === k.kind ? "text-ink bg-white" : "bg-white/10 text-white hover:bg-white/20"
-                }`}
-              >
-                {k.label}
-              </button>
-            ))}
+          <div className="mt-4">
+            {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+            <KindTabs
+              kinds={KINDS}
+              value={tab}
+              label="자료 종류"
+              variant="dark"
+              onChange={(k) => {
+                setTab(k);
+                if (text.trim() && state.kind !== "idle") void submit(k);
+              }}
+            />
           </div>
         </div>
       </div>

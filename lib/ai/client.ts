@@ -68,7 +68,15 @@ export function withCostCap(inner: ModelClient, capUsd: number = COST_CAP_USD): 
         reserveUsd: options.reserveUsd,
       });
       if (!plan.ok) throw new CostCapReached(stage, plan.reason);
-      const res = await inner.create({ ...params, max_tokens: plan.maxTokens }, options);
+      let res: ModelMessage;
+      try {
+        res = await inner.create({ ...params, max_tokens: plan.maxTokens }, options);
+      } catch (e) {
+        // 시간 초과·연결 오류로 응답 없이 끝난 호출도 과금됐을 수 있다. 계획한 최대 비용을 쓴 것으로 쳐서
+        // 뒤따르는 호출(질문 해석 뒤의 답변, DEC-033)이 상한 전액을 다시 쓰지 못하게 한다
+        spent += usageCost(params.model, { inputTokens, outputTokens: plan.maxTokens });
+        throw e;
+      }
       spent += usageCost(params.model, {
         inputTokens: res.usage.input_tokens ?? 0,
         outputTokens: res.usage.output_tokens ?? 0,
@@ -94,7 +102,7 @@ let client: Anthropic | null = null;
 
 export function createModelClient(): ModelClient {
   // 무료 모드(기본)에서는 Claude 클라이언트를 만들지 않는다 — 별도 과금 차단의 마지막 방어선 (DEC-015)
-  if (aiMode() === "free") throw new Error("AI_MODE가 pro가 아니라 Claude를 부르지 않습니다");
+  if (aiMode() === "free") throw new Error("AI_MODE가 free라 Claude를 부르지 않습니다");
   client ??= new Anthropic({
     apiKey: required("ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY),
     // 재시도 없음 (DEC-020): 실패한 요청도 과금될 수 있어 같은 요청을 두 번 보내지 않는다

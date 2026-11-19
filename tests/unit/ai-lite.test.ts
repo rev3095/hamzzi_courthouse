@@ -4,10 +4,13 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { runLiteAnalysis, liteEvidenceKeys, LITE_MAX_ARTICLES } = await import("@/lib/ai/lite");
+const { runLiteAnalysis, liteEvidenceKeys, LITE_MAX_ARTICLES, UNDERSTAND_MODEL } =
+  await import("@/lib/ai/lite");
+const { UNDERSTAND_TOKENS } = await import("@/lib/ai/cost");
 const { EvidenceSet } = await import("@/lib/search/evidence");
 const { ApiError } = await import("@/lib/api/errors");
 import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
+import { TIER_IDS, TIERS } from "@/lib/ai/models";
 import type { LawSource } from "@/lib/search/law-source";
 import type { ArticleHit, CaseDetail } from "@/lib/search/types";
 
@@ -62,12 +65,42 @@ const msg = (text: string): ModelMessage =>
     usage: { input_tokens: 5_000, output_tokens: 400, cache_read_input_tokens: 0 },
   }) as unknown as ModelMessage;
 
-function fakeModel(opts: { tokens?: (p: CreateParams) => number; fail?: unknown } = {}) {
+const UNDERSTOOD = JSON.stringify({
+  section: "lease_deposit",
+  lawQuery: "임대차 종료 후 보증금 미반환 임차권등기명령",
+  caseQueries: ["임대차보증금 반환 동시이행"],
+});
+/** 질문 해석 호출(DEC-033)인지 — 출력 한도로 구분한다 */
+const isUnderstand = (p: CreateParams) => p.max_tokens <= UNDERSTAND_TOKENS.max;
+
+/**
+ * calls = 답변 호출만, understand = 질문 해석 호출만.
+ * 질문 해석은 입력 1,500 + 출력 100토큰(Haiku $0.0002)으로 고정한다 — opts.tokens·fail은 답변 호출에만 건다
+ */
+function fakeModel(
+  opts: {
+    tokens?: (p: CreateParams) => number;
+    fail?: unknown;
+    understood?: string;
+    understandFail?: unknown;
+  } = {},
+) {
   const calls: CreateParams[] = [];
-  const model: ModelClient & { calls: CreateParams[] } = {
+  const understand: CreateParams[] = [];
+  const model: ModelClient & { calls: CreateParams[]; understand: CreateParams[] } = {
     calls,
-    countTokens: async (p) => opts.tokens?.(p) ?? 5_000,
+    understand,
+    countTokens: async (p) => (isUnderstand(p) ? 1_500 : (opts.tokens?.(p) ?? 5_000)),
     create: vi.fn(async (p: CreateParams) => {
+      if (isUnderstand(p)) {
+        understand.push(p);
+        if (opts.understandFail) throw opts.understandFail;
+        return {
+          content: [{ type: "text", text: opts.understood ?? UNDERSTOOD }],
+          stop_reason: "end_turn",
+          usage: { input_tokens: 1_500, output_tokens: 100, cache_read_input_tokens: 0 },
+        } as unknown as ModelMessage;
+      }
       calls.push(p);
       if (opts.fail) throw opts.fail;
       return msg(ANSWER);
@@ -75,14 +108,15 @@ function fakeModel(opts: { tokens?: (p: CreateParams) => number; fail?: unknown 
   };
   return model;
 }
+/** 질문 해석 1회 비용 (Haiku 입력 1,500 + 출력 100) */
+const UNDERSTAND_COST = 0.0002;
 
-const HAIKU = { answerModel: "claude-haiku-5-5" as const };
+const HAIKU = { tier: "light" as const };
 
-describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
+describe("DEC-036 단계별 답변 모델", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  test("AI_ANSWER_MODEL이 없으면 Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
-    vi.stubEnv("AI_ANSWER_MODEL", "");
+  test("단계를 주지 않으면 Pro = Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -97,12 +131,12 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     expect(out.model).toBe("claude-sonnet-5-5");
   });
 
-  test("Sonnet 질문 1건 비용은 Sonnet 단가로 계산하고 $0.03 이하 (입력 5,000 + 출력 400 = $0.014)", async () => {
+  test("Sonnet 질문 1건 비용은 Sonnet 단가로 계산하고 $0.03 이하 (답변 입력 5,000 + 출력 400 = $0.014, 질문 해석 $0.0002)", async () => {
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model: fakeModel(), lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+      { model: fakeModel(), lawSource: fakeSource(), tier: "pro" },
     );
-    expect(out.costUsd).toBeCloseTo(0.014, 6);
+    expect(out.costUsd).toBeCloseTo(0.014 + UNDERSTAND_COST, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.03);
   });
 
@@ -110,22 +144,53 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     const model = fakeModel({ tokens: () => 20_000 });
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model, lawSource: fakeSource(), answerModel: "claude-sonnet-5-5" },
+      { model, lawSource: fakeSource(), tier: "pro" },
     );
     expect(model.calls).toHaveLength(0);
     expect(out.costCapped).toBe(true);
-    expect(out.costUsd).toBe(0);
+    // 답변은 부르지 않았고 질문 해석 비용만 남는다
+    expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("목록 밖 모델 이름(오타·Opus)은 가장 싼 Haiku로 돌아간다", async () => {
-    vi.stubEnv("AI_ANSWER_MODEL", "claude-opus-5-5");
+  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 5,000토큰으로 묶는다. 비용은 $0.15 이하", async () => {
     const model = fakeModel();
-    await runLiteAnalysis(
+    const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model, lawSource: fakeSource() },
+      { model, lawSource: fakeSource(), tier: "max" },
     );
-    expect(model.calls[0].model).toBe("claude-haiku-5-5");
-    expect(model.calls[0].thinking).toEqual({ type: "disabled" });
+    const p = model.calls.find((c) => c.model === "claude-opus-5-5");
+    if (!p) throw new Error("Opus 답변 호출 없음");
+    expect(p.thinking).toEqual({ type: "adaptive" });
+    expect(p.output_config?.effort).toBe("medium");
+    expect(p.max_tokens).toBe(5_000);
+    // 답변: 입력 5,000 × $4 + 출력 400 × $20 = $0.028 (+ 질문 해석 Haiku 몫)
+    expect(out.costUsd).toBeGreaterThanOrEqual(0.028);
+    expect(out.costUsd).toBeLessThanOrEqual(0.15);
+    expect(out.model).toBe("claude-opus-5-5");
+  });
+
+  test("Pro Max 상한을 넘을 입력(40,000토큰 = $0.16)이면 부르지 않는다", async () => {
+    const model = fakeModel({ tokens: () => 40_000 });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), tier: "max" },
+    );
+    expect(model.calls).toHaveLength(0);
+    expect(out.costCapped).toBe(true);
+  });
+
+  test("답변 호출이 시간 초과면 오류 대신 AI 문단 없이 근거만", async () => {
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      {
+        model: fakeModel({ fail: new ApiError("TIMEOUT", { stage: "answer" }) }),
+        lawSource: fakeSource(),
+        tier: "pro",
+      },
+    );
+    expect(out.costCapped).toBe(true);
+    expect(out.draft.answer.points).toHaveLength(0);
+    expect(out.evidence.list().length).toBeGreaterThan(0);
   });
 
   test("모델에 넘기는 조문은 6개까지 (이전 4개), 판례는 3건까지", () => {
@@ -139,6 +204,10 @@ describe("DEC-026 라이트 답변 모델 선택 (Sonnet 5.5)", () => {
     expect(LITE_MAX_ARTICLES).toBe(6);
     expect(statutes).toHaveLength(6);
     expect(keys.length - statutes.length).toBe(3);
+    // DeepSearch(DEC-038): 조문 8·판례 4건까지 넘겨 본다
+    const deep = liteEvidenceKeys(evidence, { articles: 8, cases: 4 });
+    expect(deep.filter((k) => k.startsWith("law:"))).toHaveLength(8);
+    expect(deep).toHaveLength(12);
   });
 });
 
@@ -159,12 +228,12 @@ describe("DEC-020 라이트 답변 (Haiku)", () => {
     expect(out.costCapped).toBe(false);
   });
 
-  test("질문 1건 비용은 $0.0015 이하 (입력 5,000 + 출력 400 토큰 = $0.0007)", async () => {
+  test("질문 1건 비용은 $0.0015 이하 (답변 입력 5,000 + 출력 400 토큰 = $0.0007, 질문 해석 $0.0002)", async () => {
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
       { model: fakeModel(), lawSource: fakeSource(), ...HAIKU },
     );
-    expect(out.costUsd).toBeCloseTo(0.0007, 6);
+    expect(out.costUsd).toBeCloseTo(0.0007 + UNDERSTAND_COST, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.0015);
   });
 
@@ -190,7 +259,7 @@ describe("DEC-020 라이트 답변 (Haiku)", () => {
     );
     expect(model.calls).toHaveLength(0);
     expect(out.costCapped).toBe(true);
-    expect(out.costUsd).toBe(0);
+    expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
     expect(out.draft.answer.points).toEqual([]);
     expect(out.draft.articles.length + out.draft.cases.length).toBeGreaterThan(0);
   });
@@ -203,5 +272,155 @@ describe("DEC-020 라이트 답변 (Haiku)", () => {
     );
     expect(model.calls).toHaveLength(1);
     expect(out.costCapped).toBe(true);
+  });
+});
+
+describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색어)", () => {
+  test("답변 모델과 상관없이 Haiku로 1회, 생각 끔, 출력 300토큰 이하 — 라벨은 결과에 싣는다", async () => {
+    const model = fakeModel();
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), tier: "pro" },
+    );
+    expect(model.understand).toHaveLength(1);
+    const p = model.understand[0];
+    expect(p.model).toBe(UNDERSTAND_MODEL);
+    expect(p.model).toBe("claude-haiku-5-5");
+    expect(p.thinking).toEqual({ type: "disabled" });
+    expect(p.tools).toBeUndefined();
+    expect(p.max_tokens).toBeLessThanOrEqual(300);
+    expect(out.draft.section).toBe("lease_deposit");
+    // 질문 해석 + 답변 1회, 그 밖의 호출 없음
+    expect(model.calls).toHaveLength(1);
+  });
+
+  test("해석한 검색어로 법령·판례를 찾는다 (질문 문장 대신)", async () => {
+    const source = fakeSource();
+    await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model: fakeModel(), lawSource: source, ...HAIKU },
+    );
+    expect(source.searchArticles).toHaveBeenCalledWith(
+      "임대차 종료 후 보증금 미반환 임차권등기명령",
+      expect.any(Number),
+    );
+    const caseQueries = vi.mocked(source.searchCases).mock.calls.map((c) => c[0]);
+    expect(caseQueries[0]).toBe("임대차보증금 반환 동시이행");
+  });
+
+  test("F-007 검색어에 개인정보 모양이 있으면 버리고 질문 문장으로 찾는다", async () => {
+    const source = fakeSource();
+    const model = fakeModel({
+      understood: JSON.stringify({
+        section: "money",
+        lawQuery: "010-1234-5678 번호로 연락해 대여금 반환 청구",
+        caseQueries: ["대여금 010-1234-5678", "대여금 반환"],
+      }),
+    });
+    const out = await runLiteAnalysis(
+      { maskedText: "빌려준 돈을 못 받았어요" },
+      { model, lawSource: source, ...HAIKU },
+    );
+    expect(source.searchArticles).toHaveBeenCalledWith(
+      "빌려준 돈을 못 받았어요",
+      expect.any(Number),
+    );
+    const caseQueries = vi.mocked(source.searchCases).mock.calls.map((c) => c[0]);
+    expect(caseQueries.join(" ")).not.toContain("010");
+    expect(caseQueries).toContain("대여금 반환");
+    expect(out.draft.section).toBe("money");
+  });
+
+  test("목록 밖 라벨은 버린다 (결과에 싣지 않는다)", async () => {
+    const model = fakeModel({
+      understood: JSON.stringify({
+        section: "승소 가능",
+        lawQuery: "보증금 반환",
+        caseQueries: [],
+      }),
+    });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
+    expect(out.draft.section).toBeUndefined();
+    expect(out.draft.answer.points).toHaveLength(1);
+  });
+
+  test("질문 해석이 실패해도 오류로 끝내지 않고 질문 문장으로 찾아 답변한다 — 재시도 없음", async () => {
+    for (const understandFail of [
+      new ApiError("MODEL_FAILED", { reason: "refusal" }),
+      new ApiError("TIMEOUT", { stage: "understand" }),
+    ]) {
+      const source = fakeSource();
+      const model = fakeModel({ understandFail });
+      const out = await runLiteAnalysis(
+        { maskedText: "보증금을 못 받았어요" },
+        { model, lawSource: source, ...HAIKU },
+      );
+      expect(model.understand).toHaveLength(1);
+      expect(source.searchArticles).toHaveBeenCalledWith(
+        "보증금을 못 받았어요",
+        expect.any(Number),
+      );
+      expect(out.draft.section).toBeUndefined();
+      expect(out.draft.answer.points).toHaveLength(1);
+    }
+    // JSON이 아닌 출력도 마찬가지
+    const model = fakeModel({ understood: "죄송하지만" });
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
+    expect(out.draft.section).toBeUndefined();
+    expect(out.draft.answer.points).toHaveLength(1);
+  });
+
+  test("질문 해석과 답변을 합쳐도 질문 1건 상한을 넘지 않는다", async () => {
+    for (const tier of TIER_IDS) {
+      const out = await runLiteAnalysis(
+        { maskedText: "보증금을 못 받았어요" },
+        { model: fakeModel(), lawSource: fakeSource(), tier },
+      );
+      expect(out.costUsd).toBeLessThanOrEqual(TIERS[tier].capUsd);
+    }
+  });
+
+  test("규칙 1·3·N1 조문·사건번호·숫자·단정 표현이 든 검색어는 버리고, 바꿔 쓴 문장은 결과에 싣지 않는다", async () => {
+    const { screenUnderstanding } = await import("@/lib/ai/policy");
+    const bad = screenUnderstanding({
+      section: "insult",
+      lawQuery: "형법 제311조 모욕죄 고소 절차",
+      caseQueries: [
+        "대법원 2015도1234 공연성",
+        "고소기간 6개월 모욕죄",
+        "100% 승소",
+        "모욕죄 공연성",
+      ],
+    });
+    expect(bad.lawQuery).toBeNull();
+    expect(bad.caseQueries).toEqual(["모욕죄 공연성"]);
+
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model: fakeModel(), lawSource: fakeSource(), ...HAIKU },
+    );
+    const keywords = out.draft.searches.map((x) => x.keyword);
+    expect(keywords).toContain("질문을 법률 용어로 바꾼 문장 (지능형 법령검색)");
+    expect(keywords.join(" ")).not.toContain("임대차 종료 후 보증금 미반환");
+  });
+
+  test("응답 없이 실패한 질문 해석도 쓴 비용으로 쳐서 답변과 합쳐 상한을 넘지 않는다", async () => {
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      {
+        model: fakeModel({ understandFail: new ApiError("TIMEOUT", { stage: "understand" }) }),
+        lawSource: fakeSource(),
+        ...HAIKU,
+      },
+    );
+    // 해석 계획 최대치(입력 1,500 + 출력 300 = $0.0003) + 답변 $0.0007
+    expect(out.costUsd).toBeCloseTo(0.001, 6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.0015);
   });
 });

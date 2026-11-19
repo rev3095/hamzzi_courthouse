@@ -1,0 +1,198 @@
+{
+  "id": "admin-appeal-01",
+  "category": "admin_appeal",
+  "question": "제가 운영하는 음식점이 청소년에게 술을 팔았다는 이유로 구청에서 영업정지 처분을 받았어요. 신분증을 확인했는데 위조된 신분증이었어요. 처분이 억울한데 어떻게 다툴 수 있나요?",
+  "at": "2026-11-19T03:50:30.375Z",
+  "elapsedMs": 22934,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 8837,
+    "tokens_out": 1850,
+    "latency_ms": 22484
+  },
+  "costUsdUpperEstimate": 0.07235,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "청소년 보호법 시행령",
+        "식품위생법 시행령",
+        "청소년 보호법",
+        "공연법 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "처분 취소",
+        "청소년보호법 영업정지 처분 위조 신분증",
+        "청소년 주류 판매 영업정지 취소 행정소송"
+      ]
+    },
+    "section": "admin_appeal",
+    "answer": {
+      "points": [
+        {
+          "text": "식품위생법 시행령은 식품접객영업자가 청소년의 신분증 위조·변조 또는 도용 때문에 청소년인 줄 몰랐다는 사정이 확인되면, 구청장 등이 행정처분을 면제한다고 정하고 있습니다. 위조 신분증을 확인한 사정을 내세워 처분을 다투는 출발점이 이 조항입니다.",
+          "source": "law:식품위생법시행령:제52조",
+          "quote": "신분증 위조ᆞ변조 또는 도용으로 청소년인 사실을 알지 못한 사정이",
+          "check": "verified"
+        },
+        {
+          "text": "다만 면제를 받으려면 그런 사정이 영상정보처리기기(CCTV 등)에 촬영된 영상, 진술, 그 밖의 방법으로 확인되어야 합니다. 당시 신분증을 확인하는 장면이 담긴 영상이나 직원·손님의 진술처럼 사정을 보여줄 자료를 확보해 두시는 것이 중요해 보입니다.",
+          "source": "law:식품위생법시행령:제52조",
+          "quote": "영상정보처리기기에 촬영된 영상정보, 진술 또는 그 밖의 방법으로 확인된 경우",
+          "check": "verified"
+        },
+        {
+          "text": "영업정지 처분은 처분 사유와 내용이 적힌 서면으로 해야 합니다. 또 처분 전에 청문을 하거나 행정절차법에 따른 의견제출을 받았다면, 특별한 사유가 없으면 그 절차를 마친 날부터 14일 이내에 처분하도록 되어 있습니다. 받으신 처분서의 사유와 절차를 확인해 보시기 바랍니다.",
+          "source": "law:식품위생법시행령:제52조",
+          "quote": "처분 사유 및 처분 내용 등이 기재된 서면으로 하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "참고로, 미성년자들을 연령 확인 없이 출입시켜 이미 과징금을 두 차례 받은 업소에 대한 영업허가취소처분을 두고, 법원은 재량권 일탈로 보기 어렵다고 판단한 사례가 있습니다. 연령 확인 여부가 판단에 영향을 준 사례이므로, 신분증을 확인했다는 사실을 뒷받침하는 자료가 중요할 수 있습니다.",
+          "source": "case:93누5185",
+          "quote": "연령을 확인하지 않고 출입시킨 행위에 대한 영업허가취소처분이",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:청소년보호법시행령:제42조",
+        "lawName": "청소년 보호법 시행령",
+        "articleNo": "제42조",
+        "title": "선도ㆍ보호조치 대상 청소년의 통보 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C42%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법시행령:제52조",
+        "lawName": "식품위생법 시행령",
+        "articleNo": "제52조",
+        "title": "허가취소 등",
+        "effectiveFrom": "2026-08-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C52%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:청소년보호법:제50조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제50조",
+        "title": "선도ㆍ보호조치 대상 청소년의 통보",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C50%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:청소년보호법:제43조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제43조",
+        "title": "검사 및 조사 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C43%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:공연법시행규칙:제7조",
+        "lawName": "공연법 시행규칙",
+        "articleNo": "제7조",
+        "title": "행정처분의 기준 등",
+        "effectiveFrom": "2026-07-30",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%97%B0%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C7%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "625317",
+        "caseNo": "2026두31443",
+        "caseName": "취득세등부과처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625317",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "201409",
+        "caseNo": "93누5185",
+        "caseName": "영업허가취소처분취소",
+        "court": "대법원",
+        "decidedAt": "1993-10-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=201409",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "625315",
+        "caseNo": "2026두31375",
+        "caseName": "재산세 부과 처분 취소",
+        "court": "대법원",
+        "decidedAt": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625315",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "625371",
+        "caseNo": "2024두46736",
+        "caseName": "법인세등부과처분취소청구의소",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625371",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "625391",
+        "caseNo": "2026두30681",
+        "caseName": "양도소득세경정거부처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625391",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "처분 취소",
+        "total": 6
+      },
+      {
+        "keyword": "청소년보호법 영업정지 처분 위조 신분증",
+        "total": 0
+      },
+      {
+        "keyword": "청소년 주류 판매 영업정지 취소 행정소송",
+        "total": 1
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "식품위생법 시행령 제52조",
+          "exists": true
+        },
+        {
+          "citation": "93누5185",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

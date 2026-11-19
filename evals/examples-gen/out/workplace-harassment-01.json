@@ -1,0 +1,197 @@
+{
+  "id": "workplace-harassment-01",
+  "category": "workplace_harassment",
+  "question": "팀장이 몇 달째 저만 업무에서 빼고 회의에서 저를 무시해요. 직장 내 괴롭힘이라고 생각하는데 출근하기가 힘들 정도예요. 회사에 신고하면 어떻게 처리되고, 회사가 아무 조치도 하지 않으면 어떻게 해야 하나요?",
+  "at": "2026-11-19T03:47:12.139Z",
+  "elapsedMs": 22949,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10013,
+    "tokens_out": 1738,
+    "latency_ms": 22517
+  },
+  "costUsdUpperEstimate": 0.07481,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "근로기준법",
+        "산업안전보건기준에 관한 규칙",
+        "산업안전보건법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "직장 내 괴롭힘",
+        "직장 내 괴롭힘 사용자 조치의무",
+        "직장 내 괴롭힘 업무 배제 정신적 고통"
+      ]
+    },
+    "section": "workplace_harassment",
+    "answer": {
+      "points": [
+        {
+          "text": "근로기준법상 직장 내 괴롭힘을 알게 된 사람은 누구든지 회사(사용자)에 신고할 수 있습니다. 신고를 받거나 괴롭힘 사실을 알게 된 회사는 지체 없이 당사자 등을 대상으로 객관적인 조사를 해야 합니다. 업무 배제나 회의 중 무시가 괴롭힘에 해당하는지는 이 조사에서 확인될 부분입니다.",
+          "source": "law:근로기준법:제76조의3",
+          "quote": "누구든지 직장 내 괴롭힘 발생 사실을 알게 된 경우 그 사실을 사용자에게 신고할 수 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "조사 기간 동안 회사는 필요한 경우 피해를 주장하는 근로자를 보호하기 위해 근무장소 변경, 유급휴가 명령 등 적절한 조치를 해야 합니다. 다만 이런 조치는 본인의 뜻에 반해서 할 수 없습니다. 출근이 힘드신 상황이라면 원하는 보호조치를 회사에 말씀하실 수 있습니다.",
+          "source": "law:근로기준법:제76조의3",
+          "quote": "사용자는 피해근로자등의 의사에 반하는 조치를 하여서는 아니 된다.",
+          "check": "verified"
+        },
+        {
+          "text": "조사 결과 괴롭힘이 확인되면, 회사는 피해근로자가 요청할 때 근무장소 변경, 배치전환, 유급휴가 명령 등 적절한 조치를 해야 합니다. 또한 행위자(팀장)에게는 지체 없이 징계, 근무장소 변경 등 필요한 조치를 해야 합니다. 회사가 아무 조치도 하지 않는다면, 이 조문에 정해진 회사의 의무를 근거로 이행을 요구해 볼 수 있습니다.",
+          "source": "law:근로기준법:제76조의3",
+          "quote": "지체 없이 행위자에 대하여 징계, 근무장소의 변경 등 필요한 조치를 하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "상시 10명 이상이 일하는 회사는 취업규칙에 직장 내 괴롭힘의 예방과 발생 시 조치에 관한 사항을 넣어야 합니다. 회사 취업규칙의 신고 창구와 처리 절차를 먼저 확인해 보시면 좋습니다. 회사가 조치하지 않을 때의 구체적인 외부 구제 절차는 제공된 근거 자료에 나와 있지 않아, 추가 확인이 필요합니다.",
+          "source": "law:근로기준법:제93조",
+          "quote": "11. 직장 내 괴롭힘의 예방 및 발생 시 조치 등에 관한 사항",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:근로기준법:제76조의3",
+        "lawName": "근로기준법",
+        "articleNo": "제76조의3",
+        "title": "직장 내 괴롭힘 발생 시 조치",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C76%EC%A1%B0%EC%9D%983",
+        "used": true
+      },
+      {
+        "id": "law:산업안전보건기준에관한규칙:제674조",
+        "lawName": "산업안전보건기준에 관한 규칙",
+        "articleNo": "제674조",
+        "title": "규제의 재검토",
+        "effectiveFrom": "2026-03-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84%EB%B3%B4%EA%B1%B4%EA%B8%B0%EC%A4%80%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C674%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제93조",
+        "lawName": "근로기준법",
+        "articleNo": "제93조",
+        "title": "취업규칙의 작성ㆍ신고",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C93%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:산업안전보건법:제4조",
+        "lawName": "산업안전보건법",
+        "articleNo": "제4조",
+        "title": "정부의 책무",
+        "effectiveFrom": "2026-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%95%88%EC%A0%84%EB%B3%B4%EA%B1%B4%EB%B2%95/%EC%A0%9C4%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제76조",
+        "lawName": "근로기준법",
+        "articleNo": "제76조",
+        "title": "안전과 보건",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C76%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "619485",
+        "caseNo": "2025노2282",
+        "caseName": "가. 스토킹범죄의처벌등에관한법률위반 나. 스토킹방지및피해자보호등에관한법률위반방조 다. 모욕 라. 폭력행위등처벌에관한법률위반(공동상해)",
+        "court": "창원지방법원",
+        "decidedAt": "2026-01-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619485",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "619479",
+        "caseNo": "2024나25137",
+        "caseName": "방해금지청구",
+        "court": "광주고등법원",
+        "decidedAt": "2025-06-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619479",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "238575",
+        "caseNo": "2021누63022",
+        "caseName": "신분보장등조치결정취소소송",
+        "court": "서울고등법원",
+        "decidedAt": "2023-01-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238575",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "619487",
+        "caseNo": "2024고단353,617(병합)",
+        "caseName": "가. 스토킹범죄의처벌등에관한법률위반 나. 스토킹방지및피해자보호등에관한법률위반방조 다. 모욕 라. 폭력행위등처벌에관한법률위반(공동상해)",
+        "court": "창원지방법원밀양지원",
+        "decidedAt": "2025-09-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619487",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "234929",
+        "caseNo": "2017다35588, 35595",
+        "caseName": "부당이득금반환·부당이득금",
+        "court": "대법원",
+        "decidedAt": "2023-05-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=234929",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "직장 내 괴롭힘",
+        "total": 6
+      },
+      {
+        "keyword": "직장 내 괴롭힘 사용자 조치의무",
+        "total": 5
+      },
+      {
+        "keyword": "직장 내 괴롭힘 업무 배제 정신적 고통",
+        "total": 2
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "근로기준법 제76조의3",
+          "exists": true
+        },
+        {
+          "citation": "근로기준법 제93조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

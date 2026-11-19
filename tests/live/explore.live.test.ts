@@ -21,6 +21,41 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 �
     );
   });
 
+  test("판례 밖 16종 모두 검색되고, 본문 조회가 있는 종류는 상세도 열린다", async () => {
+    const queries = {
+      interpretation: "임대차",
+      constitutional: "임대차",
+      admin_appeal: "과징금",
+      tax_tribunal: "양도소득세",
+      appeal_review: "징계",
+      acr_special: "처분",
+      customs: "과세가격",
+      nts: "양도",
+      ftc: "과징금",
+      pipc: "개인정보",
+      nlrc: "부당해고",
+      acr: "보상",
+      treaty: "투자",
+      school: "학칙",
+      public_corp: "인사",
+      public_inst: "인사",
+      english_law: "civil",
+    } as const;
+    const empty: string[] = [];
+    const noDetail: string[] = [];
+    for (const [domain, q] of Object.entries(queries) as [keyof typeof queries, string][]) {
+      const hits = await source.searchDecisions(domain, q, 3);
+      if (hits.length === 0) {
+        empty.push(domain);
+        continue;
+      }
+      if (!hits[0].hasDetail) continue;
+      const detail = await source.getDecision(domain, hits[0].id);
+      if (!detail || detail.title.length === 0) noDetail.push(domain);
+    }
+    expect({ empty, noDetail }).toEqual({ empty: [], noDetail: [] });
+  }, 120_000);
+
   test("약칭으로 조문을 찾고, 사건번호로 판례를 찾는다", async () => {
     const art = await source.getArticle("주택임대차법", "제3조");
     expect(art?.lawName).toBe(LAW);

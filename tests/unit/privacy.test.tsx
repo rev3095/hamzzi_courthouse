@@ -10,14 +10,15 @@ afterEach(() => {
 const { default: PrivacyPage } = await import("@/app/privacy/page");
 
 test("무료 모드: AI 모델 제공자에게 보내지 않는다고 적는다", () => {
-  vi.stubEnv("AI_MODE", "");
+  vi.stubEnv("AI_MODE", "free");
   render(<PrivacyPage />);
   expect(screen.getByText("지금은 AI 모델 제공자에게 질문을 보내지 않아요.")).toBeDefined();
   expect(screen.queryByText(/Anthropic/)).toBeNull();
 });
 
-test("AI_MODE=pro: 가린 문장과 근거 일부를 Anthropic에 보낸다고 적고, 원문은 보내지 않는다고 적는다", () => {
-  vi.stubEnv("AI_MODE", "pro");
+test("유료 모드(키 있음): 가린 문장과 근거 일부를 Anthropic에 보낸다고 적고, 원문은 보내지 않는다고 적는다", () => {
+  vi.stubEnv("AI_MODE", "");
+  vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
   render(<PrivacyPage />);
   const p = screen.getByText(/AI 모델 제공자\(Anthropic\)/);
   expect(p.textContent).toContain("가린 문장");

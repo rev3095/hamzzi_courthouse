@@ -1,0 +1,200 @@
+{
+  "id": "industrial-accident-01",
+  "category": "industrial_accident",
+  "question": "공사 현장에서 일하다 발판에서 떨어져 크게 다쳤어요. 회사는 회사 돈으로 처리하자며 산재 신청을 하지 말라고 해요. 회사가 동의하지 않아도 산재 신청을 할 수 있나요?",
+  "at": "2026-11-19T03:47:34.292Z",
+  "elapsedMs": 22152,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 9485,
+    "tokens_out": 1819,
+    "latency_ms": 21657
+  },
+  "costUsdUpperEstimate": 0.07432,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "산업재해보상보험법 시행규칙",
+        "산업재해보상보험법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "업무상 재해",
+        "산재보험 요양급여 신청 사업주 동의",
+        "업무상 재해 추락 산업재해보상보험"
+      ]
+    },
+    "section": "industrial_accident",
+    "answer": {
+      "points": [
+        {
+          "text": "산업재해보상보험법 제41조 제1항은 요양급여를 받으려는 사람이 소속 사업장, 재해 발생 경위, 의학적 소견 등을 적은 서류를 첨부해 근로복지공단에 직접 신청하도록 정하고 있습니다. 이 조문에는 회사의 동의를 신청 요건으로 적어 두고 있지 않습니다.",
+          "source": "law:산업재해보상보험법:제41조",
+          "quote": "서류를 첨부하여 공단에 요양급여의 신청을 하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "같은 조 제2항에 따르면, 진료한 산재보험 의료기관이 업무상 재해로 판단하면 근로자 본인의 동의를 받아 신청을 대신할 수도 있습니다. 여기서 필요한 동의도 회사가 아니라 근로자의 동의입니다.",
+          "source": "law:산업재해보상보험법:제41조",
+          "quote": "그 근로자의 동의를 받아 요양급여의 신청을 대행할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "신청을 받은 공단은 그 사실을 회사(보험가입자)에 알리고 회사의 의견을 들어야 합니다. 회사는 의견을 낼 수 있지만, 이 조문은 회사의 의견을 듣는 절차로 정하고 있을 뿐 회사의 동의를 받도록 정하고 있지는 않습니다.",
+          "source": "law:산업재해보상보험법시행규칙:제20조",
+          "quote": "근로자의 요양급여 신청에 대한 보험가입자의 의견을 들어야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "참고로 대법원은 산재 인정에 필요한 업무와 재해 사이의 상당인과관계는 근로자 측이 증명해야 한다고 판단했습니다. 그래서 사고 경위, 현장 사진, 목격자 등 업무 중 다쳤다는 자료를 미리 챙겨 두시면 도움이 될 수 있습니다.",
+          "source": "case:2017두45933",
+          "quote": "업무와 재해 사이의 상당인과관계의 증명책임은 업무상의 재해를 주장하는 근로자 측에게 있다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:산업재해보상보험법시행규칙:제20조",
+        "lawName": "산업재해보상보험법 시행규칙",
+        "articleNo": "제20조",
+        "title": "요양급여의 신청 등",
+        "effectiveFrom": "2026-02-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C20%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:산업재해보상보험법시행규칙:제2조",
+        "lawName": "산업재해보상보험법 시행규칙",
+        "articleNo": "제2조",
+        "title": "정보통신망을 이용한 신청 또는 청구",
+        "effectiveFrom": "2026-02-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:산업재해보상보험법시행규칙:제79조",
+        "lawName": "산업재해보상보험법 시행규칙",
+        "articleNo": "제79조",
+        "title": "서식",
+        "effectiveFrom": "2026-02-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C79%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:산업재해보상보험법:제77조",
+        "lawName": "산업재해보상보험법",
+        "articleNo": "제77조",
+        "title": "합병증 등 예방관리",
+        "effectiveFrom": "2026-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C77%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:산업재해보상보험법:제41조",
+        "lawName": "산업재해보상보험법",
+        "articleNo": "제41조",
+        "title": "요양급여의 신청",
+        "effectiveFrom": "2026-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C41%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "617207",
+        "caseNo": "2025노860",
+        "caseName": "업무상과실치사·산업안전보건법위반·중대재해처벌등에관한법률위반(산업재해치사)",
+        "court": "대전지방법원",
+        "decidedAt": "2025-08-27",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=617207",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "217421",
+        "caseNo": "2017두45933",
+        "caseName": "유족급여및장의비부지급처분취소",
+        "court": "대법원",
+        "decidedAt": "2021-09-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=217421",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "616527",
+        "caseNo": "2023다285162",
+        "caseName": "손해배상(국)",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "607205",
+        "caseNo": "2023다297141",
+        "caseName": "손해배상(산)[업무상 재해를 당하여 산재보험금을 지급받은 재해근로자가 사업주를 상대로 잔여 손해액의 배상을 청구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-06-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=607205",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "206279",
+        "caseNo": "2017구단67646",
+        "caseName": "요양불승인처분취소",
+        "court": "서울행법",
+        "decidedAt": "2019-03-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=206279",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "업무상 재해",
+        "total": 6
+      },
+      {
+        "keyword": "산재보험 요양급여 신청 사업주 동의",
+        "total": 6
+      },
+      {
+        "keyword": "업무상 재해 추락 산업재해보상보험",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "산업재해보상보험법 제41조",
+          "exists": true
+        },
+        {
+          "citation": "산업재해보상보험법 시행규칙 제20조",
+          "exists": true
+        },
+        {
+          "citation": "2017두45933",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "id": "respond-civil-01",
+  "category": "respond_civil",
+  "question": "법원에서 지급명령이라는 서류를 받았어요. 예전에 쓰던 카드 대금을 갚으라는 내용인데 금액이 제가 아는 것과 달라요. 그냥 두면 어떻게 되고, 다투려면 무엇을 해야 하나요?",
+  "at": "2026-11-19T03:49:45.358Z",
+  "elapsedMs": 18678,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 7776,
+    "tokens_out": 1411,
+    "latency_ms": 18187
+  },
+  "costUsdUpperEstimate": 0.05932,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "민사소송법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "지급명령 이의신청",
+        "지급명령 이의신청 확정 효력",
+        "지급명령 송달 이의기간 강제집행"
+      ]
+    },
+    "section": "respond_civil",
+    "answer": {
+      "points": [
+        {
+          "text": "지급명령을 받고 아무 대응을 하지 않으면, 지급명령이 확정판결과 같은 효력을 가지게 됩니다. 이의신청이 없을 때뿐 아니라 이의신청을 취하하거나 각하결정이 확정된 때에도 마찬가지입니다. 그래서 금액이 다르다고 생각하시면 그냥 두지 않는 것이 중요합니다.",
+          "source": "law:민사소송법:제474조",
+          "quote": "각하결정이 확정된 때에는 지급명령은 확정판결과 같은 효력이 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "다투려면 지급명령을 송달받은 날부터 2주 이내에 이의신청을 해야 합니다. 이 기간은 불변기간으로 정해져 있습니다. 이의신청을 하면 지급명령은 이의를 제기한 그 범위 안에서 효력을 잃습니다.",
+          "source": "law:민사소송법:제470조",
+          "quote": "채무자가 지급명령을 송달받은 날부터 2주 이내에 이의신청을 한 때에는",
+          "check": "verified"
+        },
+        {
+          "text": "적법한 이의신청을 하면, 채권자가 지급명령을 신청한 때에 이의신청된 청구 금액에 관하여 소송이 제기된 것으로 봅니다. 그 뒤에는 일반 소송 절차에서 실제로 갚아야 할 금액이 얼마인지를 다투게 됩니다.",
+          "source": "law:민사소송법:제472조",
+          "quote": "이의신청된 청구목적의 값에 관하여 소가 제기된 것으로 본다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:민사소송법:제472조",
+        "lawName": "민사소송법",
+        "articleNo": "제472조",
+        "title": "소송으로의 이행",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C472%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제470조",
+        "lawName": "민사소송법",
+        "articleNo": "제470조",
+        "title": "이의신청의 효력",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C470%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제469조",
+        "lawName": "민사소송법",
+        "articleNo": "제469조",
+        "title": "지급명령의 송달",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C469%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사소송법:제474조",
+        "lawName": "민사소송법",
+        "articleNo": "제474조",
+        "title": "지급명령의 효력",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C474%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제468조",
+        "lawName": "민사소송법",
+        "articleNo": "제468조",
+        "title": "지급명령의 기재사항",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C468%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "240933",
+        "caseNo": "2024마5496",
+        "caseName": "손해배상(기)[지급명령 송달 전 채무자의 이의신청의 효력이 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2024-06-07",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=240933",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624887",
+        "caseNo": "2025나55476(본소), 2025나55477(반소)",
+        "caseName": "렌탈계약의양수금·부당이득금",
+        "court": "수원지방법원",
+        "decidedAt": "2026-03-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624887",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "616527",
+        "caseNo": "2023다285162",
+        "caseName": "손해배상(국)",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "601499",
+        "caseNo": "2024마5324",
+        "caseName": "소송비용부담및확정[채무자가 지급명령 정본을 송달받은 후 변호사를 선임하여 이의신청을 하였으나 채권자가 인지를 보정하지 않아 지급명령신청서가 각하된 경우 변호사 보수가 소송비용에 포함될 수 있는지 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2024-05-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=601499",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "612987",
+        "caseNo": "2021다252977",
+        "caseName": "손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-10-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=612987",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "지급명령 이의신청",
+        "total": 6
+      },
+      {
+        "keyword": "지급명령 이의신청 확정 효력",
+        "total": 6
+      },
+      {
+        "keyword": "지급명령 송달 이의기간 강제집행",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "민사소송법 제474조",
+          "exists": true
+        },
+        {
+          "citation": "민사소송법 제470조",
+          "exists": true
+        },
+        {
+          "citation": "민사소송법 제472조",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    }
+  }
+}

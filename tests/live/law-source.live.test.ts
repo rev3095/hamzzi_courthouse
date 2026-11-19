@@ -42,4 +42,20 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 (DEC-009)", 
     const cases = await source.verifyCases(["2023다307116", "2099다99999"]);
     expect(cases.map((c) => c.exists)).toEqual([true, false]);
   });
+
+  test("F-005 AC2 ③ 긴 법령 이름도 실존으로 확인한다 (보이스피싱 예시 오탐, 2026-11-19 수정)", async () => {
+    const law = "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법";
+    const statutes = await source.verifyStatutes([
+      `${law} 제4조`,
+      `${law} 제2조의7`,
+      `${law} 제8조`,
+      `${law} 제9999조`,
+    ]);
+    expect(statutes.slice(0, 3).map((s) => s.exists)).toEqual([true, true, true]);
+    // 없는 조문은 false 또는 미확인(null) — 어느 쪽이든 실존으로 치지 않아 답변에서 빠진다
+    expect(statutes[3].exists).not.toBe(true);
+    // 줄임말은 정식 이름이 아니라 실존으로 치지 않는다 (확인 필요로 남음)
+    const [short] = await source.verifyStatutes(["통신사기피해환급법 제4조"]);
+    expect(short.exists).not.toBe(true);
+  });
 });

@@ -53,7 +53,6 @@ export type ProcedureStep = {
 export const OFFICIAL = {
   epost: { label: "인터넷우체국 (내용증명)", url: "https://www.epost.go.kr" },
   ecfs: { label: "대한민국 법원 전자소송", url: "https://ecfs.scourt.go.kr" },
-  proSe: { label: "법원 나홀로소송", url: "https://pro-se.scourt.go.kr" },
   klac: { label: "대한법률구조공단", url: "https://www.klac.or.kr" },
   leaseMediation: {
     label: "대한법률구조공단 (주택임대차분쟁조정위원회)",
@@ -117,7 +116,7 @@ const ORDER: ProcedureStep = {
     "상대방이 이의를 내면 지급명령을 신청할 때 소송을 낸 것으로 보고 소송으로 넘어가요. 새 소장을 내는 대신 법원 안내에 따라 인지대를 더 내야 할 수 있어요.",
     "상대방 주소를 모르면 진행이 어려울 수 있어요.",
   ],
-  links: [OFFICIAL.ecfs, OFFICIAL.proSe],
+  links: [OFFICIAL.ecfs],
   document: "payment-order",
   question: "지급명령은 어떻게 신청하고, 상대방이 이의를 내면 어떻게 되나요?",
 };
@@ -138,7 +137,7 @@ function suit(extra: Partial<ProcedureStep> = {}): ProcedureStep {
       "상대방이 다투면 답변서·준비서면을 주고받고 변론 기일에 나가야 해요.",
       "쟁점이 복잡하면 변호사·법무사 상담을 함께 검토하세요.",
     ],
-    links: [OFFICIAL.proSe, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
     document: "complaint",
     question: "소송을 하면 소장에는 무엇을 적고 어떤 절차를 거치나요?",
     ...extra,
@@ -153,7 +152,7 @@ const JUDGMENT: ProcedureStep = {
   cautions: [
     "판결에 불복하려면 정해진 기간 안에 항소해야 해요. 기간은 판결문을 받은 날부터 시작되니 법원 안내(나홀로소송)에서 바로 확인하세요.",
   ],
-  links: [OFFICIAL.proSe, OFFICIAL.ecfs],
+  links: [OFFICIAL.ecfs],
   question: "판결이 나온 뒤에는 무엇을 확인하고 준비해야 하나요?",
 };
 
@@ -189,7 +188,7 @@ const EVIDENCE_MONEY: ProcedureStep = {
     "원본은 따로 보관하고 사본을 쓰세요.",
     "대화 캡처는 날짜와 상대방이 함께 보이게 남겨 두세요.",
   ],
-  links: [OFFICIAL.proSe],
+  links: [OFFICIAL.ecfs],
   question: "제 상황에서 어떤 자료를 증거로 모아 두면 좋을까요?",
 };
 
@@ -491,7 +490,7 @@ export const TRACKS: Record<TrackKey, Track> = {
         cautions: [
           "재심 판정에 불복하면 정해진 기간 안에 법원에 소송을 내야 해요. 전문가 상담을 권해요.",
         ],
-        links: [OFFICIAL.proSe, OFFICIAL.klac],
+        links: [OFFICIAL.ecfs, OFFICIAL.klac],
         question: "재심 판정에 불복하면 행정소송은 어떻게 하나요?",
       },
     ],
@@ -556,7 +555,7 @@ export const TRACKS: Record<TrackKey, Track> = {
           "형사재판에서 피해 금액을 배상하라는 명령을 함께 내려 달라고 신청하는 제도예요. 재판의 변론이 끝나기 전에 신청해야 해요.",
           "정식 재판이 열리지 않고 약식명령으로 끝나면 배상명령을 신청할 수 없을 수 있어요. 그때는 민사 청구를 검토하세요.",
         ],
-        links: [OFFICIAL.proSe, OFFICIAL.klac],
+        links: [OFFICIAL.ecfs, OFFICIAL.klac],
         document: "compensation-order",
         question: "배상명령은 언제, 어떻게 신청하나요?",
       },

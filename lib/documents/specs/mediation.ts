@@ -131,7 +131,7 @@ export const MEDIATION_SPECS = {
       "조정이 성립하지 않으면 소송으로 넘어갈 수 있어요.",
       "피해 사진·영수증 같은 자료를 입증방법으로 정리해요.",
     ],
-    links: [OFFICIAL.proSe, OFFICIAL.klac],
+    links: [OFFICIAL.ecfs, OFFICIAL.klac],
     officialForms: [{ name: "[민사] 조정신청서 (A1924)", source: COURT_SOURCE, url: SCOURT_FORMS }],
     basis: ["민사조정법 제2조·제5조(조정의 신청)"],
     draftFields: "신청원인",
@@ -331,4 +331,3 @@ export const MEDIATION_SPECS = {
   "lease-mediation" | "civil-mediation" | "financial-mediation" | "property-disclosure",
   DocumentSpec
 >;
-

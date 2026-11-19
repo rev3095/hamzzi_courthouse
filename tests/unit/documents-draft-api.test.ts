@@ -14,7 +14,11 @@ const store = vi.hoisted(() => ({
   loadFollowupContext: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
-const rate = vi.hoisted(() => ({ assertRateLimit: vi.fn(), tryGlobalQuota: vi.fn() }));
+const rate = vi.hoisted(() => ({
+  assertRateLimit: vi.fn(),
+  tryGlobalQuota: vi.fn(),
+  settleAiQuota: vi.fn(),
+}));
 vi.mock("@/lib/auth/rate-limit", async (orig) => ({
   ...(await orig<typeof import("@/lib/auth/rate-limit")>()),
   assertRateLimit: rate.assertRateLimit,

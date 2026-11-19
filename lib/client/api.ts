@@ -1,5 +1,6 @@
 // 브라우저에서 부르는 API 도우미 (docs/API.md 2·4.1절). 화면(app/, components/)은 이 모듈로만 서버를 부른다.
 // 입력 원문은 요청 본문으로만 보내고 저장하지 않는다. 브라우저에 남기는 것은 마스킹본뿐이다 (DEC-006).
+import { readTier } from "./tier";
 import type { StepEvent } from "@/lib/ai/policy";
 import type { ErrorCode, ErrorDetails } from "@/lib/api/errors";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
@@ -20,7 +21,20 @@ export type Quota = {
   loginRequired: boolean;
   /** 관리자 모드(DEC-024): 질문 횟수 제한 없음 */
   admin: boolean;
+  /** AI 답변이 켜져 있는지 (DEC-036). false면 답변 모드 선택을 숨긴다 */
+  ai?: boolean;
 };
+
+/** Google 로그인 사용자인지 (DEC-035). 서버가 판단한 값만 본다 */
+export const isSignedIn = (q: Quota | null) => q?.anonymous === false;
+
+/** 오늘 질문을 더 할 수 없는지 — 비로그인은 로그인 필요, Google 로그인은 하루 한도 소진 (DEC-035) */
+export const isQuotaBlocked = (q: Quota | null) =>
+  q?.loginRequired === true || (isSignedIn(q) && !q?.admin && q?.remaining === 0);
+
+/** Google 로그인 사용자의 하루 한도 소진 (429 RATE_LIMITED, reason user_daily — DEC-035) */
+export const isUserDailyLimit = (e: ClientError) =>
+  e.code === "RATE_LIMITED" && e.details?.reason === "user_daily";
 
 export type CreatedInquiry = {
   id: string;
@@ -62,7 +76,20 @@ export const createInquiry = (input: {
   text: string;
   sensitiveConsent?: boolean;
   parentInquiryId?: string;
+  /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
+  save?: boolean;
 }) => call<CreatedInquiry>("/api/v1/inquiries", { method: "POST", body: JSON.stringify(input) });
+
+export type SavedInquiry = {
+  id: string;
+  maskedText: string;
+  status: string;
+  createdAt: string;
+  followup: boolean;
+};
+
+/** 내 질문 기록 (DEC-039, 로그인 필요) */
+export const getMyInquiries = () => call<SavedInquiry[]>("/api/v1/me/inquiries");
 
 export const confirmPii = (id: string) =>
   call<{ id: string; status: string }>(`/api/v1/inquiries/${id}/pii-confirmation`, {
@@ -159,7 +186,7 @@ export const getStatute = (id: string, asOf?: string) =>
   );
 
 // --- 탐색 확장 (DEC-029 제안): 결정문·시점 조문·법령 도구·자치법규 ---------------------------
-export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
+export type DecisionDomain = import("@/lib/search/types").DecisionDomain;
 export type DecisionRef = {
   domain: DecisionDomain;
   id: string;
@@ -167,7 +194,10 @@ export type DecisionRef = {
   refNo: string | null;
   agency: string | null;
   decidedAt: string | null;
+  dateLabel: string;
+  hasDetail: boolean;
   sourceUrl: string | null;
+  agencySite?: { label: string; url: string } | null;
 };
 export type Listed<T> = {
   items: T[];
@@ -297,6 +327,9 @@ export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 
 export type LawViews = {
+  articles: LawBase & {
+    articles: { articleNo: string; title: string; text: string; effectiveFrom: string | null }[];
+  };
   "three-tier": ThreeTierView;
   "old-new": OldNewView;
   history: HistoryView;
@@ -333,13 +366,15 @@ export async function analyzeStream(
   let res: Response;
   try {
     // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
+    // 답변 단계(DEC-036)는 이 기기에서 고른 값. 서버가 세 값 중 하나인지 확인한다
     res = await fetch(`/api/v1/inquiries/${id}/analyze`, {
       method: "POST",
-      headers: {
-        accept: "text/event-stream",
-        ...(category && { "content-type": "application/json" }),
-      },
-      ...(category && { body: JSON.stringify({ category }) }),
+      headers: { accept: "text/event-stream", "content-type": "application/json" },
+      body: JSON.stringify({
+        tier: readTier(),
+        ...(category && { category }),
+        ...(recallDeep(id) && { deep: true }),
+      }),
       credentials: "same-origin",
     });
   } catch {
@@ -380,6 +415,24 @@ export async function analyzeStream(
 const QKEY = (id: string) => `hz:q:${id}`;
 const PKEY = (id: string) => `hz:p:${id}`;
 const CKEY = (id: string) => `hz:c:${id}`;
+const DKEY = (id: string) => `hz:d:${id}`;
+
+/** DeepSearch로 보낸 질문 표시 (DEC-038). 개인정보가 아닌 표시 하나만 이 기기에 둔다 */
+export function rememberDeep(id: string) {
+  try {
+    sessionStorage.setItem(DKEY(id), "1");
+  } catch {
+    // 저장소를 못 쓰면 일반 질문으로 분석된다
+  }
+}
+
+export function recallDeep(id: string): boolean {
+  try {
+    return sessionStorage.getItem(DKEY(id)) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function rememberQuestion(
   id: string,

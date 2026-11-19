@@ -1,0 +1,204 @@
+{
+  "id": "privacy-01",
+  "category": "privacy",
+  "question": "가입한 사이트에서 제 개인정보가 유출됐다는 통지를 받았어요. 연락처와 집 주소가 포함됐다고 해요. 그 뒤로 스팸 전화가 부쩍 늘었어요. 그 회사에 손해배상을 청구할 수 있나요?",
+  "at": "2026-11-19T03:49:00.713Z",
+  "elapsedMs": 20132,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10525,
+    "tokens_out": 1602,
+    "latency_ms": 19629
+  },
+  "costUsdUpperEstimate": 0.07414,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "개인정보 보호법",
+        "기상청과 그 소속기관 직제 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "개인정보 유출 손해배상",
+        "개인정보 유출 손해배상 위자료",
+        "개인정보처리자 안전조치의무 위반 정신적 손해"
+      ]
+    },
+    "section": "privacy",
+    "answer": {
+      "points": [
+        {
+          "text": "개인정보 보호법 제39조에 따르면, 회사(개인정보처리자)가 이 법을 위반해 손해를 입은 경우 손해배상을 청구할 수 있습니다. 이때 회사가 자신에게 고의나 과실이 없었다는 점을 입증하지 못하면 책임을 면할 수 없도록 되어 있습니다.",
+          "source": "law:개인정보보호법:제39조",
+          "quote": "손해를 입으면 개인정보처리자에게 손해배상을 청구할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "구체적인 손해액을 증명하기 어려울 때는 제39조의2의 법정손해배상을 청구하는 방법이 있습니다. 회사의 고의나 과실로 개인정보가 유출된 경우 300만원 이하의 범위에서 청구할 수 있습니다. 제39조에 따라 청구했더라도 사실심 변론이 끝나기 전까지는 이 청구로 바꿀 수 있습니다.",
+          "source": "law:개인정보보호법:제39조의2",
+          "quote": "300만원 이하의 범위에서 상당한 금액을 손해액으로 하여 배상을 청구할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "이와 관련한 대법원 판례도 있습니다. 법정손해배상 청구 사건에서, 회사가 정보주체에게 위자료로 배상할 만한 정신적 손해가 생기지 않았다는 점을 주장·증명하면 책임을 면할 수 있다고 보았습니다. 따라서 결과는 사건마다 달라질 수 있습니다.",
+          "source": "case:2023다311184",
+          "quote": "위자료로 배상할 만한 정신적 손해가 발생하지 아니하였음을 주장ᆞ증명하여",
+          "check": "verified"
+        },
+        {
+          "text": "받으신 유출 통지서 내용도 확인해 보세요. 제34조에 따르면 회사는 통지할 때 유출 항목, 유출 시점과 경위, 회사의 대응조치와 피해 구제절차를 알려야 합니다. 손해배상·법정손해배상 청구나 분쟁조정 같은 법적 권리와 그 행사 방법도 알려야 합니다.",
+          "source": "law:개인정보보호법:제34조",
+          "quote": "개인정보처리자의 대응조치 및 피해 구제절차",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:개인정보보호법:제39조",
+        "lawName": "개인정보 보호법",
+        "articleNo": "제39조",
+        "title": "손해배상책임",
+        "effectiveFrom": "2026-09-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%9C%EC%9D%B8%EC%A0%95%EB%B3%B4%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C39%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:개인정보보호법:제34조",
+        "lawName": "개인정보 보호법",
+        "articleNo": "제34조",
+        "title": "개인정보 유출등의 통지ㆍ신고",
+        "effectiveFrom": "2026-09-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%9C%EC%9D%B8%EC%A0%95%EB%B3%B4%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C34%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:개인정보보호법:제39조의7",
+        "lawName": "개인정보 보호법",
+        "articleNo": "제39조의7",
+        "title": "손해배상의 보장",
+        "effectiveFrom": "2026-09-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%9C%EC%9D%B8%EC%A0%95%EB%B3%B4%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C39%EC%A1%B0%EC%9D%987",
+        "used": false
+      },
+      {
+        "id": "law:기상청과그소속기관직제시행규칙:제7조",
+        "lawName": "기상청과 그 소속기관 직제 시행규칙",
+        "articleNo": "제7조",
+        "title": "관측기반국",
+        "effectiveFrom": "2025-12-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B8%B0%EC%83%81%EC%B2%AD%EA%B3%BC%20%EA%B7%B8%20%EC%86%8C%EC%86%8D%EA%B8%B0%EA%B4%80%20%EC%A7%81%EC%A0%9C%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C7%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:개인정보보호법:제39조의2",
+        "lawName": "개인정보 보호법",
+        "articleNo": "제39조의2",
+        "title": "법정손해배상의 청구",
+        "effectiveFrom": "2026-09-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%9C%EC%9D%B8%EC%A0%95%EB%B3%B4%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C39%EC%A1%B0%EC%9D%982",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "193332",
+        "caseNo": "2015다24904, 24911, 24928, 24935",
+        "caseName": "손해배상(기)ㆍ손해배상(기)ㆍ손해배상(기)ㆍ손해배상(기)(네이트ㆍ싸이월드 회원들의 개인정보 유출로 인한 손해배상 청구사건)",
+        "court": "대법원",
+        "decidedAt": "2018-01-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=193332",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "613235",
+        "caseNo": "2023다311184",
+        "caseName": "손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-12-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613235",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "619455",
+        "caseNo": "2026도477",
+        "caseName": "도박공간개설·개인정보보호법위반",
+        "court": "대법원",
+        "decidedAt": "2026-04-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619455",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "615735",
+        "caseNo": "2023노2796",
+        "caseName": "개인정보보호법위반",
+        "court": "인천지방법원",
+        "decidedAt": "2024-05-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=615735",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "614441",
+        "caseNo": "2023나55205",
+        "caseName": "손해배상(기)",
+        "court": "서울남부지방법원",
+        "decidedAt": "2023-12-07",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614441",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "개인정보 유출 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "개인정보 유출 손해배상 위자료",
+        "total": 6
+      },
+      {
+        "keyword": "개인정보처리자 안전조치의무 위반 정신적 손해",
+        "total": 4
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "개인정보 보호법 제39조",
+          "exists": true
+        },
+        {
+          "citation": "개인정보 보호법 제39조의2",
+          "exists": true
+        },
+        {
+          "citation": "2023다311184",
+          "exists": true
+        },
+        {
+          "citation": "개인정보 보호법 제34조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

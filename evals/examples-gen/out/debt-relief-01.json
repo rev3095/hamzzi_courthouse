@@ -1,0 +1,203 @@
+{
+  "id": "debt-relief-01",
+  "category": "debt_relief",
+  "question": "카드 빚과 대출이 늘어 월급으로는 이자도 갚기 어려워요. 직장은 계속 다니고 있어요. 개인회생을 신청할 수 있는지, 신청하면 어떤 절차로 진행되는지 알고 싶어요.",
+  "at": "2026-11-19T03:50:50.557Z",
+  "elapsedMs": 20181,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 9057,
+    "tokens_out": 1539,
+    "latency_ms": 19759
+  },
+  "costUsdUpperEstimate": 0.06701,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "채무자 회생 및 파산에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "개인회생",
+        "개인회생 변제계획 인가 요건",
+        "개인회생 채무자 소득 변제기간"
+      ]
+    },
+    "section": "debt_relief",
+    "answer": {
+      "points": [
+        {
+          "text": "법률은 개인채무자가 법원에 개인회생절차 개시를 신청할 수 있다고 정하고 있습니다. 다만 주어진 자료에는 소득이나 채무 규모 같은 구체적인 신청 요건이 나와 있지 않습니다. 그래서 직장에 다니시는 질문자님이 실제로 신청 대상이 되는지는 이 자료만으로 판단하기 어렵습니다.",
+          "source": "law:채무자회생및파산에관한법률:제588조",
+          "quote": "개인채무자는 법원에 개인회생절차의 개시를 신청할 수 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "신청한 뒤에는 신청일부터 14일 이내에 변제계획안을 내야 합니다. 상당한 이유가 있으면 법원이 이 기간을 늘려 줄 수 있습니다. 변제계획안은 인가되기 전까지 고칠 수 있고, 법원이 수정을 명하면 정해진 기한 안에 고쳐야 합니다.",
+          "source": "law:채무자회생및파산에관한법률:제610조",
+          "quote": "채무자는 개인회생절차개시의 신청일부터 14일 이내에 변제계획안을 제출하여야 한다.",
+          "check": "verified"
+        },
+        {
+          "text": "변제계획에는 변제에 쓰일 재산과 소득에 관한 사항이 들어가야 합니다. 원칙적으로 인가일부터 1월 이내에 변제를 시작해 정기적으로 갚아야 하고, 변제기간은 3년을 넘지 않는 것이 원칙입니다. 다만 법원 허가가 있거나 특별한 사정이 있는 경우 등에는 예외가 있습니다.",
+          "source": "law:채무자회생및파산에관한법률:제611조",
+          "quote": "변제계획에서 정하는 변제기간은 변제개시일부터 3년을 초과하여서는 아니된다",
+          "check": "verified"
+        },
+        {
+          "text": "인가를 받은 뒤 소득이 달라지는 등 사정이 바뀌면 변경안을 낼 수 있습니다. 채무자, 회생위원, 개인회생채권자 모두 변제가 끝나기 전까지 인가된 변제계획의 변경안을 제출할 수 있습니다.",
+          "source": "law:채무자회생및파산에관한법률:제619조",
+          "quote": "변제계획에 따른 변제가 완료되기 전에는 인가된 변제계획의 변경안을 제출할 수 있다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:채무자회생및파산에관한법률:제610조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제610조",
+        "title": "변제계획안의 제출 및 수정",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C610%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:채무자회생및파산에관한법률:제588조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제588조",
+        "title": "개인회생절차개시의 신청권자",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C588%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:채무자회생및파산에관한법률:제611조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제611조",
+        "title": "변제계획의 내용",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C611%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:채무자회생및파산에관한법률:제619조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제619조",
+        "title": "인가 후의 변제계획변경",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C619%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:채무자회생및파산에관한법률:제582조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제582조",
+        "title": "개인회생채권의 변제",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C582%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "623099",
+        "caseNo": "2025마6985",
+        "caseName": "개인회생",
+        "court": "대법원",
+        "decidedAt": "2025-11-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623099",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624965",
+        "caseNo": "2024누13954",
+        "caseName": "종합소득세부과처분취소",
+        "court": "수원고등법원",
+        "decidedAt": "2026-01-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624965",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "606183",
+        "caseNo": "2022다256327",
+        "caseName": "대여금[개인회생절차의 별제권자인 근저당권자가 별제권에 의해 우선변제가 예상되는 피담보채권 부분에 대하여 이행을 소구한 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-05-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606183",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "423896",
+        "caseNo": "2021구합51797",
+        "caseName": "회생절차 중 신설회사(물적분할)의 주식취득시 간주취득세 여부",
+        "court": "창원지방법원",
+        "decidedAt": "2022-09-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=423896",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "241499",
+        "caseNo": "2024마6102",
+        "caseName": "개인회생",
+        "court": "대법원",
+        "decidedAt": "2024-08-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=241499",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "개인회생",
+        "total": 6
+      },
+      {
+        "keyword": "개인회생 변제계획 인가 요건",
+        "total": 6
+      },
+      {
+        "keyword": "개인회생 채무자 소득 변제기간",
+        "total": 4
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "채무자 회생 및 파산에 관한 법률 제588조",
+          "exists": true
+        },
+        {
+          "citation": "채무자 회생 및 파산에 관한 법률 제610조",
+          "exists": true
+        },
+        {
+          "citation": "채무자 회생 및 파산에 관한 법률 제611조",
+          "exists": true
+        },
+        {
+          "citation": "채무자 회생 및 파산에 관한 법률 제619조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

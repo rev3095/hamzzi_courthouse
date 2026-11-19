@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 const { default: Home } = await import("@/app/page");
-const { CATEGORY_LIST } = await import("@/lib/procedure/categories");
+const { CATEGORY_LIST, CATEGORY_GROUPS, CATEGORIES } = await import("@/lib/procedure/categories");
 const { demoExamples } = await import("@/lib/demo/policy");
 
 const posts = () =>
@@ -42,16 +42,28 @@ const posts = () =>
     ([url, init]) => String(url).includes("/inquiries") && init?.method === "POST",
   );
 
-test("DEC-028 카테고리 버튼이 모두 보인다", () => {
+test("DEC-028·034 묶음 탭을 누르면 그 묶음의 카테고리 버튼이 보이고, 모든 카테고리가 어느 묶음에든 있다", () => {
   render(<Home />);
-  const group = screen.getByRole("region", { name: "어떤 일인가요?" });
-  for (const c of CATEGORY_LIST) {
-    expect(within(group).getByRole("button", { name: new RegExp(c.label) })).toBeDefined();
+  const region = screen.getByRole("region", { name: "어떤 일인가요?" });
+  const seen: string[] = [];
+  for (const g of CATEGORY_GROUPS) {
+    fireEvent.click(within(region).getByRole("tab", { name: g.label }));
+    expect(within(region).getByRole("tab", { name: g.label }).getAttribute("aria-selected")).toBe(
+      "true",
+    );
+    const panel = within(region).getByRole("tabpanel");
+    expect(within(panel).getAllByRole("button")).toHaveLength(g.keys.length);
+    for (const key of g.keys) {
+      expect(within(panel).getByText(CATEGORIES[key].label)).toBeDefined();
+      seen.push(key);
+    }
   }
+  expect([...seen].sort()).toEqual(CATEGORY_LIST.map((c) => c.key).sort());
 });
 
 test("DEC-028 카테고리를 고르면 안내·질문 틀이 나오고, 문장 시작을 누르면 입력란에 들어간다 (보내지는 않음)", () => {
   render(<Home />);
+  fireEvent.click(screen.getByRole("tab", { name: "가족·학교" }));
   fireEvent.click(screen.getByRole("button", { name: /가족·이혼/ }));
   expect(screen.getByRole("button", { name: /가족·이혼/ }).getAttribute("aria-pressed")).toBe(
     "true",
@@ -85,7 +97,7 @@ test("DEC-028 예시 카드는 예시 답변 화면 링크다 (질문 생성 API
   for (const e of demoExamples()) {
     const link = within(feed).getByRole("link", { name: `예시 답변 보기: ${e.question}` });
     expect(link.getAttribute("href")).toBe(e.href);
-    expect(e.href).toMatch(/^\/examples\/[a-z]+-\d{2}$/);
+    expect(e.href).toMatch(/^\/examples\/[a-z]+(-[a-z]+)*-\d{2}$/);
   }
   fireEvent.click(within(feed).getAllByRole("link")[0]);
   expect(posts()).toHaveLength(0);
@@ -93,11 +105,13 @@ test("DEC-028 예시 카드는 예시 답변 화면 링크다 (질문 생성 API
 
 test("DEC-028 고른 분야에 예시가 있으면 예시 답변 링크를 함께 보인다", () => {
   render(<Home />);
-  fireEvent.click(screen.getByRole("button", { name: /임대차/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^임대차/ }));
   const links = screen.getAllByRole("link", { name: /^예시 답변 \d$/ });
   expect(links.map((l) => l.getAttribute("href"))).toEqual([
     "/examples/lease-01",
     "/examples/lease-02",
     "/examples/lease-03",
+    // DeepSearch 예시 (DEC-041)
+    "/examples/deep-lease-01",
   ]);
 });

@@ -362,12 +362,11 @@ describe("DEC-014 프로토타입과 같은 검색 과정", () => {
 });
 
 describe("DEC-015 모드 스위치와 fallback", () => {
-  test("AI_MODE=pro를 명시할 때만 pro, 나머지는 모두 무료 모드", async () => {
+  test("DEC-036 AI_MODE=free거나 키가 없으면 무료 모드, 그 밖에는 유료", async () => {
     const { aiMode } = await import("@/lib/ai/mode");
     expect(aiMode({})).toBe("free");
-    expect(aiMode({ AI_MODE: "live" })).toBe("free");
-    expect(aiMode({ AI_MODE: " PRO " })).toBe("pro");
-    expect(aiMode({ AI_MODE: "pro-full" })).toBe("pro-full");
+    expect(aiMode({ AI_MODE: "free", ANTHROPIC_API_KEY: "k" })).toBe("free");
+    expect(aiMode({ AI_MODE: "live", ANTHROPIC_API_KEY: "k" })).toBe("paid");
   });
 
   test("서버 fallback은 Opus·Sonnet에만 붙인다", async () => {
@@ -380,7 +379,7 @@ describe("DEC-015 모드 스위치와 fallback", () => {
   });
 
   test("무료 모드에서는 Claude 클라이언트를 만들지 않는다", async () => {
-    vi.stubEnv("AI_MODE", "");
+    vi.stubEnv("AI_MODE", "free");
     const { createModelClient } = await import("@/lib/ai/client");
     expect(() => createModelClient()).toThrow(/AI_MODE/);
     vi.unstubAllEnvs();

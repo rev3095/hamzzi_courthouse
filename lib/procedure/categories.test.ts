@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { demoExamples } from "@/lib/demo/policy";
-import { CATEGORIES, CATEGORY_KEYS, CATEGORY_LIST, isCategoryKey } from "./categories";
+import {
+  CATEGORIES,
+  CATEGORY_GROUPS,
+  CATEGORY_KEYS,
+  CATEGORY_LIST,
+  groupOf,
+  isCategoryKey,
+} from "./categories";
 import { LIFE_TRACKS } from "./life-tracks";
 import { classifyCase, hasTimeline, procedurePlan } from "./policy";
 import { TRACKS } from "./steps";
@@ -26,6 +33,16 @@ describe("DEC-028 홈 카테고리 버튼", () => {
       expect(c.starters.length, c.key).toBeGreaterThan(0);
     }
     expect(CATEGORY_LIST.map((c) => c.key)).toEqual([...CATEGORY_KEYS]);
+  });
+
+  test("DEC-034 모든 카테고리가 정확히 한 묶음에 들고, 모든 타임라인에 카테고리가 있다", () => {
+    const grouped = CATEGORY_GROUPS.flatMap((g) => g.keys);
+    expect([...grouped].sort()).toEqual([...CATEGORY_KEYS].sort());
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect(groupOf("insult")).toBe("crime");
+    // 추가 타임라인(DEC-033)마다 홈 버튼이 있다
+    const tracks = new Set(CATEGORY_LIST.map((c) => c.track));
+    for (const key of Object.keys(LIFE_TRACKS)) expect(tracks.has(key as never), key).toBe(true);
   });
 
   test("카테고리 예시 답변은 실제 예시 질문만 가리킨다", () => {
@@ -60,8 +77,8 @@ describe("DEC-028 홈 카테고리 버튼", () => {
   });
 
   test("새 섹션도 고소를 당한 쪽·서류를 받은 쪽은 피해자 타임라인을 보이지 않는다", () => {
-    expect(classifyCase(bare(["형법"]), "명예훼손으로 고소당했어요")).toBe("accused");
-    expect(classifyCase(bare(["민법"]), "양육비 청구 소장을 받았어요")).toBe("defendant");
+    expect(classifyCase(bare(["형법"]), "명예훼손으로 고소당했어요")).toBe("respond_criminal");
+    expect(classifyCase(bare(["민법"]), "양육비 청구 소장을 받았어요")).toBe("respond_civil");
   });
 
   test("중고거래 사기는 소비자 섹션이 아니라 사기 타임라인", () => {
@@ -77,8 +94,8 @@ describe("DEC-028 홈 카테고리 버튼", () => {
     // 규칙이 정한 섹션이 있으면 카테고리보다 규칙이 먼저
     expect(classifyCase(bare(["근로기준법"]), "월급을 못 받았어요", "consumer")).toBe("wage");
     // 수사를 받는 쪽·서류를 받은 쪽은 카테고리를 골라도 범위 밖 안내
-    expect(classifyCase(bare(["형법"]), "고소당했어요", "defamation")).toBe("accused");
-    expect(classifyCase(bare(["민법"]), "소장을 받았어요", "loan")).toBe("defendant");
+    expect(classifyCase(bare(["형법"]), "고소당했어요", "defamation")).toBe("respond_criminal");
+    expect(classifyCase(bare(["민법"]), "소장을 받았어요", "loan")).toBe("respond_civil");
     // 일반 금전 절차는 생활 분쟁 섹션을 골랐을 때만 바꾼다
     expect(classifyCase(bare(["상가건물임대차보호법"]), "상가 보증금을 못 받았어요", "lease")).toBe(
       "money",
@@ -101,5 +118,32 @@ describe("DEC-028 홈 카테고리 버튼", () => {
   test("양육비를 못 받는 질문은 양육비 이행 단계 안내를 덧붙인다", () => {
     const plan = procedurePlan(bare(["민법"]), "양육비를 못 받고 있어요");
     expect(hasTimeline(plan) && plan.note).toMatch(/양육비 이행 확보/);
+  });
+});
+
+describe("카테고리 기본 조문 (DEC-041 검색 보강)", () => {
+  test("모든 카테고리에 기본 조문이 하나에서 셋까지 있고, 법령 이름과 조문 번호 꼴이 맞다", () => {
+    for (const c of CATEGORY_LIST) {
+      const nos = (c.lawHints ?? []).flatMap((h) => h.articleNos);
+      expect(nos.length, c.key).toBeGreaterThanOrEqual(1);
+      expect(nos.length, c.key).toBeLessThanOrEqual(3);
+      for (const h of c.lawHints ?? []) {
+        expect(h.lawName, c.key).toMatch(/(법|법률|령|규칙)$/);
+        for (const no of h.articleNos) expect(no, c.key).toMatch(/^제\d+조(의\d+)?$/);
+      }
+    }
+  });
+
+  test("기록해 둔 후보(evals/examples-gen/law-hints.json)와 같다 — 법제처 실존 확인은 tests/live/law-hints.live.test.ts", async () => {
+    const { default: expected } = await import("../../evals/examples-gen/law-hints.json");
+    for (const c of CATEGORY_LIST) {
+      const mine = (c.lawHints ?? []).flatMap((h) =>
+        h.articleNos.map((no) => `${h.lawName} ${no}`),
+      );
+      const want = (expected.hints as unknown as Record<string, string[][]>)[c.key].map(
+        ([law, no]) => `${law} ${no}`,
+      );
+      expect(mine.sort(), c.key).toEqual(want.sort());
+    }
   });
 });

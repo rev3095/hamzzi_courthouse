@@ -166,7 +166,7 @@ def gates(conn) -> None:
 
 
 def anon_quota(conn) -> None:
-    print("[4] 비로그인 횟수 (DEC-010, 하루 3회 DEC-024)")
+    print("[4] 비로그인 횟수 (DEC-010·024, 검사용 상한 3회 — 실제 값은 lib/inquiries/policy.ts ANON_QUESTION_LIMIT)")
     fn = CONSUME.split("(")[0]
     call = f"select {fn}(%s, %s, 3, 10, interval '24 hours')"
 
@@ -178,7 +178,7 @@ def anon_quota(conn) -> None:
     check(scalar(conn, "select count(*) from public.anon_usage where anon_session_id = %s", (s1,)) == 3, "anon_usage 3행")
     raises(conn, "questions_used 4 직접 기록", "update public.anon_sessions set questions_used = 4 where id = %s", (s1,),
            match="anon_sessions_questions_used_check")
-    # 하루 3회 (DEC-024): 오늘 날짜(한국 시간)로 기록하고, 날짜가 바뀌면 0부터 다시 센다
+    # 하루 횟수 (DEC-024): 오늘 날짜(한국 시간)로 기록하고, 날짜가 바뀌면 0부터 다시 센다
     check(scalar(conn, "select quota_day = (now() at time zone 'Asia/Seoul')::date from public.anon_sessions where id = %s",
                  (s1,)) is True, "quota_day = 오늘(Asia/Seoul)")
     conn.execute("update public.anon_sessions set quota_day = quota_day - 1 where id = %s", (s1,))
@@ -353,7 +353,7 @@ def ops(conn) -> None:
     got = [scalar(conn, f"select {hit}('search', %s, 2, interval '1 hour')", (key,)) for _ in range(3)]
     check(got == [True, True, False], f"레이트 리밋: 상한 2 → 세 번째 막힘 ({got})")
     check(scalar(conn, f"select {hit}('feedback', %s, 2, interval '1 hour')", (key,)) is True,
-          "버킷이 다르면 따로 센다 (검색 횟수는 질문 3회와 별개)")
+          "버킷이 다르면 따로 센다 (검색 횟수는 질문 횟수와 별개)")
     raises(conn, "잘못된 상한", f"select {hit}('search', %s, 0, interval '1 hour')", (key,), match="invalid rate limit")
 
     s1 = scalar(conn, "insert into public.anon_sessions default values returning id")
@@ -413,6 +413,72 @@ def ops(conn) -> None:
           "8일 지난 카운터는 파기")
     check(scalar(conn, "select count(*) from cron.job where jobname = 'hz-retention-purge'") == 1,
           "pg_cron 매일 파기 작업 등록")
+
+    # DEC-036 주간 유료 예산은 단위로 센다 (가중 차감)
+    wk = "verify-" + uuid.uuid4().hex
+    hw = "public.hit_rate_limit_weighted"
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 80)", (wk,)) is True,
+          "가중 차감: 80단위 — 상한 100 안")
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 20)", (wk,)) is True,
+          "가중 차감: 80 + 20 = 100 — 상한까지 허용")
+    check(scalar(conn, f"select {hw}('ai_units', %s, 100, interval '7 days', 1)", (wk,)) is False,
+          "가중 차감: 상한을 넘으면 false")
+    check(scalar(conn, "select hits from public.rate_limit_hits where key_hash = %s", (wk,)) == 100,
+          "가중 차감: 넘은 요청은 카운터에 남기지 않음")
+    raises(conn, "가중치 0은 거부", f"select {hw}('ai_units', %s, 100, interval '7 days', 0)", (wk,))
+
+    # DEC-040 기간 예산: 상한만큼 먼저 잡아 두고 실제 비용과의 차액을 돌려준다 (금액 단위 100만분의 1달러)
+    pb = "verify-period-" + uuid.uuid4().hex
+    ps = "2026-11-19T00:00:00+09:00"
+    rs, st = "public.reserve_ai_budget", "public.settle_ai_budget"
+    hits = "select hits from public.rate_limit_hits where bucket = %s and key_hash = 'global'"
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 150000)", (pb, ps)) is True, "기간 예산: 상한 안이면 잡아 둠")
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 150000)", (pb, ps)) is False, "기간 예산: 상한을 넘는 호출은 false")
+    check(scalar(conn, hits, (pb,)) == 150000, "기간 예산: 넘은 요청은 카운터에 남기지 않음")
+    scalar(conn, f"select {st}(%s, %s, 65000)", (pb, ps))
+    check(scalar(conn, hits, (pb,)) == 85000, "기간 예산 정산: 쓰지 않은 몫을 돌려줌")
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 30000)", (pb, ps)) is True, "기간 예산: 돌려받은 뒤 다시 잡을 수 있음")
+    scalar(conn, f"select {st}(%s, %s, 999999999)", (pb, ps))
+    check(scalar(conn, hits, (pb,)) == 0, "기간 예산 정산: 0 아래로 내려가지 않음")
+    check(scalar(conn, "select count(*) from public.rate_limit_hits where bucket = %s", (pb,)) == 1,
+          "기간 예산: 기간 중 카운터 행은 하나 (창이 바뀌지 않음)")
+    raises(conn, "기간 예산: 금액 0은 거부", f"select {rs}(%s, %s, 200000, 0)", (pb, ps))
+    raises(conn, "기간 예산 정산: 금액 0은 거부", f"select {st}(%s, %s, 0)", (pb, ps))
+    for fn in ("reserve_ai_budget(text, timestamptz, int, int)", "settle_ai_budget(text, timestamptz, int)"):
+        check(scalar(conn, f"select not has_function_privilege('anon', 'public.{fn}', 'execute') "
+                           f"and not has_function_privilege('authenticated', 'public.{fn}', 'execute')"),
+              f"{fn.split('(')[0]}는 anon·로그인 사용자가 실행할 수 없음")
+    check(scalar(conn, "select has_function_privilege('anon', "
+                       "'public.hit_rate_limit_weighted(text, text, int, interval, int)', 'execute')") is False,
+          "가중 차감 함수는 anon이 실행할 수 없음")
+
+    # DEC-037 AI 절차 분류 라벨 — 서버 전용, track·steps 중 하나만, 상태 값 제한
+    check(scalar(conn, "select relrowsecurity from pg_class where oid = 'public.procedure_labels'::regclass") is True,
+          "procedure_labels RLS 켬")
+    check(scalar(conn, "select count(*) from pg_policies where tablename = 'procedure_labels'") == 0,
+          "procedure_labels 정책 없음 (서버 전용)")
+    check(scalar(conn, "select has_table_privilege('anon', 'public.procedure_labels', 'select')") is False
+          and scalar(conn, "select has_table_privilege('authenticated', 'public.procedure_labels', 'select')") is False,
+          "procedure_labels는 anon·로그인 사용자가 읽을 수 없음")
+    lid = scalar(conn, "insert into public.procedure_labels (title, keywords, track) "
+                       "values ('검증 라벨', array['검증낱말'], 'neighbor') returning id")
+    check(scalar(conn, "select status from public.procedure_labels where id = %s", (lid,)) == "pending",
+          "라벨 기본 상태는 pending")
+    conn.execute("select public.bump_procedure_label(%s)", (lid,))
+    check(scalar(conn, "select hits from public.procedure_labels where id = %s", (lid,)) == 1, "라벨 사용 횟수 올림")
+    raises(conn, "track과 steps를 함께 넣을 수 없음",
+           "insert into public.procedure_labels (title, keywords, track, steps) "
+           "values ('검증 라벨', array['검증낱말'], 'neighbor', '[]'::jsonb)")
+    raises(conn, "track·steps 둘 다 없으면 거부",
+           "insert into public.procedure_labels (title, keywords) values ('검증 라벨', array['검증낱말'])")
+    raises(conn, "정해지지 않은 상태 값 거부",
+           "insert into public.procedure_labels (title, keywords, track, status) "
+           "values ('검증 라벨', array['검증낱말'], 'neighbor', 'live')")
+    check(scalar(conn, "select column_default from information_schema.columns "
+                       "where table_schema = 'public' and table_name = 'inquiries' and column_name = 'saved'") == "false",
+          "inquiries.saved 기본값 false (DEC-039)")
+    raises(conn, "낱말 없는 라벨 거부",
+           "insert into public.procedure_labels (title, keywords, track) values ('검증 라벨', '{}', 'neighbor')")
 
 
 def main() -> int:

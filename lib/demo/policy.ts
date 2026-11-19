@@ -148,9 +148,18 @@ export function caseQueriesFrom(articles: ArticleHit[], max = 2): string[] {
  * 판례 검색어에 홈 카테고리의 고정 검색어(DEC-028)를 맨 앞에 더한다. 같은 말이 있으면 한 번만, 최대 max개.
  * 고정 검색어는 정해 둔 법률 용어라 질문 문장(개인정보 가능성)이 섞이지 않는다.
  */
-export function withCaseHint(queries: string[], hint?: string | null, max = 3): string[] {
-  if (!hint) return queries;
-  return [hint, ...queries.filter((q) => q !== hint)].slice(0, max);
+export function withCaseHint(
+  queries: string[],
+  hint?: string | null,
+  max = 3,
+  /** 질문 해석 호출이 뽑은 판례 검색어 (DEC-033, 개인정보 검사를 거친 것). 조문 제목보다 먼저 쓴다 */
+  understood: string[] = [],
+): string[] {
+  const out: string[] = [];
+  for (const q of [...(hint ? [hint] : []), ...understood, ...queries]) {
+    if (!out.includes(q)) out.push(q);
+  }
+  return hint || understood.length > 0 ? out.slice(0, max) : queries;
 }
 
 /** 검색 전용 결과 (API.md 4.1 형식, mode=search_only, 답변 문단 없음) */

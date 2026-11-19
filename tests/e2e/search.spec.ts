@@ -1,4 +1,4 @@
-// F-003·F-004 판례 검색 화면 E2E (API 가짜). 질문 3회와 별개, 관련도 점수 없음, 검색 고지·법제처 원문 링크.
+// F-003·F-004 판례 검색 화면 E2E (API 가짜). 하루 질문 횟수와 별개, 관련도 점수 없음, 검색 고지·법제처 원문 링크.
 import { expect, test } from "@playwright/test";
 import { SEARCH_NOTICE } from "../../lib/api/respond";
 import { CASE_SEARCH_NOTE } from "../../lib/search/browse";
@@ -71,7 +71,7 @@ test("판례 검색 → 상세 → 참조조문", async ({ page }) => {
   await expect(page.getByText("유사도")).toHaveCount(0);
   expect(queries).toEqual(["보증금 반환"]);
   // 검색은 질문 횟수를 쓰지 않는다
-  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 3/3");
+  await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 5/5");
 
   await page.getByRole("link", { name: "보증금반환" }).click();
   await expect(page.getByRole("heading", { name: "판시사항" })).toBeVisible();

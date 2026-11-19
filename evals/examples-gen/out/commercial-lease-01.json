@@ -1,0 +1,199 @@
+{
+  "id": "commercial-lease-01",
+  "category": "commercial_lease",
+  "question": "상가를 빌려 5년째 식당을 하고 있어요. 계약이 끝날 때가 되어 새 임차인을 구해 권리금을 받기로 했는데, 임대인이 그 사람과는 계약하지 않겠다고 해요. 권리금을 받지 못하게 된 손해를 임대인에게 청구할 수 있나요?",
+  "at": "2026-11-19T03:49:26.678Z",
+  "elapsedMs": 25963,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10081,
+    "tokens_out": 2247,
+    "latency_ms": 25525
+  },
+  "costUsdUpperEstimate": 0.08526,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "상가건물 임대차보호법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "권리금 회수 방해",
+        "상가건물 임대차 권리금 회수기회 손해배상",
+        "상가임대차 권리금 임대인 방해 손해배상"
+      ]
+    },
+    "section": "commercial_lease",
+    "answer": {
+      "points": [
+        {
+          "text": "상가건물 임대차보호법은 임대인이 임대차기간이 끝나기 6개월 전부터 임대차 종료 시까지, 정당한 사유 없이 임차인이 주선한 신규임차인과의 계약 체결을 거절해 권리금 회수를 방해하는 것을 금지하고 있습니다. 임대인이 주선한 분과 계약하지 않겠다고 한 것이 이 금지 행위에 해당하는지가 핵심 쟁점입니다.",
+          "source": "law:상가건물임대차보호법:제10조의4",
+          "quote": "임차인이 주선한 신규임차인이 되려는 자와 임대차계약의 체결을 거절하는 행위",
+          "check": "verified"
+        },
+        {
+          "text": "대법원은 임차인이 구체적인 인적사항을 제시하며 신규 임차인을 주선했는데도 임대인이 법에서 정한 방해행위로 권리금 회수를 방해했다면, 임대인이 임차인의 손해를 배상할 책임이 있다고 판단했습니다. 따라서 새 임차인을 구체적으로 소개한 사정이 중요하게 다뤄질 수 있습니다.",
+          "source": "case:2022다202498",
+          "quote": "임대인은 임차인이 입은 손해를 배상할 책임이 있다",
+          "check": "verified"
+        },
+        {
+          "text": "다만 거절에 '정당한 사유'가 있다고 보는 경우가 법에 따로 정해져 있습니다. 예를 들어 주선한 신규임차인이 보증금 또는 차임을 감당하기 어려운 사정 등이 이에 해당할 수 있어, 임대인이 어떤 이유로 거절했는지 살펴볼 필요가 있습니다.",
+          "source": "law:상가건물임대차보호법:제10조의4",
+          "quote": "다음 각 호의 어느 하나에 해당하는 경우에는 제1항제4호의 정당한 사유가 있는 것으로 본다",
+          "check": "verified"
+        },
+        {
+          "text": "또한 권리금 회수기회 보호 규정은 계약갱신 거절 사유가 있으면 적용되지 않습니다. 예를 들어 임차인이 3기의 차임액에 이르도록 차임을 연체한 사실이 있거나, 임대인 동의 없이 전대한 경우 등이 이에 해당하므로, 이러한 사정이 있는지도 함께 확인해 보시는 것이 좋습니다.",
+          "source": "law:상가건물임대차보호법:제10조",
+          "quote": "임차인이 3기의 차임액에 해당하는 금액에 이르도록 차임을 연체한 사실이 있는 경우",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:상가건물임대차보호법:제10조",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제10조",
+        "title": "계약갱신 요구 등",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C10%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:상가건물임대차보호법:제10조의4",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제10조의4",
+        "title": "권리금 회수기회 보호 등",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C10%EC%A1%B0%EC%9D%984",
+        "used": true
+      },
+      {
+        "id": "law:상가건물임대차보호법:제13조",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제13조",
+        "title": "전대차관계에 대한 적용 등",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C13%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:상가건물임대차보호법:제10조의9",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제10조의9",
+        "title": "계약 갱신요구 등에 관한 임시 특례",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C10%EC%A1%B0%EC%9D%989",
+        "used": false
+      },
+      {
+        "id": "law:상가건물임대차보호법:제2조",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제2조",
+        "title": "적용범위",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "228551",
+        "caseNo": "2022다202498",
+        "caseName": "손해배상(기)[임대인의 철거·재건축계획의 고지행위에 관하여 종전 임차인이 권리금 회수방해를 원인으로 한 손해배상을 청구한 사건]",
+        "court": "대법원",
+        "decidedAt": "2022-08-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=228551",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "624487",
+        "caseNo": "2025나41158(본소), 2025나41165(반소)",
+        "caseName": "건물인도·손해배상(기)",
+        "court": "부산지방법원",
+        "decidedAt": "2026-01-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624487",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624307",
+        "caseNo": "2026다201337, 201338",
+        "caseName": "건물인도·손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2026-07-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624307",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "221869",
+        "caseNo": "2021다272346",
+        "caseName": "손해배상(기)[권리금회수기회 방해를 원인으로 손해배상을 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2022-01-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=221869",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "613161",
+        "caseNo": "2024다305605, 305612",
+        "caseName": "건물인도·손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-11-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613161",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "권리금 회수 방해",
+        "total": 6
+      },
+      {
+        "keyword": "상가건물 임대차 권리금 회수기회 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "상가임대차 권리금 임대인 방해 손해배상",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "상가건물 임대차보호법 제10조의4",
+          "exists": true
+        },
+        {
+          "citation": "2022다202498",
+          "exists": true
+        },
+        {
+          "citation": "상가건물 임대차보호법 제10조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

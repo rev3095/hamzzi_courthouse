@@ -38,7 +38,15 @@ test("DEC-012 예시 질문 10건이 피드에 보이고, 평가용 태그는 �
 test("범위 밖 기능(변호사·소장·과금)은 홈에 없다 (절대 규칙 5)", () => {
   const { container } = render(<Home />);
   const text = container.textContent ?? "";
-  for (const word of ["변호사 찾기", "혼자 소송", "변호사 비교", "소장 작성", "결제", "Pro"]) {
+  for (const word of [
+    "변호사 찾기",
+    "혼자 소송",
+    "변호사 비교",
+    "소장 작성",
+    "결제",
+    "요금",
+    "구독",
+  ]) {
     expect(text).not.toContain(word);
   }
 });

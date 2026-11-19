@@ -53,9 +53,10 @@ test("DEC-022 '내용증명 바로 가기'는 법률 검토 전 안내와 공식
   await page.goto(`/inquiries/${INQ}`);
   await page.getByRole("link", { name: /내용증명 바로 가기/ }).click();
   await page.waitForURL("**/documents/demand-letter**");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("내용증명 작성 안내");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("내용증명 작성");
   await expect(page.getByText("법률 검토 후 열릴 기능이에요")).toBeVisible();
-  await expect(page.getByRole("link", { name: /인터넷우체국/ })).toHaveAttribute(
+  // 공식 창구 링크가 여러 개라(서식·안내) 첫 번째를 본다
+  await expect(page.getByRole("link", { name: /인터넷우체국/ }).first()).toHaveAttribute(
     "href",
     "https://www.epost.go.kr",
   );

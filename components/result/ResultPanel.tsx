@@ -19,8 +19,11 @@ import {
   recommendText,
   type ProcedurePlan,
 } from "@/lib/procedure/policy";
+import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
+import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
+import { DeepMapView } from "./DeepMapView";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 import { ProcedureTimeline } from "./ProcedureTimeline";
 import {
@@ -98,6 +101,8 @@ export function ResultPanel({
 
       <SummaryStrip result={result} plan={plan} />
 
+      {result.deep && <DeepMapView result={result} />}
+
       {hasTimeline(plan) ? (
         <>
           <ProcedureTimeline
@@ -115,7 +120,9 @@ export function ResultPanel({
             </p>
             <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
             <p className="text-muted mt-1 text-[13px]">
-              {PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.
+              {plan.byAi
+                ? `${result.aiNotice} · ${AI_PROCEDURE_NOTE}`
+                : `${PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.`}
             </p>
           </div>
         </>
@@ -305,7 +312,7 @@ function NextSteps({
           <span>
             <span className="block text-base font-bold">내 상황으로 질문하기</span>
             <span className="text-muted mt-0.5 block text-[13px]">
-              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 3번에 세요
+              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 {ANON_QUESTION_LIMIT}번에 세요
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">
@@ -457,7 +464,8 @@ function ArticlesTab({ result }: { result: DemoAnalysisResult }) {
 }
 
 /**
- * 이번 분석이 쓴 판례 검색어. 무료·라이트는 조문 제목·분야 고정 낱말이고, 전체 파이프라인(pro-full)은 모델이 마스킹본에서 뽑은 낱말이다.
+ * 이번 분석이 쓴 판례 검색어. 무료는 조문 제목·분야 고정 낱말이고, 라이트는 여기에 질문 해석 호출이 뽑은 법률 용어(DEC-033,
+ * 개인정보·조문·사건번호·숫자·단정 표현 검사를 거친 것)가 더해지며, 전체 파이프라인(pro-full)은 모델이 마스킹본에서 뽑은 낱말이다.
  * 질문 문장 자체는 넣지 않고, 리서치 화면에서 검색할 때 서버가 개인정보 검사를 한 번 더 한다 (F-007)
  */
 export function researchKeywords(result: DemoAnalysisResult): string[] {

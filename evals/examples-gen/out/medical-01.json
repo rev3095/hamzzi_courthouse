@@ -1,0 +1,203 @@
+{
+  "id": "medical-01",
+  "category": "medical",
+  "question": "어머니가 수술을 받은 뒤 다리를 잘 움직이지 못하게 되셨어요. 병원은 수술 전에 설명한 합병증이라며 책임이 없다고 해요. 저희는 그런 설명을 들은 기억이 없어요. 병원에 책임을 물을 수 있나요?",
+  "at": "2026-11-19T03:48:40.580Z",
+  "elapsedMs": 22894,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10320,
+    "tokens_out": 1896,
+    "latency_ms": 22343
+  },
+  "costUsdUpperEstimate": 0.0792,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "의료법 시행규칙",
+        "의료법",
+        "보건의료기본법",
+        "응급의료에 관한 법률 시행규칙",
+        "산업재해보상보험법 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "의료과실 손해배상",
+        "의료과오 설명의무 위반 손해배상",
+        "수술 전 설명의무 위반 합병증 책임"
+      ]
+    },
+    "section": "medical",
+    "answer": {
+      "points": [
+        {
+          "text": "의료법은 의사가 생명이나 신체에 중대한 위해가 생길 우려가 있는 수술 등을 할 때, 환자(의사결정능력이 없으면 법정대리인)에게 정해진 사항을 설명하고 서면으로 동의를 받도록 정하고 있습니다. 설명할 사항에는 수술에 따라 전형적으로 예상되는 후유증이나 부작용도 들어 있습니다.",
+          "source": "law:의료법:제24조의2",
+          "quote": "수술등에 따라 전형적으로 발생이 예상되는 후유증 또는 부작용",
+          "check": "verified"
+        },
+        {
+          "text": "병원 말대로 설명이 있었는지는 서면 동의서로 확인해 볼 수 있습니다. 환자는 의사에게 동의서 사본 발급을 요청할 수 있습니다. 다만 설명·동의 절차 때문에 수술이 늦어져 생명이 위험해지거나 심신에 중대한 장애가 생기는 경우에는 이 의무의 예외가 있습니다.",
+          "source": "law:의료법:제24조의2",
+          "quote": "환자는 의사, 치과의사 또는 한의사에게 제1항에 따른 동의서 사본의 발급을 요청할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "보건의료기본법도 모든 국민이 치료 방법 등에 관해 충분한 설명을 들은 뒤 동의 여부를 정할 권리가 있다고 정하고 있습니다. 설명이 충분했는지가 쟁점이 될 수 있는 근거입니다.",
+          "source": "law:보건의료기본법:제12조",
+          "quote": "충분한 설명을 들은 후 이에 관한 동의 여부를 결정할 권리를 가진다",
+          "check": "verified"
+        },
+        {
+          "text": "설명 문제와 별개로 수술 자체의 과실을 다툴 때, 대법원은 다른 원인이 있다고 보기 어려운 간접사실을 증명해 과실을 추정할 수 있다고 보면서도, 의사에게 무과실 증명책임을 지울 수는 없다고 판단한 바 있습니다. 어머니 사건에서도 같은 결론이 나온다고 단정할 수는 없습니다.",
+          "source": "case:2022다264434",
+          "quote": "의료상의 과실 이외의 다른 원인이 있다고 보기 어려운 간접사실들",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:의료법시행규칙:제14조",
+        "lawName": "의료법 시행규칙",
+        "articleNo": "제14조",
+        "title": "진료기록부 등의 기재 사항",
+        "effectiveFrom": "2026-06-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9D%98%EB%A3%8C%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C14%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:의료법:제24조의2",
+        "lawName": "의료법",
+        "articleNo": "제24조의2",
+        "title": "의료행위에 관한 설명",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9D%98%EB%A3%8C%EB%B2%95/%EC%A0%9C24%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:보건의료기본법:제12조",
+        "lawName": "보건의료기본법",
+        "articleNo": "제12조",
+        "title": "보건의료서비스에 관한 자기결정권",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B3%B4%EA%B1%B4%EC%9D%98%EB%A3%8C%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C12%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:응급의료에관한법률시행규칙:제3조",
+        "lawName": "응급의료에 관한 법률 시행규칙",
+        "articleNo": "제3조",
+        "title": "응급의료에 관한 설명ㆍ동의의 내용 및 절차",
+        "effectiveFrom": "2026-08-14",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9D%91%EA%B8%89%EC%9D%98%EB%A3%8C%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:산업재해보상보험법시행규칙:제62조",
+        "lawName": "산업재해보상보험법 시행규칙",
+        "articleNo": "제62조",
+        "title": "보험급여 일시지급의 신청 및 지급 절차",
+        "effectiveFrom": "2026-02-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%EC%9E%AC%ED%95%B4%EB%B3%B4%EC%83%81%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C62%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "233041",
+        "caseNo": "2022다264434",
+        "caseName": "손해배상(의)[다발성 간농양 진단을 받은 망인을 상대로 피고 병원 의료진이 경피적 배액술만 시도하고 외과적 배액술을 시도하지 않다가 사망에 이르게 한 사안에서 유족들인 원고들이 의료과실을 주장하며 손해배상을 청구한 사건]",
+        "court": "대법원",
+        "decidedAt": "2022-12-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=233041",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "179903",
+        "caseNo": "2013고합577, 2013고합1060(병합)",
+        "caseName": "공직선거법위반·국가정보원법위반",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2014-09-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=179903",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "237279",
+        "caseNo": "2021가합52609",
+        "caseName": "손해배상(의)",
+        "court": "인천지방법원",
+        "decidedAt": "2021-10-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=237279",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "220241",
+        "caseNo": "2018다263434",
+        "caseName": "손해배상(의)[환자가 치료 도중 뇌출혈로 사망하자 의료과실에 의한 손해배상을 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2022-03-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=220241",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "182733",
+        "caseNo": "2012누9231",
+        "caseName": "의료기술시행중단명령처분취소",
+        "court": "서울고등법원",
+        "decidedAt": "2013-08-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182733",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "의료과실 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "의료과오 설명의무 위반 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "수술 전 설명의무 위반 합병증 책임",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "의료법 제24조의2",
+          "exists": true
+        },
+        {
+          "citation": "보건의료기본법 제12조",
+          "exists": true
+        },
+        {
+          "citation": "2022다264434",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

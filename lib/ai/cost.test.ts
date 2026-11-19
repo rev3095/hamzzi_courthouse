@@ -21,7 +21,7 @@ describe("DEC-019 비용 계산", () => {
   });
 
   test("단가표에 없는 모델은 상한을 지킬 수 없어 거부한다", () => {
-    expect(() => usageCost("claude-opus-5-5", { inputTokens: 1, outputTokens: 1 })).toThrow();
+    expect(() => usageCost("claude-fable-5-2", { inputTokens: 1, outputTokens: 1 })).toThrow();
   });
 
   test("글자 수 추정은 넉넉하게(1.5배) 잡는다", () => {

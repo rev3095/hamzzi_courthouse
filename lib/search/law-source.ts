@@ -12,12 +12,6 @@ import { fetchLawVersions, versionInForce } from "korean-law-mcp/lib/law-lineage
 import { buildJO } from "korean-law-mcp/lib/law-parser";
 import { findLaws, resolvedLawMatches } from "korean-law-mcp/lib/law-search";
 import { parseThreeTierDelegation } from "korean-law-mcp/lib/three-tier-parser";
-import {
-  parseConstitutionalXML,
-  parseCustomsXML,
-  parseInterpretationXML,
-  parseTaxTribunalXML,
-} from "korean-law-mcp/lib/xml-parser";
 import { collectAnnexList } from "korean-law-mcp/tools/annex-list";
 import { searchAiLawStructured } from "korean-law-mcp/tools/life-law";
 import { searchPrecedentsStructured } from "korean-law-mcp/tools/precedent-search-core";
@@ -48,6 +42,7 @@ import {
   annexRefs,
   decisionDetail,
   decisionHit,
+  decisionRows,
   lawNameByAbbreviation,
   lawVersion,
   ordinanceDetail,
@@ -207,13 +202,6 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
       return [toArticle(lawName, no, title, text, u["조문시행일자"] ?? fallbackDate)];
     });
 
-  const DECISION_PARSERS: Record<DecisionDomain, (xml: string) => { items: object[] }> = {
-    interpretation: parseInterpretationXML,
-    constitutional: parseConstitutionalXML,
-    tax_tribunal: parseTaxTribunalXML,
-    customs: parseCustomsXML,
-  };
-
   const toCaseHits = (
     hits: { id: string; title: string; caseNumber?: string; court?: string; date?: string }[],
     limit: number,
@@ -252,12 +240,13 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
           extraParams: { query, display: String(Math.min(limit, 50)), page: "1" },
         }),
       );
-      return DECISION_PARSERS[domain](xml)
-        .items.flatMap((row) => decisionHit(domain, row as Record<string, unknown>) ?? [])
+      return decisionRows(xml)
+        .flatMap((row) => decisionHit(domain, row) ?? [])
         .slice(0, limit);
     },
 
     async getDecision(domain, id) {
+      if (!DECISION_DOMAINS[domain].hasDetail) return null;
       const raw = await call("decision", () =>
         client.fetchApi({
           endpoint: "lawService.do",
@@ -491,7 +480,22 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
             verifyCitations(client, { text: citation, maxCitations: 1 }),
           );
           const text = res.content.map((c) => c.text).join("\n");
-          return [citation, parseStatuteVerify(citation, text)] as const;
+          const check = parseStatuteVerify(citation, text);
+          if (check.exists !== null) return [citation, check] as const;
+          // verify_citations는 긴 법령 이름(예: "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법")을 잘라 읽어
+          // 정확한 인용도 "확인 필요"로 돌려준다. 그럴 때만 그 법령의 그 조문을 법제처에서 직접 다시 가져와 본다 —
+          // 이름이 글자 그대로 같은 법령에서 조문이 나와야 실존으로 친다 (줄임말·부분 이름은 그대로 미확인)
+          const m = citation.match(/^(.+?)\s+(제\d+조(?:의\d+)?)$/);
+          if (!m) return [citation, check] as const;
+          const art = await this.getArticle(m[1], m[2]).catch(() => null);
+          const same = (a: string, b: string) =>
+            a.normalize("NFKC").replace(/\s+/g, "") === b.normalize("NFKC").replace(/\s+/g, "");
+          return [
+            citation,
+            art && same(art.lawName, m[1]) && same(art.articleNo, m[2])
+              ? { citation, exists: true }
+              : check,
+          ] as const;
         }),
       );
       return citations.map(

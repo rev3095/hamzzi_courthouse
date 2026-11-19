@@ -1,0 +1,206 @@
+{
+  "id": "stalking-01",
+  "category": "stalking",
+  "question": "헤어진 사람이 그만하라고 했는데도 하루에도 수십 번씩 전화와 문자를 하고 집 앞에서 기다려요. 무서워서 집에 들어가기가 힘들어요. 저에게 접근하지 못하게 하려면 어떻게 해야 하나요?",
+  "at": "2026-11-19T03:45:38.902Z",
+  "elapsedMs": 21320,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10428,
+    "tokens_out": 1765,
+    "latency_ms": 20899
+  },
+  "costUsdUpperEstimate": 0.07701,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "스토킹방지 및 피해자보호 등에 관한 법률",
+        "전자장치 부착 등에 관한 법률",
+        "스토킹방지 및 피해자보호 등에 관한 법률 시행령",
+        "스토킹범죄의 처벌 등에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "스토킹범죄",
+        "스토킹처벌법 접근금지 잠정조치",
+        "스토킹행위 반복 연락 집 앞 기다림 불안감"
+      ]
+    },
+    "section": "stalking",
+    "answer": {
+      "points": [
+        {
+          "text": "말씀하신 반복 전화·문자와 집 앞에서 기다리는 행위는 스토킹처벌법상 '스토킹행위' 정의에 해당하는지 검토할 수 있습니다. 법은 상대방 의사에 반해 정당한 이유 없이 주거 부근에서 기다리거나, 전화·문자 등을 도달하게 해 불안감이나 공포심을 일으키는 행위를 스토킹행위로 정하고 있습니다.",
+          "source": "law:스토킹범죄의처벌등에관한법률:제2조",
+          "quote": "상대방등의 주거, 직장, 학교, 그 밖에 일상적으로 생활하는 장소",
+          "check": "verified"
+        },
+        {
+          "text": "접근을 막는 방법으로 '긴급응급조치'가 있습니다. 판례가 인용한 조문에 따르면, 스토킹행위 신고와 관련해 반복될 우려가 있고 긴급한 경우 사법경찰관이 직권 또는 피해자 요청으로 100미터 이내 접근 금지와 전기통신 이용 접근 금지를 할 수 있습니다. 이후 48시간 이내에 판사 사후승인 청구 절차가 이어집니다.",
+          "source": "case:2026도100088",
+          "quote": "스토킹행위의 상대방 등이나 그 주거 등으로부터 100미터 이내의 접근 금지",
+          "check": "verified"
+        },
+        {
+          "text": "법원의 '잠정조치'로도 100m 이내 접근금지, 전기통신 이용 접근금지가 내려질 수 있습니다. 대법원은 이 조치가 기간 연장결정 없이 만료되면 효력을 잃는다고 보면서도, 검사가 같은 범죄사실과 재발 우려를 이유로 새 잠정조치를 다시 청구할 수 있다고 판단했습니다.",
+          "source": "case:2022모2092",
+          "quote": "제2호의 100m 이내 접근금지, 제3호의 전기통신을 이용한 접근금지",
+          "check": "verified"
+        },
+        {
+          "text": "집에 들어가기 무서우신 상황이라면 국가 지원도 참고하실 수 있습니다. 법은 국가와 지방자치단체가 스토킹 신고체계를 운영하고, 피해자 보호시설, 법률구조, 주거 지원, 상담·치료회복프로그램 등을 제공하도록 정하고 있습니다.",
+          "source": "law:스토킹방지및피해자보호등에관한법률:제3조",
+          "quote": "피해자에 대한 법률구조와 주거 지원 및 취업 등 자립 지원 서비스의 제공",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:스토킹방지및피해자보호등에관한법률:제3조",
+        "lawName": "스토킹방지 및 피해자보호 등에 관한 법률",
+        "articleNo": "제3조",
+        "title": "국가 등의 책무",
+        "effectiveFrom": "2026-08-13",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8A%A4%ED%86%A0%ED%82%B9%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EB%B3%B4%ED%98%B8%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C3%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:전자장치부착등에관한법률:제31조의6",
+        "lawName": "전자장치 부착 등에 관한 법률",
+        "articleNo": "제31조의6",
+        "title": "전자장치 부착의 집행",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%9E%90%EC%9E%A5%EC%B9%98%20%EB%B6%80%EC%B0%A9%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C31%EC%A1%B0%EC%9D%986",
+        "used": false
+      },
+      {
+        "id": "law:스토킹방지및피해자보호등에관한법률시행령:제3조",
+        "lawName": "스토킹방지 및 피해자보호 등에 관한 법률 시행령",
+        "articleNo": "제3조",
+        "title": "스토킹 예방교육 등",
+        "effectiveFrom": "2026-08-13",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8A%A4%ED%86%A0%ED%82%B9%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EB%B3%B4%ED%98%B8%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:스토킹범죄의처벌등에관한법률:제17조의2",
+        "lawName": "스토킹범죄의 처벌 등에 관한 법률",
+        "articleNo": "제17조의2",
+        "title": "피해자 등에 대한 신변안전조치",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8A%A4%ED%86%A0%ED%82%B9%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C17%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:스토킹범죄의처벌등에관한법률:제2조",
+        "lawName": "스토킹범죄의 처벌 등에 관한 법률",
+        "articleNo": "제2조",
+        "title": "정의",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8A%A4%ED%86%A0%ED%82%B9%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C2%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "625387",
+        "caseNo": "2026도100088",
+        "caseName": "스토킹범죄의처벌등에관한법률위반",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625387",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "233979",
+        "caseNo": "2022모2092",
+        "caseName": "잠정조치기각결정에대한재항고[검사가 「스토킹범죄의 처벌 등에 관한 법률」(이하 ‘스토킹처벌법’이라고 한다) 제9조 제1항 제2, 3호의 접근금지 잠정조치 결정이 내려진 행위자에 대하여 그 잠정조치 기간이 만료된 후 다시 스토킹처벌법 제9조 제1항 제2, 3호의 접근금지 잠정조치를 청구하는 사안]",
+        "court": "대법원",
+        "decidedAt": "2023-02-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=233979",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "625255",
+        "caseNo": "2025도7091",
+        "caseName": "스토킹범죄의처벌등에관한법률위반·정보통신망이용촉진및정보보호등에관한법률위반",
+        "court": "대법원",
+        "decidedAt": "2026-04-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625255",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "241631",
+        "caseNo": "2024도7832",
+        "caseName": "스토킹범죄의처벌등에관한법률위반",
+        "court": "대법원",
+        "decidedAt": "2024-09-27",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=241631",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "619505",
+        "caseNo": "2024도12341, 2024보도89",
+        "caseName": "특수협박·특수주거침입·스토킹범죄의처벌등에관한법률위반·보호관찰명령",
+        "court": "대법원",
+        "decidedAt": "2026-04-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619505",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "스토킹범죄",
+        "total": 6
+      },
+      {
+        "keyword": "스토킹처벌법 접근금지 잠정조치",
+        "total": 6
+      },
+      {
+        "keyword": "스토킹행위 반복 연락 집 앞 기다림 불안감",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "스토킹범죄의 처벌 등에 관한 법률 제2조",
+          "exists": true
+        },
+        {
+          "citation": "2026도100088",
+          "exists": true
+        },
+        {
+          "citation": "2022모2092",
+          "exists": true
+        },
+        {
+          "citation": "스토킹방지 및 피해자보호 등에 관한 법률 제3조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

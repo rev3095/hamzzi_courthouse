@@ -253,6 +253,14 @@ export function DecisionRoute() {
       <div className="mt-4">
         {d.sourceUrl ? (
           <OriginalLink url={d.sourceUrl} label="법제처에서 원문 보기 →" />
+        ) : d.agencySite ? (
+          <p className="text-muted text-[13px]">
+            국가법령정보센터에는 이 자료의 공개 주소가 없어요.{" "}
+            <OriginalLink
+              url={d.agencySite.url}
+              label={`${d.agencySite.label} 사이트에서 ${d.refNo ? `‘${d.refNo}’(으)로` : "제목으로"} 찾기 ↗`}
+            />
+          </p>
         ) : (
           <p className="text-muted text-[13px]">
             원문은 국가법령정보센터에서 {d.refNo ? `‘${d.refNo}’(으)로` : "제목으로"} 검색해 확인할
@@ -290,6 +298,7 @@ export function DiffText({ parts }: { parts: DiffPart[] }) {
 }
 
 const LAW_TOOLS: [string, string][] = [
+  ["articles", "법령 전문·판례"],
   ["three-tier", "3단 비교"],
   ["old-new", "신구조문 대조"],
   ["history", "개정 연혁"],

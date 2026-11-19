@@ -11,10 +11,11 @@ const store = vi.hoisted(() => ({
   markInquiryFailed: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
-const ai = vi.hoisted(() => ({ runDemoAnalysis: vi.fn() }));
-vi.mock("@/lib/ai/orchestrator", () => ai);
 const lite = vi.hoisted(() => ({ runLiteAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/lite", () => lite);
+// 절차 분류 보조(DEC-037)는 tests/unit/procedure-labels.test.ts에서 따로 본다
+const hint = vi.hoisted(() => ({ procedureHintFor: vi.fn(async () => undefined) }));
+vi.mock("@/lib/inquiries/procedure-hint", () => hint);
 const free = vi.hoisted(() => ({ runFreeAnalysis: vi.fn() }));
 vi.mock("@/lib/demo/free", () => free);
 const cite = vi.hoisted(() => ({ verifyDraft: vi.fn() }));
@@ -22,10 +23,11 @@ vi.mock("@/lib/citations/verify", () => cite);
 const rate = vi.hoisted(() => ({
   // 주간·하루 상한 확인 (DEC-026). 실제 숫자는 lib/ai/models.test.ts가 본다
   tryAiQuota: vi.fn(async () => true),
+  settleAiQuota: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/auth/rate-limit", () => rate);
 
-const { analyzeInquiry, ANALYSIS_BUDGET_MS } = await import("@/lib/inquiries/analyze");
+const { analyzeInquiry } = await import("@/lib/inquiries/analyze");
 
 const INQ = {
   id: "inq-1",
@@ -41,12 +43,14 @@ const ANON = { kind: "anon" as const, anonSessionId: "anon-1" };
 const RESULT = { outcome: "grounded" };
 
 beforeEach(() => {
-  // 아래 기존 테스트는 전체 파이프라인(pro-full) 경로다. 라이트(pro)·무료 모드는 아래 describe에서 따로 본다
-  vi.stubEnv("AI_MODE", "pro-full");
+  // 유료 경로: 키가 있고 AI_MODE=free가 아니다 (DEC-036). 무료 모드는 아래 describe에서 따로 본다
+  vi.stubEnv("AI_MODE", "");
+  vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
   vi.clearAllMocks();
+  hint.procedureHintFor.mockResolvedValue(undefined);
   calls.length = 0;
   store.loadFollowupContext.mockResolvedValue([{ question: "앞 질문", answer: "앞 답" }]);
-  ai.runDemoAnalysis.mockImplementation(async () => {
+  lite.runLiteAnalysis.mockImplementation(async () => {
     calls.push("analyze");
     return {
       draft: { answer: { points: [] } },
@@ -72,10 +76,12 @@ describe("analyzeInquiry", () => {
     const out = await analyzeInquiry(INQ, ANON, new Headers());
     expect(calls).toEqual(["analyze", "verify", "finish"]);
     expect(out).toEqual({ resultId: "r-1", result: RESULT });
-    expect(ai.runDemoAnalysis).toHaveBeenCalledWith(
+    // 단계를 보내지 않으면 Pro (DEC-036)
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
       { maskedText: "마스킹본", context: [{ question: "앞 질문", answer: "앞 답" }] },
-      expect.objectContaining({ budgetMs: ANALYSIS_BUDGET_MS }),
+      expect.objectContaining({ tier: "pro" }),
     );
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(20);
     // P3에서 거른 문단 수를 실패율에 넣는다
     expect(cite.verifyDraft).toHaveBeenCalledWith(
       expect.anything(),
@@ -99,7 +105,7 @@ describe("analyzeInquiry", () => {
   });
 
   test("분석이 실패하면 횟수를 차감하지 않고 failed로 표시한다", async () => {
-    ai.runDemoAnalysis.mockRejectedValue(new ApiError("MODEL_FAILED"));
+    lite.runLiteAnalysis.mockRejectedValue(new ApiError("MODEL_FAILED"));
     await expect(analyzeInquiry(INQ, ANON, new Headers())).rejects.toMatchObject({
       code: "MODEL_FAILED",
     });
@@ -116,9 +122,9 @@ describe("analyzeInquiry", () => {
   });
 });
 
-describe("DEC-015 무료 모드 (기본)", () => {
-  test("AI_MODE가 없으면 Claude 분석을 부르지 않고 무료 분석 결과를 같은 트랜잭션으로 저장한다", async () => {
-    vi.stubEnv("AI_MODE", "");
+describe("DEC-015 무료 모드", () => {
+  test("AI_MODE=free면 Claude 분석을 부르지 않고 무료 분석 결과를 같은 트랜잭션으로 저장한다", async () => {
+    vi.stubEnv("AI_MODE", "free");
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "search_only", outcome: "grounded" },
       citations: [],
@@ -126,8 +132,14 @@ describe("DEC-015 무료 모드 (기본)", () => {
       model: "search_only",
     });
     const out = await analyzeInquiry(INQ, ANON, new Headers());
-    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
+    expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
     expect(cite.verifyDraft).not.toHaveBeenCalled();
+    // 무료 모드의 절차 분류는 저장된 라벨만 본다 (모델 없음)
+    expect(hint.procedureHintFor).toHaveBeenCalledWith(
+      expect.anything(),
+      "마스킹본",
+      expect.objectContaining({ allowAi: false }),
+    );
     expect(free.runFreeAnalysis).toHaveBeenCalledWith("마스킹본", expect.anything());
     expect(store.finishAnalysis).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,7 +148,7 @@ describe("DEC-015 무료 모드 (기본)", () => {
       }),
       ANON,
       expect.any(Headers),
-      // 예시가 아닌 실제 질문은 무료 모드(검색 전용)라도 하루 3회에서 1회를 쓴다
+      // 예시가 아닌 실제 질문은 무료 모드(검색 전용)라도 하루 횟수에서 1회를 쓴다
       { consumeAnonQuota: true },
     );
     expect(out.result).toMatchObject({ mode: "search_only" });
@@ -144,8 +156,20 @@ describe("DEC-015 무료 모드 (기본)", () => {
     expect(rate.tryAiQuota).not.toHaveBeenCalled();
   });
 
-  test("DEC-019·026 Pro라도 주간 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
-    vi.stubEnv("AI_MODE", "pro-full");
+  test("키가 없으면 AI_MODE와 상관없이 무료 모드", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    free.runFreeAnalysis.mockResolvedValue({
+      result: { mode: "search_only", outcome: "grounded" },
+      citations: [],
+      stats: { total: 0, removed: 0 },
+      model: "search_only",
+    });
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "max" });
+    expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
+  });
+
+  test("DEC-026 주간 전체 상한을 넘으면 Claude를 부르지 않고 무료 분석으로 처리한다", async () => {
     rate.tryAiQuota.mockResolvedValueOnce(false);
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "search_only", outcome: "grounded" },
@@ -154,13 +178,13 @@ describe("DEC-015 무료 모드 (기본)", () => {
       model: "search_only",
     });
     const out = await analyzeInquiry(INQ, ANON, new Headers());
-    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
+    expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
     expect(free.runFreeAnalysis).toHaveBeenCalled();
     expect(out.result).toMatchObject({ mode: "search_only" });
   });
 
   test("무료 분석이 실패해도 횟수를 차감하지 않고 failed로 표시한다", async () => {
-    vi.stubEnv("AI_MODE", "");
+    vi.stubEnv("AI_MODE", "free");
     free.runFreeAnalysis.mockRejectedValue(new ApiError("SEARCH_UPSTREAM_FAILED"));
     await expect(analyzeInquiry(INQ, ANON, new Headers())).rejects.toMatchObject({
       code: "SEARCH_UPSTREAM_FAILED",
@@ -170,7 +194,7 @@ describe("DEC-015 무료 모드 (기본)", () => {
   });
 });
 
-describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
+describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
   const LITE_OUT = {
     draft: { answer: { points: [] } },
     evidence: {},
@@ -182,21 +206,40 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
     costCapped: false,
   };
 
-  test("AI_MODE=pro는 전체 파이프라인이 아니라 라이트 답변을 부른다", async () => {
-    vi.stubEnv("AI_MODE", "pro");
+  test.each([
+    ["light", 1],
+    ["pro", 20],
+    ["max", 100],
+  ] as const)("%s 단계는 주간 예산을 %i단위 쓰고 그 단계로 답변한다", async (tier, weight) => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
-    await analyzeInquiry(INQ, ANON, new Headers());
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier });
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(weight);
     expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
       { maskedText: "마스킹본", context: expect.anything() },
-      expect.anything(),
+      expect.objectContaining({ tier }),
     );
-    expect(ai.runDemoAnalysis).not.toHaveBeenCalled();
     expect(cite.verifyDraft).toHaveBeenCalled();
     expect(store.finishAnalysis).toHaveBeenCalled();
   });
 
-  test("DEC-027 유료 모드라도 예시 질문은 미리 만든 분석을 재생 — 주간 상한도, 비로그인 하루 3회도 쓰지 않는다 (비용 0)", async () => {
-    vi.stubEnv("AI_MODE", "pro");
+  test("DEC-037 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {
+    lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
+    cite.verifyDraft.mockResolvedValue({
+      result: { outcome: "grounded" },
+      citations: [],
+      stats: {},
+    });
+    hint.procedureHintFor.mockResolvedValue({ kind: "track", track: "neighbor" } as never);
+    const out = await analyzeInquiry(INQ, ANON, new Headers());
+    expect(hint.procedureHintFor).toHaveBeenCalledWith(
+      expect.anything(),
+      "마스킹본",
+      expect.objectContaining({ allowAi: true }),
+    );
+    expect(out.result.procedureHint).toEqual({ kind: "track", track: "neighbor" });
+  });
+
+  test("DEC-027 유료 모드라도 예시 질문은 미리 만든 분석을 재생 — 주간 상한도, 비로그인 하루 횟수도 쓰지 않는다 (비용 0)", async () => {
     const { demoExamples } = await import("@/lib/demo/policy");
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "replay", outcome: "grounded" },
@@ -217,7 +260,7 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
   });
 
   test("DEC-027 무료 모드에서도 예시 질문 재생은 횟수를 차감하지 않는다", async () => {
-    vi.stubEnv("AI_MODE", "");
+    vi.stubEnv("AI_MODE", "free");
     const { demoExamples } = await import("@/lib/demo/policy");
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "replay", outcome: "grounded" },
@@ -232,5 +275,21 @@ describe("DEC-020 라이트 모드 (AI_MODE=pro)", () => {
       expect.any(Headers),
       { consumeAnonQuota: false },
     );
+  });
+
+  describe("DEC-040 기간 예산 정산", () => {
+    test("답변 뒤 그 단계 가중치와 실제 비용으로 정산한다", async () => {
+      rate.settleAiQuota.mockClear();
+      lite.runLiteAnalysis.mockResolvedValue({ ...LITE_OUT, costUsd: 0.0204 });
+      await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "pro" });
+      expect(rate.settleAiQuota).toHaveBeenCalledWith(20, 0.0204);
+    });
+
+    test("예산을 못 잡아 무료로 처리한 질문은 정산하지 않는다", async () => {
+      rate.settleAiQuota.mockClear();
+      rate.tryAiQuota.mockResolvedValueOnce(false);
+      await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "max" });
+      expect(rate.settleAiQuota).not.toHaveBeenCalled();
+    });
   });
 });

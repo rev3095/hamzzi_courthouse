@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-024 비로그인 하루 3회(한국 시간 0시 초기화) + 관리자 모드(비밀번호 서명 쿠키). 순수 규칙과 관리자 로그인 API.
+// DEC-024 비로그인 하루 횟수(한국 시간 0시 초기화) + 관리자 모드(비밀번호 서명 쿠키). 순수 규칙과 관리자 로그인 API.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   ADMIN_TTL_MS,
@@ -21,7 +21,7 @@ const { POST, DELETE } = await import("@/app/api/v1/admin/session/route");
 // 테스트용 가짜 값 (실제 비밀번호·키 아님)
 const SECRETS = { passcode: "test-pass", serverSecret: "test-server-secret" };
 
-describe("DEC-024 하루 3회 — 한국 시간 날짜", () => {
+describe("DEC-024 하루 횟수 — 한국 시간 날짜", () => {
   test("UTC 15:00 = 한국 0시에 날짜가 바뀐다", () => {
     expect(kstDay(Date.parse("2026-11-17T14:59:59Z"))).toBe("2026-11-17");
     expect(kstDay(Date.parse("2026-11-17T15:00:00Z"))).toBe("2026-11-18");
@@ -51,6 +51,19 @@ describe("DEC-024 관리자 비밀번호·쿠키", () => {
     });
   });
 
+  test("DEC-024 ADMIN_PASSWORD 이름으로 넣어도 켜지고, 둘 다 있으면 ADMIN_PASSCODE를 쓴다", () => {
+    expect(adminSecrets({ ADMIN_PASSWORD: " y ", SUPABASE_SERVICE_ROLE_KEY: "k" })).toEqual({
+      passcode: "y",
+      serverSecret: "k",
+    });
+    expect(
+      adminSecrets({ ADMIN_PASSCODE: "x", ADMIN_PASSWORD: "y", SUPABASE_SERVICE_ROLE_KEY: "k" }),
+    ).toEqual({ passcode: "x", serverSecret: "k" });
+    expect(
+      adminSecrets({ ADMIN_PASSCODE: " ", ADMIN_PASSWORD: "", SUPABASE_SERVICE_ROLE_KEY: "k" }),
+    ).toBeNull();
+  });
+
   test("비밀번호 대조", () => {
     expect(passcodeMatches("test-pass", SECRETS)).toBe(true);
     expect(passcodeMatches("test-pas", SECRETS)).toBe(false);
@@ -63,15 +76,21 @@ describe("DEC-024 관리자 비밀번호·쿠키", () => {
     const token = issueAdminToken(SECRETS, now);
     expect(verifyAdminToken(token, SECRETS, now + 1000)).toBe(true);
     expect(verifyAdminToken(token, SECRETS, now + ADMIN_TTL_MS + 1)).toBe(false);
-    expect(verifyAdminToken(token.replace(/.$/, (c) => (c === "0" ? "1" : "0")), SECRETS, now)).toBe(
-      false,
-    );
+    expect(
+      verifyAdminToken(
+        token.replace(/.$/, (c) => (c === "0" ? "1" : "0")),
+        SECRETS,
+        now,
+      ),
+    ).toBe(false);
     expect(verifyAdminToken(token, { ...SECRETS, passcode: "changed" }, now)).toBe(false);
     expect(verifyAdminToken(token, { ...SECRETS, serverSecret: "other" }, now)).toBe(false);
     expect(verifyAdminToken(undefined, SECRETS, now)).toBe(false);
     expect(verifyAdminToken(token, null, now)).toBe(false);
     // 만료를 늘려 서명 없이 만든 값
-    expect(verifyAdminToken(`${now + ADMIN_TTL_MS * 10}.${"0".repeat(64)}`, SECRETS, now)).toBe(false);
+    expect(verifyAdminToken(`${now + ADMIN_TTL_MS * 10}.${"0".repeat(64)}`, SECRETS, now)).toBe(
+      false,
+    );
   });
 });
 
@@ -110,7 +129,10 @@ describe("POST·DELETE /admin/session", () => {
     const res = await login({ passcode: "test-pass" });
     expect(res.status).toBe(429);
     expect(session.setAdminCookie).not.toHaveBeenCalled();
-    expect(rate.assertRateLimit.mock.calls[0][0]).toMatchObject({ bucket: "admin_login", limit: 5 });
+    expect(rate.assertRateLimit.mock.calls[0][0]).toMatchObject({
+      bucket: "admin_login",
+      limit: 5,
+    });
   });
 
   test("ADMIN_PASSCODE가 없으면 관리자 모드가 없다 (404)", async () => {

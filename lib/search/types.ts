@@ -39,7 +39,24 @@ export type CitationCheck = { citation: string; exists: boolean | null; note?: s
 // --- 탐색 확장 (DEC-029 제안): 결정문·시점 조문·신구 대조·3단 비교·자치법규 ---------------------
 
 /** 판례 밖 결정문 종류. 법제처 Open API 대상: expc · detc · ttSpecialDecc · kcsCgmExpc */
-export type DecisionDomain = "interpretation" | "constitutional" | "tax_tribunal" | "customs";
+export type DecisionDomain =
+  | "interpretation"
+  | "constitutional"
+  | "admin_appeal"
+  | "tax_tribunal"
+  | "appeal_review"
+  | "acr_special"
+  | "customs"
+  | "nts"
+  | "ftc"
+  | "pipc"
+  | "nlrc"
+  | "acr"
+  | "treaty"
+  | "school"
+  | "public_corp"
+  | "public_inst"
+  | "english_law";
 
 /** 결정문 목록 항목. id = 법제처 일련번호. sourceUrl은 공개 주소를 아는 종류만 */
 export type DecisionHit = {
@@ -49,7 +66,13 @@ export type DecisionHit = {
   refNo: string | null; // 안건번호·사건번호·청구번호
   agency: string | null;
   decidedAt: string | null;
+  /** 날짜가 뜻하는 것 (회신·종국·의결·등록 …) */
+  dateLabel: string;
+  /** 법제처가 상세 조회를 주지 않는 종류는 false */
+  hasDetail: boolean;
   sourceUrl: string | null;
+  /** 원문 주소가 없을 때 번호로 찾아볼 기관 공식 사이트 */
+  agencySite: { label: string; url: string } | null;
 };
 
 /** 결정문 상세. 요지 항목만 담고 이유·전문은 담지 않는다 (DEC-007과 같은 원칙) */

@@ -11,6 +11,8 @@ import {
   analyzeStream,
   confirmPii,
   getResult,
+  isQuotaBlocked,
+  isUserDailyLimit,
   notifyQuotaChanged,
   recallQuestion,
   type ClientError,
@@ -18,7 +20,8 @@ import {
 import { moodForError } from "@/lib/mascot/moods";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { HamzziJudge } from "../HamzziJudge";
-import { DEMO_LIMIT_TEXT } from "../LimitNotice";
+import { DEMO_LIMIT_TEXT, DEMO_LIMIT_TITLE, GoogleLoginButton, limitCopy } from "../LimitNotice";
+import { GOOGLE_LOGIN_ENABLED } from "@/lib/client/login";
 import { PrimaryButton, SecondaryButton } from "../Modal";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
@@ -283,7 +286,7 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
     body: "같은 네트워크에서는 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.",
   },
   LOGIN_REQUIRED: {
-    title: "오늘 질문 3번을 모두 썼어요",
+    title: DEMO_LIMIT_TITLE,
     body: DEMO_LIMIT_TEXT,
   },
   NOT_FOUND: {
@@ -315,7 +318,8 @@ export function Problem({
   onConfirmPii: () => void;
 }) {
   // INTERNAL_ERROR 등은 고정 문구만 (예외 내용 표시 금지)
-  const text = PROBLEM_TEXT[error.code] ?? {
+  // 로그인 사용자의 하루 한도(DEC-035)는 네트워크 상한과 다른 안내
+  const text = (isUserDailyLimit(error) ? limitCopy(true) : PROBLEM_TEXT[error.code]) ?? {
     title: "일시적인 오류가 발생했어요",
     body: "잠시 후 다시 시도해 주세요.",
   };
@@ -345,6 +349,12 @@ export function Problem({
           >
             예시 질문 보기
           </Link>
+        </div>
+      )}
+
+      {error.code === "LOGIN_REQUIRED" && GOOGLE_LOGIN_ENABLED && (
+        <div className="mx-auto mt-6 flex max-w-[320px] flex-col gap-2">
+          <GoogleLoginButton />
         </div>
       )}
 
@@ -426,7 +436,7 @@ function FollowUp({
 }) {
   const quota = useQuota();
   const { busy, error, send, modals, showLimit } = useAsk({ parentInquiryId: parentId });
-  const blocked = quota?.loginRequired === true;
+  const blocked = isQuotaBlocked(quota);
   return (
     <section aria-labelledby="follow-title" className="mt-8">
       <h2 id="follow-title" className="font-display text-ink text-[19px] font-bold">
@@ -445,6 +455,7 @@ function FollowUp({
           label="심층 질문하기"
           placeholder="이 사건에 대해 더 물어보세요"
           inputRef={inputRef}
+          askTools
         />
       </div>
       {error ? (
