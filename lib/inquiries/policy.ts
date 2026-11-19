@@ -99,7 +99,7 @@ export function assertUserQuota(questionsUsed: number) {
 
 const loginRequired = () => new ApiError("LOGIN_REQUIRED", { loginProviders: LOGIN_PROVIDERS });
 
-/** 질문 접수 전 검사: 이미 3회를 썼으면 저장하지 않고 401 LOGIN_REQUIRED */
+/** 질문 접수 전 검사: 이미 하루 ANON_QUESTION_LIMIT회를 썼으면 저장하지 않고 401 LOGIN_REQUIRED */
 export function assertAnonQuota(questionsUsed: number) {
   if (questionsUsed >= ANON_QUESTION_LIMIT) throw loginRequired();
 }

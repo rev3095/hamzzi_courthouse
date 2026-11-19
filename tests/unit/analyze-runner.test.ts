@@ -148,7 +148,7 @@ describe("DEC-015 무료 모드", () => {
       }),
       ANON,
       expect.any(Headers),
-      // 예시가 아닌 실제 질문은 무료 모드(검색 전용)라도 하루 3회에서 1회를 쓴다
+      // 예시가 아닌 실제 질문은 무료 모드(검색 전용)라도 하루 횟수에서 1회를 쓴다
       { consumeAnonQuota: true },
     );
     expect(out.result).toMatchObject({ mode: "search_only" });
@@ -239,7 +239,7 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
     expect(out.result.procedureHint).toEqual({ kind: "track", track: "neighbor" });
   });
 
-  test("DEC-027 유료 모드라도 예시 질문은 미리 만든 분석을 재생 — 주간 상한도, 비로그인 하루 3회도 쓰지 않는다 (비용 0)", async () => {
+  test("DEC-027 유료 모드라도 예시 질문은 미리 만든 분석을 재생 — 주간 상한도, 비로그인 하루 횟수도 쓰지 않는다 (비용 0)", async () => {
     const { demoExamples } = await import("@/lib/demo/policy");
     free.runFreeAnalysis.mockResolvedValue({
       result: { mode: "replay", outcome: "grounded" },

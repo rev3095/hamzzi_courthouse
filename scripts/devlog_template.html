@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>햄찌법원 개발 아카이브</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF9F6; --white:#FFFFFF; --ink:#1A2233; --muted:#5A6272; --gold:#A9873C; --cream:#F4EEE1;
+  --honey:#FFF4DE; --line:#E6E2D8; --sage:#6F8A4E; --fur:#E9A94B; --ok:#3D5A40; --warn:#9A4A2A;
+  --serif:"Noto Serif KR",serif; --sans:"IBM Plex Sans KR",system-ui,sans-serif; --accent:"Playfair Display",serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --radius:14px; --shadow:0 1px 2px rgba(26,34,51,.05),0 8px 24px -12px rgba(26,34,51,.18);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--sans);
+  background-image:radial-gradient(1200px 600px at 110% -10%,#F1EADB 0,transparent 60%),radial-gradient(900px 500px at -10% 30%,#F6F1E6 0,transparent 55%);}
+a{color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+/* 머리 */
+.hero{position:relative;padding:56px 0 40px;border-bottom:1px solid var(--line);overflow:hidden}
+.hero:before{content:"";position:absolute;inset:auto -10% -60% auto;width:620px;height:620px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(233,169,75,.18),transparent);pointer-events:none}
+.hero .wrap{display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center}
+.eyebrow{font:600 12px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+h1{font:900 clamp(40px,6vw,76px)/1.05 var(--serif);margin:14px 0 10px;letter-spacing:-.02em}
+h1 em{font:italic 600 .62em var(--accent);color:var(--gold);letter-spacing:0;margin-left:.2em}
+.lede{max-width:640px;color:var(--muted);font-size:16px;margin:0}
+.mascot{width:168px;height:168px;border-radius:50%;background:var(--honey);border:6px solid #fff;box-shadow:var(--shadow);
+  display:grid;place-items:center;overflow:hidden}
+.mascot img{width:100%;height:100%;object-fit:cover}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:30px}
+.stat{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.stat b{display:block;font:800 30px/1.1 var(--accent);color:var(--ink)}
+.stat span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+/* 탭 */
+nav.tabs{position:sticky;top:0;z-index:20;background:rgba(250,249,246,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{appearance:none;border:0;background:none;padding:16px 16px 14px;font:600 14px var(--sans);color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--gold)}
+nav.tabs button small{font:500 11px var(--mono);color:var(--gold);margin-left:6px}
+.panel{display:none;padding:28px 0 80px}
+.panel.on{display:block}
+/* 타임라인 배치 */
+.layout{display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:start}
+aside{position:sticky;top:70px;max-height:calc(100vh - 90px);overflow:auto;padding-right:4px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.box{padding:18px}
+.box h3{font:700 15px var(--serif);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.box h3:before{content:"";width:18px;height:2px;background:var(--gold)}
+/* 폼 */
+form.filters{display:grid;gap:12px}
+label.f{display:grid;gap:6px;font:600 12px var(--sans);color:var(--muted);letter-spacing:.03em}
+input[type=search],input[type=date],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:15px var(--sans);color:var(--ink)}
+input:focus,select:focus{outline:2px solid rgba(169,135,60,.35);border-color:var(--gold)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kinds{display:flex;flex-wrap:wrap;gap:6px}
+.kinds label{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font:500 12px var(--sans);cursor:pointer;background:#fff;user-select:none}
+.kinds input{accent-color:var(--gold);margin:0}
+.btns{display:flex;gap:8px}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:10px;padding:9px 14px;font:600 13px var(--sans);cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.count{font:500 12px var(--mono);color:var(--muted)}
+/* 세션 트리 */
+ul.tree{list-style:none;margin:0;padding:0}
+ul.tree ul{list-style:none;margin:0 0 0 14px;padding:0 0 0 12px;border-left:1px dashed var(--line)}
+.node{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;border-radius:10px;cursor:pointer;font-size:13px;line-height:1.35}
+.node:hover{background:var(--cream)}
+.node.off{opacity:.38}
+.dot{flex:none;width:11px;height:11px;border-radius:50%;margin-top:3px;box-shadow:0 0 0 3px #fff,0 0 0 4px var(--line)}
+.node .t{font-weight:600}
+.node .m{display:block;font:400 11px var(--mono);color:var(--muted);margin-top:2px}
+/* 날짜 블록 */
+.day{margin:0 0 34px}
+.dayhead{display:flex;align-items:baseline;gap:14px;margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.dayhead .d{font:800 34px/1 var(--accent);letter-spacing:-.01em}
+.dayhead .w{font:700 15px var(--serif);color:var(--gold)}
+.dayhead .n{margin-left:auto;font:500 12px var(--mono);color:var(--muted)}
+.sess{position:relative;margin:0 0 14px;border-left:4px solid var(--c);background:var(--white);border-radius:0 var(--radius) var(--radius) 0;box-shadow:var(--shadow);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sess[data-depth="1"]{margin-left:26px}
+.sess[data-depth="2"]{margin-left:52px}
+.sess[data-depth="1"]:before,.sess[data-depth="2"]:before{content:"↳";position:absolute;left:-22px;top:12px;color:var(--muted);font-size:15px}
+.sesshead{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 9%,#fff),#fff 70%);border-radius:0 var(--radius) 0 0}
+.sesshead b{font:700 15px var(--serif)}
+.sesshead .p{font:400 11px var(--mono);color:var(--muted)}
+.sesshead .k{margin-left:auto;font:500 11px var(--mono);color:var(--muted)}
+ol.entries{list-style:none;margin:0;padding:6px 0}
+ol.entries li{display:grid;grid-template-columns:54px 70px 1fr;gap:10px;padding:10px 16px;border-top:1px dashed #EFEBE2}
+ol.entries li:first-child{border-top:0}
+.time{font:500 12px var(--mono);color:var(--muted);padding-top:2px}
+.badge{display:inline-block;justify-self:start;font:600 11px var(--sans);padding:3px 8px;border-radius:999px;background:var(--cream);color:var(--ink);white-space:nowrap;height:fit-content}
+.badge.decision{background:var(--ink);color:#fff}
+.badge.problem{background:#F7E3DA;color:var(--warn)}
+.badge.fix{background:#E8EFE2;color:var(--ok)}
+.badge.build{background:var(--honey);color:#7A5A16}
+.badge.message{background:#EAEFF7;color:#304C7A}
+.badge.check{background:#EEF0F3;color:var(--muted)}
+.badge.report{background:#F3EEF7;color:#5B3F7A}
+.et{font-weight:600}
+.ed{color:#3A4252;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{font:500 11px var(--mono);padding:2px 7px;border-radius:6px;border:1px solid var(--line);background:#FBFAF7;text-decoration:none;color:var(--muted)}
+a.chip:hover{border-color:var(--gold);color:var(--ink)}
+mark{background:#FCE9B8;color:inherit;border-radius:3px;padding:0 1px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+/* 표 */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font:600 12px var(--sans);letter-spacing:.04em;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink);position:sticky;top:52px;background:var(--bg)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#FFFDF8}
+td.mono{font:500 12px var(--mono);white-space:nowrap;color:var(--muted)}
+.toolbar{display:flex;gap:10px;align-items:center;margin:0 0 16px}
+.toolbar input{max-width:360px}
+h2.sec{font:700 26px var(--serif);margin:0 0 6px}
+p.sub{color:var(--muted);margin:0 0 18px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ucard h4{display:flex;align-items:center;gap:8px;font:700 15px var(--serif);margin:0 0 10px}
+.ucard ul{margin:0;padding-left:18px;color:#3A4252}
+.ucard li{margin:4px 0}
+/* 세션 카드 */
+.scards{display:grid;gap:14px}
+.scard{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;padding:18px 20px;border-left:5px solid var(--c)}
+.scard[data-depth="1"]{margin-left:30px}
+.scard[data-depth="2"]{margin-left:60px}
+.scard h4{font:700 18px var(--serif);margin:0}
+.scard .meta{font:400 12px var(--mono);color:var(--muted);margin-top:4px}
+.scard p{margin:8px 0 0;color:#3A4252}
+.scard .num{text-align:right;font:800 30px/1 var(--accent)}
+.scard .num small{display:block;font:500 11px var(--sans);color:var(--muted)}
+.bar{display:flex;gap:2px;margin-top:10px;height:8px}
+.bar i{flex:1;border-radius:2px;background:var(--line)}
+.bar i.on{background:var(--c)}
+footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:12px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}.stats{grid-template-columns:repeat(2,1fr)}.hero .wrap{grid-template-columns:1fr}.mascot{display:none}.grid2{grid-template-columns:1fr}ol.entries li{grid-template-columns:46px 1fr}ol.entries li .badge{grid-column:2}ol.entries li>div{grid-column:1/-1}}
+@media print{nav.tabs,aside{display:none}.panel{display:block!important}.layout{grid-template-columns:1fr}.sess,.card{box-shadow:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Hamzzi Court · Development Archive</div>
+      <h1>햄찌법원 개발 아카이브<em>devlog</em></h1>
+      <p class="lede" id="lede"></p>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="mascot"><img src="../../public/mascot/hamzzi-judge.webp" alt="햄찌 판사" onerror="this.parentNode.style.display='none'"></div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <div class="wrap" id="tabs"></div>
+</nav>
+
+<main class="wrap">
+  <section class="panel on" id="p-timeline" role="tabpanel">
+    <div class="layout">
+      <aside>
+        <div class="card box" style="margin-bottom:14px">
+          <h3>찾기</h3>
+          <form class="filters" id="filters" onsubmit="return false">
+            <label class="f">낱말 (제목·내용·커밋·결정 번호)
+              <input type="search" id="q" placeholder="예: DeepSearch, DEC-040, ef3735c">
+            </label>
+            <div class="row2">
+              <label class="f">시작일<input type="date" id="from"></label>
+              <label class="f">종료일<input type="date" id="to"></label>
+            </div>
+            <div class="f" style="font:600 12px var(--sans);color:var(--muted)">종류
+              <div class="kinds" id="kinds" style="margin-top:6px"></div>
+            </div>
+            <label class="f">정렬
+              <select id="sort"><option value="desc">최근 날짜부터</option><option value="asc">처음부터</option></select>
+            </label>
+            <div class="btns"><button type="button" class="btn ghost" id="reset">초기화</button><span class="count" id="count" style="align-self:center"></span></div>
+          </form>
+        </div>
+        <div class="card box">
+          <h3>세션 계층</h3>
+          <ul class="tree" id="tree"></ul>
+          <p class="count" style="margin:10px 0 0">세션을 누르면 그 세션만 켜고 끕니다.</p>
+        </div>
+      </aside>
+      <div id="timeline"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-sessions" role="tabpanel">
+    <h2 class="sec">세션</h2>
+    <p class="sub">누가 누구를 시작했는지 계층대로. 막대는 그 세션이 기록을 남긴 날입니다.</p>
+    <div class="scards" id="scards"></div>
+  </section>
+
+  <section class="panel" id="p-decisions" role="tabpanel">
+    <h2 class="sec">결정</h2>
+    <p class="sub">세션 대화에서 사용자가 정한 것, 그리고 PRD 16.2 결정 로그 전체.</p>
+    <h3 style="font:700 18px var(--serif);margin:18px 0 10px">사용자 결정</h3>
+    <div class="card" style="overflow:auto"><table id="udec"></table></div>
+    <h3 style="font:700 18px var(--serif);margin:28px 0 10px">PRD 결정 로그</h3>
+    <div class="card" style="overflow:auto"><table id="prd"></table></div>
+  </section>
+
+  <section class="panel" id="p-commits" role="tabpanel">
+    <h2 class="sec">커밋 색인</h2>
+    <p class="sub">main의 병합 제외 커밋 전체. 누르면 GitHub에서 열립니다.</p>
+    <div class="toolbar"><input type="search" id="cq" placeholder="커밋 제목·해시·F-ID·DEC 번호로 찾기"><span class="count" id="ccount"></span></div>
+    <div class="card" style="overflow:auto"><table id="commits"></table></div>
+  </section>
+
+  <section class="panel" id="p-open" role="tabpanel">
+    <h2 class="sec">끝까지 확인하지 못한 것</h2>
+    <p class="sub">각 세션이 확인하지 못했거나 남겨 둔 일. 측정하지 않은 값은 추정으로 적었습니다.</p>
+    <div class="grid2" id="open"></div>
+  </section>
+</main>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script>
+const D=/*__DATA__*/null;
+const KIND={request:"요청",decision:"결정",build:"구현",fix:"수정",report:"보고",problem:"문제",check:"확인",message:"세션 메시지"};
+const WEEK="일월화수목금토";
+const PALETTE=["#1A2233","#A9873C","#6F8A4E","#B5603A","#3E6A8A","#7A4E8A","#2F7F78","#C08A2E","#8A3E55","#4F5D9A","#5E7F3A","#9A6B3E","#3A7FA8"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const S=D.sessions; const byKey={}; S.forEach((s,i)=>{s.color=PALETTE[i%PALETTE.length];byKey[s.key]=s;});
+const rank=Object.fromEntries(S.map((s,i)=>[s.key,i]));
+const E=D.entries;
+const days=[...new Set(E.map(e=>e.date))].sort();
+const wk=d=>WEEK[new Date(d+"T00:00:00+09:00").getUTCDay()===undefined?0:new Date(d+"T12:00:00Z").getUTCDay()];
+const state={q:"",from:"",to:"",kinds:new Set(Object.keys(KIND)),off:new Set(),sort:"desc"};
+
+// 머리
+$("#lede").textContent=`${days[0]} ~ ${days.at(-1)} · 세션 ${S.length}개가 남긴 작업 ${E.length}건을 날짜와 세션 계층으로 모았습니다. 사용자 결정, PRD 결정 로그, main 커밋 ${D.commits.length}개를 함께 찾아볼 수 있습니다.`;
+const stats=[[S.length,"세션"],[days.length,"작업한 날"],[E.length,"기록"],[D.commits.length,"커밋"],[D.prd.length,"PRD 결정"]];
+$("#stats").innerHTML=stats.map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+// 탭
+const TABS=[["timeline","타임라인",E.length],["sessions","세션",S.length],["decisions","결정",D.decisions.length+D.prd.length],["commits","커밋 색인",D.commits.length],["open","남은 일",Object.values(D.unresolved).flat().length]];
+$("#tabs").innerHTML=TABS.map(([k,l,n],i)=>`<button role="tab" data-k="${k}" aria-selected="${i===0}">${l}<small>${n}</small></button>`).join("");
+$("#tabs").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;
+  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+b.dataset.k));
+  history.replaceState(null,"","#"+b.dataset.k);});
+if(location.hash){const b=document.querySelector(`#tabs button[data-k="${location.hash.slice(1)}"]`);b&&b.click();}
+
+// 종류 체크
+$("#kinds").innerHTML=Object.entries(KIND).map(([k,l])=>`<label><input type="checkbox" value="${k}" checked>${l}</label>`).join("");
+
+// 세션 트리
+function tree(parent){const kids=S.filter(s=>(s.parent??null)===parent);if(!kids.length)return"";
+  return kids.map(s=>{const n=E.filter(e=>e.session===s.key).length;const sub=tree(s.key);
+    return `<li><div class="node" data-k="${s.key}"><span class="dot" style="background:${s.color}"></span><span><span class="t">${esc(s.title)}</span><span class="m">${esc(s.tool||"")} · ${esc(s.period||"")} · ${n}건</span></span></div>${sub?`<ul>${sub}</ul>`:""}</li>`;}).join("");}
+$("#tree").innerHTML=tree(null);
+$("#tree").addEventListener("click",ev=>{const n=ev.target.closest(".node");if(!n)return;const k=n.dataset.k;
+  state.off.has(k)?state.off.delete(k):state.off.add(k);n.classList.toggle("off");render();});
+
+function hi(text){const t=esc(text);if(!state.q)return t;const q=state.q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return t.replace(new RegExp(q,"gi"),m=>`<mark>${m}</mark>`);}
+function match(e){if(state.off.has(e.session))return false;if(!state.kinds.has(e.kind))return false;
+  if(state.from&&e.date<state.from)return false;if(state.to&&e.date>state.to)return false;
+  if(state.q){const hay=[e.title,e.detail,(e.commits||[]).join(" "),(e.ids||[]).join(" "),byKey[e.session]?.title].join(" ").toLowerCase();if(!hay.includes(state.q.toLowerCase()))return false;}
+  return true;}
+function chain(k){const c=[];while(k){c.push(k);k=byKey[k]?.parent??null;}return c.reverse();}
+function render(){
+  const hits=E.filter(match);$("#count").textContent=`${hits.length} / ${E.length}건`;
+  const ds=[...new Set(hits.map(e=>e.date))].sort();if(state.sort==="desc")ds.reverse();
+  if(!hits.length){$("#timeline").innerHTML=`<div class="card empty">조건에 맞는 기록이 없습니다.</div>`;return;}
+  $("#timeline").innerHTML=ds.map(d=>{
+    const todays=hits.filter(e=>e.date===d);
+    const keys=[...new Set(todays.map(e=>e.session))].sort((a,b)=>rank[a]-rank[b]);
+    const shown=[];keys.forEach(k=>chain(k).forEach(a=>{if(!shown.includes(a))shown.push(a);}));
+    const blocks=shown.map(k=>{const s=byKey[k]||{title:k,color:"#999",depth:0};const list=todays.filter(e=>e.session===k).sort((a,b)=>(a.time||"").localeCompare(b.time||""));
+      return `<div class="sess" data-depth="${Math.min(s.depth||0,2)}" style="--c:${s.color}"><div class="sesshead"><b>${esc(s.title)}</b><span class="p">${s.parent?"↳ "+esc(byKey[s.parent]?.title||""):"최상위 세션"}</span><span class="k">${list.length?list.length+"건":"하위 세션만"}</span></div>${list.length?`<ol class="entries">${list.map(e=>`<li><span class="time">${esc(e.time||"")}</span><span class="badge ${e.kind}">${KIND[e.kind]||esc(e.kind)}</span><div><div class="et">${hi(e.title)}</div><div class="ed">${hi(e.detail)}</div>${(e.commits?.length||e.ids?.length)?`<div class="chips">${(e.commits||[]).map(c=>`<a class="chip" href="${D.repo}/commit/${c}" target="_blank" rel="noopener">${hi(c)}</a>`).join("")}${(e.ids||[]).map(i=>`<span class="chip">${hi(i)}</span>`).join("")}</div>`:""}</div></li>`).join("")}</ol>`:""}</div>`;}).join("");
+    return `<section class="day"><div class="dayhead"><span class="d">${d.slice(5).replace("-",".")}</span><span class="w">${d.slice(0,4)} · ${wk(d)}요일</span><span class="n">${todays.length}건</span></div>${blocks}</section>`;}).join("");}
+const f=$("#filters");
+f.addEventListener("input",()=>{state.q=$("#q").value.trim();state.from=$("#from").value;state.to=$("#to").value;state.sort=$("#sort").value;
+  state.kinds=new Set([...document.querySelectorAll("#kinds input:checked")].map(i=>i.value));render();});
+$("#reset").addEventListener("click",()=>{f.reset();state.q="";state.from="";state.to="";state.sort="desc";state.kinds=new Set(Object.keys(KIND));state.off.clear();document.querySelectorAll(".node.off").forEach(n=>n.classList.remove("off"));render();});
+$("#from").min=$("#to").min=days[0];$("#from").max=$("#to").max=days.at(-1);
+render();
+
+// 세션 카드
+$("#scards").innerHTML=S.map(s=>{const mine=E.filter(e=>e.session===s.key);const on=new Set(mine.map(e=>e.date));
+  return `<div class="card scard" data-depth="${Math.min(s.depth||0,2)}" style="--c:${s.color}"><span class="dot" style="background:${s.color};margin-top:7px"></span><div><h4>${esc(s.title)}</h4><div class="meta">${esc(s.tool||"")} · ${esc(s.period||"")}${s.parent?" · 시작한 세션: "+esc(byKey[s.parent]?.title||""):" · 최상위"}${s.prs?.length?" · PR "+s.prs.join(", "):""}</div>${s.purpose?`<p>${esc(s.purpose)}</p>`:""}<div class="bar" title="기록이 있는 날">${days.map(d=>`<i class="${on.has(d)?"on":""}" title="${d}"></i>`).join("")}</div></div><div class="num">${mine.length}<small>기록</small></div></div>`;}).join("");
+
+// 결정
+$("#udec").innerHTML=`<thead><tr><th>날짜</th><th>세션</th><th>결정</th><th>번호</th></tr></thead><tbody>${[...D.decisions].sort((a,b)=>a.date.localeCompare(b.date)).map(d=>`<tr><td class="mono">${esc(d.date)}</td><td><span class="dot" style="display:inline-block;background:${byKey[d.session]?.color||"#999"};margin-right:6px"></span>${esc(byKey[d.session]?.title||d.session)}</td><td>${esc(d.text)}</td><td class="mono">${esc(d.id||"")}</td></tr>`).join("")}</tbody>`;
+$("#prd").innerHTML=`<thead><tr><th>번호</th><th>제목</th></tr></thead><tbody>${D.prd.map(d=>`<tr><td class="mono">${esc(d.id)}</td><td>${esc(d.title)}</td></tr>`).join("")}</tbody>`;
+
+// 커밋
+function commits(){const q=$("#cq").value.trim().toLowerCase();const rows=D.commits.filter(c=>!q||(c.hash+" "+c.subject).toLowerCase().includes(q));
+  $("#ccount").textContent=`${rows.length} / ${D.commits.length}개`;
+  $("#commits").innerHTML=`<thead><tr><th>커밋</th><th>시각</th><th>제목</th></tr></thead><tbody>${rows.map(c=>`<tr><td class="mono"><a href="${D.repo}/commit/${c.hash}" target="_blank" rel="noopener">${esc(c.hash)}</a></td><td class="mono">${esc(c.date)}</td><td>${esc(c.subject)}</td></tr>`).join("")}</tbody>`;}
+$("#cq").addEventListener("input",commits);commits();
+
+// 남은 일
+$("#open").innerHTML=S.filter(s=>(D.unresolved[s.key]||[]).length).map(s=>`<div class="card box ucard" style="border-top:4px solid ${s.color}"><h4><span class="dot" style="background:${s.color}"></span>${esc(s.title)}</h4><ul>${D.unresolved[s.key].map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
+
+$("#foot").innerHTML=`만든 시각 ${esc(D.built)} · <code>scripts/build_devlog.py</code>가 <code>docs/devlog/data.json</code>·git log·PRD 16.2로 만들었습니다. 각 세션 대화 기록을 읽고 요약한 것이며, 다른 세션의 작업은 그 세션의 보고를 옮겼습니다. · <a href="${D.repo}">${esc(D.repo.replace("https://",""))}</a>`;
+</script>
+</body>
+</html>

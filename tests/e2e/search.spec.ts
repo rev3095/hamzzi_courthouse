@@ -1,4 +1,4 @@
-// F-003·F-004 판례 검색 화면 E2E (API 가짜). 질문 3회와 별개, 관련도 점수 없음, 검색 고지·법제처 원문 링크.
+// F-003·F-004 판례 검색 화면 E2E (API 가짜). 하루 질문 횟수와 별개, 관련도 점수 없음, 검색 고지·법제처 원문 링크.
 import { expect, test } from "@playwright/test";
 import { SEARCH_NOTICE } from "../../lib/api/respond";
 import { CASE_SEARCH_NOTE } from "../../lib/search/browse";

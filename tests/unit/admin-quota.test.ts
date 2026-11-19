@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-024 비로그인 하루 3회(한국 시간 0시 초기화) + 관리자 모드(비밀번호 서명 쿠키). 순수 규칙과 관리자 로그인 API.
+// DEC-024 비로그인 하루 횟수(한국 시간 0시 초기화) + 관리자 모드(비밀번호 서명 쿠키). 순수 규칙과 관리자 로그인 API.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   ADMIN_TTL_MS,
@@ -21,7 +21,7 @@ const { POST, DELETE } = await import("@/app/api/v1/admin/session/route");
 // 테스트용 가짜 값 (실제 비밀번호·키 아님)
 const SECRETS = { passcode: "test-pass", serverSecret: "test-server-secret" };
 
-describe("DEC-024 하루 3회 — 한국 시간 날짜", () => {
+describe("DEC-024 하루 횟수 — 한국 시간 날짜", () => {
   test("UTC 15:00 = 한국 0시에 날짜가 바뀐다", () => {
     expect(kstDay(Date.parse("2026-11-17T14:59:59Z"))).toBe("2026-11-17");
     expect(kstDay(Date.parse("2026-11-17T15:00:00Z"))).toBe("2026-11-18");

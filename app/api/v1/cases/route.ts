@@ -1,5 +1,5 @@
 // /api/v1/cases — 판례 직접 검색 (F-003, API.md 4절). 법제처 실시간 조회 (DEC-009), 결과는 저장하지 않는다.
-// 비로그인 질문 3회와는 별개이고, 같은 네트워크 1시간 상한만 둔다 (DEC-017 제안).
+// 비로그인 하루 질문 횟수와는 별개이고, 같은 네트워크 1시간 상한만 둔다 (DEC-017 제안).
 // GET ?q= 는 API.md 형식 그대로 두고, 화면은 POST 본문을 쓴다 — 검색어가 주소·플랫폼 접속 기록에 남지 않게 (F-007)
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute, type RequestScope } from "@/lib/api/route";

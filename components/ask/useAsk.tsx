@@ -1,6 +1,6 @@
 "use client";
 // 질문 보내기 흐름 (F-001, F-007, DEC-010): 입력 → POST /inquiries → (민감정보 동의 S-02b) → (가린 문장 확인 S-02a)
-// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 3회를 다 쓰면 데모 한도 안내(S-06 자리).
+// → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 하루 횟수를 다 쓰면 데모 한도 안내(S-06 자리).
 // 원문은 입력란에만 있고 브라우저에 저장하지 않는다. 저장하는 것은 서버가 돌려준 마스킹본뿐 (DEC-006).
 import { useRouter } from "next/navigation";
 import { useState } from "react";

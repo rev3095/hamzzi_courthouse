@@ -245,6 +245,14 @@ describe("DEC-041 사건 구조와 시각자료", () => {
     expect(document.body.textContent).not.toMatch(/유리|불리|승소|가능성|확률|점수/);
   });
 
+  test("좁은 화면용 세로 목록에도 당사자·쟁점 개수가 같고, 근거 수만 적는다 (가로 스크롤 없음)", () => {
+    const { container } = render(<DeepMapView result={result} />);
+    expect(
+      screen.getByRole("group", { name: "사건 구조: 당사자 2, 쟁점 2, 확인할 사실 1" }),
+    ).toBeDefined();
+    expect(container.innerHTML).not.toContain("min-w-[640px]");
+  });
+
   test("긴 글은 줄을 나누고 넘치면 줄임표를 붙인다", () => {
     expect(wrapText("가나다 라마바 사아자", 6, 3)).toEqual(["가나다", "라마바", "사아자"]);
     expect(wrapText("가".repeat(30), 10, 2).at(-1)?.endsWith("…")).toBe(true);

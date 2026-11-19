@@ -13,7 +13,7 @@
   --sage: #6f8a4e;
   --fur: #e9a94b;
   --success-text: #3d5a40;
-  /* D+ 시안(Figma 03)에 변수 없이 쓰인 값. Figma hz tokens에 추가 필요 (docs/07 3절) */
+  /* D+ 시안(Figma 03)에서 온 값. Figma hz tokens에도 같은 이름으로 있다 (2026-11-19, docs/07 3절) */
   --honey-line: #ebd9b4;
   --gold-line: #e3d6b5;
   --label: #6b5420;

@@ -166,7 +166,7 @@ def gates(conn) -> None:
 
 
 def anon_quota(conn) -> None:
-    print("[4] 비로그인 횟수 (DEC-010, 하루 3회 DEC-024)")
+    print("[4] 비로그인 횟수 (DEC-010·024, 검사용 상한 3회 — 실제 값은 lib/inquiries/policy.ts ANON_QUESTION_LIMIT)")
     fn = CONSUME.split("(")[0]
     call = f"select {fn}(%s, %s, 3, 10, interval '24 hours')"
 
@@ -178,7 +178,7 @@ def anon_quota(conn) -> None:
     check(scalar(conn, "select count(*) from public.anon_usage where anon_session_id = %s", (s1,)) == 3, "anon_usage 3행")
     raises(conn, "questions_used 4 직접 기록", "update public.anon_sessions set questions_used = 4 where id = %s", (s1,),
            match="anon_sessions_questions_used_check")
-    # 하루 3회 (DEC-024): 오늘 날짜(한국 시간)로 기록하고, 날짜가 바뀌면 0부터 다시 센다
+    # 하루 횟수 (DEC-024): 오늘 날짜(한국 시간)로 기록하고, 날짜가 바뀌면 0부터 다시 센다
     check(scalar(conn, "select quota_day = (now() at time zone 'Asia/Seoul')::date from public.anon_sessions where id = %s",
                  (s1,)) is True, "quota_day = 오늘(Asia/Seoul)")
     conn.execute("update public.anon_sessions set quota_day = quota_day - 1 where id = %s", (s1,))
@@ -353,7 +353,7 @@ def ops(conn) -> None:
     got = [scalar(conn, f"select {hit}('search', %s, 2, interval '1 hour')", (key,)) for _ in range(3)]
     check(got == [True, True, False], f"레이트 리밋: 상한 2 → 세 번째 막힘 ({got})")
     check(scalar(conn, f"select {hit}('feedback', %s, 2, interval '1 hour')", (key,)) is True,
-          "버킷이 다르면 따로 센다 (검색 횟수는 질문 3회와 별개)")
+          "버킷이 다르면 따로 센다 (검색 횟수는 질문 횟수와 별개)")
     raises(conn, "잘못된 상한", f"select {hit}('search', %s, 0, interval '1 hour')", (key,), match="invalid rate limit")
 
     s1 = scalar(conn, "insert into public.anon_sessions default values returning id")
