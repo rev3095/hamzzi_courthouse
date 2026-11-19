@@ -2,15 +2,16 @@
 // 답변 모드 선택 (DEC-036): 질문창 아래 3단 슬라이더. 원형 손잡이를 끌거나 단계 이름을 눌러 고른다.
 // 실제 조작은 보이지 않는 range 입력이 맡는다 — 키보드(←→)·터치·화면 낭독기가 그대로 동작한다.
 // 설명 문구는 답변 방식의 사실만 적는다. 정확도·유불리를 약속하지 않는다 (절대 규칙 2).
+// 화면에는 실제 모델 이름을 싣지 않는다 (2026-11-19 사용자 요청) — 모델은 lib/ai/models.ts TIERS에만 있다.
 import { useId } from "react";
 import { TIER_IDS, type TierId } from "@/lib/ai/models";
 import { useTier, writeTier } from "@/lib/client/tier";
 import { useQuota } from "../useQuota";
 
-export const TIER_TEXT: Record<TierId, { name: string; model: string; hint: string }> = {
-  light: { name: "Light", model: "Haiku", hint: "가장 빠른 모델" },
-  pro: { name: "Pro", model: "Sonnet", hint: "기본 모델" },
-  max: { name: "Pro Max", model: "Opus", hint: "답하기 전에 더 오래 생각하는 모델" },
+export const TIER_TEXT: Record<TierId, { name: string; hint: string }> = {
+  light: { name: "Light", hint: "가장 빠른 모델" },
+  pro: { name: "Pro", hint: "기본 모델" },
+  max: { name: "Pro Max", hint: "답하기 전에 더 오래 생각하는 모델" },
 };
 
 export function TierSlider() {
@@ -40,7 +41,7 @@ export function TierSlider() {
             step={1}
             value={index}
             onChange={(e) => writeTier(TIER_IDS[Number(e.target.value)])}
-            aria-valuetext={`${text.name} (${text.model})`}
+            aria-valuetext={`${text.name} · ${text.hint}`}
             className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           />
           <div className="bg-line absolute top-1/2 right-3 left-3 h-1 -translate-y-1/2 rounded-full" />
@@ -81,8 +82,7 @@ export function TierSlider() {
         </div>
       </div>
       <p className="text-muted min-w-0 flex-1 text-[13px] leading-snug" aria-live="polite">
-        <span className="text-ink font-semibold">{text.model}</span> · {text.hint}
-        <span className="text-muted"> · 데모에서는 어느 모드든 무료예요</span>
+        {text.hint} · 데모에서는 어느 모드든 무료예요
       </p>
     </div>
   );
