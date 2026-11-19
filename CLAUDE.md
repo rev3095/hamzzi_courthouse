@@ -40,7 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/03_PRD_햄찌법원.md` | 사용하지 않음 (대체된 이전 PRD) |
 
 ## 기술 스택 (확정, DEC-004)
-Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 로그인은 Google만 — DEC-035) · Python 3.12 수집기(uv) · Claude API — 답변 모델은 사용자가 고른 단계(DEC-036: Light `claude-haiku-5-5` · Pro `claude-sonnet-5-5` · Pro Max `claude-opus-5-5`), 문서 초안·절차 분류는 **`claude-haiku-5-5`**(DEC-023·033), 단가표 lib/ai/cost.ts
+Next.js 16(App Router) + TypeScript + Tailwind 4 · Supabase(Postgres + pgvector + Auth, 소셜 로그인) · Python 3.12 수집기(uv) · Claude API — 답변 모델은 사용자가 고른 단계(DEC-036: Light `claude-haiku-5-5` · Pro `claude-sonnet-5-5` · Pro Max `claude-opus-5-5`), 문서 초안·절차 분류는 **`claude-haiku-5-5`**(DEC-023·033), 단가표 lib/ai/cost.ts
 Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 데이터와 API가 다르다).
 
 ## 명령어
@@ -56,7 +56,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | E2E 테스트 | `pnpm test:e2e` (처음 한 번 `pnpm exec playwright install chromium`). 개발 서버는 Playwright가 띄우고, 이미 떠 있으면 재사용한다 |
 | E2E 일부 | `pnpm exec playwright test tests/e2e/home.spec.ts` |
 | 법제처 실호출 스모크 | `pnpm test:live` (korean-law-mcp 어댑터 + 무료 모드, 무료. 등록 IP·`OPEN_LAW_API_KEY` 필요 — 기본 테스트에서 제외). Claude 실호출 테스트는 `ALLOW_PAID_API=1`일 때만 돌고 **별도 과금**되므로 사용자 허락 없이 실행 금지 |
-| 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
+| 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다. `pnpm lint`·`pnpm format`(`prettier --write .`)은 `.claude/worktrees/**`(다른 세션의 작업 폴더)까지 훑는다 — 내 변경만 보려면 `pnpm exec eslint app components lib tests`, 포맷은 `pnpm exec prettier --write <고친 파일>` |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | AI 평가 | `pnpm eval:demo` — **유료**(Claude 생성 호출). 절대 규칙 8에 따라 사용자 허락 없이 실행 금지 |
 | 예시 답변 만들기·반영 | `scripts/gen-examples.mjs` — **유료**(질문마다 Opus 답변 + Haiku 해석, 관리자 모드 서버 대상, 사용법은 파일 머리말). 사용자 허락 없이 실행 금지. 반영은 무료 `python -X utf8 scripts/merge_examples.py`(검증 통과 문단만 `lib/demo/examples.json`·카테고리에 넣는다) |
@@ -97,7 +97,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
 - 비로그인 횟수: POST /inquiries는 하루 횟수를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 하루 `ANON_QUESTION_LIMIT`회(`quota_day`, 한국 시간) + 같은 IP 해시 `ANON_IP_WINDOW` 동안 `ANON_IP_DAILY_LIMIT`회, `anon_usage`). 한도 숫자는 lib/inquiries/policy.ts 상수가 DB 함수 인자(`p_session_limit`·`p_ip_limit`)로 넘어가므로, 바꿀 때 마이그레이션은 필요 없고 문서에 숫자를 따로 적지 않는다. `questions_used`를 직접 update하지 않는다. 관리자 모드(`hz_admin` 서명 쿠키, `lib/auth/admin-*`)면 `resolveOwner`가 `admin: true`를 붙이고 `countsAnonQuota`가 false라 검사·차감을 모두 건너뛴다. 예시 질문(`findExample`, lib/demo/policy.ts)은 두 라우트가 사전 검사를 건너뛰고 `finishAnalysis(…, { consumeAnonQuota: false })`로 저장만 한다(DEC-027) — 홈 화면도 같은 기준으로 하루 횟수를 다 써도 예시를 연다.
-- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 주간 상한·기간 예산(DEC-040, 2026-11-25까지)(`tryAiQuota(단계 가중치)`, lib/auth/rate-limit.ts · 금액은 lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). 그 밖에는 요청 본문의 `tier`(없으면 Pro)로 `runLiteAnalysis`(lib/ai/lite.ts: 질문 해석 Haiku 1회(DEC-033: 섹션 라벨 + 검색어, 같은 질문 1건 상한 안) → `freeSearch` → 그 단계 모델 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지). 전체 파이프라인 `runDemoAnalysis`는 코드에 남아 있지만 분석 경로에서 쓰지 않는다(DEC-036).
+- 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 주간 상한(`tryAiQuota(단계 가중치)`, lib/auth/rate-limit.ts · 금액은 lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). 그 밖에는 요청 본문의 `tier`(없으면 Pro)로 `runLiteAnalysis`(lib/ai/lite.ts: 질문 해석 Haiku 1회(DEC-033: 섹션 라벨 + 검색어, 같은 질문 1건 상한 안) → `freeSearch` → 그 단계 모델 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지). 전체 파이프라인 `runDemoAnalysis`는 코드에 남아 있지만 분석 경로에서 쓰지 않는다(DEC-036).
 - 내 질문 기록(DEC-039): 로그인은 배포된 DEC-035(lib/client/login.ts, 마이페이지 components/me/MyPage)를 쓴다. 기록 남기기 선택은 lib/client/save.ts(`hz:save`)·components/ask/SaveToggle, 목록은 components/MyInquiries(`GET /me/inquiries`). `save: true`는 로그인 사용자 질문에만 `inquiries.saved`로 남는다.
 - DeepSearch(DEC-038): 홈 질문창의 버튼 → `components/ask/DeepAsk`(양식·직접 입력). 칸 구성·합치기·보내기 전 점검은 lib/inquiries/deep.ts 순수 규칙이고 **점검에 모델을 쓰지 않는다**. 보내는 길은 일반 질문과 같고(`useAsk.send`), analyze 본문 `deep: true`면 근거만 조문 8·판례 4건까지 넓힌다(비용 상한 그대로). 서버는 DEC-041대로 `runDeepAnalysis`(lib/ai/deep.ts: Haiku 구조화 1회 → 쟁점별 법제처 검색 → 고른 단계 답변 1회, 상한 2배 `TIERS[tier].deep`)를 쓰고, 구조 거르기·화면용 사건 구조는 lib/ai/deep-policy.ts 순수 규칙이다. 시각자료(components/result/DeepMapView: 사건 구조도·사실관계 흐름·쟁점별 근거·확인할 사실)는 결과의 `deep`과 검증된 문단으로 코드가 그리며 모델을 더 부르지 않는다.
 - 절차 분류(DEC-037): 질문 해석 라벨(DEC-033)과 규칙(lib/procedure/policy)이 모두 정하지 못해 `other`일 때만 `procedureHintFor`(lib/inquiries/procedure-hint.ts)가 저장된 라벨(`procedure_labels`, lib/procedure/labels-store.ts) → 없으면 Haiku 분류 1회(lib/ai/classify.ts) → 저장 순서로 본다. AI 문구 검사·승인 규칙은 lib/procedure/labels.ts(숫자·한글 수사·단정 표현·법령 언급·개인정보 금지). 라벨은 모두 pending으로 저장되고 `/admin` 승인 뒤에만 다른 질문에 쓰인다 — 방금 분류한 질문에만 AI가 고른 기존 타임라인이 바로 보인다. AI가 정한 안내(`plan.byAi`)에는 화면이 `AI_NOTICE`를 붙인다.
@@ -122,7 +122,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 여러 Claude 세션(데스크톱 앱·VS Code)이 이 폴더(main 체크아웃)에서 동시에 고치고 커밋한다. 여기서 `git add -A`·커밋을 하면 다른 세션의 작업 중 파일이 섞여 배포가 깨진 적이 있다(2026-11-18). 변경은 `git worktree add ../<이름> origin/main`으로 만든 별도 폴더에서 하고 `git push origin HEAD:main`으로 올린다. Windows에서 worktree 폴더는 경로가 길어 `git worktree remove`가 실패하므로 `cmd /c 'rmdir /s /q "\\?\<절대경로>"'` 뒤 `git worktree prune`으로 지운다.
 - `pnpm exec prettier --write lib`처럼 폴더째 포맷하면 관련 없는 파일이 바뀐다. 고친 파일만 지정한다.
 - `.env*`는 settings.json이 읽기도 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
-- korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용(키는 `.env.local`의 `LAW_OC`, 없으면 `OPEN_LAW_API_KEY`). ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
+- korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용. ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
 
 ## 스킬·리뷰어
 - `add-crawler` 데이터 소스 추가 · `add-endpoint` API 추가 · `add-migration` DB 변경 · `figma-sync` Figma 디자인을 코드에 반영
