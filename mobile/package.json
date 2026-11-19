@@ -1,0 +1,6 @@
+{
+  "name": "hamzzi-courthouse-mobile",
+  "private": true,
+  "description": "햄찌법원 Android·iOS 앱 (Capacitor, DEC-048). 의존성은 저장소 루트 package.json에 있다 — 이 파일은 Capacitor CLI가 앱 폴더를 찾는 표시다.",
+  "version": "1.1.0"
+}
