@@ -8939,6 +8939,1298 @@
         },
         "mode": "ai"
       }
+    },
+    {
+      "id": "military-abuse-01",
+      "tags": [
+        "군 가혹행위"
+      ],
+      "question": "군대에 있는 아들이 선임들에게 계속 폭언과 구타를 당하고 있다고 털어놨어요. 부대에 알리면 보복당할까 걱정인데, 부대 밖에서 신고하거나 도움받을 수 있는 방법이 있나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "군인의 지위 및 복무에 관한 기본법",
+            "국가인권위원회법",
+            "군검사와 군사법경찰관의 수사준칙에 관한 규정"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "군인 가혹행위 국가배상",
+            "군 가혹행위 선임병 폭행 진정",
+            "군인 인권침해 보복금지 신고"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "부대 밖 도움 방법으로, 군인은 구타·폭언 같은 사적 제재에 대해 부대 보고와 별도로 「국가인권위원회법」 등 다른 법령에서 정한 방법에 따라 국가인권위원회 등에 진정할 수 있습니다. 조문상 진정 주체는 '군인'이므로 아드님 본인 명의의 진정을 기준으로 확인해 보시면 좋겠습니다.",
+              "source": "law:군인의지위및복무에관한기본법:제43조",
+              "quote": "다른 법령에서 정하는 방법에 따라 국가인권위원회 등에 진정을 할 수 있다",
+              "check": "verified"
+            },
+            {
+              "text": "말씀하신 선임들의 폭언과 구타는 법에서 금지하는 행위에 해당할 수 있습니다. 법은 군인이 어떠한 경우에도 구타, 폭언, 가혹행위 등 사적 제재를 해서는 안 된다고 정하고 있습니다.",
+              "source": "law:군인의지위및복무에관한기본법:제26조",
+              "quote": "구타, 폭언, 가혹행위 및 집단 따돌림 등 사적 제재를 하거나 직권을 남용하여서는 아니 된다",
+              "check": "verified"
+            },
+            {
+              "text": "보복이 걱정되신다면 신고자 보호 규정을 참고하세요. 누구든지 신고를 이유로 불이익조치를 해서는 안 되고, 국방부장관은 신고자와 신고 내용의 비밀을 보장해야 하며, 불이익을 받으면 원상회복 등 필요한 조치를 취해야 합니다.",
+              "source": "law:군인의지위및복무에관한기본법:제45조",
+              "quote": "누구든지 신고등을 이유로 신고자에게 징계조치 등 어떠한 신분상 불이익이나",
+              "check": "verified"
+            },
+            {
+              "text": "그 밖에 일정 규모 이상의 부대에는 병영생활 전문상담관이 있어 구타·폭언 등 기본권 침해 고충을 상담받을 수 있고, 상담관은 부대장에게 피해자 보호 등 필요한 조치를 요청할 수 있습니다. 또한 군인권보호관이나 군 수사기관에 신고하는 방법도 법에 규정되어 있습니다.",
+              "source": "law:군인의지위및복무에관한기본법:제41조",
+              "quote": "구타, 폭언, 가혹행위 및 집단 따돌림 등 군 내 기본권 침해에 관한 사항",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:군인의지위및복무에관한기본법:제26조",
+            "lawName": "군인의 지위 및 복무에 관한 기본법",
+            "articleNo": "제26조",
+            "title": "사적 제재 및 직권남용의 금지",
+            "effectiveFrom": "2026-01-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C26%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군인의지위및복무에관한기본법:제43조",
+            "lawName": "군인의 지위 및 복무에 관한 기본법",
+            "articleNo": "제43조",
+            "title": "신고의무 등",
+            "effectiveFrom": "2026-01-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C43%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군인의지위및복무에관한기본법:제45조",
+            "lawName": "군인의 지위 및 복무에 관한 기본법",
+            "articleNo": "제45조",
+            "title": "신고자 보호",
+            "effectiveFrom": "2026-01-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C45%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:국가인권위원회법:제2조",
+            "lawName": "국가인권위원회법",
+            "articleNo": "제2조",
+            "title": "정의",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EA%B0%80%EC%9D%B8%EA%B6%8C%EC%9C%84%EC%9B%90%ED%9A%8C%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군검사와군사법경찰관의수사준칙에관한규정:제2조",
+            "lawName": "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+            "articleNo": "제2조",
+            "title": "군 수사기관의 인권보호 책무",
+            "effectiveFrom": "2022-07-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%82%AC%EC%99%80%20%EA%B5%B0%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%88%98%EC%82%AC%EC%A4%80%EC%B9%99%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C2%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군인의지위및복무에관한기본법:제41조",
+            "lawName": "군인의 지위 및 복무에 관한 기본법",
+            "articleNo": "제41조",
+            "title": "전문상담관",
+            "effectiveFrom": "2026-01-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C41%EC%A1%B0",
+            "used": true
+          }
+        ],
+        "cases": [
+          {
+            "id": "616527",
+            "caseNo": "2023다285162",
+            "caseName": "손해배상(국)",
+            "court": "대법원",
+            "decidedAt": "2026-01-22",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "182139",
+            "caseNo": "2014노315",
+            "caseName": "살인(예비적죄명:상해치사)·폭력행위등처벌에관한법률위반(집단·흉기등폭행)·강요·의료법위반·폭력행위등처벌에관한법률위반(공동폭행)[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)]·위력행사가혹행위(피고인1에대하여일부인정된죄명:군인등강제추행)·폭행[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)·피고인2에대하여일부인정된죄명:폭력행위등처벌에관한법률위반(집단·흉기등협박)]·직권남용가혹행위·폭행방조·직무유기(피고인5에대하여일부변경된죄명:부하범죄부진정)·공갈·재물손괴·협박[일부변경된죄명:특정범죄가중처벌등에관한법률위반(보복범죄등)]·성매매알선등행위의처벌에관한법률위반(성매매)·증거인멸",
+            "court": "고등군사법원",
+            "decidedAt": "2015-04-09",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182139",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "179916",
+            "caseNo": "2014노2820",
+            "caseName": "공직선거법위반·국가정보원법위반",
+            "court": "서울고등법원",
+            "decidedAt": "2015-02-09",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=179916",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "613041",
+            "caseNo": "2023가합61941",
+            "caseName": "손해배상(기)",
+            "court": "서울중앙지방법원",
+            "decidedAt": "2024-10-10",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613041",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "182157",
+            "caseNo": "2014고13,2014고14(병합)",
+            "caseName": "살인(인정된죄명:상해치사)·폭력행위등처벌에관한법률위반(집단·흉기등폭행)·강요·의료법위반·폭력행위등처벌에관한법률위반(공동폭행)[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)]·위력행사가혹행위(피고인1에대하여일부인정된죄명:군인등강제추행)·폭행[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)·피고인2에대하여일부인정된죄명:폭력행위등처벌에관한법률위반(집단·흉기등폭행)]·직권남용가혹행위·폭행방조·직무유기(피고인5에대하여일부변경된죄명:부하범죄부진정)·공갈·강요·위력행사가혹행위·재물손괴·협박·성매매알선등행위의처벌에관한법률위반(성매매)·폭행·직무유기·증거인멸",
+            "court": "제3군사령부 보통군사법원",
+            "decidedAt": "2014-10-30",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182157",
+            "fromBody": true,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 6
+          },
+          {
+            "keyword": "군인 가혹행위 국가배상",
+            "total": 6
+          },
+          {
+            "keyword": "군 가혹행위 선임병 폭행 진정",
+            "total": 2
+          },
+          {
+            "keyword": "군인 인권침해 보복금지 신고",
+            "total": 6
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "군인의 지위 및 복무에 관한 기본법 제43조",
+              "exists": true
+            },
+            {
+              "citation": "군인의 지위 및 복무에 관한 기본법 제26조",
+              "exists": true
+            },
+            {
+              "citation": "군인의 지위 및 복무에 관한 기본법 제45조",
+              "exists": true
+            },
+            {
+              "citation": "군인의 지위 및 복무에 관한 기본법 제41조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "military-criminal-01",
+      "tags": [
+        "군형법·군사재판"
+      ],
+      "question": "군 복무 중인 병사인데 상관에게 대들었다는 [이름1] 군사경찰 조사를 받으라는 연락을 받았어요. 상관모욕 혐의라고 하는데 조사 전에 무엇을 준비해야 하고 변호인 도움은 어떻게 받나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "군형법",
+            "군사법원법",
+            "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+            "군검찰 사건사무규칙",
+            "군검찰 보존사무규칙",
+            "군인사법 시행규칙"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "군형법 상관모욕",
+            "상관모욕 군형법 군사경찰 조사",
+            "군사법원 상관모욕 변호인 선임"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "현역으로 복무하는 병사는 군형법의 적용 대상인 '군인'에 해당합니다. 그래서 상관모욕 같은 군형법상 혐의로 군사경찰 조사를 받게 될 수 있습니다. 다만 전환복무 중인 병은 군인에서 제외된다는 단서가 있습니다.",
+              "source": "law:군형법:제1조",
+              "quote": "현역에 복무하는 장교, 준사관, 부사관 및 병(兵)을 말한다",
+              "check": "verified"
+            },
+            {
+              "text": "대법원은 상관모욕죄(3년 이하의 징역이나 금고)가 문서 공시나 연설, 또는 이에 상응하는 공연한 방법으로 모욕한 경우에만 성립한다고 보았습니다. 3인이 듣는 가운데 한 발언을 상관모욕으로 보지 않은 사례도 있습니다. 조사 전에 당시 장소, 들은 사람, 발언 방법을 정리해 두시면 도움이 될 수 있습니다. 결과는 사건마다 다를 수 있습니다.",
+              "source": "case:2022도5937",
+              "quote": "이에 상응하는 정도의 공연한 방법으로 상관을 모욕하는 경우에만 성립하는지 여부(적극)",
+              "check": "verified"
+            },
+            {
+              "text": "조사가 길어지면 군사법경찰관은 특별한 사정이 없는 한 휴식시간을 주어야 합니다. 피의자나 변호인이 휴식을 요청할 수도 있습니다. 변호인 선임 방법 자체는 주어진 근거에 나와 있지 않으니, 관련 규정을 따로 확인해 보시길 권합니다.",
+              "source": "law:군검사와군사법경찰관의수사준칙에관한규정:제17조",
+              "quote": "피의자나 사건관계인에게 조사 도중 최소 2시간마다 10분 이상 휴식시간을 주어야 한다",
+              "check": "verified"
+            },
+            {
+              "text": "군형법 제1조에 규정된 사람이 범한 죄는 군사법원이 재판권을 가집니다. 수사 후 기소되면 군사법원 절차로 진행될 수 있습니다.",
+              "source": "law:군사법원법:제2조",
+              "quote": "군사법원은 다음 각 호의 어느 하나에 해당하는 사람이 범한 죄에 대하여 재판권을 가진다",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:군형법:제1조",
+            "lawName": "군형법",
+            "articleNo": "제1조",
+            "title": "적용대상자",
+            "effectiveFrom": "2022-07-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%ED%98%95%EB%B2%95/%EC%A0%9C1%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군형법:제60조의6",
+            "lawName": "군형법",
+            "articleNo": "제60조의6",
+            "title": "군인등에 대한 폭행죄, 협박죄의 특례",
+            "effectiveFrom": "2022-07-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%ED%98%95%EB%B2%95/%EC%A0%9C60%EC%A1%B0%EC%9D%986",
+            "used": false
+          },
+          {
+            "id": "law:군사법원법:제2조",
+            "lawName": "군사법원법",
+            "articleNo": "제2조",
+            "title": "신분적 재판권",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%82%AC%EB%B2%95%EC%9B%90%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군검사와군사법경찰관의수사준칙에관한규정:제17조",
+            "lawName": "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+            "articleNo": "제17조",
+            "title": "휴식시간 부여",
+            "effectiveFrom": "2022-07-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%82%AC%EC%99%80%20%EA%B5%B0%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%88%98%EC%82%AC%EC%A4%80%EC%B9%99%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C17%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군검찰사건사무규칙:제131조",
+            "lawName": "군검찰 사건사무규칙",
+            "articleNo": "제131조",
+            "title": "피고인의 신뢰관계인 동석 신청",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EC%82%AC%EA%B1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C131%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군검찰보존사무규칙:제22조",
+            "lawName": "군검찰 보존사무규칙",
+            "articleNo": "제22조",
+            "title": "보존절차",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EB%B3%B4%EC%A1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C22%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군인사법시행규칙:제62조",
+            "lawName": "군인사법 시행규칙",
+            "articleNo": "제62조",
+            "title": "조사의 보류",
+            "effectiveFrom": "2026-08-04",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C62%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군검찰사건사무규칙:제147조",
+            "lawName": "군검찰 사건사무규칙",
+            "articleNo": "제147조",
+            "title": "공판정에서의 속기ㆍ녹음 및 영상녹화 신청",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EC%82%AC%EA%B1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C147%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "624315",
+            "caseNo": "2022도5937",
+            "caseName": "상관모욕",
+            "court": "대법원",
+            "decidedAt": "2026-07-22",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624315",
+            "fromBody": false,
+            "used": true
+          },
+          {
+            "id": "614593",
+            "caseNo": "2023노3763",
+            "caseName": "성폭력범죄의처벌등에관한특례법위반(촬영물등이용협박)·스토킹범죄의처벌등에관한법률위반·주거침입·상관모욕",
+            "court": "서울고법",
+            "decidedAt": "2024-03-29",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614593",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "209181",
+            "caseNo": "2015도12980",
+            "caseName": "상관살해·상관살해미수·살인·살인미수·군용물절도·군용물손괴·군무이탈",
+            "court": "대법원",
+            "decidedAt": "2016-02-19",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=209181",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "182787",
+            "caseNo": "2015노84",
+            "caseName": "상관살해·상관살해미수·살인·살인미수·군용물절도·군용물손괴·군무이탈",
+            "court": "고등군사법원",
+            "decidedAt": "2015-08-17",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182787",
+            "fromBody": true,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 8
+          },
+          {
+            "keyword": "군형법 상관모욕",
+            "total": 6
+          },
+          {
+            "keyword": "상관모욕 군형법 군사경찰 조사",
+            "total": 4
+          },
+          {
+            "keyword": "군사법원 상관모욕 변호인 선임",
+            "total": 3
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "군형법 제1조",
+              "exists": true
+            },
+            {
+              "citation": "2022도5937",
+              "exists": true
+            },
+            {
+              "citation": "군검사와 군사법경찰관의 수사준칙에 관한 규정 제17조",
+              "exists": true
+            },
+            {
+              "citation": "군사법원법 제2조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "military-discharge-01",
+      "tags": [
+        "의가사 제대"
+      ],
+      "question": "현역으로 복무 중인 동생이 훈련 중 허리를 크게 다쳐 수술을 받았고 복무를 계속하기 어려운 상태예요. 의가사 제대 심사는 어떻게 진행되고 무엇을 준비해야 하나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "병역법",
+            "군인사법",
+            "군인사법 시행령",
+            "군인의 지위 및 복무에 관한 기본법",
+            "군에서의 형의 집행 및 군수용자의 처우에 관한 법률 시행규칙",
+            "군무원인사법 시행령"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "현역복무부적합 전역처분",
+            "의가사 제대 군인사법",
+            "현역복무부적합 질병 부상 심사"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "동생분이 현역병이라면 병역법 제65조가 가장 직접 관련됩니다. 질병이나 부상으로 병역을 감당하기 어려운 현역병은 신체검사를 거쳐 보충역 편입, 전시근로역 편입 또는 병역면제 처분을 받을 수 있습니다. 흔히 말하는 '의가사 제대'와 비슷한 절차로 볼 수 있습니다.",
+              "source": "law:병역법:제65조",
+              "quote": "신체검사를 거쳐 보충역 편입ᆞ전시근로역 편입 또는 병역면제 처분을 할 수 있고",
+              "check": "verified"
+            },
+            {
+              "text": "대상 요건은 전상·공상·질병 또는 심신장애로 병역을 감당할 수 없는 경우입니다. 훈련 중 다친 허리 수술 후 상태가 이 요건에 해당하는지는 신체검사 결과에 따라 판단됩니다. 조문이 '할 수 있다'로 되어 있어 처분이 자동으로 정해지지는 않습니다. 구체적인 제출 서류는 제공된 근거에 없으니 소속 부대에 확인해 보세요.",
+              "source": "law:병역법:제65조",
+              "quote": "전상ᆞ공상ᆞ질병 또는 심신장애로 인하여 병역을 감당할 수 없는 사람",
+              "check": "verified"
+            },
+            {
+              "text": "동생분이 장교·부사관 같은 간부라면 군인사법 제37조가 적용될 수 있습니다. 심신장애로 현역 복무가 적합하지 않은 사람은 각군 전역심사위원회 심의를 거쳐 전역할 수 있습니다. 다만 전상·공상이 아닌 경우에는 제적될 수도 있어, 훈련 중 부상이라는 점, 즉 공상 여부가 중요한 쟁점이 될 수 있습니다.",
+              "source": "law:군인사법:제37조",
+              "quote": "각군 전역심사위원회의 심의를 거쳐 현역에서 전역시킬 수 있다",
+              "check": "verified"
+            },
+            {
+              "text": "참고로 한 판례에서 대법원은 군인연금법 시행령상 장애보상금이 의병전역 형식을 갖춘 경우에만 지급되는 것은 아니라고 판단했습니다. 명예전역한 군인이 전역 후 장애등급 판정을 받은 사건이었습니다. 다만 직업군인 연금 사안이어서 동생분의 경우에 그대로 적용된다고 단정할 수는 없습니다.",
+              "source": "case:2006두9023",
+              "quote": "장애보상금은 의병전역의 형식을 갖춘 경우에만 지급하는 것인지 여부(소극)",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:병역법:제65조",
+            "lawName": "병역법",
+            "articleNo": "제65조",
+            "title": "병역처분 변경 등",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B3%91%EC%97%AD%EB%B2%95/%EC%A0%9C65%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군인사법:제37조",
+            "lawName": "군인사법",
+            "articleNo": "제37조",
+            "title": "본인의 의사에 따르지 아니한 전역 및 제적",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%82%AC%EB%B2%95/%EC%A0%9C37%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:군인사법시행령:제60조의31",
+            "lawName": "군인사법 시행령",
+            "articleNo": "제60조의31",
+            "title": "전공사상심사의 특례에 따른 전사자 등의 구분",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C60%EC%A1%B0%EC%9D%9831",
+            "used": false
+          },
+          {
+            "id": "law:군인의지위및복무에관한기본법:제39조",
+            "lawName": "군인의 지위 및 복무에 관한 기본법",
+            "articleNo": "제39조",
+            "title": "의견 건의",
+            "effectiveFrom": "2026-01-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C39%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군에서의형의집행및군수용자의처우에관한법률시행규칙:제89조",
+            "lawName": "군에서의 형의 집행 및 군수용자의 처우에 관한 법률 시행규칙",
+            "articleNo": "제89조",
+            "title": "귀휴 심사",
+            "effectiveFrom": "2020-02-03",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%97%90%EC%84%9C%EC%9D%98%20%ED%98%95%EC%9D%98%20%EC%A7%91%ED%96%89%20%EB%B0%8F%20%EA%B5%B0%EC%88%98%EC%9A%A9%EC%9E%90%EC%9D%98%20%EC%B2%98%EC%9A%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C89%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:군무원인사법시행령:제92조",
+            "lawName": "군무원인사법 시행령",
+            "articleNo": "제92조",
+            "title": "위원의 제척ㆍ기피ㆍ회피",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EB%AC%B4%EC%9B%90%EC%9D%B8%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C92%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "225935",
+            "caseNo": "2019두37073",
+            "caseName": "장교현역복무부적합자전역처분취소청구의소",
+            "court": "대법원",
+            "decidedAt": "2019-12-27",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=225935",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "158730",
+            "caseNo": "2009고54",
+            "caseName": "특정범죄 가중처벌등에 관한 법률위반(뇌물)·특정범죄 가중처벌등에 관한 법률위반(특수직무 유기)·뇌물수수·직권남용 권리행사 방해·강요(인정된 죄명:강요방조)·공무상 비밀누설 교사",
+            "court": "국방부보통군사법원",
+            "decidedAt": "2010-05-13",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=158730",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "216023",
+            "caseNo": "2006두9023",
+            "caseName": "장애보상금지급불가처분취소",
+            "court": "대법원",
+            "decidedAt": "2006-10-12",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=216023",
+            "fromBody": false,
+            "used": true
+          },
+          {
+            "id": "225937",
+            "caseNo": "2019두39659",
+            "caseName": "현역복무부적합전역처분취소",
+            "court": "대법원",
+            "decidedAt": "2019-12-27",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=225937",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "212219",
+            "caseNo": "99가합95970",
+            "caseName": "손해배상(기)",
+            "court": "서울지법",
+            "decidedAt": "2000-10-18",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=212219",
+            "fromBody": false,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 6
+          },
+          {
+            "keyword": "현역복무부적합 전역처분",
+            "total": 6
+          },
+          {
+            "keyword": "의가사 제대 군인사법",
+            "total": 6
+          },
+          {
+            "keyword": "현역복무부적합 질병 부상 심사",
+            "total": 2
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "병역법 제65조",
+              "exists": true
+            },
+            {
+              "citation": "군인사법 제37조",
+              "exists": true
+            },
+            {
+              "citation": "2006두9023",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "property-defect-01",
+      "tags": [
+        "부동산 매매 하자"
+      ],
+      "question": "집을 사서 이사한 뒤에 천장 누수와 곰팡이가 심한 걸 알게 됐어요. 계약할 때 매도인과 공인중개사는 아무 설명도 하지 않았어요. 수리비를 누구에게 어떻게 청구할 수 있나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "민법",
+            "공인중개사법",
+            "공인중개사법 시행규칙",
+            "공인중개사법 시행령",
+            "공인중개사의 매수신청대리인 등록 등에 관한 규칙"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "매도인 하자담보책임",
+            "매매 하자담보책임 누수 손해배상",
+            "공인중개사 설명의무 하자 손해배상"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "산 집에 하자가 있으면 민법상 매도인의 하자담보책임을 물을 수 있는지 검토할 수 있습니다. 다만 매수인이 하자를 알았거나 과실로 알지 못한 경우에는 이 책임이 인정되지 않는다는 단서가 있습니다. 누수와 곰팡이를 계약 당시 알 수 있었는지가 쟁점이 될 수 있습니다.",
+              "source": "law:민법:제580조",
+              "quote": "매매의 목적물에 하자가 있는 때에는 제575조제1항의 규정을 준용한다",
+              "check": "verified"
+            },
+            {
+              "text": "대법원은 목적물이 거래통념상 기대되는 객관적 성질을 갖추지 못하면 매도인이 하자담보책임을 진다고 보았습니다. 또 하자담보책임과 채무불이행책임이 함께 인정될 수 있다고 판단했습니다. 토지 폐기물 사건에서는 처리비용 배상을 인정한 원심을 정당하다고 봤지만, 사용자 사건도 같은 결과가 나온다고 단정할 수는 없습니다.",
+              "source": "case:2017다202050",
+              "quote": "매도인의 하자담보책임과 채무불이행책임은 별개의 권원에 의하여 경합적으로 인정된다",
+              "check": "verified"
+            },
+            {
+              "text": "공인중개사는 중개가 완성되기 전에 중개대상물의 상태 등을 확인해 매수인에게 설명하고 근거자료를 제시해야 합니다. 시행령은 설명 대상에 배수 등 시설물의 상태와 벽면·바닥면 및 도배의 상태를 포함하고 있습니다.",
+              "source": "law:공인중개사법:제25조",
+              "quote": "권리를 취득하고자 하는 중개의뢰인에게 성실ᆞ정확하게 설명하고",
+              "check": "verified"
+            },
+            {
+              "text": "개업공인중개사가 고의나 과실로 거래당사자에게 재산상 손해를 입히면 그 손해를 배상할 책임이 있습니다. 이 책임을 보장하려고 보증보험·공제 가입이나 공탁을 하도록 되어 있습니다. 따라서 설명의무 위반이 있었다면 중개사 측에 대한 청구도 검토할 수 있습니다.",
+              "source": "law:공인중개사법:제30조",
+              "quote": "고의 또는 과실로 인하여 거래당사자에게 재산상의 손해를 발생하게 한 때에는",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:민법:제580조",
+            "lawName": "민법",
+            "articleNo": "제580조",
+            "title": "매도인의 하자담보책임",
+            "effectiveFrom": "2026-03-17",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C580%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:공인중개사법:제25조",
+            "lawName": "공인중개사법",
+            "articleNo": "제25조",
+            "title": "중개대상물의 확인ㆍ설명",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EB%B2%95/%EC%A0%9C25%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:공인중개사법:제30조",
+            "lawName": "공인중개사법",
+            "articleNo": "제30조",
+            "title": "손해배상책임의 보장",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EB%B2%95/%EC%A0%9C30%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:공인중개사법시행규칙:제1조",
+            "lawName": "공인중개사법 시행규칙",
+            "articleNo": "제1조",
+            "title": "목적",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C1%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:공인중개사법시행규칙:제25조",
+            "lawName": "공인중개사법 시행규칙",
+            "articleNo": "제25조",
+            "title": "업무정지의 기준",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C25%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:공인중개사법시행령:제21조",
+            "lawName": "공인중개사법 시행령",
+            "articleNo": "제21조",
+            "title": "중개대상물의 확인ㆍ설명",
+            "effectiveFrom": "2026-08-28",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C21%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:공인중개사의매수신청대리인등록등에관한규칙:제16조",
+            "lawName": "공인중개사의 매수신청대리인 등록 등에 관한 규칙",
+            "articleNo": "제16조",
+            "title": "매수신청대리 대상물의 확인ㆍ설명",
+            "effectiveFrom": "2023-01-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EC%9D%98%20%EB%A7%A4%EC%88%98%EC%8B%A0%EC%B2%AD%EB%8C%80%EB%A6%AC%EC%9D%B8%20%EB%93%B1%EB%A1%9D%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C16%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "215425",
+            "caseNo": "2017다202050",
+            "caseName": "손해배상(기)[매매계약에서 매도인의 하자담보책임이 문제된 사건]",
+            "court": "대법원",
+            "decidedAt": "2021-04-08",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=215425",
+            "fromBody": false,
+            "used": true
+          },
+          {
+            "id": "624491",
+            "caseNo": "2020가합571614(본소), 2022가합521507(반소)",
+            "caseName": "공사대금등청구의소·건물철거등청구",
+            "court": "서울중앙지방법원",
+            "decidedAt": "2024-09-10",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624491",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "605893",
+            "caseNo": "2023나18356",
+            "caseName": "손해배상(기)",
+            "court": "대구고법",
+            "decidedAt": "2024-10-30",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=605893",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "607549",
+            "caseNo": "2024나12050(본소), 2024나12067(반소)",
+            "caseName": "분양대금반환청구의소·매매대금",
+            "court": "부산고등법원(창원)",
+            "decidedAt": "2025-01-23",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=607549",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "617231",
+            "caseNo": "2019가합591124",
+            "caseName": "하자보수보증금등",
+            "court": "서울중앙지방법원",
+            "decidedAt": "2023-02-07",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=617231",
+            "fromBody": true,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 7
+          },
+          {
+            "keyword": "매도인 하자담보책임",
+            "total": 6
+          },
+          {
+            "keyword": "매매 하자담보책임 누수 손해배상",
+            "total": 6
+          },
+          {
+            "keyword": "공인중개사 설명의무 하자 손해배상",
+            "total": 6
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "민법 제580조",
+              "exists": true
+            },
+            {
+              "citation": "2017다202050",
+              "exists": true
+            },
+            {
+              "citation": "공인중개사법 제25조",
+              "exists": true
+            },
+            {
+              "citation": "공인중개사법 제30조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "tax-appeal-01",
+      "tags": [
+        "세금"
+      ],
+      "question": "부모님께 받은 돈으로 집을 샀는데 세무서에서 증여세를 내라는 고지서가 왔어요. 일부는 빌린 돈이라 차용증도 있는데, 고지된 세금에 불복하려면 어떤 절차를 밟아야 하나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "국세기본법",
+            "상속세 및 증여세법 시행령",
+            "관세법"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "증여세 부과처분 취소",
+            "증여세 부과처분 취소 차용금 증여 추정",
+            "증여재산 가액 취득세 부과 불복"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "세법에 따른 처분이 위법하거나 부당해서 권리나 이익을 침해당한 사람은 국세기본법에 따라 그 처분의 취소나 변경을 청구할 수 있습니다. 증여세 고지에 동의하지 않으시면 이 조세 불복 절차를 이용하실 수 있습니다.",
+              "source": "law:국세기본법:제55조",
+              "quote": "그 처분의 취소 또는 변경을 청구하거나 필요한 처분을 청구할 수 있다",
+              "check": "verified"
+            },
+            {
+              "text": "기간이 중요합니다. 심사청구는 처분이 있음을 안 날, 통지를 받았다면 그 받은 날부터 90일 이내에 해야 합니다. 이의신청을 먼저 거친 경우에는 그 결정 통지를 받은 날부터 90일 이내에 심사청구를 할 수 있습니다.",
+              "source": "law:국세기본법:제61조",
+              "quote": "(처분의 통지를 받은 때에는 그 받은 날)부터 90일 이내에 제기하여야 한다",
+              "check": "verified"
+            },
+            {
+              "text": "조세심판원에 심판청구를 하는 방법도 있습니다. 불복 사유 등을 적은 심판청구서를 처분한 세무서장이나 조세심판원장에게 내면 됩니다. 다른 세무서 등에 잘못 냈더라도 청구기간 계산에서는 심판청구를 한 것으로 봅니다.",
+              "source": "law:국세기본법:제69조",
+              "quote": "그 처분을 하였거나 하였어야 할 세무서장이나 조세심판원장에게 제출하여야 한다",
+              "check": "verified"
+            },
+            {
+              "text": "세무서는 납부고지서에 과세표준과 세액의 산출근거를 적어 통지해야 합니다. 고지서의 산출근거를 보고 빌린 돈 부분이 증여로 계산됐는지 확인한 뒤, 차용증 등 자료를 불복 사유와 함께 정리해 보시는 것이 도움이 될 수 있습니다.",
+              "source": "law:상속세및증여세법시행령:제79조",
+              "quote": "납부고지서에 과세표준과 세액의 산출근거를 적어 통지해야 한다",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:국세기본법:제55조",
+            "lawName": "국세기본법",
+            "articleNo": "제55조",
+            "title": "불복",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C55%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:국세기본법:제61조",
+            "lawName": "국세기본법",
+            "articleNo": "제61조",
+            "title": "청구기간",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C61%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:국세기본법:제81조의15",
+            "lawName": "국세기본법",
+            "articleNo": "제81조의15",
+            "title": "과세전적부심사",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C81%EC%A1%B0%EC%9D%9815",
+            "used": false
+          },
+          {
+            "id": "law:국세기본법:제69조",
+            "lawName": "국세기본법",
+            "articleNo": "제69조",
+            "title": "청구 절차",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C69%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:국세기본법:제47조의3",
+            "lawName": "국세기본법",
+            "articleNo": "제47조의3",
+            "title": "과소신고ㆍ초과환급신고가산세",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C47%EC%A1%B0%EC%9D%983",
+            "used": false
+          },
+          {
+            "id": "law:상속세및증여세법시행령:제79조",
+            "lawName": "상속세 및 증여세법 시행령",
+            "articleNo": "제79조",
+            "title": "과세표준과 세액의 결정통지",
+            "effectiveFrom": "2026-10-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EC%86%8D%EC%84%B8%20%EB%B0%8F%20%EC%A6%9D%EC%97%AC%EC%84%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C79%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:관세법:제129조의2",
+            "lawName": "관세법",
+            "articleNo": "제129조의2",
+            "title": "정보통신망을 이용한 불복청구",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B4%80%EC%84%B8%EB%B2%95/%EC%A0%9C129%EC%A1%B0%EC%9D%982",
+            "used": false
+          },
+          {
+            "id": "law:관세법:제129조",
+            "lawName": "관세법",
+            "articleNo": "제129조",
+            "title": "불복방법의 통지",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B4%80%EC%84%B8%EB%B2%95/%EC%A0%9C129%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "625311",
+            "caseNo": "2024두62509",
+            "caseName": "증여세부과처분취소",
+            "court": "대법원",
+            "decidedAt": "2026-06-25",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625311",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "624555",
+            "caseNo": "2025두32147",
+            "caseName": "양도소득세경정거부처분취소",
+            "court": "대법원",
+            "decidedAt": "2026-08-12",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624555",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "622257",
+            "caseNo": "2025두30615",
+            "caseName": "상속세부과처분취소[상속인이 상속받은 토지를 개별공시지가에 의하여 평가하여 상속세 과세표준 및 세액을 신고ㆍ납부하였는데, 과세관청이 구 상속세 및 증여세법 시행령 제49조 제1항 단서에서 정한 기간 내에 발생한 매매사례가액에 기하여 위 토지의 시가를 산정하여 상속세를 결정ㆍ고지한 사건]",
+            "court": "대법원",
+            "decidedAt": "2026-05-20",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622257",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "423464",
+            "caseNo": "2021누36709",
+            "caseName": "취득세 등 부과처분 취소(종전 규정에 의한 조세감면 신뢰 및 공적인 견해 표명)",
+            "court": "서울고등법원",
+            "decidedAt": "2022-06-21",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=423464",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "625309",
+            "caseNo": "2024두31963",
+            "caseName": "증여세부과처분취소",
+            "court": "대법원",
+            "decidedAt": "2026-05-14",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625309",
+            "fromBody": false,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 8
+          },
+          {
+            "keyword": "증여세 부과처분 취소",
+            "total": 6
+          },
+          {
+            "keyword": "증여세 부과처분 취소 차용금 증여 추정",
+            "total": 0
+          },
+          {
+            "keyword": "증여재산 가액 취득세 부과 불복",
+            "total": 6
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "국세기본법 제55조",
+              "exists": true
+            },
+            {
+              "citation": "국세기본법 제61조",
+              "exists": true
+            },
+            {
+              "citation": "국세기본법 제69조",
+              "exists": true
+            },
+            {
+              "citation": "상속세 및 증여세법 시행령 제79조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "welfare-appeal-01",
+      "tags": [
+        "복지·실업급여"
+      ],
+      "question": "회사를 그만두고 실업급여를 신청했는데 스스로 퇴사했다는 이유로 수급자격이 없다는 통지를 받았어요. 실제로는 임금이 몇 달 밀려서 그만둔 건데, 이 결정에 이의를 제기하려면 어떻게 해야 하나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "고용보험법",
+            "국민기초생활 보장법",
+            "근로기준법",
+            "임금채권보장법 시행령",
+            "선원법",
+            "근로기준법 시행령"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "실업급여 부정수급 반환명령",
+            "실업급여 수급자격 부인 자발적 퇴직 임금체불",
+            "고용보험 수급자격 부인처분 취소 임금 체불 정당한 이유",
+            "고용보험법 제87조 (조문이 나오는 판례)",
+            "국민기초생활 보장법 제38조 (조문이 나오는 판례)"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "실업급여 수급자격을 인정하지 않는 결정처럼 실업급여에 관한 처분에 이의가 있으시면, 고용보험법에 따라 심사관에게 심사를 청구하실 수 있습니다. 임금이 밀려 그만두셨다는 사정은 이 심사 절차에서 주장해 보실 수 있습니다. 다만 그 사정이 받아들여질지는 근거 자료만으로는 판단할 수 없습니다.",
+              "source": "law:고용보험법:제87조",
+              "quote": "제89조에 따른 심사관에게 심사를 청구할 수 있고",
+              "check": "verified"
+            },
+            {
+              "text": "기한이 중요합니다. 심사청구는 처분이 있음을 안 날부터 90일 이내에 하셔야 합니다. 심사 결정에도 이의가 있으면 심사위원회에 재심사를 청구하실 수 있습니다. 재심사 청구는 심사청구 결정이 있음을 안 날부터 90일 이내에 하셔야 합니다.",
+              "source": "law:고용보험법:제87조",
+              "quote": "재심사의 청구는 심사청구에 대한 결정이 있음을 안 날부터 90일 이내에",
+              "check": "verified"
+            },
+            {
+              "text": "참고로 심사와 재심사를 청구하면, 시효중단에 관해서는 재판상의 청구를 한 것으로 봅니다. 통지를 받으신 날짜를 확인해 두시고, 기한 안에 절차를 진행하시는 것이 좋습니다.",
+              "source": "law:고용보험법:제87조",
+              "quote": "심사 및 재심사의 청구는 시효중단에 관하여 재판상의 청구로 본다",
+              "check": "verified"
+            },
+            {
+              "text": "밀린 임금은 실업급여와 별개의 문제입니다. 퇴직 근로자가 대지급금을 받으려면 몇 가지 기준을 모두 충족해야 합니다. 그중 하나로 사업주가 퇴직한 날까지 6개월 이상 사업을 했어야 하고, 고용노동부장관이 발급한 체불임금등ㆍ사업주확인서로 미지급 임금이 확인되어야 합니다.",
+              "source": "law:임금채권보장법시행령:제8조",
+              "quote": "법 제12조에 따라 고용노동부장관으로부터 발급받은 체불 임금등ᆞ사업주 확인서",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:고용보험법:제87조",
+            "lawName": "고용보험법",
+            "articleNo": "제87조",
+            "title": "심사와 재심사",
+            "effectiveFrom": "2028-01-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C87%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:국민기초생활보장법:제38조",
+            "lawName": "국민기초생활 보장법",
+            "articleNo": "제38조",
+            "title": "시ㆍ도지사에 대한 이의신청",
+            "effectiveFrom": "2025-10-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C38%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:국민기초생활보장법:제40조",
+            "lawName": "국민기초생활 보장법",
+            "articleNo": "제40조",
+            "title": "보건복지부장관 등에 대한 이의신청",
+            "effectiveFrom": "2025-10-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C40%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:근로기준법:제108조",
+            "lawName": "근로기준법",
+            "articleNo": "제108조",
+            "title": "벌칙",
+            "effectiveFrom": "2026-10-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C108%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:임금채권보장법시행령:제8조",
+            "lawName": "임금채권보장법 시행령",
+            "articleNo": "제8조",
+            "title": "사업주의 기준",
+            "effectiveFrom": "2026-05-12",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%84%EA%B8%88%EC%B1%84%EA%B6%8C%EB%B3%B4%EC%9E%A5%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C8%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:선원법:제56조",
+            "lawName": "선원법",
+            "articleNo": "제56조",
+            "title": "임금채권보장보험 등의 가입",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%A0%EC%9B%90%EB%B2%95/%EC%A0%9C56%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:근로기준법시행령:제23조의4",
+            "lawName": "근로기준법 시행령",
+            "articleNo": "제23조의4",
+            "title": "임금등 체불자료의 제공 제외 대상",
+            "effectiveFrom": "2025-10-23",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C23%EC%A1%B0%EC%9D%984",
+            "used": false
+          },
+          {
+            "id": "law:근로기준법:제30조",
+            "lawName": "근로기준법",
+            "articleNo": "제30조",
+            "title": "구제명령 등",
+            "effectiveFrom": "2026-10-08",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C30%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "213631",
+            "caseNo": "2020두31323",
+            "caseName": "실업급여지급제한및반환명령처분취소",
+            "court": "대법원",
+            "decidedAt": "2020-05-14",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=213631",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "207130",
+            "caseNo": "2018구합23680",
+            "caseName": "실업급여지급제한·반환명령결정처분취소청구",
+            "court": "대구지법",
+            "decidedAt": "2019-04-17",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=207130",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "158784",
+            "caseNo": "2011나6848",
+            "caseName": "손해배상",
+            "court": "의정부지법",
+            "decidedAt": "2011-10-20",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=158784",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "210313",
+            "caseNo": "2003구합8144",
+            "caseName": "고용유지지원금지급거부등처분취소",
+            "court": "대구지법",
+            "decidedAt": "2004-11-11",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=210313",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "616499",
+            "caseNo": "2022다214040",
+            "caseName": "구상금",
+            "court": "대법원",
+            "decidedAt": "2026-01-22",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616499",
+            "fromBody": false,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 8
+          },
+          {
+            "keyword": "실업급여 부정수급 반환명령",
+            "total": 4
+          },
+          {
+            "keyword": "실업급여 수급자격 부인 자발적 퇴직 임금체불",
+            "total": 0
+          },
+          {
+            "keyword": "고용보험 수급자격 부인처분 취소 임금 체불 정당한 이유",
+            "total": 0
+          },
+          {
+            "keyword": "고용보험법 제87조 (조문이 나오는 판례)",
+            "total": 5
+          },
+          {
+            "keyword": "국민기초생활 보장법 제38조 (조문이 나오는 판례)",
+            "total": 5
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "고용보험법 제87조",
+              "exists": true
+            },
+            {
+              "citation": "임금채권보장법 시행령 제8조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
     }
   ],
   "excluded": [

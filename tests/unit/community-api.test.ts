@@ -18,6 +18,7 @@ const store = vi.hoisted(() => ({
   deleteComment: vi.fn(),
   memberCommentsOf: vi.fn(),
   reportPost: vi.fn(),
+  clearReports: vi.fn(),
   awardSeeds: vi.fn(),
   revokeSeeds: vi.fn(),
   getSeedCounts: vi.fn(),
@@ -256,5 +257,57 @@ describe("댓글·신고·씨앗", () => {
       redeemEnabled: false,
       redeemableWon: 0,
     });
+  });
+});
+
+describe("민감정보 동의·신고 보강 (F-007 AC2, DEC-047)", () => {
+  const SENSITIVE = `${LONG} 저는 우울증 진단을 받고 치료 중입니다.`;
+
+  test("민감한 내용으로 보이는 글은 동의 없이는 저장하지 않고, 동의하면 시각·종류만 남긴다", async () => {
+    const body = { board: "story", title: "제목", body: SENSITIVE, password: "1234" };
+    const blocked = await posts.POST(req("POST", body), {});
+    expect(blocked.status).toBe(409);
+    const err = (await blocked.json()).error;
+    expect(err.code).toBe("CONSENT_REQUIRED");
+    expect(err.details.kind).toBe("sensitive_info");
+    expect(store.insertPost).not.toHaveBeenCalled();
+
+    const ok = await posts.POST(req("POST", { ...body, sensitiveConsent: true }), {});
+    expect(ok.status).toBe(201);
+    const consent = store.insertPost.mock.calls[0][0].sensitiveConsent;
+    expect(consent.categories.length).toBeGreaterThan(0);
+    expect(JSON.stringify(consent)).not.toContain("우울증");
+  });
+
+  test("댓글도 같고, 해당 없는 글은 동의 기록이 없다", async () => {
+    store.getPost.mockResolvedValue(stored());
+    const c = { body: "저도 우울증 진단을 받았어요 힘내세요", password: "1234" };
+    expect((await comments.POST(req("POST", c), ctx(PID))).status).toBe(409);
+    expect(
+      (await comments.POST(req("POST", { ...c, sensitiveConsent: true }), ctx(PID))).status,
+    ).toBe(201);
+    await posts.POST(
+      req("POST", { board: "free", title: "제목", body: LONG, password: "1234" }),
+      {},
+    );
+    expect(store.insertPost.mock.calls[0][0].sensitiveConsent).toBeNull();
+  });
+
+  test("같은 네트워크의 되풀이 신고는 세지 않는다", async () => {
+    store.reportPost.mockResolvedValue(true);
+    rate.assertRateLimit
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new ApiError("RATE_LIMITED"));
+    const res = await reportRoute.POST(req("POST"), ctx(PID));
+    expect(res.status).toBe(200);
+    expect(store.reportPost).not.toHaveBeenCalled();
+  });
+
+  test("신고 초기화는 관리자 모드만", async () => {
+    store.clearReports.mockResolvedValue(true);
+    expect((await reportRoute.DELETE(req("DELETE"), ctx(PID))).status).toBe(403);
+    auth.isAdminRequest.mockResolvedValue(true);
+    expect((await reportRoute.DELETE(req("DELETE"), ctx(PID))).status).toBe(200);
+    expect(store.clearReports).toHaveBeenCalledWith(PID);
   });
 });

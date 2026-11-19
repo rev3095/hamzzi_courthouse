@@ -1,0 +1,236 @@
+{
+  "id": "tax-appeal-01",
+  "category": "tax_appeal",
+  "question": "부모님께 받은 돈으로 집을 샀는데 세무서에서 증여세를 내라는 고지서가 왔어요. 일부는 빌린 돈이라 차용증도 있는데, 고지된 세금에 불복하려면 어떤 절차를 밟아야 하나요?",
+  "at": "2026-11-19T15:46:17.122Z",
+  "elapsedMs": 21597,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-sections3",
+    "tokens_in": 8319,
+    "tokens_out": 1678,
+    "latency_ms": 21081
+  },
+  "costUsdUpperEstimate": 0.06684,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "국세기본법",
+        "상속세 및 증여세법 시행령",
+        "관세법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "증여세 부과처분 취소",
+        "증여세 부과처분 취소 차용금 증여 추정",
+        "증여재산 가액 취득세 부과 불복"
+      ]
+    },
+    "section": "tax_appeal",
+    "relatedSections": [
+      "registration"
+    ],
+    "channel": "offline",
+    "answer": {
+      "points": [
+        {
+          "text": "세법에 따른 처분이 위법하거나 부당해서 권리나 이익을 침해당한 사람은 국세기본법에 따라 그 처분의 취소나 변경을 청구할 수 있습니다. 증여세 고지에 동의하지 않으시면 이 조세 불복 절차를 이용하실 수 있습니다.",
+          "source": "law:국세기본법:제55조",
+          "quote": "그 처분의 취소 또는 변경을 청구하거나 필요한 처분을 청구할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "기간이 중요합니다. 심사청구는 처분이 있음을 안 날, 통지를 받았다면 그 받은 날부터 90일 이내에 해야 합니다. 이의신청을 먼저 거친 경우에는 그 결정 통지를 받은 날부터 90일 이내에 심사청구를 할 수 있습니다.",
+          "source": "law:국세기본법:제61조",
+          "quote": "(처분의 통지를 받은 때에는 그 받은 날)부터 90일 이내에 제기하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "조세심판원에 심판청구를 하는 방법도 있습니다. 불복 사유 등을 적은 심판청구서를 처분한 세무서장이나 조세심판원장에게 내면 됩니다. 다른 세무서 등에 잘못 냈더라도 청구기간 계산에서는 심판청구를 한 것으로 봅니다.",
+          "source": "law:국세기본법:제69조",
+          "quote": "그 처분을 하였거나 하였어야 할 세무서장이나 조세심판원장에게 제출하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "세무서는 납부고지서에 과세표준과 세액의 산출근거를 적어 통지해야 합니다. 고지서의 산출근거를 보고 빌린 돈 부분이 증여로 계산됐는지 확인한 뒤, 차용증 등 자료를 불복 사유와 함께 정리해 보시는 것이 도움이 될 수 있습니다.",
+          "source": "law:상속세및증여세법시행령:제79조",
+          "quote": "납부고지서에 과세표준과 세액의 산출근거를 적어 통지해야 한다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:국세기본법:제55조",
+        "lawName": "국세기본법",
+        "articleNo": "제55조",
+        "title": "불복",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C55%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국세기본법:제61조",
+        "lawName": "국세기본법",
+        "articleNo": "제61조",
+        "title": "청구기간",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C61%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국세기본법:제81조의15",
+        "lawName": "국세기본법",
+        "articleNo": "제81조의15",
+        "title": "과세전적부심사",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C81%EC%A1%B0%EC%9D%9815",
+        "used": false
+      },
+      {
+        "id": "law:국세기본법:제69조",
+        "lawName": "국세기본법",
+        "articleNo": "제69조",
+        "title": "청구 절차",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C69%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국세기본법:제47조의3",
+        "lawName": "국세기본법",
+        "articleNo": "제47조의3",
+        "title": "과소신고ㆍ초과환급신고가산세",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EC%84%B8%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C47%EC%A1%B0%EC%9D%983",
+        "used": false
+      },
+      {
+        "id": "law:상속세및증여세법시행령:제79조",
+        "lawName": "상속세 및 증여세법 시행령",
+        "articleNo": "제79조",
+        "title": "과세표준과 세액의 결정통지",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EC%86%8D%EC%84%B8%20%EB%B0%8F%20%EC%A6%9D%EC%97%AC%EC%84%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C79%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:관세법:제129조의2",
+        "lawName": "관세법",
+        "articleNo": "제129조의2",
+        "title": "정보통신망을 이용한 불복청구",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B4%80%EC%84%B8%EB%B2%95/%EC%A0%9C129%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:관세법:제129조",
+        "lawName": "관세법",
+        "articleNo": "제129조",
+        "title": "불복방법의 통지",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B4%80%EC%84%B8%EB%B2%95/%EC%A0%9C129%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "625311",
+        "caseNo": "2024두62509",
+        "caseName": "증여세부과처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-06-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625311",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624555",
+        "caseNo": "2025두32147",
+        "caseName": "양도소득세경정거부처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-08-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624555",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622257",
+        "caseNo": "2025두30615",
+        "caseName": "상속세부과처분취소[상속인이 상속받은 토지를 개별공시지가에 의하여 평가하여 상속세 과세표준 및 세액을 신고ㆍ납부하였는데, 과세관청이 구 상속세 및 증여세법 시행령 제49조 제1항 단서에서 정한 기간 내에 발생한 매매사례가액에 기하여 위 토지의 시가를 산정하여 상속세를 결정ㆍ고지한 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622257",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "423464",
+        "caseNo": "2021누36709",
+        "caseName": "취득세 등 부과처분 취소(종전 규정에 의한 조세감면 신뢰 및 공적인 견해 표명)",
+        "court": "서울고등법원",
+        "decidedAt": "2022-06-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=423464",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "625309",
+        "caseNo": "2024두31963",
+        "caseName": "증여세부과처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-05-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625309",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 8
+      },
+      {
+        "keyword": "증여세 부과처분 취소",
+        "total": 6
+      },
+      {
+        "keyword": "증여세 부과처분 취소 차용금 증여 추정",
+        "total": 0
+      },
+      {
+        "keyword": "증여재산 가액 취득세 부과 불복",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "국세기본법 제55조",
+          "exists": true
+        },
+        {
+          "citation": "국세기본법 제61조",
+          "exists": true
+        },
+        {
+          "citation": "국세기본법 제69조",
+          "exists": true
+        },
+        {
+          "citation": "상속세 및 증여세법 시행령 제79조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

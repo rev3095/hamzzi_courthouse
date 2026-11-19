@@ -9,6 +9,7 @@ import { HamzziJudge } from "@/components/HamzziJudge";
 import { useQuota } from "@/components/useQuota";
 import { isSignedIn, type ApiResult } from "@/lib/client/api";
 import {
+  clearReports,
   communityErrorText,
   createComment,
   createPost,
@@ -20,6 +21,7 @@ import {
   listPosts,
   readNickname,
   reportPost,
+  withSensitiveConsent,
   writeNickname,
 } from "@/lib/client/community";
 import {
@@ -29,6 +31,7 @@ import {
   DEFAULT_NICKNAME,
   LIMITS,
   SEEDS,
+  SENSITIVE_ASK,
   boardName,
   type BoardKey,
   type CommentView,
@@ -53,6 +56,9 @@ const timeOf = (iso: string) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+
+/** 민감한 내용으로 보이는 글을 올릴지 묻는다 */
+const askSensitive = () => window.confirm(SENSITIVE_ASK);
 
 function Shell({ children }: { children: ReactNode }) {
   return (
@@ -317,13 +323,18 @@ export function CommunityBoard() {
   const submit = async (d: Draft) => {
     setBusy(true);
     setError(null);
-    const r = await createPost({
-      board: d.board,
-      title: d.title,
-      body: d.body,
-      nickname: d.nickname,
-      ...(!signedIn && { password: d.password }),
-    });
+    const r = await withSensitiveConsent(
+      (sensitiveConsent) =>
+        createPost({
+          board: d.board,
+          title: d.title,
+          body: d.body,
+          nickname: d.nickname,
+          ...(!signedIn && { password: d.password }),
+          ...(sensitiveConsent && { sensitiveConsent }),
+        }),
+      askSensitive,
+    );
     setBusy(false);
     if (!r.ok) return setError(communityErrorText(r.error));
     writeNickname(d.nickname);
@@ -581,12 +592,17 @@ export function PostRoute() {
   const saveEdit = async (d: Draft) => {
     setBusy(true);
     setError(null);
-    const r = await editPost(post.id, {
-      board: d.board,
-      title: d.title,
-      body: d.body,
-      ...(post.needsPassword && { password: d.password }),
-    });
+    const r = await withSensitiveConsent(
+      (sensitiveConsent) =>
+        editPost(post.id, {
+          board: d.board,
+          title: d.title,
+          body: d.body,
+          ...(post.needsPassword && { password: d.password }),
+          ...(sensitiveConsent && { sensitiveConsent }),
+        }),
+      askSensitive,
+    );
     setBusy(false);
     if (!r.ok) return setError(communityErrorText(r.error));
     setEditing(false);
@@ -605,11 +621,16 @@ export function PostRoute() {
     e.preventDefault();
     setBusy(true);
     setCommentError(null);
-    const r = await createComment(post.id, {
-      body: comment.body,
-      nickname: comment.nickname,
-      ...(!signedIn && { password: comment.password }),
-    });
+    const r = await withSensitiveConsent(
+      (sensitiveConsent) =>
+        createComment(post.id, {
+          body: comment.body,
+          nickname: comment.nickname,
+          ...(!signedIn && { password: comment.password }),
+          ...(sensitiveConsent && { sensitiveConsent }),
+        }),
+      askSensitive,
+    );
     setBusy(false);
     if (!r.ok) return setCommentError(communityErrorText(r.error));
     writeNickname(comment.nickname);
@@ -675,7 +696,7 @@ export function PostRoute() {
             {post.body}
           </div>
           <div className="border-line mt-6 flex flex-wrap items-center gap-4 border-t pt-4">
-            {canManage && (
+            {canManage && !(post.folded && !admin) && (
               <button
                 type="button"
                 className="text-muted hover:text-ink text-[13px] underline-offset-2 hover:underline"
@@ -690,6 +711,18 @@ export function PostRoute() {
                 needsPassword={post.needsPassword && !admin}
                 onDelete={removePost}
               />
+            )}
+            {admin && (post.reportCount ?? 0) > 0 && (
+              <button
+                type="button"
+                className="text-muted hover:text-ink text-[13px] underline-offset-2 hover:underline"
+                onClick={async () => {
+                  const r = await clearReports(post.id);
+                  if (r.ok) void load();
+                }}
+              >
+                신고 {post.reportCount}건 초기화 (관리자)
+              </button>
             )}
             <button
               type="button"

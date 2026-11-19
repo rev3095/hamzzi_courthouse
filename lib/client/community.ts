@@ -1,5 +1,5 @@
 // 커뮤니티·씨앗 브라우저 API (DEC-047). 비밀번호는 요청 본문으로만 보내고 이 기기에 저장하지 않는다.
-import { call } from "./api";
+import { call, type ApiResult } from "./api";
 import type {
   BoardKey,
   CommentView,
@@ -20,6 +20,7 @@ export type PostDraft = {
   body: string;
   nickname: string;
   password?: string;
+  sensitiveConsent?: boolean;
 };
 
 export const listPosts = (board: BoardKey | null, cursor?: string) => {
@@ -50,7 +51,7 @@ export const deletePost = (id: string, password?: string) =>
 
 export const createComment = (
   postId: string,
-  input: { body: string; nickname: string; password?: string },
+  input: { body: string; nickname: string; password?: string; sensitiveConsent?: boolean },
 ) =>
   call<{ comment: CommentView; masked: number; seeds: number }>(
     `${base}/posts/${encodeURIComponent(postId)}/comments`,
@@ -65,6 +66,23 @@ export const deleteComment = (id: string, password?: string) =>
 
 export const reportPost = (id: string) =>
   call<{ reported: boolean }>(`${base}/posts/${encodeURIComponent(id)}/report`, json("POST"));
+
+/** 관리자 모드: 신고 수를 0으로 되돌린다 */
+export const clearReports = (id: string) =>
+  call<{ cleared: boolean }>(`${base}/posts/${encodeURIComponent(id)}/report`, json("DELETE"));
+
+/**
+ * 민감정보로 보이는 글이면 서버가 409 CONSENT_REQUIRED를 준다 — 올릴지 물어보고 동의하면 한 번 더 보낸다.
+ * 동의하지 않으면 원래 오류를 그대로 돌려준다.
+ */
+export async function withSensitiveConsent<T>(
+  send: (consent: boolean) => Promise<ApiResult<T>>,
+  ask: () => boolean,
+): Promise<ApiResult<T>> {
+  const first = await send(false);
+  if (first.ok || first.error.code !== "CONSENT_REQUIRED" || !ask()) return first;
+  return send(true);
+}
 
 export const getMySeeds = () => call<SeedSummary>("/api/v1/me/seeds");
 
@@ -96,6 +114,7 @@ export function communityErrorText(e: {
   const reason = e.details?.reason;
   if (e.code === "FORBIDDEN" && reason === "wrong_password") return "비밀번호가 맞지 않아요.";
   if (e.code === "FORBIDDEN") return "이 글을 쓴 계정으로 로그인해야 해요.";
+  if (e.code === "CONSENT_REQUIRED") return "민감한 내용으로 보이는 부분이 있어 올리지 않았어요.";
   if (e.code === "NOT_FOUND") return "지워졌거나 없는 글이에요.";
   if (e.code === "RATE_LIMITED") return "잠시 쉬었다가 다시 써 주세요.";
   if (e.code === "VALIDATION_ERROR" && typeof field === "string") {

@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
+import { SEEDS } from "@/lib/community/policy";
 import { ANON_IP_DAILY_LIMIT, ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { EXAMPLE_RATE, LOOKUP_RATE, SEARCH_RATE } from "@/lib/auth/rate-limit";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
@@ -135,6 +136,8 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       lookupHourly: LOOKUP_RATE.limit,
       ipWindowHours: GUIDE_LIMITS.ipWindowHours,
       retentionDays: GUIDE_LIMITS.retentionDays,
+      seedPost: SEEDS.post,
+      seedComment: SEEDS.comment,
     });
     expect([EXAMPLE_RATE, SEARCH_RATE, LOOKUP_RATE].map((r) => r.windowSeconds)).toEqual([
       3600, 3600, 3600,

@@ -30,6 +30,15 @@ export const LIMITS = {
   pageSize: 20,
 } as const;
 
+/** 신고가 이만큼 쌓이면 운영자가 확인할 때까지 글을 가린다 */
+export const REPORT_FOLD_AT = 5;
+export const FOLDED_TITLE = "신고가 쌓여 가려진 글이에요";
+export const FOLDED_BODY = "여러 번 신고되어 운영자가 확인할 때까지 가려 두었어요.";
+
+/** 민감정보(건강·범죄경력 등)로 보이는 글을 올리기 전에 묻는 말 */
+export const SENSITIVE_ASK =
+  "건강·범죄경력처럼 민감한 내용으로 보이는 부분이 있어요. 커뮤니티 글은 누구나 볼 수 있어요. 그래도 올릴까요?";
+
 export const DEFAULT_NICKNAME = "익명 햄찌";
 
 /**
@@ -170,6 +179,8 @@ export type PostSummary = {
   member: boolean;
   commentCount: number;
   createdAt: string;
+  /** 신고가 쌓여 가려진 글 (제목·본문 대신 안내 문구가 온다. 관리자 모드에는 원래 내용) */
+  folded: boolean;
   /** 관리자 모드에만 싣는다 */
   reportCount?: number;
 };
@@ -193,10 +204,12 @@ export type CommentView = {
 
 // 화면으로 내보내는 모양. 계정 ID·비밀번호 해시는 싣지 않는다
 export function postSummary(row: PostRow, viewer: Viewer): PostSummary {
+  const folded = row.reportCount >= REPORT_FOLD_AT;
   return {
     id: row.id,
     board: row.board,
-    title: row.title,
+    title: folded && !viewer.admin ? FOLDED_TITLE : row.title,
+    folded,
     nickname: row.nickname,
     member: row.userId !== null,
     commentCount: row.commentCount,
@@ -208,7 +221,7 @@ export function postSummary(row: PostRow, viewer: Viewer): PostSummary {
 export function postView(row: PostRow, viewer: Viewer): PostView {
   return {
     ...postSummary(row, viewer),
-    body: row.body,
+    body: row.reportCount >= REPORT_FOLD_AT && !viewer.admin ? FOLDED_BODY : row.body,
     updatedAt: row.updatedAt,
     mine: row.userId !== null && row.userId === viewer.userId,
     needsPassword: row.userId === null,

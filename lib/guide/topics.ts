@@ -30,6 +30,10 @@ export const GUIDE_LIMITS = {
   ipWindowHours: 24,
   /** 질문·결과 보관 기간(일) (DEC-018, app/privacy 4절 — 파기 배치는 supabase 마이그레이션) */
   retentionDays: 30,
+  /** 커뮤니티 글 하나에 쌓이는 씨앗 (DEC-047, SEEDS.post) */
+  seedPost: 10,
+  /** 커뮤니티 댓글 하나에 쌓이는 씨앗 (DEC-047, SEEDS.comment) */
+  seedComment: 5,
 } as const;
 
 const L = GUIDE_LIMITS;
@@ -148,6 +152,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "features-examples",
       "features-procedure",
       "features-history",
+      "features-community",
     ],
   },
   "features-tiers": {
@@ -192,6 +197,18 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "맞는 절차가 없는 사연은 운영자가 빠진 분야를 살펴볼 수 있게 절차 이름과 낱말만 저장하고, 질문 문장은 저장하지 않아요.",
     ],
     next: ["features-examples", "features-deep"],
+  },
+  "features-community": {
+    label: "커뮤니티와 씨앗은 뭐예요?",
+    source: "DEC-047 · lib/community/policy.ts SEEDS·COMMUNITY_NOTICE",
+    lines: [
+      "커뮤니티는 법과 제도에 대한 의견, 가정해 보는 질문, 가벼운 이야기를 나누는 게시판이에요. 로그인하지 않아도 글과 댓글을 쓸 수 있어요.",
+      "로그인하지 않고 쓸 때는 비밀번호를 정하고, 그 비밀번호로 수정하거나 지워요. Google로 로그인하고 쓰면 비밀번호 없이 그 계정으로 수정하고 지워요.",
+      "글과 댓글은 이용자 의견이고 법률 자문이 아니에요. AI가 쓰지 않고, 이름이나 연락처로 보이는 부분은 올릴 때 가려져요.",
+      `로그인하고 쓰면 글 하나에 씨앗 ${L.seedPost}개, 댓글 하나에 ${L.seedComment}개가 쌓여요. 씨앗은 나중에 유료 기능이 열리면 할인에 쓸 수 있게 준비 중이고, 지금은 쌓이기만 해요.`,
+    ],
+    links: [{ href: "/community", label: "커뮤니티" }],
+    next: ["features-history", "pricing-future"],
   },
   "features-history": {
     label: "내 질문 기록은 어떻게 남겨요?",

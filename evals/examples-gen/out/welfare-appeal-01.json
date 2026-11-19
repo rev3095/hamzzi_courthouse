@@ -1,0 +1,237 @@
+{
+  "id": "welfare-appeal-01",
+  "category": "welfare_appeal",
+  "question": "회사를 그만두고 실업급여를 신청했는데 스스로 퇴사했다는 이유로 수급자격이 없다는 통지를 받았어요. 실제로는 임금이 몇 달 밀려서 그만둔 건데, 이 결정에 이의를 제기하려면 어떻게 해야 하나요?",
+  "at": "2026-11-19T15:45:55.523Z",
+  "elapsedMs": 24309,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-sections3",
+    "tokens_in": 7281,
+    "tokens_out": 1795,
+    "latency_ms": 23637
+  },
+  "costUsdUpperEstimate": 0.06502,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "고용보험법",
+        "국민기초생활 보장법",
+        "근로기준법",
+        "임금채권보장법 시행령",
+        "선원법",
+        "근로기준법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "실업급여 부정수급 반환명령",
+        "실업급여 수급자격 부인 자발적 퇴직 임금체불",
+        "고용보험 수급자격 부인처분 취소 임금 체불 정당한 이유",
+        "고용보험법 제87조 (조문이 나오는 판례)",
+        "국민기초생활 보장법 제38조 (조문이 나오는 판례)"
+      ]
+    },
+    "section": "welfare_appeal",
+    "answer": {
+      "points": [
+        {
+          "text": "실업급여 수급자격을 인정하지 않는 결정처럼 실업급여에 관한 처분에 이의가 있으시면, 고용보험법에 따라 심사관에게 심사를 청구하실 수 있습니다. 임금이 밀려 그만두셨다는 사정은 이 심사 절차에서 주장해 보실 수 있습니다. 다만 그 사정이 받아들여질지는 근거 자료만으로는 판단할 수 없습니다.",
+          "source": "law:고용보험법:제87조",
+          "quote": "제89조에 따른 심사관에게 심사를 청구할 수 있고",
+          "check": "verified"
+        },
+        {
+          "text": "기한이 중요합니다. 심사청구는 처분이 있음을 안 날부터 90일 이내에 하셔야 합니다. 심사 결정에도 이의가 있으면 심사위원회에 재심사를 청구하실 수 있습니다. 재심사 청구는 심사청구 결정이 있음을 안 날부터 90일 이내에 하셔야 합니다.",
+          "source": "law:고용보험법:제87조",
+          "quote": "재심사의 청구는 심사청구에 대한 결정이 있음을 안 날부터 90일 이내에",
+          "check": "verified"
+        },
+        {
+          "text": "참고로 심사와 재심사를 청구하면, 시효중단에 관해서는 재판상의 청구를 한 것으로 봅니다. 통지를 받으신 날짜를 확인해 두시고, 기한 안에 절차를 진행하시는 것이 좋습니다.",
+          "source": "law:고용보험법:제87조",
+          "quote": "심사 및 재심사의 청구는 시효중단에 관하여 재판상의 청구로 본다",
+          "check": "verified"
+        },
+        {
+          "text": "밀린 임금은 실업급여와 별개의 문제입니다. 퇴직 근로자가 대지급금을 받으려면 몇 가지 기준을 모두 충족해야 합니다. 그중 하나로 사업주가 퇴직한 날까지 6개월 이상 사업을 했어야 하고, 고용노동부장관이 발급한 체불임금등ㆍ사업주확인서로 미지급 임금이 확인되어야 합니다.",
+          "source": "law:임금채권보장법시행령:제8조",
+          "quote": "법 제12조에 따라 고용노동부장관으로부터 발급받은 체불 임금등ᆞ사업주 확인서",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:고용보험법:제87조",
+        "lawName": "고용보험법",
+        "articleNo": "제87조",
+        "title": "심사와 재심사",
+        "effectiveFrom": "2028-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C87%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국민기초생활보장법:제38조",
+        "lawName": "국민기초생활 보장법",
+        "articleNo": "제38조",
+        "title": "시ㆍ도지사에 대한 이의신청",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C38%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:국민기초생활보장법:제40조",
+        "lawName": "국민기초생활 보장법",
+        "articleNo": "제40조",
+        "title": "보건복지부장관 등에 대한 이의신청",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C40%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제108조",
+        "lawName": "근로기준법",
+        "articleNo": "제108조",
+        "title": "벌칙",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C108%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:임금채권보장법시행령:제8조",
+        "lawName": "임금채권보장법 시행령",
+        "articleNo": "제8조",
+        "title": "사업주의 기준",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%84%EA%B8%88%EC%B1%84%EA%B6%8C%EB%B3%B4%EC%9E%A5%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C8%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:선원법:제56조",
+        "lawName": "선원법",
+        "articleNo": "제56조",
+        "title": "임금채권보장보험 등의 가입",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%A0%EC%9B%90%EB%B2%95/%EC%A0%9C56%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법시행령:제23조의4",
+        "lawName": "근로기준법 시행령",
+        "articleNo": "제23조의4",
+        "title": "임금등 체불자료의 제공 제외 대상",
+        "effectiveFrom": "2025-10-23",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C23%EC%A1%B0%EC%9D%984",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제30조",
+        "lawName": "근로기준법",
+        "articleNo": "제30조",
+        "title": "구제명령 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C30%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "213631",
+        "caseNo": "2020두31323",
+        "caseName": "실업급여지급제한및반환명령처분취소",
+        "court": "대법원",
+        "decidedAt": "2020-05-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=213631",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "207130",
+        "caseNo": "2018구합23680",
+        "caseName": "실업급여지급제한·반환명령결정처분취소청구",
+        "court": "대구지법",
+        "decidedAt": "2019-04-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=207130",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "158784",
+        "caseNo": "2011나6848",
+        "caseName": "손해배상",
+        "court": "의정부지법",
+        "decidedAt": "2011-10-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=158784",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "210313",
+        "caseNo": "2003구합8144",
+        "caseName": "고용유지지원금지급거부등처분취소",
+        "court": "대구지법",
+        "decidedAt": "2004-11-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=210313",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "616499",
+        "caseNo": "2022다214040",
+        "caseName": "구상금",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616499",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 8
+      },
+      {
+        "keyword": "실업급여 부정수급 반환명령",
+        "total": 4
+      },
+      {
+        "keyword": "실업급여 수급자격 부인 자발적 퇴직 임금체불",
+        "total": 0
+      },
+      {
+        "keyword": "고용보험 수급자격 부인처분 취소 임금 체불 정당한 이유",
+        "total": 0
+      },
+      {
+        "keyword": "고용보험법 제87조 (조문이 나오는 판례)",
+        "total": 5
+      },
+      {
+        "keyword": "국민기초생활 보장법 제38조 (조문이 나오는 판례)",
+        "total": 5
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "고용보험법 제87조",
+          "exists": true
+        },
+        {
+          "citation": "임금채권보장법 시행령 제8조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

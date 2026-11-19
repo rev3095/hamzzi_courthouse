@@ -232,7 +232,8 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | nickname | text | 표시 이름 2~12자 (개인정보 패턴이 있으면 서버가 거절) |
 | user_id | uuid null | 로그인 글의 계정. `pass_hash`와 둘 중 하나만 |
 | pass_hash | text null | 비로그인 글의 수정·삭제 비밀번호 scrypt 해시 |
-| comment_count · report_count (글만) | int | 댓글 수(트리거 `community_comment_count`) · 신고 수(`report_community_post`) |
+| comment_count · report_count (글만) | int | 댓글 수(트리거 `community_comment_count`) · 신고 수(`report_community_post`, 5건이면 화면에서 가림) |
+| sensitive_consent | jsonb null | 민감정보 동의 기록 `{at, categories}` — 내용은 담지 않는다 (마이그레이션 `20261120010000`) |
 | created_at · updated_at | timestamptz | |
 
 인덱스: 글 `(created_at desc)`·`(board, created_at desc)`·`(user_id)`, 댓글 `(post_id, created_at)`·`(user_id)`. 서버 전용(RLS 켬, 정책 없음). IP는 저장하지 않는다. 보유: 글쓴이가 지울 때까지(계정이 삭제되면 함께 삭제).

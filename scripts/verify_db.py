@@ -498,6 +498,9 @@ def ops(conn) -> None:
     check(scalar(conn, "select comment_count from public.community_posts where id = %s", (pid,)) == 1, "댓글 수 트리거 +1")
     conn.execute("delete from public.community_comments where id = %s", (cid,))
     check(scalar(conn, "select comment_count from public.community_posts where id = %s", (pid,)) == 0, "댓글 수 트리거 -1")
+    check(scalar(conn, "select count(*) from information_schema.columns where table_schema = 'public' "
+                       "and table_name in ('community_posts', 'community_comments') and column_name = 'sensitive_consent'") == 2,
+          "글·댓글에 민감정보 동의 기록 칸이 있음")
     award = "select public.award_seeds(%s, 'post', %s, 10, 1)"
     check(scalar(conn, award, (writer, pid)) == 10, "씨앗 적립 10")
     check(scalar(conn, award, (writer, pid)) == 0, "같은 글에 두 번 적립하지 않음")

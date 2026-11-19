@@ -1,0 +1,226 @@
+{
+  "id": "military-criminal-01",
+  "category": "military_criminal",
+  "question": "군 복무 중인 병사인데 상관에게 대들었다는 [이름1] 군사경찰 조사를 받으라는 연락을 받았어요. 상관모욕 혐의라고 하는데 조사 전에 무엇을 준비해야 하고 변호인 도움은 어떻게 받나요?",
+  "at": "2026-11-19T15:47:32.869Z",
+  "elapsedMs": 25379,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-sections3",
+    "tokens_in": 7902,
+    "tokens_out": 1945,
+    "latency_ms": 24669
+  },
+  "costUsdUpperEstimate": 0.07051,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "군형법",
+        "군사법원법",
+        "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+        "군검찰 사건사무규칙",
+        "군검찰 보존사무규칙",
+        "군인사법 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "군형법 상관모욕",
+        "상관모욕 군형법 군사경찰 조사",
+        "군사법원 상관모욕 변호인 선임"
+      ]
+    },
+    "section": "military_criminal",
+    "channel": "offline",
+    "answer": {
+      "points": [
+        {
+          "text": "현역으로 복무하는 병사는 군형법의 적용 대상인 '군인'에 해당합니다. 그래서 상관모욕 같은 군형법상 혐의로 군사경찰 조사를 받게 될 수 있습니다. 다만 전환복무 중인 병은 군인에서 제외된다는 단서가 있습니다.",
+          "source": "law:군형법:제1조",
+          "quote": "현역에 복무하는 장교, 준사관, 부사관 및 병(兵)을 말한다",
+          "check": "verified"
+        },
+        {
+          "text": "대법원은 상관모욕죄(3년 이하의 징역이나 금고)가 문서 공시나 연설, 또는 이에 상응하는 공연한 방법으로 모욕한 경우에만 성립한다고 보았습니다. 3인이 듣는 가운데 한 발언을 상관모욕으로 보지 않은 사례도 있습니다. 조사 전에 당시 장소, 들은 사람, 발언 방법을 정리해 두시면 도움이 될 수 있습니다. 결과는 사건마다 다를 수 있습니다.",
+          "source": "case:2022도5937",
+          "quote": "이에 상응하는 정도의 공연한 방법으로 상관을 모욕하는 경우에만 성립하는지 여부(적극)",
+          "check": "verified"
+        },
+        {
+          "text": "조사가 길어지면 군사법경찰관은 특별한 사정이 없는 한 휴식시간을 주어야 합니다. 피의자나 변호인이 휴식을 요청할 수도 있습니다. 변호인 선임 방법 자체는 주어진 근거에 나와 있지 않으니, 관련 규정을 따로 확인해 보시길 권합니다.",
+          "source": "law:군검사와군사법경찰관의수사준칙에관한규정:제17조",
+          "quote": "피의자나 사건관계인에게 조사 도중 최소 2시간마다 10분 이상 휴식시간을 주어야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "군형법 제1조에 규정된 사람이 범한 죄는 군사법원이 재판권을 가집니다. 수사 후 기소되면 군사법원 절차로 진행될 수 있습니다.",
+          "source": "law:군사법원법:제2조",
+          "quote": "군사법원은 다음 각 호의 어느 하나에 해당하는 사람이 범한 죄에 대하여 재판권을 가진다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:군형법:제1조",
+        "lawName": "군형법",
+        "articleNo": "제1조",
+        "title": "적용대상자",
+        "effectiveFrom": "2022-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%ED%98%95%EB%B2%95/%EC%A0%9C1%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:군형법:제60조의6",
+        "lawName": "군형법",
+        "articleNo": "제60조의6",
+        "title": "군인등에 대한 폭행죄, 협박죄의 특례",
+        "effectiveFrom": "2022-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%ED%98%95%EB%B2%95/%EC%A0%9C60%EC%A1%B0%EC%9D%986",
+        "used": false
+      },
+      {
+        "id": "law:군사법원법:제2조",
+        "lawName": "군사법원법",
+        "articleNo": "제2조",
+        "title": "신분적 재판권",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%82%AC%EB%B2%95%EC%9B%90%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:군검사와군사법경찰관의수사준칙에관한규정:제17조",
+        "lawName": "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+        "articleNo": "제17조",
+        "title": "휴식시간 부여",
+        "effectiveFrom": "2022-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%82%AC%EC%99%80%20%EA%B5%B0%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%88%98%EC%82%AC%EC%A4%80%EC%B9%99%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C17%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:군검찰사건사무규칙:제131조",
+        "lawName": "군검찰 사건사무규칙",
+        "articleNo": "제131조",
+        "title": "피고인의 신뢰관계인 동석 신청",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EC%82%AC%EA%B1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C131%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:군검찰보존사무규칙:제22조",
+        "lawName": "군검찰 보존사무규칙",
+        "articleNo": "제22조",
+        "title": "보존절차",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EB%B3%B4%EC%A1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C22%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:군인사법시행규칙:제62조",
+        "lawName": "군인사법 시행규칙",
+        "articleNo": "제62조",
+        "title": "조사의 보류",
+        "effectiveFrom": "2026-08-04",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%82%AC%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C62%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:군검찰사건사무규칙:제147조",
+        "lawName": "군검찰 사건사무규칙",
+        "articleNo": "제147조",
+        "title": "공판정에서의 속기ㆍ녹음 및 영상녹화 신청",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%B0%B0%20%EC%82%AC%EA%B1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C147%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624315",
+        "caseNo": "2022도5937",
+        "caseName": "상관모욕",
+        "court": "대법원",
+        "decidedAt": "2026-07-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624315",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "614593",
+        "caseNo": "2023노3763",
+        "caseName": "성폭력범죄의처벌등에관한특례법위반(촬영물등이용협박)·스토킹범죄의처벌등에관한법률위반·주거침입·상관모욕",
+        "court": "서울고법",
+        "decidedAt": "2024-03-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614593",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "209181",
+        "caseNo": "2015도12980",
+        "caseName": "상관살해·상관살해미수·살인·살인미수·군용물절도·군용물손괴·군무이탈",
+        "court": "대법원",
+        "decidedAt": "2016-02-19",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=209181",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "182787",
+        "caseNo": "2015노84",
+        "caseName": "상관살해·상관살해미수·살인·살인미수·군용물절도·군용물손괴·군무이탈",
+        "court": "고등군사법원",
+        "decidedAt": "2015-08-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182787",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 8
+      },
+      {
+        "keyword": "군형법 상관모욕",
+        "total": 6
+      },
+      {
+        "keyword": "상관모욕 군형법 군사경찰 조사",
+        "total": 4
+      },
+      {
+        "keyword": "군사법원 상관모욕 변호인 선임",
+        "total": 3
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "군형법 제1조",
+          "exists": true
+        },
+        {
+          "citation": "2022도5937",
+          "exists": true
+        },
+        {
+          "citation": "군검사와 군사법경찰관의 수사준칙에 관한 규정 제17조",
+          "exists": true
+        },
+        {
+          "citation": "군사법원법 제2조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -5,6 +5,9 @@ import {
   BOARDS,
   COMMUNITY_NOTICE,
   DEFAULT_BOARD,
+  FOLDED_BODY,
+  FOLDED_TITLE,
+  REPORT_FOLD_AT,
   SEEDS,
   canChange,
   cleanNickname,
@@ -173,5 +176,26 @@ describe("DEC-047 씨앗", () => {
       },
     });
     expect(seedSummary(-5, 0, 0).balance).toBe(0);
+  });
+});
+
+describe("DEC-047 신고가 쌓인 글", () => {
+  const folded = { ...ROW, title: "원래 제목", body: "원래 본문", reportCount: REPORT_FOLD_AT };
+  test("상한에 닿으면 제목·본문 대신 안내 문구를 내보낸다", () => {
+    const view = postView(folded, { userId: null, admin: false });
+    expect(view).toMatchObject({ folded: true, title: FOLDED_TITLE, body: FOLDED_BODY });
+    expect(JSON.stringify(view)).not.toContain("원래");
+    expect(
+      postView({ ...folded, reportCount: REPORT_FOLD_AT - 1 }, { userId: null, admin: false }),
+    ).toMatchObject({ folded: false, title: "원래 제목" });
+  });
+
+  test("관리자 모드는 원래 내용과 신고 수를 본다", () => {
+    expect(postView(folded, { userId: null, admin: true })).toMatchObject({
+      folded: true,
+      title: "원래 제목",
+      body: "원래 본문",
+      reportCount: REPORT_FOLD_AT,
+    });
   });
 });

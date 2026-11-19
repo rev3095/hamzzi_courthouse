@@ -279,7 +279,8 @@ AI를 부르지 않는다. 글은 이용자 의견이라 `AI_NOTICE` 대신 화�
 - **보기** `GET /community/posts/{id}` → `{ post, comments }`. `post.mine`(로그인 계정으로 쓴 내 글)·`post.needsPassword`(비로그인 글). 계정 ID·비밀번호 해시는 응답에 없다. 신고 수(`reportCount`)는 관리자 모드에만.
 - **수정·삭제** `PATCH`(`{ title, body, board?, password? }`)·`DELETE`(`{ password? }`, 본문으로만). 권한이 없으면 `403 FORBIDDEN` + `details.reason` `wrong_password`(비로그인 글) 또는 `not_owner`(로그인 글). 관리자 모드는 삭제만. 글을 지우면 그 글·댓글로 받은 씨앗을 회수한다.
 - **댓글** `POST /community/posts/{id}/comments` `{ body, nickname?, password? }` → `201 { comment, masked, seeds }` · `DELETE /community/comments/{id}` `{ password? }`. 댓글 수정은 없다.
-- **신고** `POST /community/posts/{id}/report` → `{ reported: true }`. 누가 신고했는지 저장하지 않는다.
+- **신고** `POST /community/posts/{id}/report` → `{ reported: true }`. 누가 신고했는지 저장하지 않고, 같은 네트워크의 같은 글 신고는 하루 한 번만 센다. 신고가 5건(`REPORT_FOLD_AT`) 쌓이면 응답의 `folded`가 true가 되고 제목·본문 대신 안내 문구가 간다(관리자 모드에는 원래 내용). `DELETE /community/posts/{id}/report`는 관리자 모드만 — 신고 수를 0으로 되돌린다(`{ cleared: true }`, 아니면 `403`).
+- **민감정보 동의**: 글·수정·댓글의 제목·본문이 건강·범죄경력 같은 민감정보로 보이면 `sensitiveConsent: true` 없이는 `409 CONSENT_REQUIRED` + `details { kind: "sensitive_info", categories }`를 주고 저장하지 않는다. 동의하면 시각·종류만 남긴다(F-007 AC2).
 - **씨앗** `GET /me/seeds` → `{ balance, won, redeemableWon, redeemEnabled, today: { posts, postsLimit, comments, commentsLimit } }`. 비로그인 `401`. 사용(할인)은 `billing` 게이트 승인 전이라 `redeemEnabled: false`·`redeemableWon: 0`이다.
 - 입력 오류는 `400 VALIDATION_ERROR` + `details { field, reason }`(값은 싣지 않는다). 레이트 리밋(같은 네트워크 1시간): 글쓰기 10 · 댓글 30 · 수정·삭제·신고 20 → `429 RATE_LIMITED`.
 

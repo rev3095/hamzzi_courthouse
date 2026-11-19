@@ -41,11 +41,23 @@
 {"id": "eval-40", "area": 0, "question": "헤어진 여친이 제가 때렸다고 허위로 고소하고 SNS에 제 신상을 올렸어요", "gold": ["respond_criminal"], "goldOthers": ["defamation", "privacy"], "kind": "complex"}
 {"id": "eval-41", "area": 0, "question": "아버지가 치매신데 간병하던 고모가 통장에서 돈을 계속 빼갔어요. 아버지 집도 고모 명의로 바뀜", "gold": ["crime_report", "none"], "goldOthers": ["inheritance", "money", "fraud"], "kind": "complex"}
 {"id": "eval-42", "area": 0, "question": "법인 대표인데 직원이 회삿돈을 횡령했어요. 고소랑 돈 돌려받는 걸 같이 할 수 있나요", "gold": ["crime_report"], "goldOthers": ["money"], "kind": "complex"}
-{"id": "eval-43", "area": 0, "question": "군대 간 아들이 선임한테 맞았대요. 부대에서는 덮으려고 해요", "gold": ["assault", "crime_report"], "goldOthers": ["crime_report", "assault"], "kind": "complex"}
+{"id": "eval-43", "area": 0, "question": "군대 간 아들이 선임한테 맞았대요. 부대에서는 덮으려고 해요", "gold": ["military_abuse", "assault", "crime_report"], "goldOthers": ["crime_report", "assault"], "kind": "covered"}
 {"id": "eval-44", "area": 0, "question": "아파트 분양받았는데 입주가 반년 넘게 지연됨. 계약 해제하고 계약금 돌려받고 싶어요", "gold": ["contract_deposit", "consumer", "money"], "goldOthers": ["consumer", "money", "contract_deposit"], "kind": "complex"}
-{"id": "eval-45", "area": 0, "question": "기초생활수급 신청했는데 부양의무자 때문에 탈락했어요. 이의신청 되나요", "gold": ["none", "admin_appeal"], "goldOthers": [], "kind": "gap"}
-{"id": "eval-46", "area": 0, "question": "실업급여 받다가 알바한 게 걸려서 부정수급이래요. 받은 돈보다 훨씬 많이 토해내래요", "gold": ["admin_appeal", "none"], "goldOthers": [], "kind": "gap"}
-{"id": "eval-47", "area": 0, "question": "유튜브 영상에 제 그림을 무단으로 썼어요. 저작권 침해로 뭘 할 수 있나요", "gold": ["none"], "goldOthers": ["crime_report"], "kind": "gap"}
+{"id": "eval-45", "area": 0, "question": "기초생활수급 신청했는데 부양의무자 때문에 탈락했어요. 이의신청 되나요", "gold": ["welfare_appeal", "admin_appeal"], "goldOthers": [], "kind": "covered"}
+{"id": "eval-46", "area": 0, "question": "실업급여 받다가 알바한 게 걸려서 부정수급이래요. 받은 돈보다 훨씬 많이 토해내래요", "gold": ["welfare_appeal", "admin_appeal"], "goldOthers": [], "kind": "covered"}
+{"id": "eval-47", "area": 0, "question": "유튜브 영상에 제 그림을 무단으로 썼어요. 저작권 침해로 뭘 할 수 있나요", "gold": ["copyright"], "goldOthers": ["crime_report"], "kind": "covered"}
 {"id": "eval-48", "area": 0, "question": "퇴직하고 나왔는데 전 회사가 경업금지 위반이라고 내용증명을 보냄", "gold": ["none", "respond_civil"], "goldOthers": [], "kind": "gap"}
-{"id": "eval-49", "area": 0, "question": "보험사가 고지의무 위반이라고 암 진단금 지급을 거절함", "gold": ["none", "consumer"], "goldOthers": [], "kind": "gap"}
+{"id": "eval-49", "area": 0, "question": "보험사가 고지의무 위반이라고 암 진단금 지급을 거절함", "gold": ["insurance_claim", "consumer"], "goldOthers": [], "kind": "covered"}
 {"id": "eval-50", "area": 0, "question": "외국인 아내 비자 연장이 거부됐어요. 이의신청이나 소송이 가능한가요", "gold": ["admin_appeal", "none"], "goldOthers": [], "kind": "gap"}
+{"id": "eval-51", "area": 0, "question": "실업급여 받다가 부정수급이라고 받은 돈을 다 반환하라는 통지가 왔어요", "gold": ["welfare_appeal", "admin_appeal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-52", "area": 0, "question": "기초생활수급자 신청했는데 부양의무자 소득 때문에 탈락했대요. 이의신청 되나요", "gold": ["welfare_appeal", "admin_appeal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-53", "area": 0, "question": "아파트 판 지 한참 지났는데 양도소득세를 더 내라는 고지서가 날아옴", "gold": ["tax_appeal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-54", "area": 0, "question": "아버지한테 받은 전세자금에 증여세가 나왔어요. 조세심판 청구는 어떻게 하나요", "gold": ["tax_appeal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-55", "area": 0, "question": "빌라 매수하고 입주했더니 누수가 심한데 매도인이 모르쇠예요", "gold": ["property_defect"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-56", "area": 0, "question": "중개사가 근저당 설명을 안 해줘서 손해봤어요 공제금 청구 가능?", "gold": ["property_defect"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-57", "area": 0, "question": "군대에서 무릎 십자인대 파열됐는데 의병전역 가능한가요", "gold": ["military_discharge"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-58", "area": 0, "question": "현역 부적합 심사 받으려면 어떻게 하나요 우울증이 심해졌어요", "gold": ["military_discharge"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-59", "area": 0, "question": "휴가 복귀를 하루 늦게 했더니 군무이탈로 조사받으래요", "gold": ["military_criminal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-60", "area": 0, "question": "초병 근무 중 졸았다고 군검찰에 넘어간대요", "gold": ["military_criminal"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-61", "area": 0, "question": "선임이 매일 때리고 가혹행위 해요 국방헬프콜에 신고하면 어떻게 되나요", "gold": ["military_abuse"], "goldOthers": [], "kind": "new3"}
+{"id": "eval-62", "area": 0, "question": "아들이 부대에서 집단 따돌림을 당한대요 인권위 진정 가능한가요", "gold": ["military_abuse"], "goldOthers": [], "kind": "new3"}

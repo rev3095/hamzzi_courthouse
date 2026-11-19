@@ -1,0 +1,214 @@
+{
+  "id": "military-abuse-01",
+  "category": "military_abuse",
+  "question": "군대에 있는 아들이 선임들에게 계속 폭언과 구타를 당하고 있다고 털어놨어요. 부대에 알리면 보복당할까 걱정인데, 부대 밖에서 신고하거나 도움받을 수 있는 방법이 있나요?",
+  "at": "2026-11-19T15:47:54.768Z",
+  "elapsedMs": 21897,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-sections3",
+    "tokens_in": 8039,
+    "tokens_out": 1626,
+    "latency_ms": 21410
+  },
+  "costUsdUpperEstimate": 0.06468,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "군인의 지위 및 복무에 관한 기본법",
+        "국가인권위원회법",
+        "군검사와 군사법경찰관의 수사준칙에 관한 규정"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "군인 가혹행위 국가배상",
+        "군 가혹행위 선임병 폭행 진정",
+        "군인 인권침해 보복금지 신고"
+      ]
+    },
+    "section": "military_abuse",
+    "answer": {
+      "points": [
+        {
+          "text": "부대 밖 도움 방법으로, 군인은 구타·폭언 같은 사적 제재에 대해 부대 보고와 별도로 「국가인권위원회법」 등 다른 법령에서 정한 방법에 따라 국가인권위원회 등에 진정할 수 있습니다. 조문상 진정 주체는 '군인'이므로 아드님 본인 명의의 진정을 기준으로 확인해 보시면 좋겠습니다.",
+          "source": "law:군인의지위및복무에관한기본법:제43조",
+          "quote": "다른 법령에서 정하는 방법에 따라 국가인권위원회 등에 진정을 할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "말씀하신 선임들의 폭언과 구타는 법에서 금지하는 행위에 해당할 수 있습니다. 법은 군인이 어떠한 경우에도 구타, 폭언, 가혹행위 등 사적 제재를 해서는 안 된다고 정하고 있습니다.",
+          "source": "law:군인의지위및복무에관한기본법:제26조",
+          "quote": "구타, 폭언, 가혹행위 및 집단 따돌림 등 사적 제재를 하거나 직권을 남용하여서는 아니 된다",
+          "check": "verified"
+        },
+        {
+          "text": "보복이 걱정되신다면 신고자 보호 규정을 참고하세요. 누구든지 신고를 이유로 불이익조치를 해서는 안 되고, 국방부장관은 신고자와 신고 내용의 비밀을 보장해야 하며, 불이익을 받으면 원상회복 등 필요한 조치를 취해야 합니다.",
+          "source": "law:군인의지위및복무에관한기본법:제45조",
+          "quote": "누구든지 신고등을 이유로 신고자에게 징계조치 등 어떠한 신분상 불이익이나",
+          "check": "verified"
+        },
+        {
+          "text": "그 밖에 일정 규모 이상의 부대에는 병영생활 전문상담관이 있어 구타·폭언 등 기본권 침해 고충을 상담받을 수 있고, 상담관은 부대장에게 피해자 보호 등 필요한 조치를 요청할 수 있습니다. 또한 군인권보호관이나 군 수사기관에 신고하는 방법도 법에 규정되어 있습니다.",
+          "source": "law:군인의지위및복무에관한기본법:제41조",
+          "quote": "구타, 폭언, 가혹행위 및 집단 따돌림 등 군 내 기본권 침해에 관한 사항",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:군인의지위및복무에관한기본법:제26조",
+        "lawName": "군인의 지위 및 복무에 관한 기본법",
+        "articleNo": "제26조",
+        "title": "사적 제재 및 직권남용의 금지",
+        "effectiveFrom": "2026-01-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C26%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:군인의지위및복무에관한기본법:제43조",
+        "lawName": "군인의 지위 및 복무에 관한 기본법",
+        "articleNo": "제43조",
+        "title": "신고의무 등",
+        "effectiveFrom": "2026-01-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C43%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:군인의지위및복무에관한기본법:제45조",
+        "lawName": "군인의 지위 및 복무에 관한 기본법",
+        "articleNo": "제45조",
+        "title": "신고자 보호",
+        "effectiveFrom": "2026-01-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C45%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국가인권위원회법:제2조",
+        "lawName": "국가인권위원회법",
+        "articleNo": "제2조",
+        "title": "정의",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EA%B0%80%EC%9D%B8%EA%B6%8C%EC%9C%84%EC%9B%90%ED%9A%8C%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:군검사와군사법경찰관의수사준칙에관한규정:제2조",
+        "lawName": "군검사와 군사법경찰관의 수사준칙에 관한 규정",
+        "articleNo": "제2조",
+        "title": "군 수사기관의 인권보호 책무",
+        "effectiveFrom": "2022-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EA%B2%80%EC%82%AC%EC%99%80%20%EA%B5%B0%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%88%98%EC%82%AC%EC%A4%80%EC%B9%99%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:군인의지위및복무에관한기본법:제41조",
+        "lawName": "군인의 지위 및 복무에 관한 기본법",
+        "articleNo": "제41조",
+        "title": "전문상담관",
+        "effectiveFrom": "2026-01-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%B0%EC%9D%B8%EC%9D%98%20%EC%A7%80%EC%9C%84%20%EB%B0%8F%20%EB%B3%B5%EB%AC%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B8%B0%EB%B3%B8%EB%B2%95/%EC%A0%9C41%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "616527",
+        "caseNo": "2023다285162",
+        "caseName": "손해배상(국)",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "182139",
+        "caseNo": "2014노315",
+        "caseName": "살인(예비적죄명:상해치사)·폭력행위등처벌에관한법률위반(집단·흉기등폭행)·강요·의료법위반·폭력행위등처벌에관한법률위반(공동폭행)[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)]·위력행사가혹행위(피고인1에대하여일부인정된죄명:군인등강제추행)·폭행[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)·피고인2에대하여일부인정된죄명:폭력행위등처벌에관한법률위반(집단·흉기등협박)]·직권남용가혹행위·폭행방조·직무유기(피고인5에대하여일부변경된죄명:부하범죄부진정)·공갈·재물손괴·협박[일부변경된죄명:특정범죄가중처벌등에관한법률위반(보복범죄등)]·성매매알선등행위의처벌에관한법률위반(성매매)·증거인멸",
+        "court": "고등군사법원",
+        "decidedAt": "2015-04-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182139",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "179916",
+        "caseNo": "2014노2820",
+        "caseName": "공직선거법위반·국가정보원법위반",
+        "court": "서울고등법원",
+        "decidedAt": "2015-02-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=179916",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "613041",
+        "caseNo": "2023가합61941",
+        "caseName": "손해배상(기)",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2024-10-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613041",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "182157",
+        "caseNo": "2014고13,2014고14(병합)",
+        "caseName": "살인(인정된죄명:상해치사)·폭력행위등처벌에관한법률위반(집단·흉기등폭행)·강요·의료법위반·폭력행위등처벌에관한법률위반(공동폭행)[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)]·위력행사가혹행위(피고인1에대하여일부인정된죄명:군인등강제추행)·폭행[피고인1에대하여인정된죄명:폭력행위등처벌에관한법률위반(상습폭행)·피고인2에대하여일부인정된죄명:폭력행위등처벌에관한법률위반(집단·흉기등폭행)]·직권남용가혹행위·폭행방조·직무유기(피고인5에대하여일부변경된죄명:부하범죄부진정)·공갈·강요·위력행사가혹행위·재물손괴·협박·성매매알선등행위의처벌에관한법률위반(성매매)·폭행·직무유기·증거인멸",
+        "court": "제3군사령부 보통군사법원",
+        "decidedAt": "2014-10-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182157",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 6
+      },
+      {
+        "keyword": "군인 가혹행위 국가배상",
+        "total": 6
+      },
+      {
+        "keyword": "군 가혹행위 선임병 폭행 진정",
+        "total": 2
+      },
+      {
+        "keyword": "군인 인권침해 보복금지 신고",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "군인의 지위 및 복무에 관한 기본법 제43조",
+          "exists": true
+        },
+        {
+          "citation": "군인의 지위 및 복무에 관한 기본법 제26조",
+          "exists": true
+        },
+        {
+          "citation": "군인의 지위 및 복무에 관한 기본법 제45조",
+          "exists": true
+        },
+        {
+          "citation": "군인의 지위 및 복무에 관한 기본법 제41조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

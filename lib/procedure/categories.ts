@@ -657,7 +657,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
       { lawName: "고용보험법", articleNos: ["제87조"] },
       { lawName: "국민기초생활 보장법", articleNos: ["제38조", "제40조"] },
     ],
-    examples: [],
+    examples: ["welfare-appeal-01"],
   },
   property_defect: {
     key: "property_defect",
@@ -677,7 +677,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
       { lawName: "민법", articleNos: ["제580조"] },
       { lawName: "공인중개사법", articleNos: ["제25조", "제30조"] },
     ],
-    examples: [],
+    examples: ["property-defect-01"],
   },
   tax_appeal: {
     key: "tax_appeal",
@@ -695,7 +695,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseQuery: "증여세 부과처분 취소",
     caseKinds: "행정(조세)",
     lawHints: [{ lawName: "국세기본법", articleNos: ["제55조", "제61조", "제81조의15"] }],
-    examples: [],
+    examples: ["tax-appeal-01"],
   },
   military_discharge: {
     key: "military_discharge",
@@ -715,7 +715,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
       { lawName: "병역법", articleNos: ["제65조"] },
       { lawName: "군인사법", articleNos: ["제37조"] },
     ],
-    examples: [],
+    examples: ["military-discharge-01"],
   },
   military_criminal: {
     key: "military_criminal",
@@ -736,7 +736,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
       { lawName: "군형법", articleNos: ["제1조", "제60조의6"] },
       { lawName: "군사법원법", articleNos: ["제2조"] },
     ],
-    examples: [],
+    examples: ["military-criminal-01"],
   },
   military_abuse: {
     key: "military_abuse",
@@ -758,7 +758,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
         articleNos: ["제26조", "제43조", "제45조"],
       },
     ],
-    examples: [],
+    examples: ["military-abuse-01"],
   },
 };
 

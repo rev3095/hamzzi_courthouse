@@ -58,6 +58,19 @@ function mask(text: string): { text: string; masked: number } {
   return { text: scan.maskedText, masked: scan.findings.length };
 }
 
+/**
+ * 민감정보(건강·범죄경력 등)로 보이는 글은 올리는 사람이 동의해야 받는다 (F-007 AC2).
+ * 누구나 보는 글이라 질문 입력과 같은 기준으로 묻고, 동의한 시각과 종류만 남긴다. 해당 없으면 null
+ */
+function sensitiveConsent(raw: string[], consent: unknown) {
+  const categories = [...new Set(raw.flatMap((t) => scanInput(t).sensitive))];
+  if (categories.length === 0) return null;
+  if (consent !== true) {
+    throw new ApiError("CONSENT_REQUIRED", { kind: "sensitive_info", categories });
+  }
+  return { at: new Date().toISOString(), categories };
+}
+
 /** 작성자 정보: 로그인이면 계정, 비로그인이면 비밀번호 해시 */
 function authorOf(viewer: Viewer, input: { nickname?: unknown; password?: unknown }) {
   const nick = cleanNickname(input.nickname);
@@ -100,6 +113,7 @@ type PostBody = {
   body?: unknown;
   nickname?: unknown;
   password?: unknown;
+  sensitiveConsent?: unknown;
 };
 
 export async function createPost(viewer: Viewer, headers: Headers, input: PostBody) {
@@ -107,12 +121,14 @@ export async function createPost(viewer: Viewer, headers: Headers, input: PostBo
   const parsed = parsePost(input);
   if ("error" in parsed) throw invalid(parsed.error);
   const author = authorOf(viewer, input);
+  const consent = sensitiveConsent([parsed.value.title, parsed.value.body], input.sensitiveConsent);
   const title = mask(parsed.value.title);
   const body = mask(parsed.value.body);
   const post = await store.insertPost({
     board: parsed.value.board,
     title: title.text,
     body: body.text,
+    sensitiveConsent: consent,
     ...author,
   });
   const seeds =
@@ -132,12 +148,14 @@ export async function editPost(viewer: Viewer, headers: Headers, id: string, inp
   }
   const parsed = parsePost({ ...input, board: input.board ?? post.board });
   if ("error" in parsed) throw invalid(parsed.error);
+  const consent = sensitiveConsent([parsed.value.title, parsed.value.body], input.sensitiveConsent);
   const title = mask(parsed.value.title);
   const body = mask(parsed.value.body);
   const saved = await store.updatePost(id, {
     board: parsed.value.board,
     title: title.text,
     body: body.text,
+    ...(consent && { sensitiveConsent: consent }),
   });
   return { post: postView(saved, viewer), masked: title.masked + body.masked };
 }
@@ -167,7 +185,7 @@ export async function createComment(
   viewer: Viewer,
   headers: Headers,
   postId: string,
-  input: { body?: unknown; nickname?: unknown; password?: unknown },
+  input: { body?: unknown; nickname?: unknown; password?: unknown; sensitiveConsent?: unknown },
 ) {
   assertId(postId);
   await assertRateLimit(COMMENT_RATE, headers);
@@ -175,8 +193,14 @@ export async function createComment(
   if ("error" in parsed) throw invalid(parsed.error);
   const author = authorOf(viewer, input);
   if (!(await store.getPost(postId))) throw new ApiError("NOT_FOUND");
+  const consent = sensitiveConsent([parsed.body], input.sensitiveConsent);
   const body = mask(parsed.body);
-  const comment = await store.insertComment({ postId, body: body.text, ...author });
+  const comment = await store.insertComment({
+    postId,
+    body: body.text,
+    sensitiveConsent: consent,
+    ...author,
+  });
   const seeds =
     viewer.userId && earnsSeeds("comment", body.text)
       ? await store.awardSeeds(viewer.userId, "comment", comment.id)
@@ -205,8 +229,26 @@ export async function removeComment(
 export async function report(headers: Headers, id: string) {
   assertId(id);
   await assertRateLimit(MANAGE_RATE, headers);
+  // 같은 네트워크는 한 글을 하루에 한 번만 센다 — 한 사람이 되풀이 신고해 글을 가리지 못하게
+  try {
+    await assertRateLimit(
+      { bucket: `community_report_${id}`, limit: 1, windowSeconds: 86_400 },
+      headers,
+    );
+  } catch (e) {
+    if (e instanceof ApiError && e.code === "RATE_LIMITED") return { reported: true };
+    throw e;
+  }
   if (!(await store.reportPost(id))) throw new ApiError("NOT_FOUND");
   return { reported: true };
+}
+
+/** 신고 수를 0으로 되돌려 가려진 글을 다시 보이게 한다 (관리자 모드만) */
+export async function clearReports(viewer: Viewer, id: string) {
+  assertId(id);
+  if (!viewer.admin) throw new ApiError("FORBIDDEN");
+  if (!(await store.clearReports(id))) throw new ApiError("NOT_FOUND");
+  return { cleared: true };
 }
 
 export async function mySeeds(userId: string) {

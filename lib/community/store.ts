@@ -29,6 +29,9 @@ type CommentDb = {
   created_at: string;
 };
 
+/** 민감정보 동의 기록: 동의한 시각과 정보 종류만 (내용은 담지 않는다) */
+export type SensitiveConsent = { at: string; categories: string[] };
+
 const POST_COLS =
   "id, board, title, body, nickname, user_id, pass_hash, comment_count, report_count, created_at, updated_at";
 const COMMENT_COLS = "id, post_id, body, nickname, user_id, pass_hash, created_at";
@@ -92,6 +95,7 @@ export async function insertPost(input: {
   nickname: string;
   userId: string | null;
   passHash: string | null;
+  sensitiveConsent?: SensitiveConsent | null;
 }): Promise<StoredPost> {
   const { data, error } = await createServiceClient()
     .from("community_posts")
@@ -102,6 +106,7 @@ export async function insertPost(input: {
       nickname: input.nickname,
       user_id: input.userId,
       pass_hash: input.passHash,
+      sensitive_consent: input.sensitiveConsent ?? null,
     })
     .select(POST_COLS)
     .single<PostDb>();
@@ -111,11 +116,17 @@ export async function insertPost(input: {
 
 export async function updatePost(
   id: string,
-  patch: { board: BoardKey; title: string; body: string },
+  patch: { board: BoardKey; title: string; body: string; sensitiveConsent?: SensitiveConsent },
 ): Promise<StoredPost> {
   const { data, error } = await createServiceClient()
     .from("community_posts")
-    .update({ ...patch, updated_at: new Date().toISOString() })
+    .update({
+      board: patch.board,
+      title: patch.title,
+      body: patch.body,
+      ...(patch.sensitiveConsent && { sensitive_consent: patch.sensitiveConsent }),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id)
     .select(POST_COLS)
     .single<PostDb>();
@@ -156,6 +167,7 @@ export async function insertComment(input: {
   nickname: string;
   userId: string | null;
   passHash: string | null;
+  sensitiveConsent?: SensitiveConsent | null;
 }): Promise<StoredComment> {
   const { data, error } = await createServiceClient()
     .from("community_comments")
@@ -165,6 +177,7 @@ export async function insertComment(input: {
       nickname: input.nickname,
       user_id: input.userId,
       pass_hash: input.passHash,
+      sensitive_consent: input.sensitiveConsent ?? null,
     })
     .select(COMMENT_COLS)
     .single<CommentDb>();
@@ -193,6 +206,18 @@ export async function reportPost(id: string): Promise<boolean> {
   const { data, error } = await createServiceClient().rpc("report_community_post", { p_id: id });
   if (error) throw new Error("report_community_post 실패");
   return data === true;
+}
+
+/** 신고 수를 0으로 (관리자 모드). 없는 글이면 false */
+export async function clearReports(id: string): Promise<boolean> {
+  const { data, error } = await createServiceClient()
+    .from("community_posts")
+    .update({ report_count: 0 })
+    .eq("id", id)
+    .select("id")
+    .returns<{ id: string }[]>();
+  if (error) throw new Error("community_posts 수정 실패");
+  return (data?.length ?? 0) > 0;
 }
 
 /** 씨앗 적립. 하루 상한을 넘었거나 이미 받은 글이면 0. 적립이 실패해도 글쓰기는 막지 않는다 */
