@@ -127,7 +127,10 @@ export function ResultPanel({
           </div>
         </>
       ) : (
-        <TypeNotice plan={plan} />
+        <>
+          <TypeNotice plan={plan} />
+          {(result as { section?: unknown }).section === "none" && <CommunityHint />}
+        </>
       )}
 
       <RelatedSections result={result} />
@@ -155,6 +158,24 @@ function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: Proc
         </li>
       )}
     </ul>
+  );
+}
+
+/** 절차 안내가 맞지 않는 이야기(법 제도 의견·가정해 보는 질문·잡담)는 커뮤니티로 안내한다 (DEC-047) */
+function CommunityHint() {
+  return (
+    <p
+      data-testid="community-hint"
+      className="rounded-card border-line bg-cream text-ink mt-3 border px-4 py-3 text-[14px] leading-relaxed"
+    >
+      법과 제도에 대한 의견, 가정해 보는 질문, 가벼운 이야기는 다른 사람들과 나눠 보세요.{" "}
+      <Link
+        href="/community"
+        className="text-link font-semibold underline-offset-2 hover:underline"
+      >
+        커뮤니티로 가기
+      </Link>
+    </p>
   );
 }
 

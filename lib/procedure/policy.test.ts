@@ -236,6 +236,37 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
     );
   });
 
+  test("F-014 3차 추가 섹션(복지·부동산 매매 하자·세금·군 복무)은 뚜렷한 낱말이 있을 때만 간다", () => {
+    const cases: [string, string][] = [
+      ["실업급여를 신청했는데 자진퇴사라며 거절됐어요", "welfare_appeal"],
+      ["기초생활수급자에서 탈락했다는 통지를 받았어요", "welfare_appeal"],
+      ["아파트를 매수했는데 이사 후 누수를 발견했어요", "property_defect"],
+      ["공인중개사가 설명한 내용이 사실과 달라 손해를 봤어요", "property_defect"],
+      ["부모님께 받은 돈에 증여세 신고를 해야 하나요", "tax_appeal"],
+      ["양도소득세 고지서를 받았는데 불복하고 싶어요", "tax_appeal"],
+      ["복무 중 허리를 다쳤는데 의가사 제대가 되나요", "military_discharge"],
+      ["아들이 현역복무부적합 심사를 받게 됐어요", "military_discharge"],
+      ["휴가 복귀를 못 해 군무이탈로 조사받아요", "military_criminal"],
+      ["군대에서 후임 폭행으로 신고를 당했어요", "military_criminal"],
+      ["군대에서 선임에게 구타와 폭언을 당하고 있어요", "military_abuse"],
+      ["아들이 부대에서 가혹행위를 당했다고 해요", "military_abuse"],
+    ];
+    for (const [q, want] of cases) expect(classifyCase(bare(["민법"]), q), q).toBe(want);
+    // 낱말이 겹쳐도 다른 절차가 먼저인 경우
+    expect(classifyCase(bare(["근로기준법"]), "해고됐는데 실업급여는 받을 수 있나요")).not.toBe(
+      "welfare_appeal",
+    );
+    expect(
+      classifyCase(bare(["주택임대차보호법"]), "전세 보증금을 못 받았는데 중개사 책임도 있나요"),
+    ).toBe("lease_deposit");
+    expect(classifyCase(bare(["형법"]), "회사 선임이 계속 폭언을 해요")).not.toBe("military_abuse");
+    expect(classifyCase(bare(["형법"]), "명예훼손으로 고소당했어요")).toBe("respond_criminal");
+    // 군인이 수사를 받는 쪽이면 라벨이 피해자 섹션이어도 바꾸지 않는다
+    expect(
+      classifyCase({ ...bare(["군형법"]), section: "assault" }, "군대에서 폭행으로 고소당했어요"),
+    ).toBe("military_criminal");
+  });
+
   test("DEC-033 소장·지급명령을 받은 쪽은 받은 쪽 대응 타임라인 — 돈 받는 쪽 타임라인을 보이지 않는다", () => {
     for (const q of [
       "대여금 소장을 받았어요. 돈을 갚아야 하나요?",

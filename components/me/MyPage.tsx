@@ -11,6 +11,7 @@ import { GOOGLE_LOGIN_ENABLED, signOut } from "@/lib/client/login";
 import { setGuideBotEnabled, useGuideBotEnabled } from "@/lib/client/prefs";
 import { GoogleLoginButton, LOGIN_MORE_TEXT } from "../LimitNotice";
 import { MyInquiries } from "../MyInquiries";
+import { MySeeds } from "./MySeeds";
 import { useQuota } from "../useQuota";
 
 const noSubscribe = () => () => {};
@@ -124,6 +125,8 @@ export function MyPage() {
           {botOn ? "켜져 있어요" : "꺼져 있어요"}
         </p>
       </section>
+
+      {signedIn && <MySeeds />}
 
       {signedIn && (
         <section aria-labelledby="me-history" className={card}>

@@ -150,6 +150,7 @@ export function classifyCase(
 
 /** 규칙이 요구를 받는 쪽(수사를 받는 쪽·서류를 받은 쪽·갚아야 하는 쪽)으로 본 결과 — 라벨·카테고리가 요구하는 쪽 타임라인으로 바꾸지 못한다 */
 const RESPONDENT_RULED: ReadonlySet<CaseType> = new Set<CaseType>([
+  "military_criminal",
   "respond_criminal",
   "respond_civil",
   "defendant",
@@ -160,7 +161,28 @@ const RESPONDENT_LABELS: ReadonlySet<CaseType> = new Set<CaseType>([
   "respond_civil",
   "debt_relief",
   "admin_appeal",
+  "welfare_appeal",
+  "tax_appeal",
+  "military_criminal",
 ]);
+// 2026-11-19 3차 추가: 복지·실업급여 처분, 부동산 매매 하자·중개사 책임, 세금, 군 복무
+const WELFARE_WORD =
+  /실업급여|구직급여|기초생활|기초수급|수급자|생계급여|주거급여|의료급여|기초연금|장애인연금|복지급여|긴급복지/;
+const WELFARE_DISPUTE_WORD =
+  /거절|탈락|중지|중단|환수|반환|삭감|깎|부정수급|이의|불인정|안된다|못받|안나와|끊겼|끊어/;
+// "하자"는 "계약을 해제하자고"의 "하자"와 겹쳐서 뒤 글자를 본다
+const PROPERTY_DEFECT_WORD =
+  /하자담보|(공인중개|중개사|중개업소).*(책임|설명|손해|속였|속이|거짓|잘못|공제)|확인설명서|(매매|매수|샀|산집|산아파트|분양).*(하자(?![고는며면니])|누수|결로|균열)|(하자(?![고는며면니])|누수|결로|균열).*(매도인|전주인|판사람)/;
+const TAX_WORD =
+  /증여세|양도세|양도소득세|상속세|종합소득세|부가가치세|부가세|취득세|가산세|세무조사|과세예고|과세전적부|조세심판|세금.*(고지|신고|추징|불복|폭탄)/;
+const MILITARY_CONTEXT =
+  /군대|군인|군부대|부대(에서|안|내)|군복무|입대|훈련소|부사관|병영|현역|군사경찰|군검찰|군검사|헌병|중대장|소대장|행보관/;
+const MILITARY_DISCHARGE_WORD =
+  /의가사|의병전역|의병제대|현역복무부적합|복무부적합|현부심|의무조사|전공상|공상(판정|심사|처리)/;
+const MILITARY_CRIMINAL_WORD =
+  /군형법|군사법원|군사재판|군검사|군검찰|탈영|군무이탈|항명|상관(모욕|폭행|협박|상해)|초병|군사경찰.*(조사를?받|출석|피의)/;
+const MILITARY_ABUSE_WORD =
+  /가혹행위|구타|폭언|따돌림|괴롭힘|병영부조리|부조리|맞았|때렸|때려|때리|얼차려|인권침해|군인권/;
 const FINE_WORD = /과태료/;
 const INSURANCE_CLAIM_WORD = /보험금.*(거절|안줘|안준|못받|삭감|부지급)|고지의무/;
 const COPYRIGHT_WORD = /저작권|무단(도용|사용|전재)|표절/;
@@ -186,6 +208,11 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   const hasLaw = (re: RegExp, context: RegExp) =>
     [...laws].some((l) => re.test(l)) && (!hasQuestion || context.test(text));
 
+  // 군 복무 (3차 추가): 군인 신분으로 수사·재판을 받는 쪽은 일반 형사 대응보다 먼저 본다 (군형법·군사법원 절차가 다르다)
+  const military = MILITARY_CONTEXT.test(text);
+  if (MILITARY_CRIMINAL_WORD.test(text) || (military && ACCUSED.test(text))) {
+    return "military_criminal";
+  }
   if (ACCUSED.test(text)) return "respond_criminal";
   if (DEFENDANT.test(text)) return "respond_civil";
   // 빚을 갚기 어렵다는 질문은 갚을 쪽 낱말(못 갚)과 겹치므로 먼저 본다 (DEC-033)
@@ -202,6 +229,21 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   // DEC-045: 보험금 지급 거절·저작권 침해 피해 (뚜렷한 낱말이 있을 때만)
   if (INSURANCE_CLAIM_WORD.test(text)) return "insurance_claim";
   if (COPYRIGHT_WORD.test(text)) return "copyright";
+  // 3차 추가: 뚜렷한 낱말이 있을 때만. 복지·세금은 행정처분 불복과 절차가 달라 먼저 본다
+  if (MILITARY_DISCHARGE_WORD.test(text)) return "military_discharge";
+  if (military && MILITARY_ABUSE_WORD.test(text) && !SEX_CRIME_WORD.test(text)) {
+    return "military_abuse";
+  }
+  if (WELFARE_WORD.test(text) && WELFARE_DISPUTE_WORD.test(text)) return "welfare_appeal";
+  if (TAX_WORD.test(text)) return "tax_appeal";
+  // 전세·월세 계약의 중개 문제는 임대차 절차가 먼저다
+  if (
+    PROPERTY_DEFECT_WORD.test(text) &&
+    !DEPOSIT_WORD.test(text) &&
+    !/전세|월세|임대차|세입자/.test(text)
+  ) {
+    return "property_defect";
+  }
   if (ADMIN_WORD.test(text)) return "admin_appeal";
   if (SEX_CRIME_WORD.test(text)) return "sex_crime";
   if (SCHOOL_VIOLENCE_WORD.test(text)) return "school_violence";

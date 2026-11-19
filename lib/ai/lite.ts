@@ -42,7 +42,7 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-19-side";
+export const LITE_PROMPT_VERSION = "lite-2026-11-19-sections3";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;

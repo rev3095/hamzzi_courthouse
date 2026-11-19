@@ -1,5 +1,6 @@
 "use client";
 // 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 검색(F-003, Figma에 없는 메뉴), 오늘 남은 질문 n/한도(DEC-024·031·033) 또는 관리자 · 무제한.
+// 커뮤니티(DEC-047, Figma에 없는 메뉴): 게시판으로 가는 말풍선 버튼.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
 // 맨 오른쪽 프로필 아이콘 → 마이페이지(/me): Google 로그인·화면 설정 (DEC-032·033). 로그인하면 아이콘에 점 표시.
 // 범위 밖 메뉴(변호사 찾기·혼자 소송하기)와 다크 모드는 데모에서 숨긴다 (docs/07 결정 2).
@@ -46,6 +47,20 @@ export function SiteHeader() {
             </svg>
             <span className="max-sm:sr-only">판례 검색</span>
           </Link>
+          <Link
+            href="/community"
+            className="text-ink border-line hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-bold"
+          >
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <path
+                d="M4 5.5h14a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-6.5L7 19v-3.5H4A1.5 1.5 0 0 1 2.5 14V7A1.5 1.5 0 0 1 4 5.5Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="max-sm:sr-only">커뮤니티</span>
+          </Link>
           {quota?.admin && (
             <span
               className="text-ink text-[13px] font-semibold whitespace-nowrap"
@@ -59,7 +74,8 @@ export function SiteHeader() {
               className="text-muted text-[12px] whitespace-nowrap sm:text-[13px]"
               data-testid="quota"
             >
-              {`오늘 남은 질문 ${quota.remaining}/${quota.limit}`}
+              <span className="max-[480px]:sr-only">오늘 남은 질문 </span>
+              {`${quota.remaining}/${quota.limit}`}
             </span>
           )}
           <Link

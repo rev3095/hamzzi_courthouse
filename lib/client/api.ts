@@ -53,7 +53,7 @@ const NETWORK_ERROR: ClientError = {
   message: "서버에 연결하지 못했습니다.",
 };
 
-async function call<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
+export async function call<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   let res: Response;
   try {
     res = await fetch(path, {

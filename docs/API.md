@@ -74,6 +74,11 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
 | GET `/admin/procedure-labels` · PATCH `/admin/procedure-labels/{id}` | 관리자 모드 | AI 절차 분류 라벨 조회·승인·거절 | DEC-037 |
+| GET·POST `/community/posts` | 공개(anon·user) | 커뮤니티 글 목록(`?board=`·`?cursor=`)·글쓰기. 비로그인은 `password` 필수 | DEC-047 |
+| GET·PATCH·DELETE `/community/posts/{id}` | 공개 · 수정·삭제는 글쓴이(로그인 계정 또는 비밀번호), 삭제는 관리자 모드도 | 글 + 댓글 보기·수정·삭제 | DEC-047 |
+| POST `/community/posts/{id}/comments` · DELETE `/community/comments/{id}` | 공개 · 삭제는 댓글 쓴이·관리자 모드 | 댓글 쓰기·삭제 | DEC-047 |
+| POST `/community/posts/{id}/report` | 공개 | 글 신고(수만 센다) | DEC-047 |
+| GET `/me/seeds` | user | 내 씨앗 잔액·할인 가치·오늘 적립 횟수 | DEC-047 |
 | GET `/health` | 공개 | 운영 점검: DB·법제처 도달 여부, Claude 키 유무(무과금) | 13 (OQ-ARC-09) |
 
 ### POST `/inquiries`
@@ -265,6 +270,18 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
 - 로그인 사용자: `202 { status: "received", deletionRequestId, deletedInquiries }` — 같은 브라우저 익명 세션의 로그인 전 질문은 바로 지우고(`deletedInquiries`), 계정 기록은 `deletion_requests` 접수(운영자 처리), 처리 기한은 OQ-DM-03 (DEC-035).
 - 레이트 리밋: IP 해시 1시간 30회.
+
+### 커뮤니티 `/community/*` · GET `/me/seeds` (DEC-047)
+AI를 부르지 않는다. 글은 이용자 의견이라 `AI_NOTICE` 대신 화면이 `COMMUNITY_NOTICE`를 붙인다. 규칙은 lib/community/policy.ts, 흐름은 lib/community/service.ts.
+
+- **글쓰기** `POST /community/posts` `{ board, title, body, nickname?, password? }` → `201 { post, masked, seeds }`. `board`는 `free`·`opinion`·`whatif`·`story`·`tips`·`feedback`. 제목·본문은 `scanInput`으로 가린 마스킹본만 저장하고 `masked`는 가린 곳 수다. 비로그인은 `password`(4~32자)가 필수이고 scrypt 해시만 저장한다. 로그인 사용자는 `password`를 보내지 않으며, 씨앗을 받았으면 `seeds`가 0보다 크다.
+- **목록** `GET /community/posts?board=&cursor=` → `{ items: PostSummary[], nextCursor? }` 최신순 20건. `cursor`는 앞 쪽의 `nextCursor`(작성 시각).
+- **보기** `GET /community/posts/{id}` → `{ post, comments }`. `post.mine`(로그인 계정으로 쓴 내 글)·`post.needsPassword`(비로그인 글). 계정 ID·비밀번호 해시는 응답에 없다. 신고 수(`reportCount`)는 관리자 모드에만.
+- **수정·삭제** `PATCH`(`{ title, body, board?, password? }`)·`DELETE`(`{ password? }`, 본문으로만). 권한이 없으면 `403 FORBIDDEN` + `details.reason` `wrong_password`(비로그인 글) 또는 `not_owner`(로그인 글). 관리자 모드는 삭제만. 글을 지우면 그 글·댓글로 받은 씨앗을 회수한다.
+- **댓글** `POST /community/posts/{id}/comments` `{ body, nickname?, password? }` → `201 { comment, masked, seeds }` · `DELETE /community/comments/{id}` `{ password? }`. 댓글 수정은 없다.
+- **신고** `POST /community/posts/{id}/report` → `{ reported: true }`. 누가 신고했는지 저장하지 않는다.
+- **씨앗** `GET /me/seeds` → `{ balance, won, redeemableWon, redeemEnabled, today: { posts, postsLimit, comments, commentsLimit } }`. 비로그인 `401`. 사용(할인)은 `billing` 게이트 승인 전이라 `redeemEnabled: false`·`redeemableWon: 0`이다.
+- 입력 오류는 `400 VALIDATION_ERROR` + `details { field, reason }`(값은 싣지 않는다). 레이트 리밋(같은 네트워크 1시간): 글쓰기 10 · 댓글 30 · 수정·삭제·신고 20 → `429 RATE_LIMITED`.
 
 ### GET `/health`
 `200 | 503 { status: "ok" | "degraded", checks: { db: { ok, latencyMs }, lawApi: { ok, latencyMs, cached? } }, version: string, time, ai: { mode: "free" | "paid", key: "ok" | "missing" | "invalid" | "error" } }` — 공통 형식(`data`)으로 감싸지 않는다(업타임 감시 도구용). 둘 다 닿으면 200, 아니면 503. 비밀값·오류 문구·본문은 내보내지 않는다. 법제처 확인은 인스턴스마다 5분 캐시. `ai`는 정보용(DEC-019): Claude 키가 있고 유효한지를 모델 정보 조회(토큰을 쓰지 않아 과금 없음)로만 확인하고 5분 캐시하며, 200/503 판정에는 넣지 않는다. `cache-control: no-store`. 운영 문서: `docs/reports/2026-11-01_운영_모니터링.md`.

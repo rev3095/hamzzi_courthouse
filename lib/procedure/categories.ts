@@ -44,6 +44,13 @@ export const CATEGORY_KEYS = [
   // 추가 섹션 (DEC-045)
   "insurance_claim",
   "copyright",
+  // 추가 섹션 (2026-11-19 3차: 복지·부동산 매매·세금·군 복무)
+  "welfare_appeal",
+  "property_defect",
+  "tax_appeal",
+  "military_discharge",
+  "military_criminal",
+  "military_abuse",
 ] as const;
 
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
@@ -630,6 +637,129 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     lawHints: [{ lawName: "저작권법", articleNos: ["제103조", "제125조", "제136조"] }],
     examples: ["copyright-01"],
   },
+  // ── 2026-11-19 3차 추가: 복지·부동산 매매·세금·군 복무 ──
+  welfare_appeal: {
+    key: "welfare_appeal",
+    label: "복지·실업급여",
+    description: "수급 거절·중지·환수 통지 다투기",
+    guide:
+      "급여를 신청했거나 받고 있는 쪽 기준으로 안내해요. 어떤 급여인지, 어떤 통지를 받았는지 적어 주세요. 통지서에 적힌 이의 기한을 먼저 확인하세요.",
+    placeholder: "예: 실업급여를 신청했는데 자발적 퇴사라며 거절됐어요.",
+    starters: [
+      "실업급여 신청이 거절됐어요. ",
+      "기초생활수급자에서 탈락했다는 통지를 받았어요. ",
+      "받은 급여를 환수하겠다는 통지를 받았어요. ",
+    ],
+    track: "welfare_appeal",
+    caseQuery: "실업급여 부정수급 반환명령",
+    caseKinds: "행정",
+    lawHints: [
+      { lawName: "고용보험법", articleNos: ["제87조"] },
+      { lawName: "국민기초생활 보장법", articleNos: ["제38조", "제40조"] },
+    ],
+    examples: [],
+  },
+  property_defect: {
+    key: "property_defect",
+    label: "부동산 매매 하자",
+    description: "산 집의 하자, 공인중개사 책임",
+    guide:
+      "집이나 땅을 산 쪽 기준으로 안내해요. 언제 샀고 어떤 하자를 언제 발견했는지, 중개사가 무엇을 설명했는지 적어 주세요.",
+    placeholder: "예: 아파트를 사서 이사했는데 누수가 있어요. 전 주인은 몰랐다고 해요.",
+    starters: [
+      "집을 샀는데 이사하고 나서 하자를 발견했어요. ",
+      "공인중개사가 설명한 내용이 사실과 달랐어요. ",
+    ],
+    track: "property_defect",
+    caseQuery: "매도인 하자담보책임",
+    caseKinds: "민사",
+    lawHints: [
+      { lawName: "민법", articleNos: ["제580조"] },
+      { lawName: "공인중개사법", articleNos: ["제25조", "제30조"] },
+    ],
+    examples: [],
+  },
+  tax_appeal: {
+    key: "tax_appeal",
+    label: "세금",
+    description: "증여·양도 세금 신고, 고지서 불복",
+    guide:
+      "세금을 내야 하는 쪽 기준으로 안내해요. 어떤 일(증여·양도·상속)이 있었는지, 고지서나 통지를 받았는지 적어 주세요. 세액은 여기서 계산하지 않아요.",
+    placeholder: "예: 부모님께 돈을 받았는데 증여세를 신고해야 하는지 궁금해요.",
+    starters: [
+      "가족에게 재산을 받았는데 증여세 신고가 필요한지 궁금해요. ",
+      "집을 팔았는데 양도소득세 고지서를 받았어요. ",
+      "세무서에서 과세예고 통지를 받았어요. ",
+    ],
+    track: "tax_appeal",
+    caseQuery: "증여세 부과처분 취소",
+    caseKinds: "행정(조세)",
+    lawHints: [{ lawName: "국세기본법", articleNos: ["제55조", "제61조", "제81조의15"] }],
+    examples: [],
+  },
+  military_discharge: {
+    key: "military_discharge",
+    label: "의가사 제대",
+    description: "질병·부적응으로 복무가 어려울 때",
+    guide:
+      "복무 중인 본인이나 가족 기준으로 안내해요. 어떤 증상이 언제부터 있었는지, 병인지 간부인지 적어 주세요(부대 이름은 빼고).",
+    placeholder: "예: 복무 중 허리를 다쳐 훈련을 못 하는데 의가사 제대가 되는지 궁금해요.",
+    starters: [
+      "군 복무 중 다쳐서 복무를 이어가기 어려워요. ",
+      "아들이 군대에서 적응을 못 해 현역복무부적합 심사를 알아보고 있어요. ",
+    ],
+    track: "military_discharge",
+    caseQuery: "현역복무부적합 전역처분",
+    caseKinds: "행정",
+    lawHints: [
+      { lawName: "병역법", articleNos: ["제65조"] },
+      { lawName: "군인사법", articleNos: ["제37조"] },
+    ],
+    examples: [],
+  },
+  military_criminal: {
+    key: "military_criminal",
+    label: "군형법·군사재판",
+    description: "군인 신분으로 수사·재판·징계를 받을 때",
+    guide:
+      "수사나 징계를 받는 군인 본인이나 가족 기준으로 안내해요. 어떤 일로 어느 기관의 조사를 받는지 적어 주세요. 군형법은 같은 행위를 더 무겁게 정한 조항이 있어요.",
+    placeholder: "예: 부대 안에서 후임과 다퉈 군사경찰 조사를 받게 됐어요.",
+    starters: [
+      "군 복무 중 군사경찰 조사를 받게 됐어요. ",
+      "휴가 복귀를 못 해 군무이탈로 조사받는다고 해요. ",
+      "상관 모욕으로 징계와 수사를 함께 받고 있어요. ",
+    ],
+    track: "military_criminal",
+    caseQuery: "군형법 상관모욕",
+    caseKinds: "형사(군사)",
+    lawHints: [
+      { lawName: "군형법", articleNos: ["제1조", "제60조의6"] },
+      { lawName: "군사법원법", articleNos: ["제2조"] },
+    ],
+    examples: [],
+  },
+  military_abuse: {
+    key: "military_abuse",
+    label: "군 가혹행위",
+    description: "구타·폭언·따돌림 신고와 진정",
+    guide:
+      "피해를 입은 군인 본인이나 가족 기준으로 안내해요. 어떤 일이 얼마나 이어졌는지 적어 주세요(이름·부대 이름은 빼고).",
+    placeholder: "예: 군대에서 선임이 매일 폭언을 하고 잠을 못 자게 해요.",
+    starters: [
+      "군대에서 선임에게 구타와 폭언을 당하고 있어요. ",
+      "아들이 부대에서 가혹행위를 당했다고 해요. ",
+    ],
+    track: "military_abuse",
+    caseQuery: "군인 가혹행위 국가배상",
+    caseKinds: "형사·행정",
+    lawHints: [
+      {
+        lawName: "군인의 지위 및 복무에 관한 기본법",
+        articleNos: ["제26조", "제43조", "제45조"],
+      },
+    ],
+    examples: [],
+  },
 };
 
 export const CATEGORY_LIST: Category[] = CATEGORY_KEYS.map((k) => CATEGORIES[k]);
@@ -655,6 +785,7 @@ export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] 
       "debt_relief",
       "auction",
       "registration",
+      "property_defect",
     ],
   },
   { key: "work", label: "일터", keys: ["labor", "workplace_harassment", "industrial_accident"] },
@@ -693,7 +824,20 @@ export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] 
   {
     key: "respond",
     label: "서류·처분을 받음",
-    keys: ["respond_civil", "respond_criminal", "admin_appeal", "fine_objection"],
+    keys: [
+      "respond_civil",
+      "respond_criminal",
+      "admin_appeal",
+      "fine_objection",
+      "welfare_appeal",
+      "tax_appeal",
+    ],
+  },
+  // 군 복무는 민간 절차와 기관·법이 달라 묶음을 따로 둔다 (2026-11-19 3차)
+  {
+    key: "military",
+    label: "군 복무",
+    keys: ["military_discharge", "military_criminal", "military_abuse"],
   },
 ];
 

@@ -54,6 +54,7 @@ export const UNDERSTAND_SYSTEM = `${COMMON}
   · 사용자가 소송을 건 쪽이면 respond_civil이 아닙니다. 돈을 받으려는 것이면 money입니다. 승소했는데 돈을 못 받고 있는 것도 money입니다.
   · 돈을 빌려준 쪽은 debt_relief가 아니라 money입니다. debt_relief는 자신의 빚을 갚기 어려운 쪽만입니다.
   · 집이나 상가를 빌려준 쪽(임대인)이 세입자에게 받을 돈을 묻는 것이면 lease_deposit·lease_residence가 아니라 money입니다.
+  · 군인 신분으로 수사·재판·징계를 받는 쪽이면 respond_criminal이 아니라 military_criminal입니다. 군 안에서 구타·가혹행위를 당한 쪽은 military_abuse, 질병·부상·부적응으로 전역을 알아보는 것이면 military_discharge입니다.
 - 실제로 일어난 일이 아닌 가정·호기심 질문("~하면 어떤 처벌을 받나요"), 법 제도에 대한 의견이나 불만, 잡담은 none입니다. 낱말이 어느 섹션과 겹친다는 이유만으로 고르지 않습니다.
 ${SECTION_GUIDE_TEXT}
 (2) lawQuery: 법령 검색에 넣을 한 문장. 질문의 사실과 알고 싶은 것을 법률 용어로 바꿔 씁니다.

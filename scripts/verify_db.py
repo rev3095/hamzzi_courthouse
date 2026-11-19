@@ -21,6 +21,7 @@ EXPECTED_TABLES = {
     "profiles", "anon_sessions", "inquiries", "followup_questions", "analysis_results",
     "result_citations", "result_feedback", "feature_gates", "gate_changes", "consents",
     "audit_logs", "deletion_requests", "anon_usage", "rate_limit_hits",
+    "community_posts", "community_comments", "seed_ledger",
 }
 GATE_KEYS = {
     "lawyer_verification", "brief_posting", "proposals", "billing",
@@ -477,6 +478,41 @@ def ops(conn) -> None:
     check(scalar(conn, "select column_default from information_schema.columns "
                        "where table_schema = 'public' and table_name = 'inquiries' and column_name = 'saved'") == "false",
           "inquiries.saved 기본값 false (DEC-039)")
+
+    # DEC-047 커뮤니티·씨앗 — 서버 전용, 작성자는 계정·비밀번호 해시 중 하나만, 씨앗은 한 번만·하루 상한·회수
+    for t in ("community_posts", "community_comments", "seed_ledger"):
+        check(scalar(conn, "select has_table_privilege('anon', %s, 'select')", (f"public.{t}",)) is False
+              and scalar(conn, "select has_table_privilege('authenticated', %s, 'select')", (f"public.{t}",)) is False,
+              f"{t}는 anon·로그인 사용자가 읽을 수 없음")
+    writer = make_user(conn)
+    conn.execute("reset role")
+    pid = scalar(conn, "insert into public.community_posts (board, title, body, nickname, user_id) "
+                       "values ('free', '검증 글', '검증 본문', '검증 햄찌', %s) returning id", (writer,))
+    raises(conn, "작성자 없는 글 거부 (계정·비밀번호 해시 둘 다 없음)",
+           "insert into public.community_posts (board, title, body, nickname) values ('free', '검증 글', '검증 본문', '검증 햄찌')")
+    raises(conn, "없는 게시판 거부",
+           "insert into public.community_posts (board, title, body, nickname, pass_hash) "
+           "values ('nope', '검증 글', '검증 본문', '검증 햄찌', 'x')")
+    cid = scalar(conn, "insert into public.community_comments (post_id, body, nickname, pass_hash) "
+                       "values (%s, '검증 댓글', '검증 햄찌', 'x') returning id", (pid,))
+    check(scalar(conn, "select comment_count from public.community_posts where id = %s", (pid,)) == 1, "댓글 수 트리거 +1")
+    conn.execute("delete from public.community_comments where id = %s", (cid,))
+    check(scalar(conn, "select comment_count from public.community_posts where id = %s", (pid,)) == 0, "댓글 수 트리거 -1")
+    award = "select public.award_seeds(%s, 'post', %s, 10, 1)"
+    check(scalar(conn, award, (writer, pid)) == 10, "씨앗 적립 10")
+    check(scalar(conn, award, (writer, pid)) == 0, "같은 글에 두 번 적립하지 않음")
+    check(scalar(conn, award, (writer, str(uuid.uuid4()))) == 0, "하루 상한을 넘으면 적립 0")
+    check(scalar(conn, "select balance from public.seed_summary(%s)", (writer,)) == 10, "씨앗 잔액 10")
+    check(scalar(conn, "select public.revoke_seeds(%s, %s)", (writer, pid)) == 10, "글을 지우면 씨앗 회수 10")
+    check(scalar(conn, "select public.revoke_seeds(%s, %s)", (writer, pid)) == 0, "두 번 회수하지 않음")
+    check(scalar(conn, "select balance from public.seed_summary(%s)", (writer,)) == 0, "회수 뒤 잔액 0")
+    check(scalar(conn, "select public.report_community_post(%s)", (pid,)) is True
+          and scalar(conn, "select report_count from public.community_posts where id = %s", (pid,)) == 1, "신고 수 +1")
+    for fn in ("public.award_seeds(uuid, text, uuid, int, int)", "public.revoke_seeds(uuid, uuid)",
+               "public.seed_summary(uuid)", "public.report_community_post(uuid)"):
+        check(scalar(conn, "select has_function_privilege('anon', %s, 'execute')", (fn,)) is False
+              and scalar(conn, "select has_function_privilege('authenticated', %s, 'execute')", (fn,)) is False,
+              f"anon·로그인 사용자는 {fn.split('(')[0]} 실행 불가")
     raises(conn, "낱말 없는 라벨 거부",
            "insert into public.procedure_labels (title, keywords, track) values ('검증 라벨', '{}', 'neighbor')")
 

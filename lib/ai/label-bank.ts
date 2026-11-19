@@ -109,6 +109,55 @@ const SIDE: LabelExample[] = (
   ] as const
 ).map(([q, section]) => ({ q, section, others: [], channel: "unknown" as Channel }));
 
+/**
+ * 2026-11-19 3차로 더한 섹션(복지·부동산 매매 하자·세금·군 복무)의 경계 사례 (직접 작성, 가상 사연).
+ * 군 사건은 사용자가 수사를 받는 쪽인지 피해를 입은 쪽인지, 민간 절차와 겹치는지에 따라 갈린다.
+ */
+const EXTRA: LabelExample[] = (
+  [
+    ["군대에서 후임을 때렸다고 군사경찰에서 조사받으러 오라고 해요.", "military_criminal", []],
+    ["휴가 나왔다가 복귀를 안 해서 군무이탈로 수사받고 있어요.", "military_criminal", []],
+    ["상관에게 욕을 했다고 징계위원회에 넘겨졌는데 형사처벌도 받나요?", "military_criminal", []],
+    [
+      "아들이 부대에서 선임들에게 맞고 잠도 못 잔다고 해요. 어디에 신고하나요?",
+      "military_abuse",
+      [],
+    ],
+    [
+      "군대에서 선임에게 맞아 허리를 다쳤고, 이 상태로는 복무가 어려워 전역하고 싶어요.",
+      "military_abuse",
+      ["military_discharge"],
+    ],
+    ["입대 후 우울증이 심해졌는데 현역복무부적합 심사를 받을 수 있나요?", "military_discharge", []],
+    [
+      "훈련 중 무릎을 다쳐 수술했어요. 의병 전역과 공상 처리는 어떻게 되나요?",
+      "military_discharge",
+      [],
+    ],
+    ["권고사직인데 회사가 자진퇴사로 신고해서 실업급여가 거절됐어요.", "welfare_appeal", []],
+    ["아들 소득이 있다며 기초생활수급이 중지됐는데 실제로는 연락도 안 해요.", "welfare_appeal", []],
+    ["실업급여를 받는 중에 아르바이트한 게 걸려서 환수 통지를 받았어요.", "welfare_appeal", []],
+    [
+      "아파트를 사서 입주했는데 천장에서 물이 새요. 전 주인에게 수리비를 받을 수 있나요?",
+      "property_defect",
+      [],
+    ],
+    ["중개사가 문제없는 땅이라고 했는데 건물을 지을 수 없는 땅이었어요.", "property_defect", []],
+    ["어머니가 전세 자금을 보태 주셨는데 증여세를 내야 하나요?", "tax_appeal", []],
+    ["오래 살던 집을 팔았더니 양도소득세가 나왔는데 비과세 대상인 것 같아요.", "tax_appeal", []],
+    [
+      "아버지가 돌아가셔서 집을 물려받았는데 상속세 신고는 어떻게 하나요?",
+      "tax_appeal",
+      ["inheritance"],
+    ],
+  ] as const
+).map(([q, section, others]) => ({
+  q,
+  section,
+  others: [...others],
+  channel: "unknown" as Channel,
+}));
+
 const strip = (s: string) => s.replace(/^예:\s*/, "").trim();
 
 /** 홈 카테고리 문장(직접 쓴 것)에서 만든 예시 + 복합 사례 */
@@ -122,6 +171,7 @@ export const LABEL_BANK: LabelExample[] = [
     })),
   ),
   ...SIDE,
+  ...EXTRA,
   ...COMPOSITE,
 ];
 

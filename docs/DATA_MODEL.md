@@ -222,6 +222,24 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 
 인덱스 `(status, created_at desc)`. 서버 전용(RLS 켬, 정책 없음, service_role만). 보유 기간 없음(개인정보가 아닌 운영 데이터).
 
+### `community_posts` · `community_comments` — 커뮤니티 (DEC-047)
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| board (글만) | text | `free`·`opinion`·`whatif`·`story`·`tips`·`feedback` |
+| post_id (댓글만) | uuid FK | 글이 지워지면 함께 삭제 |
+| title (글만) · body | text | `[PII]` 개인정보를 가린 마스킹본만. 원문 저장 없음 |
+| nickname | text | 표시 이름 2~12자 (개인정보 패턴이 있으면 서버가 거절) |
+| user_id | uuid null | 로그인 글의 계정. `pass_hash`와 둘 중 하나만 |
+| pass_hash | text null | 비로그인 글의 수정·삭제 비밀번호 scrypt 해시 |
+| comment_count · report_count (글만) | int | 댓글 수(트리거 `community_comment_count`) · 신고 수(`report_community_post`) |
+| created_at · updated_at | timestamptz | |
+
+인덱스: 글 `(created_at desc)`·`(board, created_at desc)`·`(user_id)`, 댓글 `(post_id, created_at)`·`(user_id)`. 서버 전용(RLS 켬, 정책 없음). IP는 저장하지 않는다. 보유: 글쓴이가 지울 때까지(계정이 삭제되면 함께 삭제).
+
+### `seed_ledger` — 씨앗 장부 (DEC-047)
+`id, user_id, kind(post·comment·revoke·redeem·adjust), amount, ref_id(글·댓글), earned_day(한국 날짜), created_at`. 잔액은 합계다. 유니크 `(user_id, kind, ref_id)` — 같은 글에 두 번 주거나 두 번 회수하지 않는다. DB 함수 `award_seeds(사용자, 종류, 대상, 양, 하루 상한)`·`revoke_seeds(사용자, 대상)`·`seed_summary(사용자)`는 service_role만 실행한다. `redeem`(할인 사용)은 `billing` 게이트 승인 전까지 쓰지 않는다. 서버 전용(RLS 켬, 정책 없음). 마이그레이션 `20261119230000_community_seeds.sql`.
+
 ### `deletion_requests` (9.2)
 `id, user_id, requested_at, completed_at, scope jsonb, status(enum: received/processing/completed)`
 
@@ -249,6 +267,7 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
 | inquiries, followup_questions, analysis_results | 본인 행 (비로그인은 같은 `anon_session_id`만, 서버 경유) | ✗ | 감사 기록 남기고 제한 열람 |
 | anon_sessions, anon_usage, rate_limit_hits | 서버 전용 | ✗ | 읽기 |
+| community_posts, community_comments, seed_ledger | 서버 전용 (공개 글은 API가 계정 ID·해시를 빼고 내보낸다) | ✗ | 관리자 모드 삭제 |
 | consents, deletion_requests | 본인 행 | ✗ | 처리용 읽기 |
 | case_summaries, agent_turns | 본인 행 | ✗ | 제한 열람 |
 | public_briefs | 본인 행 | `status='posted'` 행 읽기 | 읽기 |
