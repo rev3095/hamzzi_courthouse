@@ -5,11 +5,21 @@ import { STEP_MESSAGES, type StepEvent } from "@/lib/ai/policy";
 import { AI_NOTICE } from "@/lib/api/respond";
 import { MOOD_INFO, type MascotMood } from "@/lib/mascot/moods";
 import { HamzziBadge, HamzziJudge } from "../HamzziJudge";
+import { GuideIntro } from "../guide/GuideBot";
 import { DEMO_LIMIT_TEXT, DEMO_LIMIT_TITLE } from "../LimitNotice";
 import { Analyzing, NoResult, Problem } from "../result/ResultView";
 
 export type ContextKey =
-  "home" | "analyzing" | "error" | "noresult" | "rate" | "limit" | "pii" | "result" | "bubble";
+  | "home"
+  | "analyzing"
+  | "error"
+  | "noresult"
+  | "rate"
+  | "limit"
+  | "pii"
+  | "result"
+  | "guide"
+  | "bubble";
 
 export const CONTEXT_LABEL: Record<ContextKey, string> = {
   home: "홈 히어로",
@@ -20,6 +30,7 @@ export const CONTEXT_LABEL: Record<ContextKey, string> = {
   limit: "질문 한도 안내",
   pii: "가린 문장 확인",
   result: "결과 머리 아이콘",
+  guide: "안내 챗봇 첫 인사",
   bubble: "말풍선 카드",
 };
 
@@ -29,7 +40,7 @@ export const MOOD_CONTEXTS: Record<MascotMood, ContextKey[]> = {
   thinking: ["analyzing", "bubble"],
   done: ["result", "bubble"],
   ask: ["pii", "bubble"],
-  curious: ["bubble"],
+  curious: ["guide", "bubble"],
   sorry: ["noresult", "rate", "limit", "bubble"],
   error: ["error", "bubble"],
   calm: ["bubble"],
@@ -135,6 +146,15 @@ export function MascotContext({ context, mood }: { context: ContextKey; mood: Ma
           </div>
           <div className="bg-soft mt-4 h-3 w-2/3 rounded-full" />
           <div className="bg-soft mt-2 h-3 w-1/2 rounded-full" />
+        </div>
+      );
+    case "guide":
+      // GuideBot의 실제 첫 화면 (대화 영역 바탕·폭만 같은 모양으로 감싼다)
+      return (
+        <div className="flex justify-center py-2">
+          <div className="border-line bg-bg w-full max-w-[380px] space-y-4 rounded-[20px] border px-4 py-4">
+            <GuideIntro />
+          </div>
         </div>
       );
     case "bubble": {

@@ -166,24 +166,7 @@ export function GuideBot() {
             aria-busy={typing}
             className="bg-bg relative flex-1 space-y-4 overflow-y-auto px-4 py-4"
           >
-            <div className="flex flex-col items-center gap-1 pb-1 text-center">
-              <HamzziJudge size={64} mood="curious" interactive={false} />
-              <p className="text-muted text-[13px]">
-                햄찌는 AI 캐릭터예요 · 실제 판사·변호사가 아니에요
-              </p>
-              <Link
-                href="/me"
-                onClick={closeForLink}
-                className="text-link text-[13px] underline underline-offset-2"
-              >
-                햄찌 버튼 끄기는 마이페이지에서
-              </Link>
-            </div>
-            <BotRow>
-              <Bubble>
-                <p>{GREETING}</p>
-              </Bubble>
-            </BotRow>
+            <GuideIntro onLinkClick={closeForLink} />
 
             {entries.map((e) => {
               const isLast = e === last;
@@ -252,6 +235,30 @@ export function GuideBot() {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+/** 챗봇 첫 화면: 궁금함 상태 햄찌 + AI 캐릭터 표기 + 첫 인사 (편집기 미리보기에서도 쓴다) */
+export function GuideIntro({ onLinkClick }: { onLinkClick?: () => void }) {
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1 pb-1 text-center">
+        <HamzziJudge size={64} mood="curious" interactive={false} />
+        <p className="text-muted text-[13px]">햄찌는 AI 캐릭터예요 · 실제 판사·변호사가 아니에요</p>
+        <Link
+          href="/me"
+          onClick={onLinkClick}
+          className="text-link text-[13px] underline underline-offset-2"
+        >
+          햄찌 버튼 끄기는 마이페이지에서
+        </Link>
+      </div>
+      <BotRow>
+        <Bubble>
+          <p>{GREETING}</p>
+        </Bubble>
+      </BotRow>
     </>
   );
 }
