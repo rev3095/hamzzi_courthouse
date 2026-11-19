@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 제품 요구사항
 - PRD: `docs/PRD.md` — 구현 전에 해당 **F-ID 절만** 읽는다. 전체를 읽지 않는다.
 - 현재 단계: **Phase 1** (F-001~F-007, F-013) + F-014 절차 안내 데모판(DEC-021) + 문서 작성 `[게이트]`(DEC-022). 그 밖의 Phase 2 기능은 지시가 있을 때만 작업한다. 진행 상황은 `git log`와 PRD 0절을 본다.
-- 지금은 **데모**를 먼저 만든다 (DEC-009~013): 판례·법령은 korean-law-mcp 실시간 조회, 결과 형식은 참고 프로토타입과 같게, 비로그인 3회.
+- 지금은 **데모**를 먼저 만든다 (DEC-009~013): 판례·법령은 korean-law-mcp 실시간 조회, 결과 형식은 참고 프로토타입과 같게, 비로그인 하루 횟수 제한(절대 규칙 7).
 - 절대 규칙 (PRD 3·8·10장 요약):
   1. 검증 근거에 없는 판례·조문·사건번호는 출력하지 않는다. 렌더링 전에 대조한다 (F-005). 데모의 검증 근거는 그 요청에서 법제처로부터 가져온 자료이고, 인용 구절 원문 일치와 `verify_citations` 재조회를 통과해야 한다 (DEC-009).
   2. 승소·처벌·해결 가능성을 확정 표현하지 않는다. "반드시", "무조건", "100%" 금지 (N1). **승률·성공 확률·유불리를 판단하는 기능·숫자·문구·게이지는 만들지 않는다** — 자리표시로도 넣지 않는다(사용자 재확인 2026-11-15). 허용: 단계별 "혼자 가능 / 전문가 권장" 라벨(DEC-002)과 "근거 판례 n건 · 관련 조문 n개" 같은 사실 표시.
@@ -59,6 +59,8 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | 린트 / 타입 / 포맷 | `pnpm lint` / `pnpm typecheck` / `pnpm format`. `typecheck`는 `next typegen`(라우트 타입 생성)을 먼저 실행한다. `tsc`를 직접 돌릴 때만 typegen을 따로 실행한다 |
 | 문서 교차 검증 | `pnpm docs:check` (docs 수정 후 항상) |
 | AI 평가 | `pnpm eval:demo` — **유료**(Claude 생성 호출). 절대 규칙 8에 따라 사용자 허락 없이 실행 금지 |
+| 예시 답변 만들기·반영 | `scripts/gen-examples.mjs` — **유료**(질문마다 Opus 답변 + Haiku 해석, 관리자 모드 서버 대상, 사용법은 파일 머리말). 사용자 허락 없이 실행 금지. 반영은 무료 `python -X utf8 scripts/merge_examples.py`(검증 통과 문단만 `lib/demo/examples.json`·카테고리에 넣는다) |
+| 배포 사이트 실답변 비교 | `scripts/live-compare.mjs` — **유료**(배포 사이트 실제 질문 1건). 사용자 허락 후 1회만 |
 | Android 앱(TWA) | `pnpm android:version` / `pnpm android:bump patch "변경 내용"` / `pnpm android:build` — 웹 업데이트는 앱 재빌드 불필요, 앱 껍데기를 바꿀 때만 버전을 올린다 (docs/08 3.3절) |
 | 수집기 테스트 | `pnpm collector:test` (pytest + ruff) |
 | 수집기 테스트 일부 | `cd collector && uv run pytest tests/test_prec.py -k 중복` |
@@ -94,7 +96,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 역할은 토큰이 아니라 서버가 `profiles.role`을 읽어 판단한다 (`getActor`·`requireRole`, lib/auth/server.ts). 비로그인은 `hz_anon` 쿠키 = `anon_sessions.id` (lib/auth/anon.ts).
 - 게이트: Phase 2 엔드포인트 맨 앞에서 `requireFeature(key)`. 상태 변경은 DB 함수 `change_feature_gate`로만 가능하고(트리거가 직접 수정 차단), `gate_changes`·`audit_logs`는 append-only.
 - 질문 입력: `scanInput` → 민감정보 가능성이 있으면 동의 전 저장하지 않고 409 → 마스킹본만 저장(`pii_findings` = `{findings, confirmedAt}`) → pii-confirmation → 분석.
-- 비로그인 횟수: POST /inquiries는 3회를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 하루 3회(`quota_day`, 한국 시간) + 같은 IP 해시 24시간 10회, `anon_usage`). `questions_used`를 직접 update하지 않는다. 관리자 모드(`hz_admin` 서명 쿠키, `lib/auth/admin-*`)면 `resolveOwner`가 `admin: true`를 붙이고 `countsAnonQuota`가 false라 검사·차감을 모두 건너뛴다. 예시 질문(`findExample`, lib/demo/policy.ts)은 두 라우트가 사전 검사를 건너뛰고 `finishAnalysis(…, { consumeAnonQuota: false })`로 저장만 한다(DEC-027) — 홈 화면도 같은 기준으로 3회를 다 써도 예시를 연다.
+- 비로그인 횟수: POST /inquiries는 하루 횟수를 다 썼는지 보기만 하고(`assertAnonQuota`), analyze는 모델 전에 세션·IP 상한을 미리 보고(`assertAnonQuota`·`assertAnonIpAvailable`), 차감은 분석·검증 성공 후 `finishAnalysis` → DB 함수 `finish_demo_analysis`가 결과 저장과 한 트랜잭션으로 `consume_anon_question`을 부른다(세션 하루 `ANON_QUESTION_LIMIT`회(`quota_day`, 한국 시간) + 같은 IP 해시 `ANON_IP_WINDOW` 동안 `ANON_IP_DAILY_LIMIT`회, `anon_usage`). 한도 숫자는 lib/inquiries/policy.ts 상수가 DB 함수 인자(`p_session_limit`·`p_ip_limit`)로 넘어가므로, 바꿀 때 마이그레이션은 필요 없고 문서에 숫자를 따로 적지 않는다. `questions_used`를 직접 update하지 않는다. 관리자 모드(`hz_admin` 서명 쿠키, `lib/auth/admin-*`)면 `resolveOwner`가 `admin: true`를 붙이고 `countsAnonQuota`가 false라 검사·차감을 모두 건너뛴다. 예시 질문(`findExample`, lib/demo/policy.ts)은 두 라우트가 사전 검사를 건너뛰고 `finishAnalysis(…, { consumeAnonQuota: false })`로 저장만 한다(DEC-027) — 홈 화면도 같은 기준으로 하루 횟수를 다 써도 예시를 연다.
 - 분석 모드: `lib/inquiries/analyze.ts`가 `aiMode()`(lib/ai/mode.ts)로 갈린다. free 또는 예시 질문 또는 주간 상한(`tryAiQuota(단계 가중치)`, lib/auth/rate-limit.ts · 금액은 lib/ai/models.ts) 초과 → `runFreeAnalysis`(lib/demo, Claude 없음). 그 밖에는 요청 본문의 `tier`(없으면 Pro)로 `runLiteAnalysis`(lib/ai/lite.ts: 질문 해석 Haiku 1회(DEC-033: 섹션 라벨 + 검색어, 같은 질문 1건 상한 안) → `freeSearch` → 그 단계 모델 답변 1회, 조문 6·판례 3건) + `verifyDraft`. `createModelClient`는 free에서 예외를 내고 SDK 재시도는 0(이중 과금 방지). 전체 파이프라인 `runDemoAnalysis`는 코드에 남아 있지만 분석 경로에서 쓰지 않는다(DEC-036).
 - 내 질문 기록(DEC-039): 로그인은 배포된 DEC-035(lib/client/login.ts, 마이페이지 components/me/MyPage)를 쓴다. 기록 남기기 선택은 lib/client/save.ts(`hz:save`)·components/ask/SaveToggle, 목록은 components/MyInquiries(`GET /me/inquiries`). `save: true`는 로그인 사용자 질문에만 `inquiries.saved`로 남는다.
 - DeepSearch(DEC-038): 홈 질문창의 버튼 → `components/ask/DeepAsk`(양식·직접 입력). 칸 구성·합치기·보내기 전 점검은 lib/inquiries/deep.ts 순수 규칙이고 **점검에 모델을 쓰지 않는다**. 보내는 길은 일반 질문과 같고(`useAsk.send`), analyze 본문 `deep: true`면 근거만 조문 8·판례 4건까지 넓힌다(비용 상한 그대로). 서버는 DEC-041대로 `runDeepAnalysis`(lib/ai/deep.ts: Haiku 구조화 1회 → 쟁점별 법제처 검색 → 고른 단계 답변 1회, 상한 2배 `TIERS[tier].deep`)를 쓰고, 구조 거르기·화면용 사건 구조는 lib/ai/deep-policy.ts 순수 규칙이다. 시각자료(components/result/DeepMapView: 사건 구조도·사실관계 흐름·쟁점별 근거·확인할 사실)는 결과의 `deep`과 검증된 문단으로 코드가 그리며 모델을 더 부르지 않는다.
