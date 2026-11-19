@@ -2,16 +2,16 @@
   "id": "loan-01",
   "category": "loan",
   "question": "친구에게 사업 자금으로 500만 원을 빌려줬어요. 차용증은 없고 계좌이체 내역과 갚겠다는 메신저 대화만 있어요. 갚기로 한 날짜가 반년이나 지났는데 계속 미루기만 해요. 돈을 돌려받으려면 어떻게 해야 하나요?",
-  "at": "2026-11-19T03:43:01.065Z",
-  "elapsedMs": 25530,
+  "at": "2026-11-19T04:16:47.464Z",
+  "elapsedMs": 23756,
   "meta": {
     "model": "claude-opus-5-5",
-    "prompt_version": "lite-2026-11-18-understand",
-    "tokens_in": 10051,
-    "tokens_out": 1673,
-    "latency_ms": 24634
+    "prompt_version": "lite-2026-11-19-lawname",
+    "tokens_in": 8938,
+    "tokens_out": 1594,
+    "latency_ms": 22679
   },
-  "costUsdUpperEstimate": 0.07366,
+  "costUsdUpperEstimate": 0.06763,
   "result": {
     "outcome": "grounded",
     "aiNotice": "AI 생성 · 법률 자문 아님",
@@ -19,86 +19,90 @@
       "area": "",
       "goal": "",
       "laws": [
-        "법인세법 시행령",
-        "법원보관금취급규칙",
-        "자동차손해배상 보장법",
-        "우편환법 시행규칙",
-        "우편대체법 시행규칙"
+        "민법",
+        "민사소송법",
+        "소송촉진 등에 관한 특례법"
       ],
       "lawKeywords": [
         "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
         "대여금",
-        "대여금 계좌이체 변제 약정",
-        "대여금 청구 메신저 대화 입증"
+        "대여금 반환청구 계좌이체 메신저 대화",
+        "금전소비대차 차용증 없음 입증"
       ]
     },
     "section": "money",
     "answer": {
       "points": [
         {
-          "text": "이번에 찾은 자료에는 빌려준 돈을 돌려받는 절차를 직접 정한 조문이 없어요. 그래서 질문과 가장 가까운 대법원 '대여금' 판례로 설명할게요. 이 판례는 소멸시효기간이 같은 여러 채무라면, 특별한 사정이 없는 한 갚기로 한 날(이행기)이 먼저 온 채무의 시효가 먼저 끝난다고 봤어요. 약속한 날이 이미 지났다면 시효를 관리하는 것이 중요할 수 있어요.",
-          "source": "case:2025다215255",
-          "quote": "이행기가 먼저 도래하는 채무가 소멸시효도 먼저 완성된다",
+          "text": "민법은 돈을 빌려주고 같은 금액을 돌려받기로 서로 약정하는 것을 '소비대차'라고 하며, 이 약정으로 효력이 생긴다고 정하고 있습니다. 조문에는 차용증 같은 서면을 요건으로 적고 있지 않습니다. 다만 실제로 약정이 있었는지는 따로 증명해야 할 수 있습니다.",
+          "source": "law:민법:제598조",
+          "quote": "상대방은 그와 같은 종류, 품질 및 수량으로 반환할 것을 약정함으로써 그 효력이 생긴다",
           "check": "verified"
         },
         {
-          "text": "같은 판례는 소멸시효가 끝났는지와 그 효력이 시효 중단이나 시효 이익 포기 같은 나중 사정에 따라 달라질 수 있다고 했어요. 친구분이 갚겠다고 한 메신저 대화가 이런 사정에 해당하는지는 이 자료만으로 판단하기 어려워요. 대화 내용과 날짜를 잘 보관해 두시는 게 좋겠어요.",
-          "source": "case:2025다215255",
-          "quote": "소멸시효가 중단되거나 시효의 이익을 포기하는 등 사후적 사정에 따라",
+          "text": "빌린 사람은 약정한 반환 시기에 갚아야 합니다. 말씀하신 대로 갚기로 한 날짜가 정해져 있었다면 그날이 반환 시기가 됩니다. 반대로 반환 시기를 정하지 않았다면, 빌려준 사람이 상당한 기간을 정해 반환을 요구(최고)해야 합니다.",
+          "source": "law:민법:제603조",
+          "quote": "차주는 약정시기에 차용물과 같은 종류, 품질 및 수량의 물건을 반환하여야 한다",
           "check": "verified"
         },
         {
-          "text": "이 판례에서는 한 채권자에게 여러 채무를 진 사람이 어느 채무에 쓸지 정하지 않고 일부만 갚은 경우를 다뤘어요. 법원은 이런 일부 변제를 원칙적으로 모든 채무에 대한 승인으로 보고, 소멸시효가 중단될 수 있다고 판단했어요. 다만 이 사건은 채무가 여러 개였던 사안이라 질문하신 상황과는 사실관계가 달라요.",
-          "source": "case:2025다215255",
-          "quote": "모든 채무에 대한 승인으로서 소멸시효 중단의 효력이 있는지 여부(원칙적 적극)",
+          "text": "정해진 금액의 돈을 달라는 청구라면 채권자가 법원에 신청해 '지급명령'을 받는 절차를 이용할 수 있습니다. 이는 일반 소송과 별도로 법이 정해 둔 절차입니다. 실제로 어떤 절차가 사안에 맞는지는 법원 안내나 전문가를 통해 확인해 보시는 것이 좋습니다.",
+          "source": "law:민사소송법:제462조",
+          "quote": "법원은 채권자의 신청에 따라 지급명령을 할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "다만 지급명령에는 제한이 있습니다. 상대방에게 국내에서 공시송달 외의 방법으로 서류를 보낼 수 있는 경우에만 이용할 수 있습니다. 친구의 주소 등을 알 수 없어 공시송달로만 서류를 보낼 수 있는 상황이라면 이 절차를 이용하기 어려울 수 있습니다.",
+          "source": "law:민사소송법:제462조",
+          "quote": "대한민국에서 공시송달 외의 방법으로 송달할 수 있는 경우에 한한다",
           "check": "verified"
         }
       ]
     },
     "articles": [
       {
-        "id": "law:법인세법시행령:제51조",
-        "lawName": "법인세법 시행령",
-        "articleNo": "제51조",
-        "title": "채권자가 불분명한 사채이자등의 범위",
-        "effectiveFrom": "2026-10-01",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%95%EC%9D%B8%EC%84%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C51%EC%A1%B0",
-        "used": false
+        "id": "law:민법:제598조",
+        "lawName": "민법",
+        "articleNo": "제598조",
+        "title": "소비대차의 의의",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C598%EC%A1%B0",
+        "used": true
       },
       {
-        "id": "law:법원보관금취급규칙:제30조",
-        "lawName": "법원보관금취급규칙",
-        "articleNo": "제30조",
-        "title": "준용규정",
-        "effectiveFrom": "2026-06-25",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%95%EC%9B%90%EB%B3%B4%EA%B4%80%EA%B8%88%EC%B7%A8%EA%B8%89%EA%B7%9C%EC%B9%99/%EC%A0%9C30%EC%A1%B0",
-        "used": false
+        "id": "law:민법:제603조",
+        "lawName": "민법",
+        "articleNo": "제603조",
+        "title": "반환시기",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C603%EC%A1%B0",
+        "used": true
       },
       {
-        "id": "law:자동차손해배상보장법:제11조",
-        "lawName": "자동차손해배상 보장법",
-        "articleNo": "제11조",
-        "title": "피해자에 대한 가불금",
+        "id": "law:민사소송법:제462조",
+        "lawName": "민사소송법",
+        "articleNo": "제462조",
+        "title": "적용의 요건",
         "effectiveFrom": "2026-10-02",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%90%EB%8F%99%EC%B0%A8%EC%86%90%ED%95%B4%EB%B0%B0%EC%83%81%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C11%EC%A1%B0",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C462%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:소송촉진등에관한특례법:제20조의2",
+        "lawName": "소송촉진 등에 관한 특례법",
+        "articleNo": "제20조의2",
+        "title": "공시송달에 의한 지급명령",
+        "effectiveFrom": "2026-06-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%86%8C%EC%86%A1%EC%B4%89%EC%A7%84%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C20%EC%A1%B0%EC%9D%982",
         "used": false
       },
       {
-        "id": "law:우편환법시행규칙:제34조",
-        "lawName": "우편환법 시행규칙",
-        "articleNo": "제34조",
-        "title": "온라인환증서의 반환",
-        "effectiveFrom": "2025-02-25",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9A%B0%ED%8E%B8%ED%99%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C34%EC%A1%B0",
-        "used": false
-      },
-      {
-        "id": "law:우편대체법시행규칙:제21조",
-        "lawName": "우편대체법 시행규칙",
-        "articleNo": "제21조",
-        "title": "지급의 청구",
-        "effectiveFrom": "2025-02-25",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9A%B0%ED%8E%B8%EB%8C%80%EC%B2%B4%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C21%EC%A1%B0",
+        "id": "law:민사소송법:제184조",
+        "lawName": "민사소송법",
+        "articleNo": "제184조",
+        "title": "송달받을 장소의 신고",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C184%EC%A1%B0",
         "used": false
       }
     ],
@@ -111,26 +115,26 @@
         "decidedAt": "2026-02-26",
         "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618179",
         "fromBody": false,
-        "used": true
+        "used": false
       },
       {
-        "id": "619493",
-        "caseNo": "2023나20705",
-        "caseName": "업무대행자 지위 확인 등",
-        "court": "수원고등법원",
-        "decidedAt": "2025-10-23",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619493",
+        "id": "226935",
+        "caseNo": "2021노14",
+        "caseName": "자본시장과금융투자업에관한법률위반·보조금관리에관한법률위반·업무상횡령·사기·허위작성공문서행사·금융실명거래및비밀보장에관한법률위반·범죄수익은닉의규제및처벌등에관한법률위반·업무방해·위계공무집행방해·위조사문서행사·증거은닉교사·증거인멸교사·증거위조교사·사문서위조·위조공문서행사(인정된죄명허위작성공문서행사)",
+        "court": "서울고등법원",
+        "decidedAt": "2021-08-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226935",
         "fromBody": true,
         "used": false
       },
       {
-        "id": "220037",
-        "caseNo": "2021노345",
-        "caseName": "자본시장과금융투자업에관한법률위반·증거은닉교사·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·사문서위조·위조사문서행사·주식회사등의외부감사에관한법률위반·사기",
-        "court": "서울고등법원",
-        "decidedAt": "2021-08-10",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=220037",
-        "fromBody": true,
+        "id": "238437",
+        "caseNo": "2019나10609",
+        "caseName": "대여금",
+        "court": "전주지법",
+        "decidedAt": "2023-11-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238437",
+        "fromBody": false,
         "used": false
       },
       {
@@ -144,12 +148,12 @@
         "used": false
       },
       {
-        "id": "624107",
-        "caseNo": "2024고합511, 2024고합587(병합), 2024고합637(병합), 2024고합805(병합), 2024고합807(병합)",
-        "caseName": "특정범죄가중처벌등에관한법률위반(뇌물)·범죄수익은닉의규제및처벌등에관한법률위반·뇌물공여·범죄수익은닉의규제및처벌등에관한법률위반방조·산림기술진흥및관리에관한법률위반·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·특정범죄가중처벌등에관한법률위반(알선수재)·업무상횡령방조",
-        "court": "대구지방법원",
-        "decidedAt": "2025-07-25",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624107",
+        "id": "220037",
+        "caseNo": "2021노345",
+        "caseName": "자본시장과금융투자업에관한법률위반·증거은닉교사·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·사문서위조·위조사문서행사·주식회사등의외부감사에관한법률위반·사기",
+        "court": "서울고등법원",
+        "decidedAt": "2021-08-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=220037",
         "fromBody": true,
         "used": false
       }
@@ -164,12 +168,12 @@
         "total": 4
       },
       {
-        "keyword": "대여금 계좌이체 변제 약정",
-        "total": 6
+        "keyword": "대여금 반환청구 계좌이체 메신저 대화",
+        "total": 4
       },
       {
-        "keyword": "대여금 청구 메신저 대화 입증",
-        "total": 6
+        "keyword": "금전소비대차 차용증 없음 입증",
+        "total": 2
       }
     ],
     "trace": [],
@@ -179,7 +183,15 @@
       "ok": true,
       "items": [
         {
-          "citation": "2025다215255",
+          "citation": "민법 제598조",
+          "exists": true
+        },
+        {
+          "citation": "민법 제603조",
+          "exists": true
+        },
+        {
+          "citation": "민사소송법 제462조",
           "exists": true
         }
       ],

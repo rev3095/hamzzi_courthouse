@@ -23,6 +23,7 @@ import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
+import { DeepMapView } from "./DeepMapView";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 import { ProcedureTimeline } from "./ProcedureTimeline";
 import {
@@ -99,6 +100,8 @@ export function ResultPanel({
       </div>
 
       <SummaryStrip result={result} plan={plan} />
+
+      {result.deep && <DeepMapView result={result} />}
 
       {hasTimeline(plan) ? (
         <>

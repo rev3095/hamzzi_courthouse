@@ -177,6 +177,10 @@ type DemoAnalysisResult = {
   trace: { round: 1|2|3; tool: "law" | "precedent"; query: string; added: string[] }[];   // AI가 더 찾아본 것
   recheck: { ok: boolean; items: { citation: string; exists: boolean; note?: string }[]; removed: number }; // verify_citations 결과(검증 탭). items는 남은 문단이 쓴(실존 확인된) 인용만, ok = 실존 미확인으로 뺀 문단이 없음, removed = 검증·1차 거르기에서 뺀 문단 수(내용은 내보내지 않음, DEC-014)
   searchScopeNote: string;
+  deep?: { parties: { label: string; role: string }[];        // DEC-041 DeepSearch 사건 구조 (시각자료의 재료). 사용자가 적은 사실만
+           events: { when: string; who: string; what: string }[]; // 사연에 적힌 순서
+           issues: { title: string; points: number[] }[];        // 쟁점과 그 쟁점에 답한 answer.points 순번(검증을 통과해 남은 것만)
+           unknowns: string[] };                                  // 답이 달라질 수 있는데 사연에 없는 사실
   procedureHint?:                                   // DEC-037: 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만). 없으면 생략
     | { kind: "track"; track: string }               // 검증해 둔 기존 타임라인 키
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };

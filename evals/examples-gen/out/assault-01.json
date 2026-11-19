@@ -2,16 +2,16 @@
   "id": "assault-01",
   "category": "assault",
   "question": "술집에서 처음 보는 사람이 시비를 걸다가 제 얼굴을 주먹으로 때렸어요. 다쳐서 치료를 받았고 진단서도 받았어요. 가해자가 처벌받게 하고 치료비도 받으려면 어떻게 해야 하나요?",
-  "at": "2026-11-19T03:45:17.581Z",
-  "elapsedMs": 25730,
+  "at": "2026-11-19T04:17:09.593Z",
+  "elapsedMs": 22125,
   "meta": {
     "model": "claude-opus-5-5",
-    "prompt_version": "lite-2026-11-18-understand",
-    "tokens_in": 9357,
-    "tokens_out": 2101,
-    "latency_ms": 25278
+    "prompt_version": "lite-2026-11-19-lawname",
+    "tokens_in": 7331,
+    "tokens_out": 1706,
+    "latency_ms": 21626
   },
-  "costUsdUpperEstimate": 0.07945,
+  "costUsdUpperEstimate": 0.06344,
   "result": {
     "outcome": "grounded",
     "aiNotice": "AI 생성 · 법률 자문 아님",
@@ -19,36 +19,75 @@
       "area": "",
       "goal": "",
       "laws": [
-        "국가배상법",
-        "범죄피해자 보호법 시행령",
-        "범죄피해자 보호법 시행규칙"
+        "형법",
+        "민법",
+        "범죄피해자 보호법 시행령"
       ],
       "lawKeywords": [
         "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "상해 손해배상(기)",
         "폭행 상해 손해배상",
-        "폭행 상해 치료비 손해배상",
-        "폭행죄 상해죄 진단서 피해자"
+        "폭행죄 상해 진단서 치료비"
       ]
     },
     "section": "assault",
     "answer": {
       "points": [
         {
-          "text": "범죄피해자 보호법 시행령은 피해자 구조와 관련된 '중상해'의 기준을 정하고 있습니다. 주요 장기 손상, 신체 절단·변형 등에 해당하면서 치료에 필요한 기간이 2개월 이상이어야 합니다. 진단서에 적힌 부상 정도와 치료기간이 이 기준에 해당하는지 따로 확인이 필요합니다.",
-          "source": "law:범죄피해자보호법시행령:제3조",
-          "quote": "해당 부상이나 질병을 치료하는 데에 필요한 기간이 2개월 이상인 경우를 말한다",
+          "text": "주먹으로 얼굴을 맞아 다치셨다면 형법 제257조 제1항의 상해죄가 문제될 수 있습니다. 이 조문은 사람의 신체를 상해한 사람을 7년 이하의 징역, 10년 이하의 자격정지 또는 1천만원 이하의 벌금에 처하도록 정하고 있습니다. 실제로 상해로 인정될지는 수사기관과 법원이 진단서 등 자료를 보고 판단합니다.",
+          "source": "law:형법:제257조",
+          "quote": "사람의 신체를 상해한 자는 7년 이하의 징역, 10년 이하의 자격정지",
+          "check": "verified"
+        },
+        {
+          "text": "상해가 아니라 폭행으로만 판단되면 형법 제260조 제1항이 적용될 수 있고, 2년 이하의 징역, 500만원 이하의 벌금, 구류 또는 과료가 정해져 있습니다. 폭행죄는 피해자가 처벌을 원하지 않는다는 뜻을 분명히 밝히면 공소를 제기할 수 없으니, 합의 과정에서 처벌불원 의사를 밝힐지 신중히 정하시는 것이 좋습니다.",
+          "source": "law:형법:제260조",
+          "quote": "제1항 및 제2항의 죄는 피해자의 명시한 의사에 반하여 공소를 제기할 수 없다.",
+          "check": "verified"
+        },
+        {
+          "text": "치료비는 형사처벌과 별개로 민법 제750조의 불법행위 손해배상으로 가해자에게 청구할 수 있습니다. 고의나 과실에 의한 위법행위로 손해를 입힌 사람은 그 손해를 배상할 책임이 있다고 정하고 있으므로, 치료비 영수증과 진단서 등 손해를 보여주는 자료를 잘 보관해 두시는 것이 도움이 됩니다.",
+          "source": "law:민법:제750조",
+          "quote": "고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를 배상할 책임이 있다",
           "check": "verified"
         }
       ]
     },
     "articles": [
       {
-        "id": "law:국가배상법:제3조",
-        "lawName": "국가배상법",
-        "articleNo": "제3조",
-        "title": "배상기준",
-        "effectiveFrom": "2025-01-07",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EA%B0%80%EB%B0%B0%EC%83%81%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+        "id": "law:형법:제257조",
+        "lawName": "형법",
+        "articleNo": "제257조",
+        "title": "상해, 존속상해",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C257%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제260조",
+        "lawName": "형법",
+        "articleNo": "제260조",
+        "title": "폭행, 존속폭행",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C260%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제750조",
+        "lawName": "민법",
+        "articleNo": "제750조",
+        "title": "불법행위의 내용",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C750%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제751조",
+        "lawName": "민법",
+        "articleNo": "제751조",
+        "title": "재산 이외의 손해의 배상",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C751%EC%A1%B0",
         "used": false
       },
       {
@@ -58,33 +97,6 @@
         "title": "장해의 기준",
         "effectiveFrom": "2026-10-02",
         "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%94%EC%A3%84%ED%94%BC%ED%95%B4%EC%9E%90%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C2%EC%A1%B0",
-        "used": false
-      },
-      {
-        "id": "law:6ㆍ25전쟁납북피해진상규명및납북피해자명예회복에관한법률시행령:제16조",
-        "lawName": "6ㆍ25전쟁 납북피해 진상규명 및 납북피해자 명예회복에 관한 법률 시행령",
-        "articleNo": "제16조",
-        "title": "공고",
-        "effectiveFrom": "2026-08-28",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/6%E3%86%8D25%EC%A0%84%EC%9F%81%20%EB%82%A9%EB%B6%81%ED%94%BC%ED%95%B4%20%EC%A7%84%EC%83%81%EA%B7%9C%EB%AA%85%20%EB%B0%8F%20%EB%82%A9%EB%B6%81%ED%94%BC%ED%95%B4%EC%9E%90%20%EB%AA%85%EC%98%88%ED%9A%8C%EB%B3%B5%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C16%EC%A1%B0",
-        "used": false
-      },
-      {
-        "id": "law:범죄피해자보호법시행령:제3조",
-        "lawName": "범죄피해자 보호법 시행령",
-        "articleNo": "제3조",
-        "title": "중상해의 기준",
-        "effectiveFrom": "2026-10-02",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%94%EC%A3%84%ED%94%BC%ED%95%B4%EC%9E%90%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C3%EC%A1%B0",
-        "used": true
-      },
-      {
-        "id": "law:범죄피해자보호법시행규칙:제4조",
-        "lawName": "범죄피해자 보호법 시행규칙",
-        "articleNo": "제4조",
-        "title": "손해배상청구권 대위행사의 통지",
-        "effectiveFrom": "2026-10-02",
-        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%94%EC%A3%84%ED%94%BC%ED%95%B4%EC%9E%90%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C4%EC%A1%B0",
         "used": false
       }
     ],
@@ -100,26 +112,6 @@
         "used": false
       },
       {
-        "id": "233327",
-        "caseNo": "2014나1487, 2014나1494(병합), 2014나1500(병합)",
-        "caseName": "손해배상(기)·손해배상(기)·손해배상(기)",
-        "court": "서울고등법원",
-        "decidedAt": "2016-05-13",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=233327",
-        "fromBody": true,
-        "used": false
-      },
-      {
-        "id": "613335",
-        "caseNo": "2023고단993, 2023고단1750(병합), 2024고단291(병합), 2023초기946",
-        "caseName": "재물손괴·폭행·상해·스토킹범죄의처벌등관한법률위반·성폭력범죄의처벌등에관한특례법위반(통신매체이용음란)·도로교통법위반(음주운전)·배상명령신청",
-        "court": "서울서부지방법원",
-        "decidedAt": "2024-05-16",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613335",
-        "fromBody": true,
-        "used": false
-      },
-      {
         "id": "185694",
         "caseNo": "2016도21075",
         "caseName": "특정경제범죄가중처벌등에관한법률위반(사기)·사기·폭력행위등처벌에관한법률위반(공동상해)·폭력행위등처벌에관한법률위반(공동폭행)·자동차관리법위반·자동차손해배상보장법위반·특정범죄가중처벌등에관한법률위반(도주차량)·도로교통법위반(사고후미조치)·도로교통법위반(음주측정거부)·범인도피교사",
@@ -130,12 +122,32 @@
         "used": false
       },
       {
-        "id": "614565",
-        "caseNo": "2013가단9021",
+        "id": "616527",
+        "caseNo": "2023다285162",
+        "caseName": "손해배상(국)",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "614503",
+        "caseNo": "2025가단75932",
+        "caseName": "구상금",
+        "court": "서울중앙지법",
+        "decidedAt": "2025-07-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614503",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "614371",
+        "caseNo": "2025다211430",
         "caseName": "손해배상(기)",
-        "court": "대구지법",
-        "decidedAt": "2015-04-03",
-        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614565",
+        "court": "대법원",
+        "decidedAt": "2025-12-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614371",
         "fromBody": false,
         "used": false
       }
@@ -146,30 +158,38 @@
         "total": 5
       },
       {
+        "keyword": "상해 손해배상(기)",
+        "total": 6
+      },
+      {
         "keyword": "폭행 상해 손해배상",
         "total": 6
       },
       {
-        "keyword": "폭행 상해 치료비 손해배상",
-        "total": 6
-      },
-      {
-        "keyword": "폭행죄 상해죄 진단서 피해자",
-        "total": 6
+        "keyword": "폭행죄 상해 진단서 치료비",
+        "total": 0
       }
     ],
     "trace": [],
     "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
     "mode": "ai",
     "recheck": {
-      "ok": false,
+      "ok": true,
       "items": [
         {
-          "citation": "범죄피해자 보호법 시행령 제3조",
+          "citation": "형법 제257조",
+          "exists": true
+        },
+        {
+          "citation": "형법 제260조",
+          "exists": true
+        },
+        {
+          "citation": "민법 제750조",
           "exists": true
         }
       ],
-      "removed": 2
+      "removed": 1
     }
   }
 }

@@ -15,6 +15,11 @@ type Env = Record<string, string | undefined>;
  *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서). Opus $0.15는 상한이고 실측 전이다(추정 $0.05~0.09).
  * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위와 같아야 한다 (단위 테스트가 확인)
  */
+/*
+ * deep: DeepSearch(DEC-041)일 때의 상한 — 일반 질문의 2배. 구조화(Haiku) 1회 + 쟁점별 검색(무료) + 쟁점별 답변 1회라
+ * 근거(조문 10·판례 5까지)와 문단(쟁점마다 최대 3개)이 늘어난다. Opus는 생각 + 답변을 7,000토큰으로 묶는다.
+ * 추정: Haiku 입력 15,000($0.0015)+출력 2,400($0.0012) · Sonnet $0.03+$0.024 · Opus $0.06+$0.14. 가중치 = 상한 ÷ 단위.
+ */
 export const TIERS = {
   light: {
     label: "Light",
@@ -25,6 +30,7 @@ export const TIERS = {
     answerTokens: { max: 1_200, min: 700 },
     timeoutMs: 25_000,
     weight: 1,
+    deep: { capUsd: 0.003, answerTokens: { max: 2_400, min: 1_200 }, timeoutMs: 40_000, weight: 2 },
   },
   pro: {
     label: "Pro",
@@ -35,6 +41,7 @@ export const TIERS = {
     answerTokens: { max: 1_200, min: 700 },
     timeoutMs: 25_000,
     weight: 20,
+    deep: { capUsd: 0.06, answerTokens: { max: 2_400, min: 1_200 }, timeoutMs: 45_000, weight: 40 },
   },
   max: {
     label: "Pro Max",
@@ -45,6 +52,7 @@ export const TIERS = {
     answerTokens: { max: 5_000, min: 2_000 },
     timeoutMs: 60_000,
     weight: 100,
+    deep: { capUsd: 0.3, answerTokens: { max: 7_000, min: 3_000 }, timeoutMs: 75_000, weight: 200 },
   },
 } as const;
 

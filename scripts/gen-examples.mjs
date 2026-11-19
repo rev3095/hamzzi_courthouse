@@ -21,11 +21,15 @@ if (!passcode) {
 const DIR = "evals/examples-gen";
 const OUT = `${DIR}/out`;
 mkdirSync(OUT, { recursive: true });
-const { questions } = JSON.parse(readFileSync(`${DIR}/questions.json`, "utf8"));
+// 넷째 인자: 쉼표로 나눈 id 목록 (주면 그 질문만 실행한다)
+const only = process.argv[4] ? new Set(process.argv[4].split(",")) : null;
+const questions = JSON.parse(readFileSync(`${DIR}/questions.json`, "utf8")).questions.filter(
+  (q) => !only || only.has(q.id),
+);
 
 // 상한 쪽으로 어림한다: 토큰 전부를 Opus 단가로 친다 (실제로는 일부가 Haiku 질문 해석이라 더 싸다)
 const OPUS = { input: 4, output: 20 };
-const costOf = (m) => (m ? (m.tokens_in * OPUS.input + m.tokens_out * OPUS.output) / 1e6 : 0.15);
+const costOf = (m) => (m ? (m.tokens_in * OPUS.input + m.tokens_out * OPUS.output) / 1e6 : 0.3);
 
 let cookie = "";
 async function call(path, body) {
@@ -88,6 +92,8 @@ for (const q of questions) {
     const analyzed = await call(`/inquiries/${created.id}/analyze`, {
       tier: "max",
       category: q.category,
+      // DeepSearch(DEC-041) 예시는 구조화 + 쟁점별 답변으로 분석한다 (상한 2배)
+      ...(q.deep && { deep: true }),
     });
     let meta = null;
     if (db) {
@@ -133,7 +139,7 @@ for (const q of questions) {
   } catch (e) {
     failures += 1;
     // 분석 단계에서 실패했다면 과금됐을 수 있어 상한만큼 쓴 것으로 친다
-    spent += 0.15;
+    spent += 0.3;
     rows.push({ id: q.id, error: String(e.message) });
   }
   console.log(JSON.stringify(rows.at(-1)));

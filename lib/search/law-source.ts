@@ -480,7 +480,22 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
             verifyCitations(client, { text: citation, maxCitations: 1 }),
           );
           const text = res.content.map((c) => c.text).join("\n");
-          return [citation, parseStatuteVerify(citation, text)] as const;
+          const check = parseStatuteVerify(citation, text);
+          if (check.exists !== null) return [citation, check] as const;
+          // verify_citations는 긴 법령 이름(예: "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법")을 잘라 읽어
+          // 정확한 인용도 "확인 필요"로 돌려준다. 그럴 때만 그 법령의 그 조문을 법제처에서 직접 다시 가져와 본다 —
+          // 이름이 글자 그대로 같은 법령에서 조문이 나와야 실존으로 친다 (줄임말·부분 이름은 그대로 미확인)
+          const m = citation.match(/^(.+?)\s+(제\d+조(?:의\d+)?)$/);
+          if (!m) return [citation, check] as const;
+          const art = await this.getArticle(m[1], m[2]).catch(() => null);
+          const same = (a: string, b: string) =>
+            a.normalize("NFKC").replace(/\s+/g, "") === b.normalize("NFKC").replace(/\s+/g, "");
+          return [
+            citation,
+            art && same(art.lawName, m[1]) && same(art.articleNo, m[2])
+              ? { citation, exists: true }
+              : check,
+          ] as const;
         }),
       );
       return citations.map(

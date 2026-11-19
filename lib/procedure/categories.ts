@@ -58,9 +58,17 @@ export type Category = {
   caseQuery: string;
   /** 찾는 판례의 사건 종류 (법원 사건부호 기준, 설명용) */
   caseKinds: string;
+  /**
+   * 무료 법제처 조문 검색에 더하는 고정 법령과 조문 번호. 일상 낱말로 묻는 분야는 자연어 법령 검색이
+   * 엉뚱한 조문을 가져와서(2026-11-19 예시 생성: 빌려준 돈·폭행 상해), 그 분야의 기본 조문을 먼저 가져온다
+   */
+  lawHints?: LawHint[];
   /** 이 카테고리의 예시 답변 (lib/demo/examples.json id) */
   examples: string[];
 };
+
+/** 그 분야의 기본 조문. 조문 번호를 정해 두고 법제처에서 그대로 가져온다 (낱말 점수 검색은 엉뚱한 조문을 고르는 일이 있다) */
+export type LawHint = { lawName: string; articleNos: string[] };
 
 export const CATEGORIES: Record<CategoryKey, Category> = {
   lease: {
@@ -159,7 +167,11 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "money",
     caseQuery: "대여금",
     caseKinds: "민사",
-    examples: [],
+    lawHints: [
+      { lawName: "민법", articleNos: ["제598조", "제603조"] },
+      { lawName: "민사소송법", articleNos: ["제462조"] },
+    ],
+    examples: ["loan-01"],
   },
   family: {
     key: "family",
@@ -238,9 +250,13 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     placeholder: "예: 술집에서 모르는 사람에게 맞아서 병원 치료를 받았어요.",
     starters: ["모르는 사람에게 맞아서 다쳤어요. ", "가해자가 합의를 하자고 해요. "],
     track: "assault",
-    caseQuery: "폭행 상해 손해배상",
+    caseQuery: "상해 손해배상(기)",
     caseKinds: "형사·민사",
-    examples: [],
+    lawHints: [
+      { lawName: "형법", articleNos: ["제257조", "제260조"] },
+      { lawName: "민법", articleNos: ["제750조", "제751조"] },
+    ],
+    examples: ["assault-01"],
   },
   stalking: {
     key: "stalking",
@@ -282,7 +298,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "voice_phishing",
     caseQuery: "전기통신금융사기",
     caseKinds: "형사·민사",
-    examples: [],
+    examples: ["voice-phishing-01"],
   },
   crime_report: {
     key: "crime_report",

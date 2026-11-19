@@ -41,7 +41,7 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-18-understand";
+export const LITE_PROMPT_VERSION = "lite-2026-11-19-lawname";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -104,6 +104,8 @@ export async function runLiteAnalysis(
     costCapUsd?: number;
     /** 홈 카테고리의 고정 판례 검색어 (DEC-028) */
     caseHint?: string | null;
+    /** 홈 카테고리의 고정 법령·낱말 (조문 검색 보강) */
+    lawHints?: { lawName: string; articleNos: string[] }[];
     /** DeepSearch (DEC-038): 근거를 조문 8·판례 4건까지 넘겨 본다. 비용 상한은 그대로라 넘으면 뒤에서부터 뺀다 */
     deep?: boolean;
   } = {},
@@ -112,10 +114,7 @@ export async function runLiteAnalysis(
   const context = input.context ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   // 질문 해석과 답변이 질문 1건 상한 하나를 함께 쓴다 (해석이 쓴 만큼 답변 몫이 줄어든다)
-  const model = withCostCap(
-    deps.model ?? createModelClient(),
-    deps.costCapUsd ?? tier.capUsd,
-  );
+  const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.capUsd);
   let usage: Usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
 
   // ⓪ 질문 해석 (DEC-033): 섹션 라벨 + 법률 용어 검색어. 실패하면 질문 문장으로 찾는 기존 방식 그대로 간다
@@ -149,6 +148,7 @@ export async function runLiteAnalysis(
     lawSource: source,
     onStep: deps.onStep,
     caseHint: deps.caseHint,
+    lawHints: deps.lawHints,
     wide: deps.deep,
     lawQuery: understood?.lawQuery,
     caseQueries: understood?.caseQueries,

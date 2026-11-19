@@ -52,11 +52,9 @@ function source(over: Partial<LawSource> = {}): LawSource {
 describe("DEC-015 예시 질문 재생", () => {
   test("예시 질문은 공백·전각 차이를 무시하고 찾고, 오류가 지적된 예시는 목록에 없다", () => {
     const list = demoExamples();
-    // 2026-10-22 Opus 전체 파이프라인 10건 + 2026-11-19 Pro Max 19건 (검색·검증이 약한 3건은 뺐다)
-    expect(list.length).toBe(29);
-    for (const id of ["loan-01", "assault-01", "voice-phishing-01"]) {
-      expect(list.map((e) => e.id)).not.toContain(id);
-    }
+    // 2026-10-22 Opus 전체 파이프라인 10건 + 2026-11-19 Pro Max 22건
+    // (빌려준 돈·폭행 상해·보이스피싱은 검색·검증을 고친 뒤 다시 만든 것)
+    expect(list.length).toBe(32);
     expect(list.map((e) => e.id)).not.toContain("wage-01");
     expect(list.map((e) => e.id)).not.toContain("trap-assertive");
     const q = list[0].question;
@@ -210,5 +208,31 @@ describe("DEC-029 조문이 나오는 판례로 보충", () => {
     };
     const found = await freeSearch("집주인이 보증금을 돌려주지 않아요", { lawSource: src });
     expect(found.cases.map((c) => c.id)).toEqual([CASE.id]);
+  });
+});
+
+describe("카테고리 기본 조문 (2026-11-19 예시 생성에서 드러난 검색 약점 보강)", () => {
+  const HINT = { ...ART, id: "law:민법:제598조", lawName: "민법", articleNo: "제598조" };
+
+  test("카테고리가 정해 둔 조문을 법제처에서 가져와 검색 결과 앞에 둔다 (중복은 한 번만)", async () => {
+    const getArticle = vi.fn(async (law: string, no: string) =>
+      law === "민법" && no === "제598조" ? HINT : null,
+    );
+    const found = await freeSearch("빌려준 돈을 못 받았어요", {
+      lawSource: source({ getArticle }),
+      lawHints: [
+        { lawName: "민법", articleNos: ["제598조", "제603조"] },
+        { lawName: ART.lawName, articleNos: [ART.articleNo] },
+      ],
+    });
+    expect(getArticle).toHaveBeenCalledTimes(3);
+    // 가져오지 못한 조문(제603조)은 건너뛰고, 기본 조문이 자연어 검색 결과보다 앞에 온다
+    expect(found.articles.map((a) => a.id)).toEqual([HINT.id, ART.id]);
+  });
+
+  test("기본 조문이 없는 카테고리는 조문을 따로 가져오지 않는다", async () => {
+    const getArticle = vi.fn(async () => null);
+    await freeSearch("집주인이 보증금을 돌려주지 않아요", { lawSource: source({ getArticle }) });
+    expect(getArticle).not.toHaveBeenCalled();
   });
 });

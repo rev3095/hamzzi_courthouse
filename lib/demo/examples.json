@@ -6778,6 +6778,580 @@
         },
         "mode": "ai"
       }
+    },
+    {
+      "id": "assault-01",
+      "tags": [
+        "폭행·상해"
+      ],
+      "question": "술집에서 처음 보는 사람이 시비를 걸다가 제 얼굴을 주먹으로 때렸어요. 다쳐서 치료를 받았고 진단서도 받았어요. 가해자가 처벌받게 하고 치료비도 받으려면 어떻게 해야 하나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "형법",
+            "민법",
+            "범죄피해자 보호법 시행령"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "상해 손해배상(기)",
+            "폭행 상해 손해배상",
+            "폭행죄 상해 진단서 치료비"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "주먹으로 얼굴을 맞아 다치셨다면 형법 제257조 제1항의 상해죄가 문제될 수 있습니다. 이 조문은 사람의 신체를 상해한 사람을 7년 이하의 징역, 10년 이하의 자격정지 또는 1천만원 이하의 벌금에 처하도록 정하고 있습니다. 실제로 상해로 인정될지는 수사기관과 법원이 진단서 등 자료를 보고 판단합니다.",
+              "source": "law:형법:제257조",
+              "quote": "사람의 신체를 상해한 자는 7년 이하의 징역, 10년 이하의 자격정지",
+              "check": "verified"
+            },
+            {
+              "text": "상해가 아니라 폭행으로만 판단되면 형법 제260조 제1항이 적용될 수 있고, 2년 이하의 징역, 500만원 이하의 벌금, 구류 또는 과료가 정해져 있습니다. 폭행죄는 피해자가 처벌을 원하지 않는다는 뜻을 분명히 밝히면 공소를 제기할 수 없으니, 합의 과정에서 처벌불원 의사를 밝힐지 신중히 정하시는 것이 좋습니다.",
+              "source": "law:형법:제260조",
+              "quote": "제1항 및 제2항의 죄는 피해자의 명시한 의사에 반하여 공소를 제기할 수 없다.",
+              "check": "verified"
+            },
+            {
+              "text": "치료비는 형사처벌과 별개로 민법 제750조의 불법행위 손해배상으로 가해자에게 청구할 수 있습니다. 고의나 과실에 의한 위법행위로 손해를 입힌 사람은 그 손해를 배상할 책임이 있다고 정하고 있으므로, 치료비 영수증과 진단서 등 손해를 보여주는 자료를 잘 보관해 두시는 것이 도움이 됩니다.",
+              "source": "law:민법:제750조",
+              "quote": "고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를 배상할 책임이 있다",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:형법:제257조",
+            "lawName": "형법",
+            "articleNo": "제257조",
+            "title": "상해, 존속상해",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C257%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:형법:제260조",
+            "lawName": "형법",
+            "articleNo": "제260조",
+            "title": "폭행, 존속폭행",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C260%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:민법:제750조",
+            "lawName": "민법",
+            "articleNo": "제750조",
+            "title": "불법행위의 내용",
+            "effectiveFrom": "2026-03-17",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C750%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:민법:제751조",
+            "lawName": "민법",
+            "articleNo": "제751조",
+            "title": "재산 이외의 손해의 배상",
+            "effectiveFrom": "2026-03-17",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C751%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:범죄피해자보호법시행령:제2조",
+            "lawName": "범죄피해자 보호법 시행령",
+            "articleNo": "제2조",
+            "title": "장해의 기준",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%94%EC%A3%84%ED%94%BC%ED%95%B4%EC%9E%90%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C2%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "231573",
+            "caseNo": "2021도15221",
+            "caseName": "도로교통법위반(음주운전)·자동차손해배상보장법위반·폭행·모욕·사기·상해·재물은닉",
+            "court": "대법원",
+            "decidedAt": "2022-01-13",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=231573",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "185694",
+            "caseNo": "2016도21075",
+            "caseName": "특정경제범죄가중처벌등에관한법률위반(사기)·사기·폭력행위등처벌에관한법률위반(공동상해)·폭력행위등처벌에관한법률위반(공동폭행)·자동차관리법위반·자동차손해배상보장법위반·특정범죄가중처벌등에관한법률위반(도주차량)·도로교통법위반(사고후미조치)·도로교통법위반(음주측정거부)·범인도피교사",
+            "court": "대법원",
+            "decidedAt": "2017-03-16",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=185694",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "616527",
+            "caseNo": "2023다285162",
+            "caseName": "손해배상(국)",
+            "court": "대법원",
+            "decidedAt": "2026-01-22",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "614503",
+            "caseNo": "2025가단75932",
+            "caseName": "구상금",
+            "court": "서울중앙지법",
+            "decidedAt": "2025-07-09",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614503",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "614371",
+            "caseNo": "2025다211430",
+            "caseName": "손해배상(기)",
+            "court": "대법원",
+            "decidedAt": "2025-12-11",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614371",
+            "fromBody": false,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 5
+          },
+          {
+            "keyword": "상해 손해배상(기)",
+            "total": 6
+          },
+          {
+            "keyword": "폭행 상해 손해배상",
+            "total": 6
+          },
+          {
+            "keyword": "폭행죄 상해 진단서 치료비",
+            "total": 0
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "형법 제257조",
+              "exists": true
+            },
+            {
+              "citation": "형법 제260조",
+              "exists": true
+            },
+            {
+              "citation": "민법 제750조",
+              "exists": true
+            }
+          ],
+          "removed": 1
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "loan-01",
+      "tags": [
+        "민사"
+      ],
+      "question": "친구에게 사업 자금으로 500만 원을 빌려줬어요. 차용증은 없고 계좌이체 내역과 갚겠다는 메신저 대화만 있어요. 갚기로 한 날짜가 반년이나 지났는데 계속 미루기만 해요. 돈을 돌려받으려면 어떻게 해야 하나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "민법",
+            "민사소송법",
+            "소송촉진 등에 관한 특례법"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "대여금",
+            "대여금 반환청구 계좌이체 메신저 대화",
+            "금전소비대차 차용증 없음 입증"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "민법은 돈을 빌려주고 같은 금액을 돌려받기로 서로 약정하는 것을 '소비대차'라고 하며, 이 약정으로 효력이 생긴다고 정하고 있습니다. 조문에는 차용증 같은 서면을 요건으로 적고 있지 않습니다. 다만 실제로 약정이 있었는지는 따로 증명해야 할 수 있습니다.",
+              "source": "law:민법:제598조",
+              "quote": "상대방은 그와 같은 종류, 품질 및 수량으로 반환할 것을 약정함으로써 그 효력이 생긴다",
+              "check": "verified"
+            },
+            {
+              "text": "빌린 사람은 약정한 반환 시기에 갚아야 합니다. 말씀하신 대로 갚기로 한 날짜가 정해져 있었다면 그날이 반환 시기가 됩니다. 반대로 반환 시기를 정하지 않았다면, 빌려준 사람이 상당한 기간을 정해 반환을 요구(최고)해야 합니다.",
+              "source": "law:민법:제603조",
+              "quote": "차주는 약정시기에 차용물과 같은 종류, 품질 및 수량의 물건을 반환하여야 한다",
+              "check": "verified"
+            },
+            {
+              "text": "정해진 금액의 돈을 달라는 청구라면 채권자가 법원에 신청해 '지급명령'을 받는 절차를 이용할 수 있습니다. 이는 일반 소송과 별도로 법이 정해 둔 절차입니다. 실제로 어떤 절차가 사안에 맞는지는 법원 안내나 전문가를 통해 확인해 보시는 것이 좋습니다.",
+              "source": "law:민사소송법:제462조",
+              "quote": "법원은 채권자의 신청에 따라 지급명령을 할 수 있다",
+              "check": "verified"
+            },
+            {
+              "text": "다만 지급명령에는 제한이 있습니다. 상대방에게 국내에서 공시송달 외의 방법으로 서류를 보낼 수 있는 경우에만 이용할 수 있습니다. 친구의 주소 등을 알 수 없어 공시송달로만 서류를 보낼 수 있는 상황이라면 이 절차를 이용하기 어려울 수 있습니다.",
+              "source": "law:민사소송법:제462조",
+              "quote": "대한민국에서 공시송달 외의 방법으로 송달할 수 있는 경우에 한한다",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:민법:제598조",
+            "lawName": "민법",
+            "articleNo": "제598조",
+            "title": "소비대차의 의의",
+            "effectiveFrom": "2026-03-17",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C598%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:민법:제603조",
+            "lawName": "민법",
+            "articleNo": "제603조",
+            "title": "반환시기",
+            "effectiveFrom": "2026-03-17",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C603%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:민사소송법:제462조",
+            "lawName": "민사소송법",
+            "articleNo": "제462조",
+            "title": "적용의 요건",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C462%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:소송촉진등에관한특례법:제20조의2",
+            "lawName": "소송촉진 등에 관한 특례법",
+            "articleNo": "제20조의2",
+            "title": "공시송달에 의한 지급명령",
+            "effectiveFrom": "2026-06-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%86%8C%EC%86%A1%EC%B4%89%EC%A7%84%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C20%EC%A1%B0%EC%9D%982",
+            "used": false
+          },
+          {
+            "id": "law:민사소송법:제184조",
+            "lawName": "민사소송법",
+            "articleNo": "제184조",
+            "title": "송달받을 장소의 신고",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C184%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "618179",
+            "caseNo": "2025다215255",
+            "caseName": "대여금[소멸시효가 나중에 완성되는 채무가 먼저 완성되는 채무보다 변제이익이 많다고 보아야 하는지가 문제 된 사건]",
+            "court": "대법원",
+            "decidedAt": "2026-02-26",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618179",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "226935",
+            "caseNo": "2021노14",
+            "caseName": "자본시장과금융투자업에관한법률위반·보조금관리에관한법률위반·업무상횡령·사기·허위작성공문서행사·금융실명거래및비밀보장에관한법률위반·범죄수익은닉의규제및처벌등에관한법률위반·업무방해·위계공무집행방해·위조사문서행사·증거은닉교사·증거인멸교사·증거위조교사·사문서위조·위조공문서행사(인정된죄명허위작성공문서행사)",
+            "court": "서울고등법원",
+            "decidedAt": "2021-08-11",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226935",
+            "fromBody": true,
+            "used": false
+          },
+          {
+            "id": "238437",
+            "caseNo": "2019나10609",
+            "caseName": "대여금",
+            "court": "전주지법",
+            "decidedAt": "2023-11-08",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238437",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "624227",
+            "caseNo": "2026다202468, 202469",
+            "caseName": "공사대금등청구의소·건물철거등청구",
+            "court": "대법원",
+            "decidedAt": "2026-07-16",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624227",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "220037",
+            "caseNo": "2021노345",
+            "caseName": "자본시장과금융투자업에관한법률위반·증거은닉교사·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·사문서위조·위조사문서행사·주식회사등의외부감사에관한법률위반·사기",
+            "court": "서울고등법원",
+            "decidedAt": "2021-08-10",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=220037",
+            "fromBody": true,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 5
+          },
+          {
+            "keyword": "대여금",
+            "total": 4
+          },
+          {
+            "keyword": "대여금 반환청구 계좌이체 메신저 대화",
+            "total": 4
+          },
+          {
+            "keyword": "금전소비대차 차용증 없음 입증",
+            "total": 2
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "민법 제598조",
+              "exists": true
+            },
+            {
+              "citation": "민법 제603조",
+              "exists": true
+            },
+            {
+              "citation": "민사소송법 제462조",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
+    },
+    {
+      "id": "voice-phishing-01",
+      "tags": [
+        "보이스피싱"
+      ],
+      "question": "검찰 수사관이라는 전화를 받고 제 계좌가 범죄에 쓰였다는 말에 속아 알려 준 계좌로 돈을 보냈어요. 한 시간쯤 뒤에 보이스피싱이라는 것을 알았어요. 지금 바로 무엇을 해야 돈을 돌려받을 수 있나요?",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "우편대체법 시행규칙",
+            "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+            "경찰청과 그 소속기관 직제 시행규칙"
+          ],
+          "lawKeywords": [
+            "질문 문장 (지능형 법령검색)",
+            "전기통신금융사기",
+            "전기통신금융사기 피해환급",
+            "사기이용계좌 지급정지 피해금 환급"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "송금한 계좌가 사기에 쓰인 것으로 의심되면, 피해구제 신청이나 지급정지 요청을 받은 금융회사는 그 계좌 전부를 바로 지급정지하도록 법에 정해져 있습니다. 그러니 돈을 보낸 은행이나 받은 계좌의 은행에 지금 바로 연락해 피해구제와 지급정지를 신청하는 것이 먼저입니다. 다만 이 조치로 돈이 얼마나 돌아올지는 미리 알 수 없습니다.",
+              "source": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제4조",
+              "quote": "즉시 해당 사기이용계좌등의 전부에 대하여 지급정지 조치를 하여야 한다",
+              "check": "verified"
+            },
+            {
+              "text": "경찰청에는 전기통신금융사기 통합신고대응센터가 있습니다. 이 센터는 신고를 받고 상담하며, 사기에 쓰인 계좌의 지급정지를 요청하고 피해자산 환급 상담도 합니다. 은행 신고와 함께 이 센터나 경찰에도 신고하시고, 사기범의 전화번호와 송금 내역을 정리해 두시면 좋습니다.",
+              "source": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제2조의7",
+              "quote": "전기통신금융사기에 이용된 사기이용계좌등의 지급정지 요청",
+              "check": "verified"
+            },
+            {
+              "text": "지급정지가 되어도 끝까지 유지되는 것은 아닙니다. 예를 들어 금융감독원이나 수사기관이 그 계좌가 사기이용계좌가 아니라고 인정하는 경우 등에는 지급정지가 종료될 수 있습니다. 계좌 명의인이 이의제기를 할 수도 있지만, 일부 이의제기에서는 사기 피해자산을 뺀 금액만 지급정지 종료 대상이 됩니다.",
+              "source": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제8조",
+              "quote": "금융감독원 또는 수사기관이 해당 계좌등이 사기이용계좌등이 아니라고 인정하는 경우",
+              "check": "verified"
+            },
+            {
+              "text": "참고로 한 행정법원 사건에서는 피해자가 피해구제를 신청하자 돈을 받은 계좌에 지급정지와 채권소멸절차가 진행되었습니다. 그 계좌 명의인이 환급을 청구했으나 금융감독원이 거부했고, 법원은 그 거부가 적법하다고 보았습니다. 다만 그 사건은 외화 중고거래 사안이어서 사실관계가 다르므로, 질문하신 사건도 같은 결과가 나온다고 볼 수는 없습니다.",
+              "source": "case:2025구합56092",
+              "quote": "甲의 계좌에 지급정지 조치 및 거래대금 상당의 예금채권에 관한 채권소멸절차가 진행되자",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:우편대체법시행규칙:제21조",
+            "lawName": "우편대체법 시행규칙",
+            "articleNo": "제21조",
+            "title": "지급의 청구",
+            "effectiveFrom": "2025-02-25",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9A%B0%ED%8E%B8%EB%8C%80%EC%B2%B4%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C21%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제8조",
+            "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+            "articleNo": "제8조",
+            "title": "지급정지 등의 종료",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C8%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제2조의7",
+            "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+            "articleNo": "제2조의7",
+            "title": "전기통신금융사기 통합신고대응센터의 설치 등",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C2%EC%A1%B0%EC%9D%987",
+            "used": true
+          },
+          {
+            "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제4조",
+            "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+            "articleNo": "제4조",
+            "title": "지급정지",
+            "effectiveFrom": "2026-10-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C4%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:경찰청과그소속기관직제시행규칙:제14조",
+            "lawName": "경찰청과 그 소속기관 직제 시행규칙",
+            "articleNo": "제14조",
+            "title": "전기통신금융사기 신고대응센터",
+            "effectiveFrom": "2026-10-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B2%BD%EC%B0%B0%EC%B2%AD%EA%B3%BC%20%EA%B7%B8%20%EC%86%8C%EC%86%8D%EA%B8%B0%EA%B4%80%20%EC%A7%81%EC%A0%9C%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C14%EC%A1%B0",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "616027",
+            "caseNo": "2025도14142",
+            "caseName": "폭력행위등처벌에관한법률위반(단체등의구성·활동)·공갈미수·전기통신금융사기피해방지및피해금환급에관한특별법위반방조",
+            "court": "대법원",
+            "decidedAt": "2026-01-15",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616027",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "623961",
+            "caseNo": "2025구합56092",
+            "caseName": "환급금청구기각처분취소청구의소",
+            "court": "서울행법",
+            "decidedAt": "2026-06-24",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623961",
+            "fromBody": false,
+            "used": true
+          },
+          {
+            "id": "614347",
+            "caseNo": "2025도8460",
+            "caseName": "전기통신금융사기피해방지및피해금환급에관한특별법위반·범죄수익은닉의규제및처벌등에관한법률위반",
+            "court": "대법원",
+            "decidedAt": "2025-12-11",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614347",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "622901",
+            "caseNo": "2024가합101778",
+            "caseName": "채무존재확인",
+            "court": "서울중앙지법",
+            "decidedAt": "2026-05-08",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622901",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "612955",
+            "caseNo": "2025도7814",
+            "caseName": "범죄단체가입·범죄단체활동·특정경제범죄가중처벌등에관한법률위반(사기)·전기통신금융사기피해금환급에관한특별법위반·사기·범죄수익은닉의규제및처벌등에관한법률위반",
+            "court": "대법원",
+            "decidedAt": "2025-09-04",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=612955",
+            "fromBody": false,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문 문장 (지능형 법령검색)",
+            "total": 5
+          },
+          {
+            "keyword": "전기통신금융사기",
+            "total": 6
+          },
+          {
+            "keyword": "전기통신금융사기 피해환급",
+            "total": 6
+          },
+          {
+            "keyword": "사기이용계좌 지급정지 피해금 환급",
+            "total": 6
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 제4조",
+              "exists": true
+            },
+            {
+              "citation": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 제2조의7",
+              "exists": true
+            },
+            {
+              "citation": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 제8조",
+              "exists": true
+            },
+            {
+              "citation": "2025구합56092",
+              "exists": true
+            }
+          ],
+          "removed": 0
+        },
+        "mode": "ai"
+      }
     }
   ],
   "excluded": [
@@ -6788,18 +7362,6 @@
     {
       "id": "trap-assertive",
       "reason": "단정 유도 질문에 승소가 보장되지 않는다는 점을 직접 답하지 않음"
-    },
-    {
-      "id": "loan-01",
-      "reason": "2026-11-19 생성분: 검색이 대여금 관련 조문을 찾지 못해 판례 1건에만 기대어 답함"
-    },
-    {
-      "id": "assault-01",
-      "reason": "2026-11-19 생성분: 인용 검증을 통과한 문단이 1개뿐"
-    },
-    {
-      "id": "voice-phishing-01",
-      "reason": "2026-11-19 생성분: 인용 재조회에서 모든 문단이 빠짐"
     }
   ]
 }

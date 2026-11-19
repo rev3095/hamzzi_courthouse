@@ -27,12 +27,18 @@ export type FreeAnalysis = {
 const ARTICLES = 5;
 const CASES_PER_QUERY = 6;
 const CASE_DETAILS = 5;
+const HINT_ARTICLES = 4;
 /** DeepSearch(DEC-038): 조문·판례 상세를 더 가져온다. 법제처 조회는 무료이고 모델에 넘길 때는 비용 상한이 다시 거른다 */
 const WIDE = { articles: 8, caseDetails: 7 } as const;
 
 export async function runFreeAnalysis(
   maskedText: string,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; caseHint?: string | null } = {},
+  deps: {
+    lawSource?: LawSource;
+    onStep?: (e: StepEvent) => void;
+    caseHint?: string | null;
+    lawHints?: { lawName: string; articleNos: string[] }[];
+  } = {},
 ): Promise<FreeAnalysis> {
   const example = findExample(maskedText);
   if (example) {
@@ -70,6 +76,8 @@ export async function freeSearch(
     caseHint?: string | null;
     /** DeepSearch: 조문 8·판례 상세 7건까지 */
     wide?: boolean;
+    /** 홈 카테고리의 기본 조문 (lib/procedure/categories lawHints). 앞에 둔다 */
+    lawHints?: { lawName: string; articleNos: string[] }[];
     /** 질문 해석 호출(DEC-033)이 법률 용어로 바꿔 쓴 검색 문장. 있으면 질문 문장 대신 쓴다 */
     lawQuery?: string | null;
     /** 질문 해석 호출이 뽑은 판례 검색어 */
@@ -87,12 +95,25 @@ export async function freeSearch(
   const rewritten = asked && deps.lawQuery ? searchSentence(deps.lawQuery) : null;
   const sentence = rewritten ?? asked;
   let articlesFailed = false;
-  const articles = sentence
+  const searched = sentence
     ? await source.searchArticles(sentence, maxArticles).catch(() => {
         articlesFailed = true;
         return [];
       })
     : [];
+  // 카테고리의 기본 조문을 앞에 둔다 (조문 넷까지 — 법제처 무료 조회). 가져오지 못한 것은 건너뛴다
+  const wanted = (deps.lawHints ?? [])
+    .flatMap((h) => h.articleNos.map((no) => [h.lawName, no] as const))
+    .slice(0, HINT_ARTICLES);
+  const hinted = sentence
+    ? (
+        await Promise.allSettled(wanted.map(([lawName, no]) => source.getArticle(lawName, no)))
+      ).flatMap((r) => (r.status === "fulfilled" && r.value ? [r.value] : []))
+    : [];
+  const articleIds = new Set<string>();
+  const articles = [...hinted, ...searched]
+    .filter((a) => (articleIds.has(a.id) ? false : (articleIds.add(a.id), true)))
+    .slice(0, maxArticles);
 
   // ② 찾은 조문 제목으로 판례 검색 → 중복 제거 → 상세
   // 홈 카테고리(DEC-028)를 골랐으면 그 분야의 고정 판례 검색어를 먼저 쓴다

@@ -195,6 +195,28 @@ describe("legal-reviewer 지적 보강 (F-005 ③ 법령명 연결·추출 빈�
   });
   const cites = (text: string) => claimsInText(text, ev);
 
+  test("띄어쓰기가 있는 긴 법령의 시행령도 근거에 있으면 전체 이름으로 잡는다 (2026-11-19 보이스피싱 답변이 통째로 빠진 원인)", () => {
+    const act = "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법";
+    const long = new EvidenceSet();
+    long.addArticle({ ...ART, id: `law:${act}:제4조`, lawName: act, articleNo: "제4조" });
+    long.addArticle({
+      ...ART,
+      id: `law:${act} 시행령:제3조의2`,
+      lawName: `${act} 시행령`,
+      articleNo: "제3조의2",
+    });
+    expect(claimsInText(`「${act} 시행령」 제3조의2에 따라 신청해요`, long).claims).toEqual([
+      { kind: "statute", citation: `${act} 시행령 제3조의2` },
+    ]);
+    expect(claimsInText(`${act} 제4조에 따르면`, long).claims).toEqual([
+      { kind: "statute", citation: `${act} 제4조` },
+    ]);
+    // 근거에 없는 시행령은 지금처럼 적힌 낱말 그대로 (재조회에서 확인되지 않으면 문단이 빠진다)
+    expect(claimsInText("근로기준법 시행령 제7조에 따르면", long).claims).toEqual([
+      { kind: "statute", citation: "근로기준법 시행령 제7조" },
+    ]);
+  });
+
   test("근거 법령명이 다른 법령명의 꼬리일 때 붙이지 않는다 (난민법 ≠ 민법)", () => {
     expect(cites("난민법 제3조에 따르면").claims).toEqual([
       { kind: "statute", citation: "난민법 제3조" },
