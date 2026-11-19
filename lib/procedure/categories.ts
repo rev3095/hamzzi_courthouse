@@ -86,7 +86,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "lease_deposit",
     caseQuery: "임대차보증금",
     caseKinds: "민사",
-    examples: ["lease-01", "lease-02", "lease-03"],
+    examples: ["lease-01", "lease-02", "lease-03", "deep-lease-01"],
   },
   deposit: {
     key: "deposit",

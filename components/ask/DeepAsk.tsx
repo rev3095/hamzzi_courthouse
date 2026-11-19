@@ -2,10 +2,12 @@
 // DeepSearch 입력 창 (DEC-038): 길고 복잡한 사연을 정해 둔 칸(또는 큰 입력란 하나)으로 받는다.
 // 보내기 전에 빠진 내용을 규칙으로 점검해 알려 주고(모델 없음, 비용 0), 많이 부족하면 한 번 더 묻는다.
 // 적은 내용은 이 창 안에만 있고 브라우저에 저장하지 않는다. 보내면 일반 질문과 같은 길(가리기·동의·횟수)을 탄다.
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   DEEP_FIELDS,
   DEEP_FREE_GUIDE,
+  DEEP_PRESET,
   EMPTY_DEEP,
   composeDeep,
   reviewDeep,
@@ -86,6 +88,28 @@ export function DeepAsk({
               ×
             </button>
           </div>
+          <p className="text-muted mt-2 text-[13px] leading-relaxed">
+            예시:{" "}
+            <Link
+              href={DEEP_PRESET.href}
+              className="text-link font-semibold underline-offset-2 hover:underline"
+            >
+              저장된 심층 분석 결과 보기
+            </Link>{" "}
+            ·{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMode("form");
+                setValues({ ...DEEP_PRESET.values });
+                setReview(null);
+              }}
+              className="text-link font-semibold underline-offset-2 hover:underline"
+            >
+              양식에 예시 채워 보기
+            </button>{" "}
+            (결과 보기는 질문 횟수·비용이 들지 않아요)
+          </p>
           <div
             role="tablist"
             aria-label="입력 방식"

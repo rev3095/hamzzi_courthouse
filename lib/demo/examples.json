@@ -7352,6 +7352,334 @@
         },
         "mode": "ai"
       }
+    },
+    {
+      "id": "deep-lease-01",
+      "tags": [
+        "임대차"
+      ],
+      "question": "2년 전세기간동안 이의없이 임대차가 계속 중임차인이 보증금 반환을 요구하였지만 임대인이 4개월동안 아무런 답변도 없어서 임차인의 임대차가 계속되는줄 알고 있는 중에 임대인이 갑자기 명도청구하는 경우 임차인의 대응방법",
+      "result": {
+        "outcome": "grounded",
+        "aiNotice": "AI 생성 · 법률 자문 아님",
+        "intent": {
+          "area": "",
+          "goal": "",
+          "laws": [
+            "주택임대차보호법",
+            "부동산 거래신고 등에 관한 법률 시행규칙",
+            "상가건물 임대차보호법",
+            "주택도시기금법",
+            "주택임대차보호법 시행령"
+          ],
+          "lawKeywords": [
+            "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "임대차보증금",
+            "주택임대차 묵시의 갱신 기간 만료 후 임대인 명도청구",
+            "주택임대차 갱신거절 통지 기간 명도청구"
+          ]
+        },
+        "answer": {
+          "points": [
+            {
+              "text": "주택임대차보호법 제6조 제1항은 임대인이 정해진 기간에 갱신거절 통지를 하지 않으면 기간이 끝난 때에 전과 같은 조건으로 다시 임대차한 것으로 본다고 정합니다. 다만 임차인도 기간이 끝나기 2개월 전까지 통지하지 않은 경우에만 같은 효과가 생깁니다.",
+              "source": "law:주택임대차보호법:제6조",
+              "quote": "그 기간이 끝난 때에 전 임대차와 동일한 조건으로 다시 임대차한 것으로 본다",
+              "check": "verified"
+            },
+            {
+              "text": "사연에는 보증금 반환 요구가 언제였는지 적혀 있지 않습니다. 기간이 끝나기 2개월 전까지 계약을 끝내겠다는 뜻으로 요구하셨다면 이 조항에 따른 묵시적 갱신이 되지 않을 수 있습니다. 그렇지 않았고 임대인도 통지하지 않았다면 갱신된 것으로 볼 여지가 있습니다.",
+              "source": "law:주택임대차보호법:제6조",
+              "quote": "임차인이 임대차기간이 끝나기 2개월 전까지 통지하지 아니한 경우에도 또한 같다",
+              "check": "verified"
+            },
+            {
+              "text": "묵시적 갱신이 된 경우에도 주택임대차보호법 제6조의2에 따라 임차인은 언제든지 계약해지를 통지할 수 있습니다. 이 해지는 임대인이 통지를 받은 날부터 3개월이 지나면 효력이 생깁니다. 갱신 뒤에 보증금 반환을 요구하셨다면 그 요구가 해지 통지로 볼 수 있는지가 함께 문제 될 수 있습니다.",
+              "source": "law:주택임대차보호법:제6조의2",
+              "quote": "해지는 임대인이 그 통지를 받은 날부터 3개월이 지나면 그 효력이 발생한다",
+              "check": "verified"
+            },
+            {
+              "text": "갱신이 된 것으로 본다면 주택임대차보호법 제6조 제2항에 따라 존속기간은 2년으로 봅니다. 다만 같은 조 제3항은 2기의 차임액에 달하도록 연체했거나 임차인 의무를 현저히 위반한 임차인에게는 제1항을 적용하지 않는다고 정합니다. 이 판단 결과가 쟁점 3의 명도청구에 대한 대응에 영향을 줍니다.",
+              "source": "law:주택임대차보호법:제6조",
+              "quote": "제1항의 경우 임대차의 존속기간은 2년으로 본다.",
+              "check": "verified"
+            },
+            {
+              "text": "주택임대차보호법 제4조 제2항은 임대차기간이 끝난 경우에도 임차인이 보증금을 반환받을 때까지는 임대차관계가 존속되는 것으로 본다고 정합니다. 따라서 계약이 종료된 것으로 판단되더라도, 보증금을 아직 돌려받지 못하셨다면 이 조항이 정한 효과가 명도청구에 대한 대응에서 함께 검토될 수 있습니다.",
+              "source": "law:주택임대차보호법:제4조",
+              "quote": "임대차기간이 끝난 경우에도 임차인이 보증금을 반환받을 때까지는 임대차관계가 존속되는 것으로 본다",
+              "check": "verified"
+            }
+          ]
+        },
+        "articles": [
+          {
+            "id": "law:주택임대차보호법:제4조",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제4조",
+            "title": "임대차기간 등",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C4%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:주택임대차보호법:제6조",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제6조",
+            "title": "계약의 갱신",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C6%EC%A1%B0",
+            "used": true
+          },
+          {
+            "id": "law:주택임대차보호법:제6조의2",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제6조의2",
+            "title": "묵시적 갱신의 경우 계약의 해지",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C6%EC%A1%B0%EC%9D%982",
+            "used": true
+          },
+          {
+            "id": "law:주택임대차보호법:제3조",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제3조",
+            "title": "대항력 등",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:주택임대차보호법:제6조의3",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제6조의3",
+            "title": "계약갱신 요구 등",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C6%EC%A1%B0%EC%9D%983",
+            "used": false
+          },
+          {
+            "id": "law:부동산거래신고등에관한법률시행규칙:제6조의2",
+            "lawName": "부동산 거래신고 등에 관한 법률 시행규칙",
+            "articleNo": "제6조의2",
+            "title": "주택 임대차 계약의 신고",
+            "effectiveFrom": "2026-02-10",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%20%EA%B1%B0%EB%9E%98%EC%8B%A0%EA%B3%A0%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C6%EC%A1%B0%EC%9D%982",
+            "used": false
+          },
+          {
+            "id": "law:상가건물임대차보호법:제10조",
+            "lawName": "상가건물 임대차보호법",
+            "articleNo": "제10조",
+            "title": "계약갱신 요구 등",
+            "effectiveFrom": "2026-05-12",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C10%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:주택도시기금법:제34조의5",
+            "lawName": "주택도시기금법",
+            "articleNo": "제34조의5",
+            "title": "상습 채무불이행자의 성명 등 공개",
+            "effectiveFrom": "2026-06-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EB%8F%84%EC%8B%9C%EA%B8%B0%EA%B8%88%EB%B2%95/%EC%A0%9C34%EC%A1%B0%EC%9D%985",
+            "used": false
+          },
+          {
+            "id": "law:주택임대차보호법시행령:제6조",
+            "lawName": "주택임대차보호법 시행령",
+            "articleNo": "제6조",
+            "title": "요청할 수 있는 정보의 범위 및 제공방법",
+            "effectiveFrom": "2026-07-01",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C6%EC%A1%B0",
+            "used": false
+          },
+          {
+            "id": "law:주택임대차보호법:제10조의2",
+            "lawName": "주택임대차보호법",
+            "articleNo": "제10조의2",
+            "title": "초과 차임 등의 반환청구",
+            "effectiveFrom": "2026-01-02",
+            "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C10%EC%A1%B0%EC%9D%982",
+            "used": false
+          }
+        ],
+        "cases": [
+          {
+            "id": "621911",
+            "caseNo": "2025다220329",
+            "caseName": "임대차보증금[임대인 사망 후 공동상속인 전원이 임차인과 기존 임대차계약을 연장하는 내용의 임대차계약을 체결한 행위가 민법 제1026조 제1호의 법정단순승인사유에 해당하는지 여부가 문제 된 사건]",
+            "court": "대법원",
+            "decidedAt": "2026-05-08",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=621911",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "119299",
+            "caseNo": "91가합20184",
+            "caseName": "건물명도",
+            "court": "대구지법",
+            "decidedAt": "1992-04-21",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=119299",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "67649",
+            "caseNo": "2004다45967",
+            "caseName": "건물명도",
+            "court": "대법원",
+            "decidedAt": "2005-07-28",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=67649",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "623247",
+            "caseNo": "2025다211354",
+            "caseName": "임대차보증금",
+            "court": "대법원",
+            "decidedAt": "2025-12-04",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623247",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "118554",
+            "caseNo": "88나24891",
+            "caseName": "건물철거등",
+            "court": "서울민사지법",
+            "decidedAt": "1989-04-18",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=118554",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "67646",
+            "caseNo": "2004다45998",
+            "caseName": "건물명도",
+            "court": "대법원",
+            "decidedAt": "2005-07-22",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=67646",
+            "fromBody": false,
+            "used": false
+          },
+          {
+            "id": "622357",
+            "caseNo": "2025나52246",
+            "caseName": "임대차보증금",
+            "court": "서울남부지방법원",
+            "decidedAt": "2025-11-28",
+            "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622357",
+            "fromBody": true,
+            "used": false
+          }
+        ],
+        "searches": [
+          {
+            "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+            "total": 8
+          },
+          {
+            "keyword": "임대차보증금",
+            "total": 6
+          },
+          {
+            "keyword": "주택임대차 묵시의 갱신 기간 만료 후 임대인 명도청구",
+            "total": 4
+          },
+          {
+            "keyword": "주택임대차 갱신거절 통지 기간 명도청구",
+            "total": 2
+          }
+        ],
+        "trace": [],
+        "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+        "recheck": {
+          "ok": true,
+          "items": [
+            {
+              "citation": "주택임대차보호법 제6조",
+              "exists": true
+            },
+            {
+              "citation": "주택임대차보호법 제6조의2",
+              "exists": true
+            },
+            {
+              "citation": "주택임대차보호법 제4조",
+              "exists": true
+            }
+          ],
+          "removed": 1
+        },
+        "mode": "ai",
+        "deep": {
+          "parties": [
+            {
+              "label": "임차인",
+              "role": "질문자, 보증금 반환을 요구함"
+            },
+            {
+              "label": "임대인",
+              "role": "상대방, 답변 없이 갑자기 명도청구함"
+            }
+          ],
+          "events": [
+            {
+              "when": "2년 전세기간 동안",
+              "who": "임차인",
+              "what": "이의 없이 임대차 계약이 계속 유지됨"
+            },
+            {
+              "when": "",
+              "who": "임차인",
+              "what": "임차인이 보증금 반환을 요구함"
+            },
+            {
+              "when": "4개월 동안",
+              "who": "임대인",
+              "what": "보증금 반환 요구에 아무 답변을 하지 않음"
+            },
+            {
+              "when": "",
+              "who": "임대인",
+              "what": "임차인이 임대차가 계속되는 줄 알고 있던 중 갑자기 명도청구함"
+            }
+          ],
+          "issues": [
+            {
+              "title": "임대차 기간 만료 후 묵시적 갱신이 성립했는지",
+              "points": [
+                0,
+                1,
+                2
+              ]
+            },
+            {
+              "title": "임대인의 갱신거절 통지가 기간 내에 있었는지",
+              "points": [
+                3
+              ]
+            },
+            {
+              "title": "보증금 반환 의무와 명도 청구 사이의 관계",
+              "points": [
+                4
+              ]
+            }
+          ],
+          "unknowns": [
+            "임대차 기간 만료 전에 임대인이 갱신거절이나 계약종료를 통지했는지",
+            "임차인이 계약 종료를 요구하는 통지를 서면으로 했는지",
+            "임대인이 명도청구 소송을 제기했는지 또는 내용증명만 보냈는지",
+            "전세보증금 반환이 이루어졌는지 여부",
+            "보증금 반환 요구 시점과 임대차 기간 만료 시점의 선후 관계"
+          ]
+        }
+      }
     }
   ],
   "excluded": [

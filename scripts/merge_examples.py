@@ -36,7 +36,8 @@ for path in sorted(glob.glob("evals/examples-gen/out/*.json")):
     if g["id"] in have:
         continue
     r = g["result"]
-    points = [p for p in r["answer"]["points"] if p["check"] == "verified"]
+    keep = [i for i, p in enumerate(r["answer"]["points"]) if p["check"] == "verified"]
+    points = [r["answer"]["points"][i] for i in keep]
     dropped = len(r["answer"]["points"]) - len(points)
     if r.get("mode") != "ai" or len(points) < MIN_POINTS:
         skipped.append((g["id"], r.get("mode"), len(points)))
@@ -55,6 +56,16 @@ for path in sorted(glob.glob("evals/examples-gen/out/*.json")):
         "recheck": {**r["recheck"], "removed": r["recheck"]["removed"] + dropped},
         "mode": "ai",
     }
+    # DeepSearch 예시(DEC-041): 사건 구조의 쟁점은 남은 문단의 새 순번으로 다시 잇는다
+    if r.get("deep"):
+        new_index = {old: new for new, old in enumerate(keep)}
+        result["deep"] = {
+            **r["deep"],
+            "issues": [
+                {"title": i["title"], "points": [new_index[x] for x in i["points"] if x in new_index]}
+                for i in r["deep"]["issues"]
+            ],
+        }
     data["examples"].append(
         {
             "id": g["id"],
@@ -71,6 +82,9 @@ if added:
         data["source"] += note
     write(EXAMPLES, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     for ex_id, cat, _, _ in added:
+        # DeepSearch 예시는 카테고리 목록에 넣지 않는다 (DeepSearch 창에서 따로 연다)
+        if ex_id.startswith("deep-"):
+            continue
         pat = re.compile(r"(\n  " + cat + r": \{\n(?:.*\n)*?\s+examples: )\[\]")
         cat_src, n = pat.subn(lambda m: f'{m.group(1)}["{ex_id}"]', cat_src, count=1)
         assert n == 1, cat

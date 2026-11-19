@@ -167,7 +167,14 @@ const CRIME_REPORT_CONTEXT = /고소|신고|피해|당했|처벌|범죄/;
 function classifyByRules(r: Input, question: string | null): CaseType {
   const fixedIntent = r.mode === "replay" ? [r.intent.area, r.intent.goal] : [];
   const text = norm([question ?? "", ...fixedIntent].join(" "));
-  const laws = new Set([...r.intent.laws, ...r.articles.map((a) => a.lawName)].map((l) => norm(l)));
+  // 답변이 실제로 쓴 조문이 있으면 그 법령만 본다. 검색에는 무관한 법령이 섞여 들어오는데(예: 주택 전세 질문에
+  // 상가건물 임대차보호법), 쓰지 않은 근거의 법령 이름이 타임라인을 바꾸면 안 된다 (2026-11-19 예시 생성에서 확인)
+  const cited = r.articles.filter((a) => a.used).map((a) => a.lawName);
+  const laws = new Set(
+    (cited.length > 0 ? cited : [...r.intent.laws, ...r.articles.map((a) => a.lawName)]).map((l) =>
+      norm(l),
+    ),
+  );
   // 질문 문장이 있으면 법령 이름은 그 분야 낱말과 함께일 때만 근거로 쓴다 (DEC-033)
   const hasQuestion = norm(question ?? "").length > 0;
   const hasLaw = (re: RegExp, context: RegExp) =>

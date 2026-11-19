@@ -148,3 +148,21 @@ export function reviewDeep(input: { values?: DeepValues; text?: string }): DeepR
 
 /** 심층 질문에서 모델에 넘겨 볼 근거 수 — 같은 비용 상한 안에서만 더 넣는다 (넘으면 뒤에서부터 뺀다) */
 export const DEEP_EVIDENCE = { articles: 8, cases: 4 } as const;
+
+/**
+ * DeepSearch 예시 (DEC-041): 2026-11-19 실호출 결과를 저장해 둔 것(lib/demo/examples.json deep-lease-01).
+ * 입력 창에서 결과를 바로 보거나 양식에 채워 볼 수 있다 — 저장된 답변을 보여 줄 뿐이라 질문 횟수·비용이 들지 않는다.
+ * values는 그 사연을 양식으로 옮긴 모습이다 (사연에 없는 사실은 더하지 않았다).
+ */
+export const DEEP_PRESET = {
+  href: "/examples/deep-lease-01",
+  label: "전세 계약이 끝난 뒤 계속 살던 중 임대인이 갑자기 집을 비워 달라고 한 경우",
+  values: {
+    facts:
+      "2년 전세 계약 기간이 끝난 뒤에도 서로 이의 없이 계속 살고 있었어요. 그러던 중 제가 임대인에게 보증금을 돌려 달라고 요구했는데, 임대인은 4개월 동안 아무 답도 하지 않았어요. 답이 없어서 임대차가 계속되는 줄 알고 살고 있었는데, 임대인이 갑자기 집을 비워 달라고(명도) 청구했어요.",
+    other: "임대인 (집주인)",
+    done: "보증금 반환을 요구했어요.",
+    proof: "",
+    ask: "임대인의 명도 청구에 임차인이 어떻게 대응할 수 있나요?",
+  } satisfies DeepValues,
+} as const;

@@ -5,6 +5,7 @@ import { DeepAsk } from "@/components/ask/DeepAsk";
 import {
   DEEP_EVIDENCE,
   DEEP_FIELDS,
+  DEEP_PRESET,
   EMPTY_DEEP,
   composeDeep,
   reviewDeep,
@@ -147,6 +148,20 @@ describe("DEC-038 입력 창", () => {
     fireEvent.click(screen.getByRole("tab", { name: "직접 입력" }));
     expect(screen.getByText("이 내용이 들어가게 적어 주세요")).toBeDefined();
     type(/사연 직접 입력/, `${FULL.facts} 상대는 집주인이에요. ${FULL.ask}`);
+    fireEvent.click(screen.getByRole("button", { name: "심층 분석 시작" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  test("DEC-041 예시: 저장된 결과로 가는 링크가 있고, 양식에 채운 예시는 빠진 내용 없이 통과한다", () => {
+    const onSubmit = open();
+    expect(
+      screen.getByRole("link", { name: "저장된 심층 분석 결과 보기" }).getAttribute("href"),
+    ).toBe(DEEP_PRESET.href);
+    fireEvent.click(screen.getByRole("button", { name: "양식에 예시 채워 보기" }));
+    expect((screen.getByLabelText(/상대방은 누구인가요/) as HTMLTextAreaElement).value).toBe(
+      DEEP_PRESET.values.other,
+    );
+    expect(reviewDeep({ values: DEEP_PRESET.values }).missing).toEqual([]);
     fireEvent.click(screen.getByRole("button", { name: "심층 분석 시작" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });

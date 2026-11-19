@@ -111,5 +111,7 @@ test("DEC-028 고른 분야에 예시가 있으면 예시 답변 링크를 함�
     "/examples/lease-01",
     "/examples/lease-02",
     "/examples/lease-03",
+    // DeepSearch 예시 (DEC-041)
+    "/examples/deep-lease-01",
   ]);
 });

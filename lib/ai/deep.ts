@@ -98,6 +98,8 @@ export async function runDeepAnalysis(
 
   // ① 사건 구조화
   let struct: DeepStruct | null = null;
+  // 구조화가 왜 안 됐는지 (고정 낱말만 — 사연 내용은 담지 않는다). 일반 답변으로 내려갈 때 프롬프트 버전에 붙여 남긴다
+  let structFailure = "no_issues";
   deps.onStep?.({ stage: "intent", message: STEP_MESSAGES.understand });
   try {
     const res = await callModel(
@@ -117,9 +119,14 @@ export async function runDeepAnalysis(
     usage = addUsage(usage, res);
     const parsed = DeepStructZ.safeParse(JSON.parse(textOf(res)));
     if (parsed.success) struct = screenStruct(parsed.data, input.maskedText);
+    else structFailure = "format";
   } catch (e) {
     if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
       throw e;
+    if (e instanceof ApiError) {
+      const d = (e.details ?? {}) as Record<string, unknown>;
+      structFailure = `${e.code}:${String(d.reason ?? d.status ?? "")}`.slice(0, 40);
+    } else structFailure = e instanceof CostCapReached ? "budget" : "json";
   }
   // 쟁점을 하나도 못 뽑았으면 일반 답변으로 (근거만 넓게). 구조화에 쓴 비용은 상한에서 빼 준다
   if (!struct || struct.issues.length === 0) {
@@ -142,6 +149,7 @@ export async function runDeepAnalysis(
         cacheReadTokens: usage.cacheReadTokens + lite.usage.cacheReadTokens,
       },
       costUsd: spentOnStruct + lite.costUsd,
+      promptVersion: `${lite.promptVersion}+deep-fallback:${structFailure}`,
       struct: null,
       drafted: [],
     };
