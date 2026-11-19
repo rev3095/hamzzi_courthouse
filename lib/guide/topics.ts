@@ -6,6 +6,7 @@
 // 검사: lib/guide/policy.test.ts (단정·승률 표현, 숫자, 실제 페이지 링크, 하위 질문 참조)
 
 import { AI_NOTICE, SEARCH_NOTICE } from "@/lib/api/respond";
+import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 
 /** 정해진 안내라 AI 생성물이 아니다. SEARCH_NOTICE·DOCUMENT_NOTICE와 같은 방식 */
 export const GUIDE_NOTICE = "정해진 안내 · AI 생성 아님 · 법률 자문 아님";
@@ -134,14 +135,20 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     links: [PRIVACY],
   },
 
-  // ── ② 기능 안내 (DEC-036·038·039·041) ─────────────────────
+  // ── ② 기능 안내 (DEC-036·038·039·041·042) ─────────────────
   features: {
     label: "기능 안내",
-    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041",
+    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042",
     lines: [
-      "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 내 질문 기록이 있어요.",
+      "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 질문 기록이 있어요.",
     ],
-    next: ["features-tiers", "features-deep", "features-examples", "features-history"],
+    next: [
+      "features-tiers",
+      "features-deep",
+      "features-examples",
+      "features-procedure",
+      "features-history",
+    ],
   },
   "features-tiers": {
     label: "Light · Pro · Pro Max는 뭐예요?",
@@ -169,11 +176,22 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     label: "예시 답변은 어디서 봐요?",
     source: "DEC-027 · DEC-028",
     lines: [
-      "홈의 카테고리를 고르면 그 분야의 예시 질문과 답변을 볼 수 있어요.",
+      "홈의 '예시 답변 바로 보기'에서 분야를 고르면 그 분야의 예시 질문과 답변을 볼 수 있어요. 새로 더한 분야처럼 아직 예시가 없는 분야도 있어요.",
       "예시는 미리 분석해 두고 인용을 확인한 답변을 다시 보여 드리는 거라 질문 횟수에 들어가지 않아요.",
     ],
     links: [{ href: "/#examples", label: "예시 질문 보기" }],
-    next: ["rules-examples"],
+    next: ["rules-examples", "features-procedure"],
+  },
+  "features-procedure": {
+    label: "절차 안내는 어떻게 정해져요?",
+    source: "DEC-021 · DEC-042 · DEC-043 · lib/procedure/steps.ts PROCEDURE_NOTICE",
+    lines: [
+      "결과 화면에는 비슷한 사건이 보통 거치는 절차 단계를 함께 보여 드려요. 분야를 고르지 않고 물어도 질문을 읽어 맞는 절차를 골라요.",
+      "AI 답변이 켜져 있을 때 여러 문제가 섞인 사연이면 '함께 살펴볼 절차'가 나와요. 위 안내는 가장 먼저 물으신 문제 기준이고, 누르면 그 분야로 따로 물어볼 수 있어요.",
+      `절차 단계 문구는 미리 정해 둔 문안이고, 법률 전문가 검토 전이라 화면에 '${PROCEDURE_NOTICE}'을 함께 표시해요. 사건이 어떻게 될지는 판단하지 않아요.`,
+      "맞는 절차가 없는 사연은 운영자가 빠진 분야를 살펴볼 수 있게 절차 이름과 낱말만 저장하고, 질문 문장은 저장하지 않아요.",
+    ],
+    next: ["features-examples", "features-deep"],
   },
   "features-history": {
     label: "내 질문 기록은 어떻게 남겨요?",

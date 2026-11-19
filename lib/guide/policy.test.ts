@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { ANON_IP_DAILY_LIMIT, ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { EXAMPLE_RATE, LOOKUP_RATE, SEARCH_RATE } from "@/lib/auth/rate-limit";
+import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import {
   GUIDE_LIMITS,
   GUIDE_NOTICE,
@@ -105,6 +106,7 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       "features-tiers",
       "features-deep",
       "features-examples",
+      "features-procedure",
       "features-history",
     ]
       .map((id) => guideTopic(id)!.lines.join(" "))
@@ -115,6 +117,13 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     expect(features).not.toMatch(/정확|더 좋은|더 나은|품질/);
     expect(guideTopic("features-deep")!.lines.join(" ")).toContain("판단하지 않아요");
     expect(guideTopic("features-deep")!.lines.join(" ")).toContain("질문 한 번으로");
+  });
+
+  test("기능 안내: 절차 안내는 검토 전 참고용 표시를 밝히고 결과를 판단하지 않는다 (DEC-021·042·043)", () => {
+    const procedure = guideTopic("features-procedure")!.lines.join(" ");
+    expect(procedure).toContain(PROCEDURE_NOTICE);
+    expect(procedure).toContain("판단하지 않아요");
+    expect(procedure).toContain("질문 문장은 저장하지 않아요");
   });
 
   test("절대 규칙 3: 숫자는 코드 상수·공식 기준 값뿐이다", () => {
