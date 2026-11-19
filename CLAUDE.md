@@ -29,7 +29,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `docs/API.md` | 엔드포인트·스키마·에러 코드 |
 | `docs/05_브랜드_가이드.md` | UI 작업(색·글꼴·마스코트 규칙) |
 | `docs/07_Figma_연동.md` | 화면 구현·디자인 반영. 디자인 기준은 Figma 파일이고, 반영은 `figma-sync` 스킬 순서로 |
-| `docs/08_Google_Play_배포.md` | Android 앱(TWA, `twa/`)·Play 등록·앱 버전 올리기 |
+| `docs/08_Google_Play_배포.md` | Android 앱(Capacitor, `mobile/`)·Play 등록·앱 버전 올리기 |
 | `docs/research/04_화면설계_도구_조사.md` | 화면설계 도구·MCP 선택 근거 |
 | `docs/research/01_데이터_소스.md` | 데이터 수집기 작업 |
 | `docs/research/03_규제_쟁점.md` | 게이트 기능·동의·과금 관련 작업 |
@@ -61,7 +61,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 | AI 평가 | `pnpm eval:demo` — **유료**(Claude 생성 호출). 절대 규칙 8에 따라 사용자 허락 없이 실행 금지 |
 | 예시 답변 만들기·반영 | `scripts/gen-examples.mjs` — **유료**(질문마다 Opus 답변 + Haiku 해석, 관리자 모드 서버 대상, 사용법은 파일 머리말). 사용자 허락 없이 실행 금지. 반영은 무료 `python -X utf8 scripts/merge_examples.py`(검증 통과 문단만 `lib/demo/examples.json`·카테고리에 넣는다) |
 | 배포 사이트 실답변 비교 | `scripts/live-compare.mjs` — **유료**(배포 사이트 실제 질문 1건). 사용자 허락 후 1회만 |
-| Android 앱(TWA) | `pnpm android:version` / `pnpm android:bump patch "변경 내용"` / `pnpm android:build` — 웹 업데이트는 앱 재빌드 불필요, 앱 껍데기를 바꿀 때만 버전을 올린다 (docs/08 3.3절) |
+| 앱(Capacitor, DEC-048) | `pnpm app:dev`(화면 미리보기 5190) / `pnpm app:version` / `pnpm app:bump patch "변경 내용"` / `pnpm app:apk`(디버그 APK·서명 전 AAB → `mobile/out/`) — 앱 안 코드(`mobile/src`·`lib/reader`·`lib/procedure`·`lib/pii`·예시)가 바뀌면 다시 빌드해 올린다 (docs/08 3.3절). 판독 정확도 `pnpm reader:score`(무료). 처음 방식 TWA(`twa/`, `pnpm android:*`)는 남겨 두었지만 올리지 않는다 |
 | 수집기 테스트 | `pnpm collector:test` (pytest + `ruff check`). CI는 `ruff format --check`도 돌리므로 수집기를 고쳤으면 `cd collector && uv run ruff format --check .`도 확인한다 |
 | 수집기 테스트 일부 | `cd collector && uv run pytest tests/test_prec.py -k 중복` |
 | DB 마이그레이션 | `pnpm exec supabase migration new <이름>` (add-migration 스킬) |
@@ -86,7 +86,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·search·documents·studio·guide·me·community) · `lib/{api,auth,inquiries,gate,pii,ai,demo,community,search,citations,calc,procedure,documents,mascot,guide,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `twa/` Android 앱(TWA, Bubblewrap) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·search·documents·studio·guide·me·community) · `lib/{api,auth,inquiries,gate,pii,ai,demo,community,search,citations,calc,procedure,documents,mascot,guide,reader,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `mobile/` 앱(Capacitor android·ios, 오프라인 판독 `lib/reader`) · `twa/` 처음 방식(TWA, 올리지 않음) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.

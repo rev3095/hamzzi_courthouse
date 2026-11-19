@@ -1,0 +1,5 @@
+{
+  "_note": "앱 버전의 한 곳 (DEC-048). node mobile/release.mjs bump 으로만 바꾼다. versionCode는 Play에 올린 값보다 늘 커야 하고 다시 쓰지 않는다. TWA 첫 빌드(twa/)가 1을 썼으므로 2부터.",
+  "versionName": "1.1.0",
+  "versionCode": 2
+}

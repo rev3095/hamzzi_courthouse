@@ -4,13 +4,17 @@
     {
       "name": "dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "dev"
-      ],
+      "runtimeArgs": ["dev"],
       "port": 3000,
       "env": {
         "NEXT_TELEMETRY_DISABLED": "1"
       }
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "vite", "--config", "mobile/vite.config.ts"],
+      "port": 5190
     }
   ]
 }

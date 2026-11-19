@@ -22,7 +22,13 @@
     "typecheck": "next typegen && tsc --noEmit",
     "android:version": "node twa/release.mjs check",
     "android:bump": "node twa/release.mjs bump",
-    "android:build": "node twa/release.mjs build"
+    "android:build": "node twa/release.mjs build",
+    "app:dev": "vite --config mobile/vite.config.ts",
+    "app:version": "node mobile/release.mjs check",
+    "app:bump": "node mobile/release.mjs bump",
+    "app:sync": "node mobile/release.mjs sync",
+    "app:apk": "node mobile/release.mjs apk",
+    "reader:score": "vitest run lib/reader/accuracy.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
@@ -38,6 +44,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
@@ -54,6 +64,7 @@
     "supabase": "^2.121.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "8.3.4",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.0.5"
   },

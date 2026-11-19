@@ -65,3 +65,6 @@ supabase/.temp/
 
 # 공개 커뮤니티에서 모은 법률 사연 원문 (DEC-044: 공개 저장소에 올리지 않는다, 이 컴퓨터에만)
 /evals/labels/community/
+
+# 판독기 채점 보고서 (READER_REPORT=1로 생성)
+/evals/reader/
