@@ -160,7 +160,10 @@ function apk() {
 const [cmd = "check", ...args] = process.argv.slice(2);
 try {
   if (cmd === "check") check();
-  else if (cmd === "apply") (apply(), check());
+  else if (cmd === "apply") {
+    apply();
+    check();
+  }
   else if (cmd === "bump") bump(args[0], args.slice(1).join(" "));
   else if (cmd === "sync") sync();
   else if (cmd === "apk") apk();

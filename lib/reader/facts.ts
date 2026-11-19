@@ -15,9 +15,9 @@ export type Facts = {
 };
 
 const WHEN =
-  /(?:(?:작년|재작년|올해|지난해)\s*)?(?:\d{4}\s*년\s*)?\d{1,2}\s*월(?:\s*\d{1,2}\s*일|\s*(?:초|중순|말))?|\d{4}\s*년|지난\s*(?:달|주|해|번)|재작년|작년|올해|어제|그제|그저께|오늘|방금|이번\s*(?:달|주)|(?:\d+|한|두|세|네|다섯|여섯|몇)\s*(?:달|개월|년|주|일|시간)\s*(?:전|째|동안|넘게|이상|지났|됐|되었|밀)/g;
+  /(?:(?:작년|재작년|올해|지난해)\s*)?(?:\d{4}\s*년\s*)?(?<![\d,.])\d{1,2}\s*월(?![세급요])(?:\s*\d{1,2}\s*일|\s*(?:초|중순|말))?|\d{4}\s*년|지난\s*(?:달|주|해|번)|재작년|작년|올해|어제|그제|그저께|오늘|방금|이번\s*(?:달|주)|다음\s*(?:달|주)|내일|모레|(?:\d+|한|두|세|네|다섯|여섯|몇)\s*(?:달|개월|년|주|일|시간)\s*(?:전|째|동안|넘게|이상|지났|됐|되었|밀)/g;
 const MONEY =
-  /(?:\d[\d,.]*\s*(?:억|천만|백만|십만|만|천)?\s*원|\d[\d,.]*\s*(?:억|천만|백만|만)(?:\s*원)?|(?:한|두|세|네|다섯|몇)\s*(?:푼|달\s*치)|(?:일|이|삼|사|오|육|칠|팔|구|십|백|천)+\s*만\s*원)/g;
+  /(?:\d[\d,.]*\s*(?:억|천만|백만|십만|만|천)?\s*원|\d[\d,.]*\s*(?:억|천만|백만|만)(?:\s*원)?|(?:한|두|세|네|다섯|몇)\s*(?:푼|달\s*치)|(?<![가-힣])(?:일|이|삼|사|오|육|칠|팔|구|십|백|천)+\s*만\s*원)/g;
 
 const PARTY_WORDS = [
   "집주인",
@@ -120,8 +120,12 @@ const EVIDENCE_WORDS: [RegExp, string][] = [
 ];
 const DONE_WORDS: [RegExp, string][] = [
   [/내용증명(을)?\s*(보냈|보내|발송)/, "내용증명을 보냄"],
-  [/(경찰|112)(에)?\s*(신고|고소)\s*(했|함|넣)/, "경찰 신고"],
-  [/고소(장)?\s*(을)?\s*(했|넣었|접수)/, "고소함"],
+  // 상대가 했다는 말(했대요·했다고)은 내가 해 본 일이 아니다
+  [/(경찰|112)(에)?\s*(신고|고소)\s*(했|함|넣)(?!대|다고|다며|다네|단)/, "경찰 신고"],
+  [
+    /(?<!(저를|나를|저도|상대가|상대방이|상대도)\s*)고소(장)?\s*(을)?\s*(했|넣었|접수)(?!대|다고|다며|다네|단)/,
+    "고소함",
+  ],
   [/(노동청|노동부)(에)?\s*(진정|신고)?\s*(했|넣었|접수)?/, "노동청에 알림"],
   [/(소송|소)(을)?\s*(걸었|제기했|냈)/, "소송을 냄"],
   [/조정(신청)?\s*(을)?\s*(했|신청)/, "조정 신청"],
@@ -135,6 +139,20 @@ const DONE_WORDS: [RegExp, string][] = [
 const uniq = (xs: string[]) =>
   [...new Set(xs.map((x) => x.replace(/\s+/g, " ").trim()))].filter(Boolean);
 
+// "근로계약서는 없고"처럼 없다고 한 자료는 뽑지 않는다
+const NEGATED =
+  /^\s*(?:은|는|도|이|가|을|를)?\s*(?:없|안\s*(?:썼|써|받|남)|못\s*(?:받|썼|구했)|따로\s*없)/;
+
+/** 자료 낱말이 있고, 그 뒤에 "없다"류가 바로 붙지 않은 곳이 하나라도 있으면 가진 것으로 본다 */
+function has(re: RegExp, text: string): boolean {
+  const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+  for (const m of text.matchAll(g)) {
+    if (!NEGATED.test(text.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 8)))
+      return true;
+  }
+  return false;
+}
+
 export function extractFacts(masked: string): Facts {
   const text = masked.normalize("NFKC");
   const parties = PARTY_WORDS.filter((w) => text.includes(w));
@@ -146,7 +164,7 @@ export function extractFacts(masked: string): Facts {
     when: uniq(text.match(WHEN) ?? []).slice(0, 4),
     money: uniq(text.match(MONEY) ?? []).slice(0, 4),
     parties: partiesClean.slice(0, 4),
-    evidence: uniq(EVIDENCE_WORDS.filter(([re]) => re.test(text)).map(([, l]) => l))
+    evidence: uniq(EVIDENCE_WORDS.filter(([re]) => has(re, text)).map(([, l]) => l))
       .filter((e, _i, all) => e !== "계약서" || !all.includes("근로계약서"))
       .slice(0, 6),
     done: uniq(DONE_WORDS.filter(([re]) => re.test(text)).map(([, l]) => l)).slice(0, 4),

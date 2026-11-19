@@ -5,7 +5,15 @@ import { CHECK_TEXTS, checklistFor } from "./checklist";
 import { similarExamples } from "./examples";
 import { extractFacts } from "./facts";
 import { LEXICON, PRECEDENCE, normText, type Section } from "./lexicon";
-import { CONFIDENCE_TEXT, NO_DATA_NOTE, OFFLINE_OTHER_BODY, READER_NOTICE, URGENT_NOTE, readOffline } from "./read";
+import {
+  CONFIDENCE_TEXT,
+  NO_DATA_NOTE,
+  OFFLINE_OTHER_BODY,
+  READER_NOTICE,
+  URGENT_NOTE,
+  readOffline,
+  sectionName,
+} from "./read";
 import { detectRole, ROLE_TEXT } from "./role";
 import { ONLINE_READER_ENABLED, chooseReader } from "./source";
 
@@ -78,6 +86,25 @@ describe("입장", () => {
     const r = read("제가 단톡에 쓴 글 때문에 명예훼손으로 고소당했어요");
     expect(r.section).toBe("respond_criminal");
     expect(r.role).toBe("accused");
+  });
+  test("받는 쪽에게 요구하는 쪽 절차·예시를 함께 권하지 않는다", () => {
+    const r = read(
+      "술 먹고 싸웠는데 상대가 저를 폭행으로 고소했대요. 저도 맞아서 전치 2주 나왔어요",
+    );
+    expect(r.section).toBe("respond_criminal");
+    expect(r.also).not.toContain("assault");
+    expect(r.candidates.map((c) => c.section)).not.toContain("assault");
+    expect(r.examples.every((e) => e.sameSection)).toBe(true);
+  });
+  test("내용증명만 받은 요구하는 쪽 질문은 입장과 절차가 같은 방향", () => {
+    const r = read("상가 월세가 밀렸다고 건물주가 내용증명을 보내왔는데 권리금은 어떻게 되나요");
+    if (r.role === "claimant")
+      expect(r.plan.kind === "notice" ? r.plan.caseType : r.plan.caseType).not.toBe(
+        "respond_civil",
+      );
+  });
+  test("화면용 섹션 이름에 내부 영어 이름이 없다", () => {
+    for (const s of PRECEDENCE) expect(sectionName(s)).not.toMatch(/[a-z]{3,}_[a-z]/);
   });
   test("군인 신분으로 수사를 받는 쪽은 군형법 절차", () => {
     expect(read("휴가 복귀를 하루 늦게 했더니 군무이탈로 조사받으래요").section).toBe(
@@ -160,6 +187,23 @@ describe("사실 정리", () => {
     const r = read("작년 3월에 친구에게 300만 원을 빌려줬는데 안 갚아요. 차용증 있어요");
     expect(r.checklist.given.length).toBeGreaterThan(0);
     expect(r.checklist.missing.length).toBeGreaterThan(0);
+  });
+  test("월세·금액 숫자를 날짜로, 낱말 속 글자를 금액으로 뽑지 않는다", () => {
+    const f = extractFacts("보증금 1000 월세 50인데 제 돈이 만원밖에 없어요. 3월 5일에 이사해요");
+    expect(f.when).toEqual(["3월 5일"]);
+    expect(f.money).not.toContain("이 만원");
+  });
+  test("상대가 했다는 일은 내가 해 본 일로 뽑지 않는다", () => {
+    const f = extractFacts("상대가 저를 폭행으로 고소했대요. 다음 주에 출석하래요");
+    expect(f.done).not.toContain("고소함");
+    expect(f.when).toContain("다음 주");
+    expect(extractFacts("어제 경찰서에 고소장을 접수했어요").done).toContain("고소함");
+  });
+  test("없다고 한 자료는 가진 자료로 뽑지 않는다", () => {
+    const f = extractFacts("근로계약서는 없고 카톡만 있어요");
+    expect(f.evidence).not.toContain("근로계약서");
+    expect(f.evidence).toContain("메신저 대화");
+    expect(extractFacts("차용증 따로 없어요").evidence).not.toContain("차용증");
   });
   test("'형'은 다른 낱말 안에서 상대방으로 뽑지 않는다", () => {
     expect(extractFacts("형사 고소를 하고 싶어요").parties).not.toContain("형");

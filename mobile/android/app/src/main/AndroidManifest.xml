@@ -38,4 +38,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- WebView가 인터넷 연결 여부(navigator.onLine)를 알려면 필요하다. 데이터를 모으지 않는 일반 권한 (DEC-048) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>

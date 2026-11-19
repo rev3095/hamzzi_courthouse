@@ -4,7 +4,9 @@
 // 하지 않는 것: 법령·판례 인용, 조문 번호, 새 숫자(기간·금액), 승패·유불리·처벌 가능성 판단 (절대 규칙 1·2·3).
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { CATEGORIES } from "@/lib/procedure/categories";
+import { LIFE_TRACKS, type LifeTrackKey } from "@/lib/procedure/life-tracks";
 import { classifyCase, procedurePlan, type ProcedurePlan } from "@/lib/procedure/policy";
+import { TRACKS } from "@/lib/procedure/steps";
 import type { SectionLabel } from "@/lib/procedure/sections";
 import { scanInput } from "@/lib/pii";
 import { checklistFor, type Checklist } from "./checklist";
@@ -106,6 +108,25 @@ const COURT_PAPER = /소장|지급명령|이행권고|법원|소송|민사/;
 export function isChatter(text: string): boolean {
   const hits = new Set(text.match(new RegExp(CHATTER.source, "g")) ?? []).size;
   return (hits >= 1 && !PERSONAL.test(text)) || hits >= 3;
+}
+
+/** 받는 쪽 사람에게도 맞는 절차 (lib/procedure/policy의 받는 쪽 라벨과 같은 묶음) */
+const RESPONDENT_SECTIONS: ReadonlySet<Section> = new Set<Section>([
+  "respond_criminal",
+  "respond_civil",
+  "military_criminal",
+  "debt_relief",
+  "inheritance",
+  "admin_appeal",
+  "welfare_appeal",
+  "tax_appeal",
+  "fine_objection",
+]);
+
+/** 화면에 보일 섹션 이름 (타임라인의 분야·제목). 모델용 설명(SECTION_GUIDE)은 내부 이름이 섞여 쓰지 않는다 */
+export function sectionName(s: Section): string {
+  const t = (TRACKS as Record<string, { section: string; title: string }>)[s] ?? LIFE_TRACKS[s as LifeTrackKey];
+  return t ? `${t.section} · ${t.title}` : s;
 }
 
 /** 기존 절차 규칙(lib/procedure/policy)이 보는 받는 쪽 결과 */
@@ -265,15 +286,19 @@ export function readOffline(input: ReaderInput): ReaderResult {
     confidence = "chosen";
   }
 
+  // 받는 쪽이면 함께 걸린 절차·다른 분야 후보도 받는 쪽 절차만 보인다 (요구하는 쪽 절차를 권하지 않는다)
+  const allowed = (s: Section) => role === "claimant" || RESPONDENT_SECTIONS.has(s);
   const also = ranked
-    .filter((r) => r.section !== section && r.score >= 2)
+    .filter((r) => r.section !== section && r.score >= 2 && allowed(r.section))
     .slice(0, 2)
     .map((r) => r.section);
-  const candidates = ranked.filter((r) => r.section !== section).slice(0, 4);
+  const candidates = ranked.filter((r) => r.section !== section && allowed(r.section)).slice(0, 4);
 
   const basePlan = procedurePlan(
     { ...BARE, section: section ?? "none" },
-    section ? masked : null,
+    // 기존 규칙은 문장만 보고 받는 쪽으로 정할 수 있다(내용증명만 받음·소송을 건 쪽). 판독기가 요구하는 쪽으로 본 질문은
+    // 문장을 넘기지 않아 판독기가 고른 섹션 그대로 절차를 보인다 — 입장 문구와 절차가 어긋나지 않게
+    section && !(role === "claimant" && RESPONDENT.has(ruled)) ? masked : null,
     confidence === "chosen" ? input.category : null,
   );
   const plan: ProcedurePlan =
@@ -298,7 +323,8 @@ export function readOffline(input: ReaderInput): ReaderResult {
     plan,
     facts,
     checklist,
-    examples: similarExamples(section, masked),
+    // 받는 쪽은 같은 섹션 예시만 (글자만 겹치는 피해자 쪽 예시를 권하지 않는다)
+    examples: similarExamples(section, masked).filter((e) => role === "claimant" || e.sameSection),
     masked,
     maskedCount: scan.findings.length,
     sensitive: scan.sensitive.length > 0,

@@ -8,12 +8,17 @@ import { AI_NOTICE } from "@/lib/api/respond";
 import { CATEGORIES, CATEGORY_GROUPS, type CategoryKey } from "@/lib/procedure/categories";
 import { hasTimeline, type ProcedurePlan } from "@/lib/procedure/policy";
 import { DIFFICULTY_LABEL, PROCEDURE_NOTICE, type OfficialLink } from "@/lib/procedure/steps";
-import { SECTION_GUIDE } from "@/lib/procedure/sections";
 import { exampleSection } from "@/lib/reader/examples";
 import type { Section } from "@/lib/reader/lexicon";
-import { MIN_CHARS, READER_NOTICE, readOffline, type ReaderResult } from "@/lib/reader/read";
+import {
+  MIN_CHARS,
+  READER_NOTICE,
+  readOffline,
+  sectionName,
+  type ReaderResult,
+} from "@/lib/reader/read";
 import { WEB_URL, chooseReader } from "@/lib/reader/source";
-import face from "@/public/mascot/hamzzi-face.webp";
+import face from "@/public/mascot/hamzzi-face.webp?url";
 import appVersion from "../app-version.json";
 import { useOnline } from "./online";
 
@@ -49,6 +54,8 @@ export function App() {
     <div className="app">
       <header className="top">
         <button className="brand" onClick={() => go({ name: "home" })} aria-label="처음 화면">
+          {/* 앱 안 정적 파일이라 next/image가 필요 없다 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={face} alt="" width={36} height={36} />
           <span>햄찌법원</span>
         </button>
@@ -191,7 +198,6 @@ function Result(props: {
     );
   }
 
-  const sectionTitle = (s: Section) => SECTION_GUIDE[s];
   const f = r.facts;
   const factRows: [string, string[]][] = [
     ["때", f.when],
@@ -212,7 +218,7 @@ function Result(props: {
         <p>{r.confidenceText}</p>
         <p className="muted small">{r.roleText}</p>
         {r.also.length > 0 && (
-          <p className="muted small">함께 걸린 절차: {r.also.map(sectionTitle).join(" · ")}</p>
+          <p className="muted small">함께 걸린 절차: {r.also.map(sectionName).join(" · ")}</p>
         )}
         {(r.maskedCount > 0 || r.sensitive) && (
           <p className="muted small">
@@ -224,7 +230,8 @@ function Result(props: {
         )}
       </div>
 
-      {(r.confidence !== "clear" || r.candidates.length > 0) && (
+      {/* 받는 쪽은 고른 분야가 쓰이지 않으므로 버튼을 보이지 않는다 */}
+      {r.role === "claimant" && (r.confidence !== "clear" || r.candidates.length > 0) && (
         <div className="card">
           <h2>다른 분야로 보기</h2>
           <div className="row wrap gap">
@@ -240,7 +247,7 @@ function Result(props: {
               분야 직접 고르기
             </button>
           </div>
-          <p className="muted small">고소를 당했거나 서류를 받은 쪽으로 읽힌 질문은 고른 분야보다 그 절차를 먼저 보여 줘요.</p>
+          <p className="muted small">고른 분야의 절차로 다시 정리해요.</p>
         </div>
       )}
 
