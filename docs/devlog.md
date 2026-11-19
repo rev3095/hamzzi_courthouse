@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-20 동안 세션 12개가 남긴 작업 기록 440건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-20 동안 세션 12개가 남긴 작업 기록 446건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -10,7 +10,7 @@
 
 ## 세션 계층
 
-- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-20 · 기록 133건  
+- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-20 · 기록 137건  
   기획·설계부터 데모 개발·병합·배포까지 맡은 최상위 세션. 일을 나눠 다른 세션들을 시작하고 결과를 합쳤다.
   - **햄찌법원 개발 재개 (Phase 3 준비)** — Claude Desktop · 2026-10-19 ~ 2026-11-19 · 기록 49건  
     메인 개발 세션이 시작한 세션. 법제처 수집기와 DB 테이블에서 시작해 korean-law-mcp 어댑터, AI 분석·인용 검증·analyze API, 무료/Pro 모드 전환, 화면·정책 초안·배포, 검색·피드백·삭제·파기·헬스체크까지 데모의 대부분을 구현했다.
@@ -20,7 +20,7 @@
       마스코트를 상태별 그림으로 바꿔 쓰는 체계와 이를 교체·미리보기하는 개발용 편집기(/studio)를 만들고 사이트에 반영했다.
   - **결과 화면 개편: 절차 타임라인·문서 작성(게이트)** — Claude Desktop · 2026-11-15 ~ 2026-11-19 · 기록 22건  
     결과 화면(S-04)을 요약형 레이아웃과 섹션별 절차 타임라인으로 개편하고, 문서 작성은 게이트 뒤에 두는 작업을 맡은 세션.
-  - **Google Play 앱 배포 준비·빌드 (TWA)** — Claude Desktop · 2026-11-17 ~ 2026-11-20 · 기록 18건 · PR 1, 11  
+  - **Google Play 앱 배포 준비·빌드 (TWA)** — Claude Desktop · 2026-11-17 ~ 2026-11-20 · 기록 20건 · PR 1, 11  
     배포된 햄찌법원 웹을 TWA 방식 Android 앱으로 감싸 빌드하고 Google Play 등록 문서와 진행 절차를 정리한다.
     - **P32 개인정보 가리기 이름 오탐 고치기** — Claude Desktop · 2026-11-20 · 기록 3건 · PR 12  
       앱 판독기 확인 중 찾은 lib/pii 오탐('세입자 구해야'의 '구해야'를 이름으로 가림)을 웹과 함께 쓰는 코드에서 고쳤다.
@@ -46,6 +46,10 @@
 - `00:30` **[요청] 개발 문서 전부를 아카이브 안에 읽기 좋게** — 지금까지 만든 보고서 등 md 문서를 모두 개발 아카이브 안에 넣고, 지금 페이지처럼 글꼴이 잘 보이게 만들어 달라는 요청.
 - `00:55` **[구현] 아카이브에 "문서" 탭 — 저장소 md 문서 58개** — 저장소에 올라간 md 문서(보고서 14·제품 기획·설계 12·조사 6·Claude Code 답변 기록·모듈 설명 18·Claude Code 지침 7)를 빌드할 때 HTML로 바꿔 한 파일에 넣었다(scripts/devlog_docs.py, markdown-it-py). 화면은 왼쪽 묶음별 목록과 제목·본문 찾기, 가운데 읽기 화면(본문 17px·줄 간격 1.9, 제목은 명조, 표는 가로 스크롤, 코드·인용·mermaid 원문 상자), 오른쪽 이 문서 차례, 읽은 정도 막대, 글자 크기 4단계·고딕/명조 선택, 이전·다음 문서. 문서 사이 링크는 아카이브 안 이동으로, 저장소 파일 링크는 GitHub로 바꿨다. 아카이브 글 버전(docs/devlog.md)은 타임라인과 같은 내용이라 뺐다.
 - `00:58` **[확인] 문서 탭 화면 확인** — 로컬에서 띄워 넓은 화면·모바일 너비로 확인했다. 문서 58개·묶음 6개, 표 감싸기, 차례, 문서 사이 링크 39개 모두 대상 있음, 검색(rls → 9개 문서), 탭·주소 이동이 동작했다. 이메일·로컬 경로 문자열은 없었다. 게시본은 로그인 문제로 직접 열어 보지 못했다.
+- `06:55` **[요청] 수정 반영해 최종 사이트 배포와 앱 빌드** — PR 12(개인정보 가리기 수정)와 PR 11(앱)을 반영해 사이트를 Vercel에 배포하고 앱을 다시 빌드해 달라는 요청.
+- `07:00` **[구현] PR 12 → PR 11 병합** — 두 브랜치를 main에 합친 상태로 로컬에서 typecheck, 단위 테스트 1068건, docs:check, pnpm build(경고 없음)를 먼저 통과시킨 뒤 GitHub에서 PR 12, PR 11 순서로 병합했다. 병합 뒤 main은 로컬에서 검사한 트리와 같았다. ([`ec27ed6`](https://github.com/rev3095/hamzzi_courthouse/commit/ec27ed6), [`c5e51cb`](https://github.com/rev3095/hamzzi_courthouse/commit/c5e51cb), F-007, DEC-048)
+- `07:05` **[확인] 배포 사이트 확인 — c5e51cb** — Vercel 자동 배포 뒤 상태 점검이 버전 c5e51cb, DB·법제처 연결 정상을 보고했고 홈·검색·커뮤니티가 200으로 응답했다. ([`c5e51cb`](https://github.com/rev3095/hamzzi_courthouse/commit/c5e51cb))
+- `07:05` **[세션 메시지] 앱 다시 빌드를 앱 세션에 맡김** — 빌드 환경이 있는 앱 세션에 main(c5e51cb) 기준 디버그 APK·서명 전 AAB 빌드와 비행기 모드 확인을 맡겼다. 업로드·푸시·유료 호출은 하지 않게 했다.
 
 ##### ↳ 햄찌법원 화면 리디자인 (IA·흐름·화면설계)
 
@@ -63,6 +67,8 @@
 - `02:49` **[문제] 개인정보 가리기 오탐과 새 번호 P32·P33** — 보고 기준: 개인정보 가리기가 '세입자 구해야'의 '구해야'를 이름으로 가리는 오탐을 찾았다. 웹과 같이 쓰는 코드라 P32로 따로 떼었다. 온라인 AI 판독을 켤지는 P33 사용자 결정으로 남겼다. Capacitor 앱에는 assetlinks 지문이 필요 없어 P16이 빠졌고 P31은 끝났다.
 - `03:44` **[세션 메시지] P32를 하위 세션으로 떼어 시작** — 보고 기준: 개인정보 가리기 오탐(P32)은 웹과 같이 쓰는 코드라 앱 작업과 섞지 않고 새 세션으로 떼었다.
 - `03:45` **[구현] 앱 Capacitor 전환 PR 11 열기** — 보고 기준: 브랜치 claude/app-offline-reader를 푸시해 PR 11을 열었다. Capacitor 앱·규칙 판독기(lib/reader)·온라인 AI 판독 자리(꺼 둠)와, PR 3의 앱 보고서·Play 문서 변경을 함께 담았다. 결정 번호는 DEC-048. 병합 전이다. ([`9ed4cff`](https://github.com/rev3095/hamzzi_courthouse/commit/9ed4cff), [`a8196d1`](https://github.com/rev3095/hamzzi_courthouse/commit/a8196d1), DEC-048)
+- `07:20` **[구현] main 기준 앱 다시 빌드 — 1.1.0(versionCode 2)** — 보고 기준: main(c5e51cb)으로 디버그 APK와 서명 전 AAB를 다시 만들었다(커밋하지 않음). 스토어에 올린 적이 없어 버전은 그대로 두었다. 패키지·targetSdk 36·권한 두 가지를 확인했다. 에뮬레이터 비행기 모드에서 앱이 열리고 판독되며, '세입자 구해야' 예문은 더 가려지지 않고 '세입자 김민수 씨'의 이름은 계속 가려진다.
+- `07:20` **[문제] 집주인 질문을 세입자 절차로 읽는 판독기 빈틈** — 보고 기준: '세입자가 보증금 돌려달라고 하는데 저도 돈이 없어요'처럼 갚아야 하는 쪽의 질문을 요구하는 쪽으로 읽어 보증금 반환 절차를 보여 준다. 갚아야 하는 쪽 표현 목록에 '달래요'는 있고 '돌려달라고 하는데'가 없다. 받는 쪽에게 요구하는 쪽 절차를 보이지 않는다는 원칙에 어긋나 고칠 일로 남겼다. P32 수정 때문에 생긴 문제는 아니다.
 
 ###### ↳ ↳ P32 개인정보 가리기 이름 오탐 고치기
 
@@ -803,6 +809,7 @@
 | DEC-045 | 절차 섹션 2개 추가(보험금 지급 거절·저작권 침해)와 라벨 정확도 평가 체계 (2026-11-19 사용자 요청, DEC-042·043 확장) |
 | DEC-046 | 절차 섹션 6개 추가 — 복지·실업급여, 세금, 부동산 매매 하자, 군 복무 3종 (2026-11-19 사용자 요청, DEC-043·045 확장) |
 | DEC-047 | 커뮤니티와 씨앗 (2026-11-19 사용자 요청) |
+| DEC-048 | 앱을 Capacitor로 바꾸고 인터넷 없이 쓰는 규칙 판독기를 넣는다 (2026-11-20 사용자 요청) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -877,11 +884,11 @@
 - P14 Play 계정 등록, P15 업로드 키·AAB 서명·내부 테스트 업로드, 비공개 테스트 12명 14일, 프로덕션 신청은 사용자가 진행해야 한다.
 - P33 인터넷 연결 시 AI 판독을 켤지는 사용자 결정이다.
 - 오프라인 판독기 정확도는 처음 보는 글 30건 중 20건으로 웹 Haiku보다 낮다.
-- PR 11(Capacitor 앱·규칙 판독기, DEC-048)은 병합 전이다. 앱 보고서와 docs/08 수정은 병합 뒤에 문서 탭에 들어간다.
+- 판독기가 '돌려달라고 하는데' 같은 갚아야 하는 쪽 질문을 요구하는 쪽으로 읽는 빈틈을 고치지 않았다.
+- 다시 만든 APK·AAB는 실제 휴대폰 설치, 인터넷 연결 상태의 바깥 링크, iOS 빌드(Mac 필요)를 확인하지 않았다.
 
 **P32 개인정보 가리기 이름 오탐 고치기**
 
-- PR 12는 병합 전이다. 병합 뒤 앱(PR 11)은 다시 빌드해야 반영된다.
 - 성 없이 이름만 쓴 경우(예: '동생 은하가')는 잡지 못한다.
 - 수집기의 판결문용 '이름 아닌 말' 목록은 고치지 않았다.
 
@@ -934,13 +941,18 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 153개 (병합 제외)</summary>
+<details><summary>main 커밋 160개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`7ac79ab`](https://github.com/rev3095/hamzzi_courthouse/commit/7ac79ab) | 2026-11-20 06:43 | docs: devlog에 P32 개인정보 가리기 수정 PR 12 반영 (기록 440건) |
+| [`cc9a70d`](https://github.com/rev3095/hamzzi_courthouse/commit/cc9a70d) | 2026-11-20 06:41 | fix: F-007 AC1 이름 판정 재현율 보완 — 한 글자 어미는 떼어 보고 호칭 앞은 활용형 검사 안 함 |
 | [`fdc8d5b`](https://github.com/rev3095/hamzzi_courthouse/commit/fdc8d5b) | 2026-11-20 04:22 | docs: devlog에 위법 판독기 「레퍼런스 기업 탐색」(국내외 23곳 조사) 반영 (기록 439건) |
 | [`2e1741a`](https://github.com/rev3095/hamzzi_courthouse/commit/2e1741a) | 2026-11-20 03:52 | docs: devlog에 앱 PR 11과 하위 세션 P32(이름 오탐 수정) 반영 — 세션 12개, 기록 437건 |
+| [`d6db56e`](https://github.com/rev3095/hamzzi_courthouse/commit/d6db56e) | 2026-11-20 03:50 | fix: F-007 AC1 관계어 뒤 동사·조사·사건 낱말을 이름으로 가리지 않음 |
 | [`b964ee1`](https://github.com/rev3095/hamzzi_courthouse/commit/b964ee1) | 2026-11-20 02:50 | docs: devlog에 11-20 새벽 결과 반영 — 배포 확인(04e0bd7)·로컬 브랜치 정리·앱 Capacitor 전환과 오프라인 규칙 판독기 (기록 433건) |
+| [`a8196d1`](https://github.com/rev3095/hamzzi_courthouse/commit/a8196d1) | 2026-11-20 02:48 | fix: 판독기 검토 반영 — 받는 쪽에게 요구하는 쪽 절차·예시 권하지 않기, 입장과 절차 방향 맞추기, 사실 정리 오탐(월세 숫자·없다고 한 자료·상대가 한 고소), 화면용 섹션 이름, 네트워크 상태 권한; Play 문서·보고서를 Capacitor 기준으로 (DEC-048) |
+| [`9ed4cff`](https://github.com/rev3095/hamzzi_courthouse/commit/9ed4cff) | 2026-11-20 02:32 | feat: 앱을 Capacitor로 — 인터넷 없이 쓰는 규칙 판독기(lib/reader)와 앱 화면(mobile/), 온라인 AI 판독은 자리만 (DEC-048) |
 | [`4127d5f`](https://github.com/rev3095/hamzzi_courthouse/commit/4127d5f) | 2026-11-20 00:56 | feat: 새 분야 6개 예시 답변, 커뮤니티 민감정보 동의·신고 자동 가림, 안내 챗봇 커뮤니티 항목 (F-005, F-007, DEC-030, DEC-045, DEC-046, DEC-047) |
 | [`e615e84`](https://github.com/rev3095/hamzzi_courthouse/commit/e615e84) | 2026-11-20 00:50 | docs: devlog에 문서 탭 — 보고서·PRD·조사·모듈 README 등 저장소 md 문서 58개를 읽기 화면(차례·찾기·글자 크기·고딕/명조)으로 아카이브 (기록 422건) |
 | [`04e0bd7`](https://github.com/rev3095/hamzzi_courthouse/commit/04e0bd7) | 2026-11-19 22:43 | feat: 커뮤니티·씨앗, 절차 섹션 6개 추가(복지·세금·부동산 매매 하자·군 복무 3종) (F-014, F-007, F-013, DEC-046, DEC-047) |
@@ -958,6 +970,7 @@
 | [`7eb1fe3`](https://github.com/rev3095/hamzzi_courthouse/commit/7eb1fe3) | 2026-11-19 21:02 | feat: 질문 해석을 복수 라벨·온/오프라인·새 라벨 제안·동적 예시로 + 공개 질문 400건 Haiku 라벨링 + LLM 구조 보고서 (F-014, DEC-033, DEC-037, DEC-042) |
 | [`3153783`](https://github.com/rev3095/hamzzi_courthouse/commit/3153783) | 2026-11-19 20:55 | docs: 개발 아카이브 devlog — 세션 11개(하위 세션 계층 포함)·기록 390건, 날짜→세션 순 + 디자인 HTML(검색·필터·세션 트리·결정·커밋 색인) |
 | [`9ef25bb`](https://github.com/rev3095/hamzzi_courthouse/commit/9ef25bb) | 2026-11-19 20:55 | test: 예시 답변 33건 전부를 법제처 실호출로 재검증 — 인용 실존·구절 원문 일치·숫자 출처 (F-005, DEC-027) |
+| [`1bbc798`](https://github.com/rev3095/hamzzi_courthouse/commit/1bbc798) | 2026-11-19 20:54 | docs: 앱 제작·스토어 등록 보고서(Google Play·App Store, P14~P30) + Play 문서에 Google 로그인 데이터·계정 삭제 요건 (DEC-035) |
 | [`b7ac113`](https://github.com/rev3095/hamzzi_courthouse/commit/b7ac113) | 2026-11-19 20:50 | feat: 편집기 최신 화면 반영 — 안내 챗봇 첫 인사(궁금함) 미리보기, 화면↔편집기 상태 동기화 검사 (브랜드 가이드 2.3, DEC-030) |
 | [`37ffb0e`](https://github.com/rev3095/hamzzi_courthouse/commit/37ffb0e) | 2026-11-19 20:50 | docs: 코드 주석·테스트 이름에 남은 '비로그인 3회'를 하루 횟수(ANON_QUESTION_LIMIT)로 (F-001, DEC-010, DEC-031) |
 | [`c722498`](https://github.com/rev3095/hamzzi_courthouse/commit/c722498) | 2026-11-19 20:44 | docs: CLAUDE.md를 코드에 맞춤 — Google 로그인 흐름·로그인 사용자 한도·안내 챗봇 구조, 비로그인 횟수는 상수 이름으로 (DEC-030, DEC-035, DEC-039) |
@@ -1012,6 +1025,7 @@
 | [`a019d43`](https://github.com/rev3095/hamzzi_courthouse/commit/a019d43) | 2026-11-18 11:05 | feat: 햄찌 안내 챗봇 — 메뉴로 고르는 고정 안내 (DEC-030) |
 | [`7e9dca7`](https://github.com/rev3095/hamzzi_courthouse/commit/7e9dca7) | 2026-11-18 10:57 | feat: 확인된 원문 링크·검색 종류 탭 묶음 + E2E 정리 (F-003, DEC-029) |
 | [`efa5b48`](https://github.com/rev3095/hamzzi_courthouse/commit/efa5b48) | 2026-11-18 05:41 | feat: 판례 밖 자료 16종 통합 검색 + 법령 전문 라이브 판례 패널, 관세청 해석 조회 오류 수정 (F-003, F-004, DEC-029) |
+| [`df44260`](https://github.com/rev3095/hamzzi_courthouse/commit/df44260) | 2026-11-18 05:33 | docs: Play 등록 문서에 판례 리서치·예시 질문 무제한·기기 저장 자료 반영 (DEC-027, DEC-029) |
 | [`b27228a`](https://github.com/rev3095/hamzzi_courthouse/commit/b27228a) | 2026-11-18 01:41 | feat: 판례 리서치 화면·답변 흐름 연결·판례 검색 강조 + Next.js 16.4.6 (F-003, F-004, DEC-029) |
 | [`313c538`](https://github.com/rev3095/hamzzi_courthouse/commit/313c538) | 2026-11-18 01:23 | docs: 홈 카테고리 결정 번호를 DEC-028로 (모델 선택 DEC-026·027과 겹침 해소) |
 | [`6a9f43b`](https://github.com/rev3095/hamzzi_courthouse/commit/6a9f43b) | 2026-11-18 01:22 | docs: 판례·법령 탐색 확장 결정 번호를 DEC-029로 (다른 세션의 DEC-026~028과 겹침 해소) |
@@ -1096,13 +1110,14 @@
 
 ## 문서 아카이브
 
-저장소의 md 문서 58개. 디자인 버전의 "문서" 탭에서 읽기 좋게 볼 수 있다.
+저장소의 md 문서 62개. 디자인 버전의 "문서" 탭에서 읽기 좋게 볼 수 있다.
 
-### 보고서 (14)
+### 보고서 (15)
 
 - [햄찌법원만의 LLM 만들기 — API만 쓰는 구조에서 RAG·미세조정·하네스를 어떻게 하는가](reports/2026-11-19_햄찌법원_LLM_만들기_RAG_하네스.md) — `docs/reports/2026-11-19_햄찌법원_LLM_만들기_RAG_하네스.md` · 수정 2026-11-19
 - [질문 해석 · 절차 섹션 라벨 · 타임라인 확장 보고 (2026-11-19)](reports/2026-11-19_질문해석_섹션라벨_타임라인_비용.md) — `docs/reports/2026-11-19_질문해석_섹션라벨_타임라인_비용.md` · 수정 2026-11-19
 - [홈 카테고리 예시 답변 22건 — 생성 결과와 성능 분석](reports/2026-11-19_예시_답변_22건_성능_분석.md) — `docs/reports/2026-11-19_예시_답변_22건_성능_분석.md` · 수정 2026-11-19
+- [햄찌법원 앱 제작 · 스토어 등록 보고서 (Google Play · Apple App Store)](reports/2026-11-19_앱_제작_스토어_등록_보고서.md) — `docs/reports/2026-11-19_앱_제작_스토어_등록_보고서.md` · 수정 2026-11-20
 - [답변 단계별 구조·API 비용 보고서 — Light · Pro · Pro Max](reports/2026-11-19_모델별_구조_비용_보고서.md) — `docs/reports/2026-11-19_모델별_구조_비용_보고서.md` · 수정 2026-11-19
 - [배포 사이트 같은 질문 — Sonnet 5.5(Pro, 2026-11-18) vs Opus 5.5(Pro Max, 2026-11-19)](reports/2026-11-19_Sonnet_Opus_실서비스_비교.md) — `docs/reports/2026-11-19_Sonnet_Opus_실서비스_비교.md` · 수정 2026-11-19
 - [DeepSearch 특화 — 무엇을 다르게 하는가, 실호출 결과, 모델별 비용](reports/2026-11-19_DeepSearch_특화_비용_분석.md) — `docs/reports/2026-11-19_DeepSearch_특화_비용_분석.md` · 수정 2026-11-19
@@ -1123,9 +1138,9 @@
 - [04. 추가로 작성할 것 · 생각하고 결정해야 할 것](04_추가_결정사항.md) — `docs/04_추가_결정사항.md` · 수정 2026-10-19
 - [05. 햄찌법원 브랜드 가이드 v0.1](05_브랜드_가이드.md) — `docs/05_브랜드_가이드.md` · 수정 2026-10-19
 - [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-19
-- [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-17
+- [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-20
 - [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-20
-- [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-17
+- [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-20
 - [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-20
 - [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-20
 - [PRD 초안 검토·수정·검증 결과](PRD_review.md) — `docs/PRD_review.md` · 수정 2026-10-19
@@ -1143,7 +1158,7 @@
 
 - [devlog — Claude Code 섹션 (답변 전문, 최신순)](devlog/claude-code.md) — `docs/devlog/claude-code.md` · 수정 2026-11-20
 
-### 모듈 설명 (18)
+### 모듈 설명 (21)
 
 - [햄찌법원 (Hamzzi Court)](../README.md) — `README.md` · 수정 2026-10-21
 - [햄찌법원 수집기 (collector)](../collector/README.md) — `collector/README.md` · 수정 2026-10-19
@@ -1158,10 +1173,13 @@
 - [lib/gate — 기능 게이트 (F-013)](../lib/gate/README.md) — `lib/gate/README.md` · 수정 2026-10-19
 - [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-19
 - [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-19
-- [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-10-19
+- [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-20
 - [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-19
+- [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-20
 - [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-18
 - [lib/supabase — DB·인증 클라이언트](../lib/supabase/README.md) — `lib/supabase/README.md` · 수정 2026-10-21
+- [햄찌법원 앱 (Capacitor) 변경 기록](../mobile/CHANGELOG.md) — `mobile/CHANGELOG.md` · 수정 2026-11-20
+- [CapApp-SPM](../mobile/ios/App/CapApp-SPM/README.md) — `mobile/ios/App/CapApp-SPM/README.md` · 수정 2026-11-20
 - [햄찌법원 Android 앱 버전 기록](../twa/CHANGELOG.md) — `twa/CHANGELOG.md` · 수정 2026-11-17
 
 ### Claude Code 지침 (7)
