@@ -87,3 +87,38 @@ export function weeklyBudgetUnits(env: Env = process.env): number {
   // 80 / 0.0015 = 53333.33… 같은 부동소수 오차를 버린다
   return Math.floor(budget / BUDGET_UNIT_USD + 1e-9);
 }
+
+/**
+ * 기간 예산 (DEC-040, 2026-11-19 사용자 결정). 2026-11-25(한국 시간)까지는 주간 창 대신 이 기간 하나로 센다:
+ * 상한 $95(`AI_PERIOD_BUDGET_USD`), **실제로 쓴 금액만** 차감하고, 다 쓰면 기간이 끝날 때까지 무료 모드다.
+ * 기간이 끝나면 위 주간 규칙(AI_WEEKLY_BUDGET_USD)으로 돌아간다.
+ * 카운터 행은 파기 배치가 창 시작 8일 뒤에 지우므로 기간은 8일을 넘기지 않는다 (단위 테스트가 확인).
+ */
+export const PERIOD_BUDGET = {
+  bucket: "ai_period_20261125",
+  startsAt: "2026-11-19T00:00:00+09:00",
+  /** 11월 25일 24시(한국 시간) */
+  endsAt: "2026-11-26T00:00:00+09:00",
+  usd: 95,
+} as const;
+
+/** 기간 예산 카운터의 금액 단위: 100만분의 1달러 (정수) */
+export const MICRO_PER_USD = 1_000_000;
+export const usdToMicro = (usd: number) => Math.ceil(usd * MICRO_PER_USD - 1e-6);
+/** 단계 가중치(단위 $0.0015)를 그 호출의 상한 금액으로 */
+export const weightToMicro = (weight: number) => usdToMicro(weight * BUDGET_UNIT_USD);
+
+export type PeriodBudget = { bucket: string; startsAt: string; limitMicro: number };
+
+/** 지금 기간 예산이 적용되는지. 기간 밖이면 null (주간 규칙). 0이면 유료 분석 없음, 잘못된 값은 기본값 */
+export function periodBudget(now: Date = new Date(), env: Env = process.env): PeriodBudget | null {
+  const t = now.getTime();
+  if (t < Date.parse(PERIOD_BUDGET.startsAt) || t >= Date.parse(PERIOD_BUDGET.endsAt)) return null;
+  const n = Number.parseFloat(env.AI_PERIOD_BUDGET_USD ?? "");
+  const usd = Number.isFinite(n) && n >= 0 ? n : PERIOD_BUDGET.usd;
+  return {
+    bucket: PERIOD_BUDGET.bucket,
+    startsAt: PERIOD_BUDGET.startsAt,
+    limitMicro: usdToMicro(usd),
+  };
+}

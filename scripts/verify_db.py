@@ -426,6 +426,28 @@ def ops(conn) -> None:
     check(scalar(conn, "select hits from public.rate_limit_hits where key_hash = %s", (wk,)) == 100,
           "가중 차감: 넘은 요청은 카운터에 남기지 않음")
     raises(conn, "가중치 0은 거부", f"select {hw}('ai_units', %s, 100, interval '7 days', 0)", (wk,))
+
+    # DEC-040 기간 예산: 상한만큼 먼저 잡아 두고 실제 비용과의 차액을 돌려준다 (금액 단위 100만분의 1달러)
+    pb = "verify-period-" + uuid.uuid4().hex
+    ps = "2026-11-19T00:00:00+09:00"
+    rs, st = "public.reserve_ai_budget", "public.settle_ai_budget"
+    hits = "select hits from public.rate_limit_hits where bucket = %s and key_hash = 'global'"
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 150000)", (pb, ps)) is True, "기간 예산: 상한 안이면 잡아 둠")
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 150000)", (pb, ps)) is False, "기간 예산: 상한을 넘는 호출은 false")
+    check(scalar(conn, hits, (pb,)) == 150000, "기간 예산: 넘은 요청은 카운터에 남기지 않음")
+    scalar(conn, f"select {st}(%s, %s, 65000)", (pb, ps))
+    check(scalar(conn, hits, (pb,)) == 85000, "기간 예산 정산: 쓰지 않은 몫을 돌려줌")
+    check(scalar(conn, f"select {rs}(%s, %s, 200000, 30000)", (pb, ps)) is True, "기간 예산: 돌려받은 뒤 다시 잡을 수 있음")
+    scalar(conn, f"select {st}(%s, %s, 999999999)", (pb, ps))
+    check(scalar(conn, hits, (pb,)) == 0, "기간 예산 정산: 0 아래로 내려가지 않음")
+    check(scalar(conn, "select count(*) from public.rate_limit_hits where bucket = %s", (pb,)) == 1,
+          "기간 예산: 기간 중 카운터 행은 하나 (창이 바뀌지 않음)")
+    raises(conn, "기간 예산: 금액 0은 거부", f"select {rs}(%s, %s, 200000, 0)", (pb, ps))
+    raises(conn, "기간 예산 정산: 금액 0은 거부", f"select {st}(%s, %s, 0)", (pb, ps))
+    for fn in ("reserve_ai_budget(text, timestamptz, int, int)", "settle_ai_budget(text, timestamptz, int)"):
+        check(scalar(conn, f"select not has_function_privilege('anon', 'public.{fn}', 'execute') "
+                           f"and not has_function_privilege('authenticated', 'public.{fn}', 'execute')"),
+              f"{fn.split('(')[0]}는 anon·로그인 사용자가 실행할 수 없음")
     check(scalar(conn, "select has_function_privilege('anon', "
                        "'public.hit_rate_limit_weighted(text, text, int, interval, int)', 'execute')") is False,
           "가중 차감 함수는 anon이 실행할 수 없음")

@@ -7,7 +7,13 @@ import { AI_NOTICE, ok } from "@/lib/api/respond";
 import { readJson, withRoute } from "@/lib/api/route";
 import { draftFacts } from "@/lib/ai/doc-draft";
 import { aiMode } from "@/lib/ai/mode";
-import { DOC_DRAFT_RATE, assertRateLimit, tryAiQuota } from "@/lib/auth/rate-limit";
+import { HELPER_WEIGHT } from "@/lib/ai/models";
+import {
+  DOC_DRAFT_RATE,
+  assertRateLimit,
+  settleAiQuota,
+  tryAiQuota,
+} from "@/lib/auth/rate-limit";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { FACTS_FIELD, ruleSuggestions } from "@/lib/documents/draft";
 import { isDocumentKind } from "@/lib/documents/policy";
@@ -57,6 +63,8 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   else if (!(await tryAiQuota())) ai = { used: false, reason: "daily_limit" };
   else {
     const out = await draftFacts({ kind, maskedStory });
+    // 기간 예산(DEC-040): 실제로 쓴 금액만 남긴다
+    await settleAiQuota(HELPER_WEIGHT, out.costUsd);
     if (out.ok) {
       suggestions[factsKey] = out.text;
       missing = out.missing;

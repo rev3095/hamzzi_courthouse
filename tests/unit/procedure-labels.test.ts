@@ -25,7 +25,10 @@ const labelStore = vi.hoisted(() => ({
 vi.mock("@/lib/procedure/labels-store", () => labelStore);
 const classify = vi.hoisted(() => ({ classifyProcedure: vi.fn() }));
 vi.mock("@/lib/ai/classify", () => classify);
-const rate = vi.hoisted(() => ({ tryAiQuota: vi.fn(async () => true) }));
+const rate = vi.hoisted(() => ({
+  tryAiQuota: vi.fn(async () => true),
+  settleAiQuota: vi.fn(async () => {}),
+}));
 vi.mock("@/lib/auth/rate-limit", () => rate);
 
 const { procedureHintFor } = await import("@/lib/inquiries/procedure-hint");

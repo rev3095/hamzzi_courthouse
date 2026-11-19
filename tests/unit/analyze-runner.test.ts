@@ -23,6 +23,7 @@ vi.mock("@/lib/citations/verify", () => cite);
 const rate = vi.hoisted(() => ({
   // 주간·하루 상한 확인 (DEC-026). 실제 숫자는 lib/ai/models.test.ts가 본다
   tryAiQuota: vi.fn(async () => true),
+  settleAiQuota: vi.fn(async () => {}),
 }));
 vi.mock("@/lib/auth/rate-limit", () => rate);
 
@@ -274,5 +275,21 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
       expect.any(Headers),
       { consumeAnonQuota: false },
     );
+  });
+
+  describe("DEC-040 기간 예산 정산", () => {
+    test("답변 뒤 그 단계 가중치와 실제 비용으로 정산한다", async () => {
+      rate.settleAiQuota.mockClear();
+      lite.runLiteAnalysis.mockResolvedValue({ ...LITE_OUT, costUsd: 0.0204 });
+      await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "pro" });
+      expect(rate.settleAiQuota).toHaveBeenCalledWith(20, 0.0204);
+    });
+
+    test("예산을 못 잡아 무료로 처리한 질문은 정산하지 않는다", async () => {
+      rate.settleAiQuota.mockClear();
+      rate.tryAiQuota.mockResolvedValueOnce(false);
+      await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "max" });
+      expect(rate.settleAiQuota).not.toHaveBeenCalled();
+    });
   });
 });

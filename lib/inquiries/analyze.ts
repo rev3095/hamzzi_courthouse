@@ -3,7 +3,7 @@
 // 근거 모음(EvidenceSet)은 이 함수 안에서만 쓰고 저장하지 않는다 (DEC-007).
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
-import { tryAiQuota } from "@/lib/auth/rate-limit";
+import { settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import { runLiteAnalysis } from "@/lib/ai/lite";
 import { tierOf, type TierId } from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
@@ -77,6 +77,8 @@ export async function analyzeInquiry(
       { maskedText: inquiry.masked_text, context },
       { onStep, caseHint, tier: tier.id, deep: opts.deep === true },
     );
+    // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
+    await settleAiQuota(tier.weight, analysis.costUsd);
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep,
       screened: analysis.dropped.length,

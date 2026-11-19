@@ -204,6 +204,8 @@ PK `(bucket, key_hash, window_start)`, 인덱스 `(window_start)`. 서버 전용
 
 DB 함수 `hit_rate_limit_weighted(bucket, key, 상한, 기간, 가중치)`는 한 번에 여러 단위를 올린다 — 주간 유료 예산을 단계별 금액으로 세기 위해서다(DEC-036, 마이그레이션 `20261118143933`).
 
+DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_ai_budget(bucket, 기간 시작, 돌려줄 금액)`은 기간 예산(DEC-040, 버킷 `ai_period_20261125`)에 쓴다 — 창 시작을 date_bin이 아니라 서버가 넘긴 기간 시작 시각으로 고정하고, 금액 단위는 100만분의 1달러, 키는 `global`이다. 호출 전에 상한만큼 잡고 답변 뒤 실제 비용과의 차액을 돌려준다(0 아래로 내려가지 않음). service_role만 실행한다 (마이그레이션 `20261118210000_ai_period_budget.sql`).
+
 ### `procedure_labels` — AI 절차 분류 라벨 (DEC-037) **(데모)**
 규칙이 절차를 정하지 못한 질문을 AI가 분류한 결과. 같은 낱말의 질문이 다시 오면 모델을 부르지 않고 이 표를 쓴다. **개인정보·질문 문장 없음**(서버가 저장 전에 숫자·개인정보 패턴을 검사).
 

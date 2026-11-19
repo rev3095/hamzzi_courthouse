@@ -4,7 +4,7 @@
 import "server-only";
 import { classifyProcedure } from "@/lib/ai/classify";
 import { HELPER_WEIGHT } from "@/lib/ai/models";
-import { tryAiQuota } from "@/lib/auth/rate-limit";
+import { settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import {
@@ -31,6 +31,7 @@ export async function procedureHintFor(
     }
     if (!opts.allowAi || !(await tryAiQuota(HELPER_WEIGHT))) return undefined;
     const out = await classifyProcedure(maskedText);
+    await settleAiQuota(HELPER_WEIGHT, out.costUsd);
     if (!out.ok) return undefined;
     const label = labelFromClassification(out.output, maskedText);
     if (!label) return undefined;
