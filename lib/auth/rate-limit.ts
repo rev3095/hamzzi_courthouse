@@ -29,7 +29,7 @@ export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, window
 
 /**
  * 유료(Claude) 분석 전체 상한 (DEC-026·036). 주간 금액 하나만 둔다(기본 $80, DEC-031 임시 — 하루 상한 없음).
- * 단계가 섞여도 금액이 맞도록 건수가 아니라 단위($0.0015)로 센다: Light 1 · Pro 20 · Pro Max 100 · 문서 초안·절차 분류 1 (lib/ai/models.ts).
+ * 단계가 섞여도 금액이 맞도록 건수가 아니라 단위($0.0015)로 센다: Light 2 · Pro 20 · Pro Max 100 · 문서 초안·절차 분류 1 (lib/ai/models.ts, 가중치 = 상한 ÷ 단위 올림).
  * 주간 창은 date_bin 기준(2000-01-01 토요일 00:00 UTC) → 매주 토요일 09:00 KST에 새로 시작한다.
  * 주간 카운터 행은 파기 배치가 8일 동안 남긴다 (마이그레이션 20261117160154_ai_weekly_quota_retention.sql).
  *

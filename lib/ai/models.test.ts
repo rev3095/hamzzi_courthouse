@@ -46,7 +46,7 @@ describe("DEC-036 질문 1건 상한", () => {
       expect(PRICES[TIERS[id].model]).toBeDefined();
       expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.15);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.0015, 0.03, 0.15]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.15]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -85,11 +85,16 @@ describe("DEC-036 질문 1건 상한", () => {
 });
 
 describe("DEC-036 주간 예산은 단위로 센다 (하루 상한 없음)", () => {
-  test("가중치 × 단위 금액 = 그 단계의 질문 1건 상한", () => {
+  test("가중치 = 질문 1건 상한 ÷ 단위 금액을 올림 (상한보다 적게 잡지 않는다)", () => {
     expect(BUDGET_UNIT_USD).toBe(0.0015);
     for (const id of TIER_IDS) {
-      expect(TIERS[id].weight * BUDGET_UNIT_USD).toBeCloseTo(TIERS[id].capUsd, 10);
+      for (const t of [TIERS[id], TIERS[id].deep]) {
+        expect(t.weight).toBe(Math.ceil(t.capUsd / BUDGET_UNIT_USD - 1e-9));
+        expect(t.weight * BUDGET_UNIT_USD).toBeGreaterThanOrEqual(t.capUsd - 1e-12);
+      }
     }
+    // 2026-11-19 사용자 결정: Light 상한 $0.002 → 2단위 / DeepSearch $0.004 → 3단위
+    expect([TIERS.light.weight, TIERS.light.deep.weight]).toEqual([2, 3]);
     expect(HELPER_WEIGHT).toBe(1);
   });
 

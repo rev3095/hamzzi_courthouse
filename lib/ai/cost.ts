@@ -21,7 +21,7 @@ export const COST_CAP_USD = 0.015;
 /**
  * 라이트 모드(AI_MODE=pro, DEC-020) Haiku 질문 1건 상한 — 사용자 결정 $0.0015 (2026-11-16, 이전 $0.001).
  * 배분: 입력 약 9,000토큰($0.0009) + 출력 1,200토큰($0.0006). 입력은 호출 전에 무과금 토큰 세기로 확인한다.
- * 단계별 상한·출력 한도는 lib/ai/models.ts TIERS (DEC-036: Light $0.0015 · Pro $0.03 · Pro Max $0.12)
+ * 단계별 상한·출력 한도는 lib/ai/models.ts TIERS (DEC-036: Light $0.002 · Pro $0.03 · Pro Max $0.15)
  */
 export const LITE_COST_CAP_USD = 0.0015;
 export const LITE_ANSWER_TOKENS = { max: 1_200, min: 700 } as const;

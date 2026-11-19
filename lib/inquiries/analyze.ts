@@ -43,7 +43,7 @@ export async function analyzeInquiry(
     // 넘으면 그 주는 무료 모드로 처리한다 — 운영자 최대 비용 고정.
     // 비로그인 하루 횟수 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7).
     // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
-    // 주간 예산은 단계 가중치만큼 차감한다 (DEC-036: Light 1 · Pro 20 · Pro Max 100단위)
+    // 주간 예산은 단계 가중치만큼 차감한다 (DEC-036: Light 2 · Pro 20 · Pro Max 100단위)
     const tier = tierOf(opts.tier);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
     const deep = opts.deep === true;

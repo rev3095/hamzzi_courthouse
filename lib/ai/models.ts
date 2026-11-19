@@ -12,13 +12,18 @@ type Env = Record<string, string | undefined>;
  * - effort: Light·Pro는 low, Pro Max는 medium.
  * - capUsd: 질문 1건 Claude 비용 상한(질문 해석 Haiku 포함). 입력 약 9,000토큰 + answerTokens.max 출력 정가 기준
  *   (Haiku $0.0009+$0.0006 · Sonnet $0.018+$0.012 · Opus $0.036+$0.10).
+ *   Light는 $0.0015 → **$0.002** (2026-11-19 사용자 결정): 질문 해석 입력이 약 4,900토큰으로 커져(DEC-033 갱신),
+ *   캐시가 식은 첫 질문에서는 해석이 캐시 쓰기 포함 약 $0.0006을 써 답변 몫이 모자랐다(근거가 빠짐).
  *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서). Opus $0.15는 상한이고 실측 전이다(추정 $0.05~0.09).
- * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위와 같아야 한다 (단위 테스트가 확인)
+ * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위를 올림한 값 (단위 테스트가 확인).
+ *   Light $0.002는 단위의 정수배가 아니라 2단위($0.003)로 잡는다 — 기간 예산(DEC-040)은 실제 비용과의 차액을 돌려주므로 손해가 없고,
+ *   주간 규칙(상한 기준 차감)에서는 Light 1건을 $0.003로 조금 크게 센다.
  */
 /*
  * deep: DeepSearch(DEC-041)일 때의 상한 — 일반 질문의 2배. 구조화(Haiku) 1회 + 쟁점별 검색(무료) + 쟁점별 답변 1회라
  * 근거(조문 10·판례 5까지)와 문단(쟁점마다 최대 3개)이 늘어난다. Opus는 생각 + 답변을 7,000토큰으로 묶는다.
- * 추정: Haiku 입력 15,000($0.0015)+출력 2,400($0.0012) · Sonnet $0.03+$0.024 · Opus $0.06+$0.14. 가중치 = 상한 ÷ 단위.
+ * 추정: Haiku 입력 15,000($0.0015)+출력 2,400($0.0012) · Sonnet $0.03+$0.024 · Opus $0.06+$0.14. 가중치 = 상한 ÷ 단위(올림).
+ * Light DeepSearch는 일반 상한 $0.002의 2배인 $0.004 (실측 $0.0025, 이전 상한 $0.003은 여유가 작았다).
  */
 export const TIERS = {
   light: {
@@ -26,11 +31,11 @@ export const TIERS = {
     model: "claude-haiku-5-5",
     thinking: { type: "disabled" },
     effort: "low",
-    capUsd: 0.0015,
+    capUsd: 0.002,
     answerTokens: { max: 1_200, min: 700 },
     timeoutMs: 25_000,
-    weight: 1,
-    deep: { capUsd: 0.003, answerTokens: { max: 2_400, min: 1_200 }, timeoutMs: 40_000, weight: 2 },
+    weight: 2,
+    deep: { capUsd: 0.004, answerTokens: { max: 2_400, min: 1_200 }, timeoutMs: 40_000, weight: 3 },
   },
   pro: {
     label: "Pro",
@@ -82,7 +87,7 @@ export const DEFAULT_WEEKLY_BUDGET_USD = 80;
 
 /**
  * 주간 예산을 세는 단위 (DEC-036). 단계가 섞여도 금액이 맞도록 건수가 아니라 단위로 센다:
- * Light 1 · Pro 20 · Pro Max 100 · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
+ * Light 2 · Pro 20 · Pro Max 100 · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
  */
 export const BUDGET_UNIT_USD = 0.0015;
 /** 문서 초안(DEC-023)·절차 분류(DEC-037) 1건. 둘 다 Haiku $0.0015 이하 */

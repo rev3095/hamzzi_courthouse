@@ -178,7 +178,8 @@ describe("DEC-041 심층 분석 흐름", () => {
   test("단계마다 상한은 일반 질문의 2배이고, 예산 가중치와 맞는다", () => {
     for (const id of TIER_IDS) {
       expect(TIERS[id].deep.capUsd).toBeCloseTo(TIERS[id].capUsd * 2, 10);
-      expect(TIERS[id].deep.weight * BUDGET_UNIT_USD).toBeCloseTo(TIERS[id].deep.capUsd, 10);
+      // 가중치는 상한 ÷ 단위를 올림 (Light $0.004 → 3단위)
+      expect(TIERS[id].deep.weight).toBe(Math.ceil(TIERS[id].deep.capUsd / BUDGET_UNIT_USD - 1e-9));
     }
   });
 

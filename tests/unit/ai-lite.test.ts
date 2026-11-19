@@ -238,9 +238,9 @@ describe("DEC-020 라이트 답변 (Haiku)", () => {
   });
 
   test("입력이 예산을 넘으면 근거를 빼고 다시 잰다 — 생성 호출은 예산 안에서 1번만", async () => {
-    // 판례가 들어가면 13,000토큰(예산 초과: 입력 $0.0013 + 최소 출력 700토큰 > $0.0015), 빼면 5,000토큰
+    // 판례가 들어가면 18,000토큰(예산 초과: 해석 $0.0002 + 입력 $0.0018 + 최소 출력 700토큰 > $0.002), 빼면 5,000토큰
     const model = fakeModel({
-      tokens: (p) => (JSON.stringify(p.messages).includes("2020다12345") ? 13_000 : 5_000),
+      tokens: (p) => (JSON.stringify(p.messages).includes("2020다12345") ? 18_000 : 5_000),
     });
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
