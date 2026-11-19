@@ -1,0 +1,216 @@
+{
+  "id": "insurance-claim-01",
+  "category": "insurance_claim",
+  "question": "암 진단을 받고 보험금을 청구했는데, 보험사가 가입 전에 병원에 다닌 사실을 알리지 않았다며 지급을 거절하고 계약도 해지하겠다고 해요. 어떻게 대응해야 하나요?",
+  "at": "2026-11-19T12:43:37.612Z",
+  "elapsedMs": 25470,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-side",
+    "tokens_in": 6560,
+    "tokens_out": 2097,
+    "latency_ms": 24966
+  },
+  "costUsdUpperEstimate": 0.06818,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "상법",
+        "보험사기방지 특별법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "보험금 고지의무 위반",
+        "고지의무 위반 해지 보험금 지급 거절",
+        "고지의무 위반 질병 인과관계 보험금"
+      ]
+    },
+    "section": "insurance_claim",
+    "relatedSections": [
+      "medical"
+    ],
+    "answer": {
+      "points": [
+        {
+          "text": "상법 제651조에 따르면, 계약 당시 고의 또는 중대한 과실로 중요한 사항을 알리지 않았거나 사실과 다르게 알린 경우 보험사는 계약을 해지할 수 있습니다. 다만 그 사실을 안 날부터 1월 내, 계약 체결일부터 3년 내에만 해지할 수 있습니다. 또 보험사가 계약 당시 그 사실을 알았거나 중대한 과실로 몰랐다면 해지할 수 없습니다.",
+          "source": "law:상법:제651조",
+          "quote": "계약을 체결한 날로부터 3년내에 한하여 계약을 해지할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "상법 제655조에 따르면, 사고가 난 뒤 고지의무 위반으로 계약이 해지되면 보험사는 원칙적으로 보험금을 지급할 책임이 없습니다. 다만 알리지 않은 사실이 보험사고 발생에 영향을 미치지 않았다는 점이 증명되면 보험금을 지급할 책임이 있습니다. 따라서 과거 병원 진료와 이번 암 진단의 관련성을 따져 보시는 것이 중요합니다.",
+          "source": "law:상법:제655조",
+          "quote": "보험사고 발생에 영향을 미치지 아니하였음이 증명된 경우에는",
+          "check": "verified"
+        },
+        {
+          "text": "백혈병 진단 후 고지의무 위반으로 계약이 해지된 비슷한 사건에서, 대법원은 인과관계가 없다는 점의 증명책임이 보험계약자 측에 있다고 판단했습니다. 또 인과관계를 조금이라도 인정할 여지가 있으면 제655조 단서를 적용하기 어렵다고 보았습니다. 이는 그 사건에 대한 판단이므로, 질문하신 사안도 같은 결과가 나온다고 단정할 수는 없습니다.",
+          "source": "case:2024다272941",
+          "quote": "인과관계가 존재하지 않는다는 점에 관한 증명책임의 소재(=보험계약자 측)",
+          "check": "verified"
+        },
+        {
+          "text": "또 다른 사건에서 대법원은 보험사가 '계약 전 알릴 의무사항'의 중요성과 위반 시 불이익을 구체적이고 상세하게 설명할 의무가 있다고 보았습니다. 이 의무를 이행했다는 점의 증명책임은 보험자에게 있다고 판단했습니다. 따라서 가입 당시 질문 내용과 설명을 받은 경위를 확인해 보실 필요가 있습니다.",
+          "source": "case:2023다293620",
+          "quote": "명시·설명의무의 이행에 관한 증명책임의 소재(=보험자)",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:상법:제651조",
+        "lawName": "상법",
+        "articleNo": "제651조",
+        "title": "고지의무위반으로 인한 계약해지",
+        "effectiveFrom": "2026-09-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EB%B2%95/%EC%A0%9C651%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:상법:제655조",
+        "lawName": "상법",
+        "articleNo": "제655조",
+        "title": "계약해지와 보험금청구권",
+        "effectiveFrom": "2026-09-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EB%B2%95/%EC%A0%9C655%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:상법:제658조",
+        "lawName": "상법",
+        "articleNo": "제658조",
+        "title": "보험금액의 지급",
+        "effectiveFrom": "2026-09-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EB%B2%95/%EC%A0%9C658%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:상법:제649조",
+        "lawName": "상법",
+        "articleNo": "제649조",
+        "title": "사고발생전의 임의해지",
+        "effectiveFrom": "2026-09-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EB%B2%95/%EC%A0%9C649%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:보험사기방지특별법시행령:제3조",
+        "lawName": "보험사기방지 특별법 시행령",
+        "articleNo": "제3조",
+        "title": "보험금 지급지체 등 사유",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B3%B4%ED%97%98%EC%82%AC%EA%B8%B0%EB%B0%A9%EC%A7%80%20%ED%8A%B9%EB%B3%84%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:상법:제652조",
+        "lawName": "상법",
+        "articleNo": "제652조",
+        "title": "위험변경증가의 통지와 계약해지",
+        "effectiveFrom": "2026-09-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EB%B2%95/%EC%A0%9C652%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "600295",
+        "caseNo": "2024다272941",
+        "caseName": "보험금[보험계약자가 고지의무를 위반한 사실과 보험사고 발생 사이에 인과관계가 있는지 여부가 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-01-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=600295",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "615947",
+        "caseNo": "2022다233713",
+        "caseName": "구상금",
+        "court": "대법원",
+        "decidedAt": "2026-01-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=615947",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "241519",
+        "caseNo": "2023다293620",
+        "caseName": "채무부존재확인",
+        "court": "대법원",
+        "decidedAt": "2024-04-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=241519",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "225457",
+        "caseNo": "2018도13792",
+        "caseName": "직권남용권리행사방해·강요(일부인정된죄명:강요미수)·강요미수·사기미수·증거인멸교사·특정범죄가중처벌등에관한법률위반(뇌물)·특정범죄가중처벌등에관한법률위반(뇌물)(인정된죄명:뇌물수수)·국회에서의증언·감정등에관한법률위반·범죄수익은닉의규제및처벌등에관한법률위반·특정범죄가중처벌등에관한법률위반(알선수재)",
+        "court": "대법원",
+        "decidedAt": "2019-08-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=225457",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "609545",
+        "caseNo": "2022가합107693",
+        "caseName": "보험에관한소송",
+        "court": "서울남부지법",
+        "decidedAt": "2025-09-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=609545",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 6
+      },
+      {
+        "keyword": "보험금 고지의무 위반",
+        "total": 6
+      },
+      {
+        "keyword": "고지의무 위반 해지 보험금 지급 거절",
+        "total": 6
+      },
+      {
+        "keyword": "고지의무 위반 질병 인과관계 보험금",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "상법 제651조",
+          "exists": true
+        },
+        {
+          "citation": "상법 제655조",
+          "exists": true
+        },
+        {
+          "citation": "2024다272941",
+          "exists": true
+        },
+        {
+          "citation": "2023다293620",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

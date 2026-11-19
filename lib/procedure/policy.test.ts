@@ -220,6 +220,22 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
     expect(procedurePlan(bare(["형법"]), "처벌할 수 있나요").kind).toBe("life_timeline");
   });
 
+  test("F-014 DEC-045 보험금 지급 거절·저작권 침해는 뚜렷한 낱말이 있을 때만 새 섹션으로 간다", () => {
+    expect(classifyCase(bare(["상법"]), "보험사가 고지의무 위반이라며 진단금을 안 줘요")).toBe(
+      "insurance_claim",
+    );
+    expect(classifyCase(bare(["상법"]), "보험금을 청구했는데 지급이 거절됐어요")).toBe(
+      "insurance_claim",
+    );
+    expect(classifyCase(bare(["저작권법"]), "제 그림을 무단사용한 영상을 찾았어요")).toBe(
+      "copyright",
+    );
+    // 보험이라는 낱말만으로는 가지 않는다 (교통사고 과실 다툼 등)
+    expect(classifyCase(bare(["민법"]), "보험 처리를 해 준다고 했는데 연락이 없어요")).not.toBe(
+      "insurance_claim",
+    );
+  });
+
   test("DEC-033 소장·지급명령을 받은 쪽은 받은 쪽 대응 타임라인 — 돈 받는 쪽 타임라인을 보이지 않는다", () => {
     for (const q of [
       "대여금 소장을 받았어요. 돈을 갚아야 하나요?",

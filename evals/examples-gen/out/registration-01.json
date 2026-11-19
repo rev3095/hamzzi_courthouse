@@ -1,0 +1,224 @@
+{
+  "id": "registration-01",
+  "category": "registration",
+  "question": "부모님께 아파트를 증여받기로 했어요. 법무사에게 맡기지 않고 직접 소유권이전등기를 신청하려면 어떤 서류를 준비하고 어디에 내야 하나요?",
+  "at": "2026-11-19T12:42:25.438Z",
+  "elapsedMs": 21242,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-side",
+    "tokens_in": 8259,
+    "tokens_out": 1570,
+    "latency_ms": 20712
+  },
+  "costUsdUpperEstimate": 0.06444,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "부동산등기법",
+        "부동산등기 특별조치법",
+        "부동산 실권리자명의 등기에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "소유권이전등기",
+        "증여 소유권이전등기 신청",
+        "부동산 증여 등기 서류"
+      ]
+    },
+    "section": "registration",
+    "channel": "offline",
+    "answer": {
+      "points": [
+        {
+          "text": "부모님께 증여받는 아파트의 소유권이전등기는 법률에 다른 규정이 없으면 받는 사람(등기권리자)과 주는 부모님(등기의무자)이 함께 신청하는 것이 원칙입니다. 따라서 직접 하시더라도 부모님과 공동으로 신청하셔야 합니다.",
+          "source": "law:부동산등기법:제23조",
+          "quote": "등기권리자(登記權利者)와 등기의무자(登記義務者)가 공동으로 신청한다",
+          "check": "verified"
+        },
+        {
+          "text": "신청은 등기소에 직접 나가 신청정보와 첨부정보를 적은 서면을 내는 방문신청이나, 전산(앱 포함)으로 보내는 전자신청으로 할 수 있습니다. 구체적으로 어떤 신청정보·첨부서류가 필요한지는 대법원규칙으로 정하도록 되어 있어, 주어진 근거만으로는 서류 목록을 확인해 드리기 어렵습니다.",
+          "source": "law:부동산등기법:제24조",
+          "quote": "등기소에 출석하여 신청정보 및 첨부정보를 적은 서면을 제출하는 방법",
+          "check": "verified"
+        },
+        {
+          "text": "필요한 첨부정보를 빠뜨리거나 방문신청 때 당사자가 출석하지 않으면 등기관이 신청을 각하할 수 있습니다. 다만 고칠 수 있는 잘못이고 등기관이 보정을 명한 날의 다음 날까지 고치면 각하되지 않습니다.",
+          "source": "law:부동산등기법:제29조",
+          "quote": "등기관이 보정을 명한 날의 다음 날까지 그 잘못된 부분을 보정하였을 때에는",
+          "check": "verified"
+        },
+        {
+          "text": "신청 기한도 확인해 두세요. 소유권이전 계약을 맺은 사람은 정해진 날부터 60일 이내에 등기를 신청해야 하며, 증여처럼 한쪽만 채무를 지는 계약이라면 그 기산일은 계약의 효력이 발생한 날로 볼 여지가 있습니다. 계약이 취소·해제·무효인 경우는 예외입니다.",
+          "source": "law:부동산등기특별조치법:제2조",
+          "quote": "계약당사자의 일방만이 채무를 부담하는 경우에는 그 계약의 효력이 발생한 날",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:부동산등기법:제23조",
+        "lawName": "부동산등기법",
+        "articleNo": "제23조",
+        "title": "등기신청인",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C23%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:부동산등기법:제24조",
+        "lawName": "부동산등기법",
+        "articleNo": "제24조",
+        "title": "등기신청의 방법",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C24%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:부동산등기법:제29조",
+        "lawName": "부동산등기법",
+        "articleNo": "제29조",
+        "title": "신청의 각하",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C29%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:부동산등기특별조치법:제2조",
+        "lawName": "부동산등기 특별조치법",
+        "articleNo": "제2조",
+        "title": "소유권이전등기등 신청의무",
+        "effectiveFrom": "2022-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%20%ED%8A%B9%EB%B3%84%EC%A1%B0%EC%B9%98%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:동산ㆍ채권등의담보에관한법률:제41조",
+        "lawName": "동산ㆍ채권 등의 담보에 관한 법률",
+        "articleNo": "제41조",
+        "title": "등기신청인",
+        "effectiveFrom": "2022-04-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%20%EB%93%B1%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C41%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:동산ㆍ채권등의담보에관한법률:제43조",
+        "lawName": "동산ㆍ채권 등의 담보에 관한 법률",
+        "articleNo": "제43조",
+        "title": "등기신청에 필요한 서면 또는 전자문서 및 신청서의 기재사항 및 방식",
+        "effectiveFrom": "2022-04-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%20%EB%93%B1%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C43%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산실권리자명의등기에관한법률:제2조",
+        "lawName": "부동산 실권리자명의 등기에 관한 법률",
+        "articleNo": "제2조",
+        "title": "정의",
+        "effectiveFrom": "2020-03-24",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%20%EC%8B%A4%EA%B6%8C%EB%A6%AC%EC%9E%90%EB%AA%85%EC%9D%98%20%EB%93%B1%EA%B8%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624551",
+        "caseNo": "2026다203274",
+        "caseName": "소유권이전등기",
+        "court": "대법원",
+        "decidedAt": "2026-08-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624551",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622257",
+        "caseNo": "2025두30615",
+        "caseName": "상속세부과처분취소[상속인이 상속받은 토지를 개별공시지가에 의하여 평가하여 상속세 과세표준 및 세액을 신고ㆍ납부하였는데, 과세관청이 구 상속세 및 증여세법 시행령 제49조 제1항 단서에서 정한 기간 내에 발생한 매매사례가액에 기하여 위 토지의 시가를 산정하여 상속세를 결정ㆍ고지한 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622257",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "618721",
+        "caseNo": "2024누12688",
+        "caseName": "취득세등 경정거부처분취소",
+        "court": "광주고등법원",
+        "decidedAt": "2025-11-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618721",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "620419",
+        "caseNo": "2025다220458",
+        "caseName": "소유권이전등기절차이행등의소",
+        "court": "대법원",
+        "decidedAt": "2026-04-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=620419",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "618673",
+        "caseNo": "2025두35499",
+        "caseName": "증여세부과처분취소[보충적 평가방법으로 증여세를 신고·납부하였으나 감정가액의 평균을 시가로 보아 증여세를 부과한 문제 된 사안]",
+        "court": "대법원",
+        "decidedAt": "2026-04-02",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618673",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 7
+      },
+      {
+        "keyword": "소유권이전등기",
+        "total": 6
+      },
+      {
+        "keyword": "증여 소유권이전등기 신청",
+        "total": 6
+      },
+      {
+        "keyword": "부동산 증여 등기 서류",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "부동산등기법 제23조",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기법 제24조",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기법 제29조",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기 특별조치법 제2조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

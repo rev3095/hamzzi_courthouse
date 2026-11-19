@@ -1,0 +1,61 @@
+{"_note": "공개 커뮤니티 글 60건의 정답 라벨 (DEC-044). 글 내용은 싣지 않는다 — 원문은 evals/labels/community/(gitignore)에만 있다. 정답은 개발 세션이 글을 읽고 정했고 법률 전문가 확인은 받지 않았다. gold는 받아들이는 답 전부(순서 무관). kind: chatter = 잡담·의견·가정 질문, side = 요구받는 쪽이거나 방향이 헷갈리기 쉬운 글, case = 그 밖의 사연"}
+{"id": "dc-001", "gold": ["consumer", "crime_report", "none"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-002", "gold": ["commercial_lease"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-003", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-004", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-005", "gold": ["crime_report", "none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-006", "gold": ["money", "fraud"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-007", "gold": ["none", "contract_deposit", "money", "commercial_lease"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-008", "gold": ["money", "none"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-009", "gold": ["crime_report", "sex_crime", "respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-010", "gold": ["none", "debt_relief"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-011", "gold": ["voice_phishing", "fraud", "respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-012", "gold": ["inheritance"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-013", "gold": ["none", "respond_criminal"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-014", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-015", "gold": ["school_violence"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-016", "gold": ["fraud"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-017", "gold": ["none", "defamation"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-018", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-019", "gold": ["respond_civil", "inheritance"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-020", "gold": ["none", "defamation"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-021", "gold": ["none", "defamation"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-022", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-023", "gold": ["money"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-024", "gold": ["defamation", "medical", "none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-025", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-026", "gold": ["none", "assault"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-027", "gold": ["inheritance"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-028", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-029", "gold": ["assault", "wage"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-030", "gold": ["none", "respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-031", "gold": ["none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-032", "gold": ["assault"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-033", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-034", "gold": ["none"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-035", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-036", "gold": ["none", "crime_report", "respond_civil"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-037", "gold": ["consumer", "none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-038", "gold": ["respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-039", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-040", "gold": ["lease_residence"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-041", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-042", "gold": ["money"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-043", "gold": ["sex_crime", "none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-044", "gold": ["none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-045", "gold": ["none", "privacy", "crime_report"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-046", "gold": ["crime_report"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-047", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-048", "gold": ["crime_report", "none"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-049", "gold": ["consumer", "money", "fraud"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-050", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-051", "gold": ["contract_deposit", "money", "wage"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-052", "gold": ["respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-053", "gold": ["none"], "goldOthers": [], "kind": "chatter", "question": ""}
+{"id": "dc-054", "gold": ["fine_objection"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-055", "gold": ["inheritance"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-056", "gold": ["family"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-057", "gold": ["respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-058", "gold": ["fraud", "crime_report"], "goldOthers": [], "kind": "side", "question": ""}
+{"id": "dc-059", "gold": ["sex_crime", "none", "respond_criminal"], "goldOthers": [], "kind": "case", "question": ""}
+{"id": "dc-060", "gold": ["none", "respond_criminal"], "goldOthers": [], "kind": "side", "question": ""}

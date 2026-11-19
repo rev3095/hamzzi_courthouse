@@ -162,6 +162,8 @@ const RESPONDENT_LABELS: ReadonlySet<CaseType> = new Set<CaseType>([
   "admin_appeal",
 ]);
 const FINE_WORD = /과태료/;
+const INSURANCE_CLAIM_WORD = /보험금.*(거절|안줘|안준|못받|삭감|부지급)|고지의무/;
+const COPYRIGHT_WORD = /저작권|무단(도용|사용|전재)|표절/;
 const AUCTION_BIDDER_WORD = /입찰|낙찰|권리분석|매수신청|공매/;
 const REGISTRATION_WORD = /소유권이전등기|가등기|등기를?신청|등기신청/;
 const PERMIT_WORD = /영업신고|영업허가|인허가/;
@@ -197,6 +199,9 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   if (AUCTION_BIDDER_WORD.test(text)) return "auction";
   if (REGISTRATION_WORD.test(text)) return "registration";
   if (PERMIT_WORD.test(text)) return "business_permit";
+  // DEC-045: 보험금 지급 거절·저작권 침해 피해 (뚜렷한 낱말이 있을 때만)
+  if (INSURANCE_CLAIM_WORD.test(text)) return "insurance_claim";
+  if (COPYRIGHT_WORD.test(text)) return "copyright";
   if (ADMIN_WORD.test(text)) return "admin_appeal";
   if (SEX_CRIME_WORD.test(text)) return "sex_crime";
   if (SCHOOL_VIOLENCE_WORD.test(text)) return "school_violence";

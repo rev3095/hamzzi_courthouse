@@ -1,0 +1,213 @@
+{
+  "id": "auction-01",
+  "category": "auction",
+  "question": "경매로 나온 아파트에 입찰하려고 해요. 등기부를 보니 근저당이 있고 전입신고가 된 임차인도 있어요. 낙찰받으면 제가 그 임차인의 보증금을 떠안게 되나요?",
+  "at": "2026-11-19T12:42:04.193Z",
+  "elapsedMs": 26066,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-side",
+    "tokens_in": 7495,
+    "tokens_out": 1825,
+    "latency_ms": 25129
+  },
+  "costUsdUpperEstimate": 0.06648,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "민사집행법",
+        "주택임대차보호법",
+        "채무자 회생 및 파산에 관한 법률",
+        "민법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "부동산 경매 매수인 인수",
+        "경매 대항력 임차인 보증금 인수",
+        "근저당권 전입신고 우선변제 낙찰자"
+      ]
+    },
+    "section": "auction",
+    "relatedSections": [
+      "lease_deposit"
+    ],
+    "answer": {
+      "points": [
+        {
+          "text": "임차인이 집을 넘겨받고 전입신고를 마치면, 등기가 없어도 그 다음 날부터 제3자에게 임대차를 주장할 수 있는 힘(대항력)이 생깁니다. 그래서 이 임차인의 대항력이 생긴 시점이 언제인지가 보증금 인수 여부를 가르는 출발점이 됩니다.",
+          "source": "law:주택임대차보호법:제3조",
+          "quote": "주택의 인도(引渡)와 주민등록을 마친 때에는 그 다음 날부터 제삼자에 대하여 효력이 생긴다",
+          "check": "verified"
+        },
+        {
+          "text": "대항력 있는 임차인이 있는 주택을 넘겨받은 사람은 임대인의 지위를 이어받은 것으로 봅니다. 따라서 낙찰자에게 대항할 수 있는 임차인이라면, 낙찰자가 임대인으로서 보증금 반환 문제를 떠안게 될 수 있습니다.",
+          "source": "law:주택임대차보호법:제3조",
+          "quote": "임대인(賃貸人)의 지위를 승계한 것으로 본다",
+          "check": "verified"
+        },
+        {
+          "text": "경매로 저당권은 모두 소멸하고, 등기된 임차권 등은 저당권에 대항할 수 없으면 매각으로 소멸하며 그 밖의 경우는 매수인이 인수합니다. 전입신고만 한 임차인이라면 대항력이 생긴 날과 근저당 등기일의 선후를 매각물건명세서 등으로 꼭 확인해 보시길 권합니다.",
+          "source": "law:민사집행법:제91조",
+          "quote": "저당권ᆞ압류채권ᆞ가압류채권에 대항할 수 없는 경우에는 매각으로 소멸된다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:민사집행법:제91조",
+        "lawName": "민사집행법",
+        "articleNo": "제91조",
+        "title": "인수주의와 잉여주의의 선택 등",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C91%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사집행법:제113조",
+        "lawName": "민사집행법",
+        "articleNo": "제113조",
+        "title": "매수신청의 보증",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C113%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제142조",
+        "lawName": "민사집행법",
+        "articleNo": "제142조",
+        "title": "대금의 지급",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C142%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주택임대차보호법:제3조",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제3조",
+        "title": "대항력 등",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:채무자회생및파산에관한법률:제415조",
+        "lawName": "채무자 회생 및 파산에 관한 법률",
+        "articleNo": "제415조",
+        "title": "주택임차인 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B1%84%EB%AC%B4%EC%9E%90%20%ED%9A%8C%EC%83%9D%20%EB%B0%8F%20%ED%8C%8C%EC%82%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C415%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주택임대차보호법:제3조의3",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제3조의3",
+        "title": "임차권등기명령",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C3%EC%A1%B0%EC%9D%983",
+        "used": false
+      },
+      {
+        "id": "law:민법:제650조",
+        "lawName": "민법",
+        "articleNo": "제650조",
+        "title": "임차건물등의 부속물에 대한 법정질권",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C650%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "618541",
+        "caseNo": "2025다217707",
+        "caseName": "소유권이전등기말소등[공유물분할을 위한 경매절차에서 매각된 부동산의 매수인이 소유권이전등기청구권의 순위보전을 위한 가등기 및 그에 따른 본등기의 말소를 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-03-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618541",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "616251",
+        "caseNo": "2025가단107133",
+        "caseName": "배당이의",
+        "court": "서울북부지법",
+        "decidedAt": "2026-01-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616251",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "188058",
+        "caseNo": "2015나54463",
+        "caseName": "건물명도",
+        "court": "의정부지방법원",
+        "decidedAt": "2016-05-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=188058",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "623247",
+        "caseNo": "2025다211354",
+        "caseName": "임대차보증금",
+        "court": "대법원",
+        "decidedAt": "2025-12-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623247",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622055",
+        "caseNo": "2024다292525",
+        "caseName": "매매대금등",
+        "court": "대법원",
+        "decidedAt": "2025-11-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622055",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 7
+      },
+      {
+        "keyword": "부동산 경매 매수인 인수",
+        "total": 6
+      },
+      {
+        "keyword": "경매 대항력 임차인 보증금 인수",
+        "total": 6
+      },
+      {
+        "keyword": "근저당권 전입신고 우선변제 낙찰자",
+        "total": 1
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "주택임대차보호법 제3조",
+          "exists": true
+        },
+        {
+          "citation": "민사집행법 제91조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

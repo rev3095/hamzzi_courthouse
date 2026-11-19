@@ -16,7 +16,8 @@ const { callModel, createModelClient, textOf, withCostCap } = await import("@/li
 const { UNDERSTAND_SYSTEM } = await import("@/lib/ai/prompts");
 const { UNDERSTAND_MODEL } = await import("@/lib/ai/lite");
 
-const IN = "evals/labels/easylaw-questions.jsonl";
+// LABEL_IN으로 다른 질문 파일을 줄 수 있다 (예: 평가셋 evals/labels/eval-set.jsonl)
+const IN = process.env.LABEL_IN ?? "evals/labels/easylaw-questions.jsonl";
 const OUT = process.env.LABEL_OUT ?? "evals/labels/labeled.jsonl";
 // 다시 라벨링: 이 파일에서 section이 none이었던 질문만 고른다 (섹션을 늘린 뒤 효과를 잴 때)
 const ONLY_NONE_FROM = process.env.LABEL_ONLY_NONE_FROM;

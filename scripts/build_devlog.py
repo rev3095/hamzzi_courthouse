@@ -95,6 +95,7 @@ def build_md(data, commits, decs):
     )
     L.append(
         "- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).\n"
+        "- Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.\n"
         "- 원본: 각 세션의 대화 기록을 읽고 요약했다. 측정하지 않은 값은 \"추정\", 확인하지 못한 것은 그렇다고 적었다.\n"
         "- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `python -X utf8 scripts/build_devlog.py`.\n"
     )

@@ -1,0 +1,224 @@
+{
+  "id": "copyright-01",
+  "category": "copyright",
+  "question": "제가 그려서 블로그에 올린 그림을 어떤 업체가 허락 없이 상품 광고에 쓰고 있어요. 저작권 침해로 그림을 내리게 하고 손해도 배상받으려면 어떻게 해야 하나요?",
+  "at": "2026-11-19T12:44:00.510Z",
+  "elapsedMs": 22898,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-side",
+    "tokens_in": 8198,
+    "tokens_out": 1948,
+    "latency_ms": 22397
+  },
+  "costUsdUpperEstimate": 0.07175,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "저작권법",
+        "콘텐츠산업 진흥법",
+        "행정기관의 공모전 운영에 관한 규정"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "저작권 침해 손해배상",
+        "저작권 침해 손해배상 광고 사용",
+        "저작재산권 침해 금지청구 복제 배포"
+      ]
+    },
+    "section": "copyright",
+    "channel": "online",
+    "answer": {
+      "points": [
+        {
+          "text": "블로그에 올린 그림을 허락 없이 쓴 업체가 고의나 과실로 권리를 침해했다면, 저작권법 제125조에 따라 손해배상을 청구할 수 있습니다. 업체가 침해로 이익을 얻었다면 그 이익액을 손해액으로 추정하고, 통상 받을 수 있는 이용료 상당액을 손해로 청구하는 방법도 있습니다.",
+          "source": "law:저작권법:제125조",
+          "quote": "그 이익의 액을 저작재산권자등이 받은 손해의 액으로 추정한다",
+          "check": "verified"
+        },
+        {
+          "text": "실제 손해액 대신 저작물마다 1천만원 이하의 법정손해배상을 청구할 수도 있습니다. 영리 목적의 고의 침해라면 5천만원 이하입니다. 다만 침해가 일어나기 전에 그림이 저작권 등록되어 있어야 한다는 요건이 있습니다.",
+          "source": "law:저작권법:제125조의2",
+          "quote": "영리를 목적으로 고의로 권리를 침해한 경우에는 5천만원",
+          "check": "verified"
+        },
+        {
+          "text": "광고가 온라인서비스제공자의 서비스를 통해 게시되어 있다면, 침해 사실을 소명하여 그 서비스제공자에게 게시 중단을 요구할 수 있습니다. 업체가 정당한 권리를 소명해 재개를 요구하면 재개될 수 있으나, 그 전에 소를 제기한 사실을 알리면 재개되지 않습니다.",
+          "source": "law:저작권법:제103조",
+          "quote": "온라인서비스제공자에게 그 저작물등의 복제ᆞ전송을 중단시킬 것을 요구할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "보호를 받으려면 그림이 저작물로서 창작성을 갖춰야 합니다. 대법원은 다른 사건에서 완전한 독창성까지는 아니어도 남의 것을 모방하지 않고 창작자 자신의 독자적인 표현을 담아야 한다고 판단했습니다. 직접 그린 그림이라는 점을 보여줄 원본 파일 등을 챙겨 두시면 좋습니다.",
+          "source": "case:2024다228661",
+          "quote": "사상이나 감정에 대한 창작자 자신의 독자적인 표현을 담고 있어야 한다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:저작권법:제103조",
+        "lawName": "저작권법",
+        "articleNo": "제103조",
+        "title": "복제ㆍ전송의 중단",
+        "effectiveFrom": "2026-10-29",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%80%EC%9E%91%EA%B6%8C%EB%B2%95/%EC%A0%9C103%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:저작권법:제125조",
+        "lawName": "저작권법",
+        "articleNo": "제125조",
+        "title": "손해배상의 청구",
+        "effectiveFrom": "2026-10-29",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%80%EC%9E%91%EA%B6%8C%EB%B2%95/%EC%A0%9C125%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:저작권법:제136조",
+        "lawName": "저작권법",
+        "articleNo": "제136조",
+        "title": "벌칙",
+        "effectiveFrom": "2026-10-29",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%80%EC%9E%91%EA%B6%8C%EB%B2%95/%EC%A0%9C136%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:저작권법:제125조의2",
+        "lawName": "저작권법",
+        "articleNo": "제125조의2",
+        "title": "법정손해배상의 청구",
+        "effectiveFrom": "2026-08-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%80%EC%9E%91%EA%B6%8C%EB%B2%95/%EC%A0%9C125%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:콘텐츠산업진흥법:제38조",
+        "lawName": "콘텐츠산업 진흥법",
+        "articleNo": "제38조",
+        "title": "손해배상 청구 등",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%BD%98%ED%85%90%EC%B8%A0%EC%82%B0%EC%97%85%20%EC%A7%84%ED%9D%A5%EB%B2%95/%EC%A0%9C38%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:행정기관의공모전운영에관한규정:제4조",
+        "lawName": "행정기관의 공모전 운영에 관한 규정",
+        "articleNo": "제4조",
+        "title": "시행계획의 수립",
+        "effectiveFrom": "2022-08-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EA%B8%B0%EA%B4%80%EC%9D%98%20%EA%B3%B5%EB%AA%A8%EC%A0%84%20%EC%9A%B4%EC%98%81%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C4%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:저작권법:제35조의4",
+        "lawName": "저작권법",
+        "articleNo": "제35조의4",
+        "title": "문화시설에 의한 복제 등",
+        "effectiveFrom": "2026-08-11",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%80%EC%9E%91%EA%B6%8C%EB%B2%95/%EC%A0%9C35%EC%A1%B0%EC%9D%984",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "618155",
+        "caseNo": "2024다228661",
+        "caseName": "손해배상(기)[저작권 침해를 원인으로 하는 손해배상 및 침해금지 등을 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-02-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618155",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "234953",
+        "caseNo": "2017도19025",
+        "caseName": "저작권법위반방조",
+        "court": "대법원",
+        "decidedAt": "2021-09-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=234953",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "618571",
+        "caseNo": "2023나2047788",
+        "caseName": "손해배상(기)",
+        "court": "서울고법",
+        "decidedAt": "2025-09-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618571",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "175525",
+        "caseNo": "2012다55068",
+        "caseName": "저작권침해금지및손해배상등",
+        "court": "대법원",
+        "decidedAt": "2014-05-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=175525",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "217565",
+        "caseNo": "2020나2018284",
+        "caseName": "초상권침해금지및방해예방청구",
+        "court": "서울고등법원",
+        "decidedAt": "2021-02-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=217565",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 7
+      },
+      {
+        "keyword": "저작권 침해 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "저작권 침해 손해배상 광고 사용",
+        "total": 6
+      },
+      {
+        "keyword": "저작재산권 침해 금지청구 복제 배포",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "저작권법 제125조",
+          "exists": true
+        },
+        {
+          "citation": "저작권법 제125조의2",
+          "exists": true
+        },
+        {
+          "citation": "저작권법 제103조",
+          "exists": true
+        },
+        {
+          "citation": "2024다228661",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -30,7 +30,8 @@ describe("DEC-042 예시 뱅크 (미세조정 대신 관련 예시를 골라 넣
     expect(LABEL_BANK.length).toBeGreaterThanOrEqual(CATEGORY_LIST.length * 2);
     for (const e of LABEL_BANK) {
       expect(SECTION_LABELS as string[], e.q).toContain(e.section);
-      expect(e.section).not.toBe("none");
+      // "맞는 섹션 없음" 예시(가정·의견 질문)는 함께 걸린 절차가 없어야 한다
+      if (e.section === "none") expect(e.others, e.q).toEqual([]);
       for (const o of e.others) {
         expect(SECTION_LABELS as string[], e.q).toContain(o);
         expect(o).not.toBe(e.section);

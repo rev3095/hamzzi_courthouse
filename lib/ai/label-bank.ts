@@ -90,6 +90,25 @@ const COMPOSITE: LabelExample[] = [
   },
 ];
 
+/**
+ * 사용자가 어느 쪽인지에 따라 라벨이 갈리는 사례 (직접 작성, DEC-044).
+ * 2026-11-19 커뮤니티 글 60건 평가에서 틀린 11건 가운데 8건이 이 유형이었다 — 피해자를 고소당한 쪽으로,
+ * 채권자를 채무자로, 원고를 피고로 읽었다. 그 글들을 옮긴 것이 아니라 같은 유형을 새로 썼다.
+ */
+const SIDE: LabelExample[] = (
+  [
+    ["스토킹으로 고소를 당했어요. 저는 안부 연락만 몇 번 했을 뿐인데요.", "respond_criminal"],
+    ["제가 한 행동 때문에 신고가 들어갔다고 경찰에서 연락이 왔어요.", "respond_criminal"],
+    ["사기꾼을 고소했는데 사건이 검찰로 넘어갔대요. 그 뒤 진행은 어떻게 확인하나요?", "fraud"],
+    ["제가 낸 민사소송에서 상대방이 합의를 하자고 하는데 어떻게 하는 게 좋을까요?", "money"],
+    ["빌려준 돈 소송에서 이겼는데 상대방이 돈이 없다며 주지 않아요.", "money"],
+    ["제가 집주인인데 나간 세입자가 밀린 월세와 수리비를 주지 않아요.", "money"],
+    ["산 물건이 유통기한이 한참 지난 것이었는데 가게는 판 적이 없다고 우겨요.", "consumer"],
+    ["길에서 시비가 붙어 사람을 때리면 어떤 처벌을 받는지 궁금해요.", "none"],
+    ["요즘 법이 범죄자에게 너무 관대한 것 같은데 왜 그런 건가요?", "none"],
+  ] as const
+).map(([q, section]) => ({ q, section, others: [], channel: "unknown" as Channel }));
+
 const strip = (s: string) => s.replace(/^예:\s*/, "").trim();
 
 /** 홈 카테고리 문장(직접 쓴 것)에서 만든 예시 + 복합 사례 */
@@ -102,6 +121,7 @@ export const LABEL_BANK: LabelExample[] = [
       channel: CHANNEL_OF[c.track as SectionLabel] ?? ("unknown" as Channel),
     })),
   ),
+  ...SIDE,
   ...COMPOSITE,
 ];
 

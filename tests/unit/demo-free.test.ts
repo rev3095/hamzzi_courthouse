@@ -55,7 +55,8 @@ describe("DEC-015 예시 질문 재생", () => {
     // 2026-10-22 Opus 전체 파이프라인 10건 + 2026-11-19 Pro Max 22건
     // (빌려준 돈·폭행 상해·보이스피싱은 검색·검증을 고친 뒤 다시 만든 것)
     // + DeepSearch 예시 1건 (deep-lease-01, DEC-041)
-    expect(list.length).toBe(33);
+    // + 2026-11-19 추가 섹션 6개의 예시 (DEC-043·045)
+    expect(list.length).toBe(39);
     expect(list.map((e) => e.id)).not.toContain("wage-01");
     expect(list.map((e) => e.id)).not.toContain("trap-assertive");
     const q = list[0].question;

@@ -41,6 +41,9 @@ export const CATEGORY_KEYS = [
   "registration",
   "fine_objection",
   "business_permit",
+  // 추가 섹션 (DEC-045)
+  "insurance_claim",
+  "copyright",
 ] as const;
 
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
@@ -552,7 +555,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseQuery: "부동산 경매 매수인 인수",
     caseKinds: "민사·집행",
     lawHints: [{ lawName: "민사집행법", articleNos: ["제91조", "제113조", "제142조"] }],
-    examples: [],
+    examples: ["auction-01"],
   },
   registration: {
     key: "registration",
@@ -566,7 +569,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseQuery: "소유권이전등기",
     caseKinds: "민사",
     lawHints: [{ lawName: "부동산등기법", articleNos: ["제23조", "제24조", "제29조"] }],
-    examples: [],
+    examples: ["registration-01"],
   },
   fine_objection: {
     key: "fine_objection",
@@ -580,7 +583,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseQuery: "과태료 이의",
     caseKinds: "행정·비송",
     lawHints: [{ lawName: "질서위반행위규제법", articleNos: ["제16조", "제20조", "제21조"] }],
-    examples: [],
+    examples: ["fine-objection-01"],
   },
   business_permit: {
     key: "business_permit",
@@ -594,7 +597,38 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     caseQuery: "영업신고 수리",
     caseKinds: "행정",
     lawHints: [{ lawName: "식품위생법", articleNos: ["제37조", "제39조", "제41조"] }],
-    examples: [],
+    examples: ["business-permit-01"],
+  },
+  insurance_claim: {
+    key: "insurance_claim",
+    label: "보험금",
+    description: "보험금 지급 거절·삭감 다투기",
+    guide:
+      "보험금을 청구한 쪽 기준으로 안내해요. 어떤 보험인지, 보험사가 어떤 이유로 거절했는지 적어 주세요(증권번호는 빼고).",
+    placeholder: "예: 보험사가 고지의무 위반이라며 진단금 지급을 거절했어요.",
+    starters: ["보험금을 청구했는데 지급이 거절됐어요. ", "보험사가 보험금을 깎아서 줬어요. "],
+    track: "insurance_claim",
+    caseQuery: "보험금 고지의무 위반",
+    caseKinds: "민사",
+    lawHints: [{ lawName: "상법", articleNos: ["제651조", "제655조", "제658조"] }],
+    examples: ["insurance-claim-01"],
+  },
+  copyright: {
+    key: "copyright",
+    label: "저작권",
+    description: "내 글·그림·영상이 무단으로 쓰였을 때",
+    guide:
+      "창작물을 만든 쪽 기준으로 안내해요. 무엇을 만들었고 어디에 어떻게 쓰였는지 적어 주세요.",
+    placeholder: "예: 제가 그린 그림을 다른 사람이 허락 없이 영상에 썼어요.",
+    starters: [
+      "제가 만든 작품이 허락 없이 쓰이고 있어요. ",
+      "제 사진을 무단으로 가져다 쓴 곳을 찾았어요. ",
+    ],
+    track: "copyright",
+    caseQuery: "저작권 침해 손해배상",
+    caseKinds: "민사·형사",
+    lawHints: [{ lawName: "저작권법", articleNos: ["제103조", "제125조", "제136조"] }],
+    examples: ["copyright-01"],
   },
 };
 
@@ -646,7 +680,15 @@ export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] 
   {
     key: "life",
     label: "사고·생활",
-    keys: ["traffic", "medical", "neighbor", "privacy", "business_permit"],
+    keys: [
+      "traffic",
+      "medical",
+      "neighbor",
+      "privacy",
+      "business_permit",
+      "insurance_claim",
+      "copyright",
+    ],
   },
   {
     key: "respond",

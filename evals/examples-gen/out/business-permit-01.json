@@ -1,0 +1,225 @@
+{
+  "id": "business-permit-01",
+  "category": "business_permit",
+  "question": "집에서 만든 반찬을 온라인으로 팔아 보려고 해요. 영업신고를 해야 하는지, 해야 한다면 어디에 어떻게 하는지 알고 싶어요.",
+  "at": "2026-11-19T12:43:12.140Z",
+  "elapsedMs": 23615,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-19-side",
+    "tokens_in": 7459,
+    "tokens_out": 1895,
+    "latency_ms": 23033
+  },
+  "costUsdUpperEstimate": 0.06774,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "식품위생법",
+        "식품위생법 시행규칙",
+        "식품위생법 시행령",
+        "수입식품안전관리 특별법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "영업신고 수리",
+        "식품위생법 영업신고 미신고 영업",
+        "즉석판매제조가공업 영업신고"
+      ]
+    },
+    "section": "business_permit",
+    "channel": "online",
+    "answer": {
+      "points": [
+        {
+          "text": "식품위생법은 일정한 식품 관련 영업을 하려는 사람에게 영업 종류별 또는 영업소별로 특별자치시장·특별자치도지사·시장·군수·구청장 등에게 신고하도록 정하고 있습니다. 반찬을 만들어 파는 일이 이 신고 대상 영업에 해당하는지가 먼저 확인할 점입니다.",
+          "source": "law:식품위생법:제37조",
+          "quote": "제36조제1항 각 호에 따른 영업 중 대통령령으로 정하는 영업을 하려는 자는",
+          "check": "verified"
+        },
+        {
+          "text": "시행령은 신고해야 하는 영업으로 즉석판매제조·가공업, 식품소분·판매업, 식품운반업 등을 들고 있고, 신고처는 특별자치시장·특별자치도지사 또는 시장·군수·구청장입니다. 어느 업종에 해당하는지는 판매 방식에 따라 달라질 수 있어, 관할 시·군·구청에 미리 문의해 보시는 것이 좋습니다.",
+          "source": "law:식품위생법시행령:제25조",
+          "quote": "특별자치시장ᆞ특별자치도지사 또는 시장ᆞ군수ᆞ구청장에게 신고를 하여야 하는 영업은",
+          "check": "verified"
+        },
+        {
+          "text": "신고 절차는 영업에 필요한 시설을 먼저 갖춘 뒤, 정해진 서식의 영업신고서(전자문서 포함)에 교육이수증 등 서류를 붙여 신고관청에 내는 방식입니다. 즉석판매제조·가공업 등에 해당하면 식품 유형과 제조방법설명서도 필요하고, 지하수를 쓰면 수질검사성적서가 필요합니다.",
+          "source": "law:식품위생법시행규칙:제42조",
+          "quote": "영업에 필요한 시설을 갖춘 후 별지 제37호서식의 영업신고서",
+          "check": "verified"
+        },
+        {
+          "text": "영업을 하려는 사람은 원칙적으로 미리 식품위생교육을 받아야 합니다. 다만 부득이한 사유로 미리 받을 수 없는 경우에는 영업을 시작한 뒤에 식품의약품안전처장이 정하는 바에 따라 교육을 받을 수 있다는 예외가 있습니다.",
+          "source": "law:식품위생법:제41조",
+          "quote": "제36조제1항 각 호에 따른 영업을 하려는 자는 미리 식품위생교육을 받아야 한다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:식품위생법:제37조",
+        "lawName": "식품위생법",
+        "articleNo": "제37조",
+        "title": "영업허가 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C37%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:식품위생법:제39조",
+        "lawName": "식품위생법",
+        "articleNo": "제39조",
+        "title": "영업 승계",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C39%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법:제41조",
+        "lawName": "식품위생법",
+        "articleNo": "제41조",
+        "title": "식품위생교육",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C41%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:식품위생법시행규칙:제42조",
+        "lawName": "식품위생법 시행규칙",
+        "articleNo": "제42조",
+        "title": "영업의 신고 등",
+        "effectiveFrom": "2026-09-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C42%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:식품위생법시행령:제25조",
+        "lawName": "식품위생법 시행령",
+        "articleNo": "제25조",
+        "title": "영업신고를 하여야 하는 업종",
+        "effectiveFrom": "2026-08-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C25%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:식품위생법시행규칙:제47조",
+        "lawName": "식품위생법 시행규칙",
+        "articleNo": "제47조",
+        "title": "영업허가 등의 보고",
+        "effectiveFrom": "2026-09-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C47%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:수입식품안전관리특별법:제15조",
+        "lawName": "수입식품안전관리 특별법",
+        "articleNo": "제15조",
+        "title": "영업의 등록 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%88%98%EC%9E%85%EC%8B%9D%ED%92%88%EC%95%88%EC%A0%84%EA%B4%80%EB%A6%AC%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C15%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "173647",
+        "caseNo": "2013누2679",
+        "caseName": "숙박업영업신고수리처분취소",
+        "court": "부산고법",
+        "decidedAt": "2014-04-02",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=173647",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "600527",
+        "caseNo": "2023두57142",
+        "caseName": "영업정지처분취소",
+        "court": "대법원",
+        "decidedAt": "2024-05-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=600527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "238901",
+        "caseNo": "2023도8730",
+        "caseName": "식품위생법위반·사기·공무집행방해",
+        "court": "대법원",
+        "decidedAt": "2023-12-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238901",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "105567",
+        "caseNo": "88누6962",
+        "caseName": "영업소설치신고수리",
+        "court": "대법원",
+        "decidedAt": "1989-09-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=105567",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "230897",
+        "caseNo": "2020도12944",
+        "caseName": "개발제한구역의지정및관리에관한특별조치법위반·식품위생법위반·수도법위반·하천법위반[피고인이 2016년 음식점 영업장 면적을 변경하고도 변경신고를 하지 않은 채 영업을 계속한 행위가 식품위생법 제37조 제4항 위반죄에 해당하는지가 문제된 사안]",
+        "court": "대법원",
+        "decidedAt": "2022-08-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=230897",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 7
+      },
+      {
+        "keyword": "영업신고 수리",
+        "total": 6
+      },
+      {
+        "keyword": "식품위생법 영업신고 미신고 영업",
+        "total": 6
+      },
+      {
+        "keyword": "즉석판매제조가공업 영업신고",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "식품위생법 제37조",
+          "exists": true
+        },
+        {
+          "citation": "식품위생법 시행령 제25조",
+          "exists": true
+        },
+        {
+          "citation": "식품위생법 시행규칙 제42조",
+          "exists": true
+        },
+        {
+          "citation": "식품위생법 제41조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

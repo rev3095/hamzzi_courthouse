@@ -46,6 +46,9 @@ export const SECTION_GUIDE: Record<SectionLabel, string> = {
     "부동산 등기를 신청하려는 경우 (소유권이전등기·가등기 등). 임차권등기명령은 lease_deposit",
   fine_objection: "과태료를 통지받거나 부과받아 이의를 제기하려는 경우",
   business_permit: "영업신고·영업허가처럼 가게를 열 때 필요한 인허가 절차를 알아보는 경우",
+  insurance_claim:
+    "보험사가 보험금 지급을 거절하거나 줄인 경우 (고지의무 위반 주장 등). 교통사고 과실 다툼은 traffic",
+  copyright: "내 창작물(글·그림·사진·영상 등)이 허락 없이 쓰인 저작권 침해 피해",
   none: "위 어디에도 맞지 않거나 알 수 없음. 돈을 갚아야 하는 쪽인데 서류는 받지 않았을 때도 none",
 };
 
