@@ -1,15 +1,16 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-19 동안 세션 11개가 남긴 작업 기록 419건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-20 동안 세션 11개가 남긴 작업 기록 422건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
 - 원본: 각 세션의 대화 기록을 읽고 요약했다. 측정하지 않은 값은 "추정", 확인하지 못한 것은 그렇다고 적었다.
-- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `python -X utf8 scripts/build_devlog.py`.
+- 문서 아카이브: 저장소의 보고서·PRD·조사·모듈 README 등 md 문서 전체를 디자인 버전의 "문서" 탭에 넣었다(목록은 이 파일 맨 끝).
+- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `uv run --no-project --with markdown-it-py --with mdit-py-plugins python -X utf8 scripts/build_devlog.py`.
 
 ## 세션 계층
 
-- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-19 · 기록 130건  
+- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-20 · 기록 133건  
   기획·설계부터 데모 개발·병합·배포까지 맡은 최상위 세션. 일을 나눠 다른 세션들을 시작하고 결과를 합쳤다.
   - **햄찌법원 개발 재개 (Phase 3 준비)** — Claude Desktop · 2026-10-19 ~ 2026-11-19 · 기록 49건  
     메인 개발 세션이 시작한 세션. 법제처 수집기와 DB 테이블에서 시작해 korean-law-mcp 어댑터, AI 분석·인용 검증·analyze API, 무료/Pro 모드 전환, 화면·정책 초안·배포, 검색·피드백·삭제·파기·헬스체크까지 데모의 대부분을 구현했다.
@@ -35,6 +36,14 @@
 ---
 
 ## 날짜별 기록
+
+### 2026-11-20 (금)
+
+#### 메인 개발 (Legal tech 플랫폼 개발 계획)
+
+- `00:30` **[요청] 개발 문서 전부를 아카이브 안에 읽기 좋게** — 지금까지 만든 보고서 등 md 문서를 모두 개발 아카이브 안에 넣고, 지금 페이지처럼 글꼴이 잘 보이게 만들어 달라는 요청.
+- `00:55` **[구현] 아카이브에 "문서" 탭 — 저장소 md 문서 58개** — 저장소에 올라간 md 문서(보고서 14·제품 기획·설계 12·조사 6·Claude Code 답변 기록·모듈 설명 18·Claude Code 지침 7)를 빌드할 때 HTML로 바꿔 한 파일에 넣었다(scripts/devlog_docs.py, markdown-it-py). 화면은 왼쪽 묶음별 목록과 제목·본문 찾기, 가운데 읽기 화면(본문 17px·줄 간격 1.9, 제목은 명조, 표는 가로 스크롤, 코드·인용·mermaid 원문 상자), 오른쪽 이 문서 차례, 읽은 정도 막대, 글자 크기 4단계·고딕/명조 선택, 이전·다음 문서. 문서 사이 링크는 아카이브 안 이동으로, 저장소 파일 링크는 GitHub로 바꿨다. 아카이브 글 버전(docs/devlog.md)은 타임라인과 같은 내용이라 뺐다.
+- `00:58` **[확인] 문서 탭 화면 확인** — 로컬에서 띄워 넓은 화면·모바일 너비로 확인했다. 문서 58개·묶음 6개, 표 감싸기, 차례, 문서 사이 링크 39개 모두 대상 있음, 검색(rls → 9개 문서), 탭·주소 이동이 동작했다. 이메일·로컬 경로 문자열은 없었다. 게시본은 로그인 문제로 직접 열어 보지 못했다.
 
 ### 2026-11-19 (목)
 
@@ -877,10 +886,11 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 147개 (병합 제외)</summary>
+<details><summary>main 커밋 148개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`04e0bd7`](https://github.com/rev3095/hamzzi_courthouse/commit/04e0bd7) | 2026-11-19 22:43 | feat: 커뮤니티·씨앗, 절차 섹션 6개 추가(복지·세금·부동산 매매 하자·군 복무 3종) (F-014, F-007, F-013, DEC-046, DEC-047) |
 | [`f7d7f15`](https://github.com/rev3095/hamzzi_courthouse/commit/f7d7f15) | 2026-11-19 21:54 | feat: 보험금·저작권 섹션과 예시 6건, 라벨 정확도 평가 체계, 방향 규칙, devlog Claude Code 섹션 (F-014, F-005, DEC-042, DEC-044, DEC-045) |
 | [`a6a07fc`](https://github.com/rev3095/hamzzi_courthouse/commit/a6a07fc) | 2026-11-19 21:52 | docs: devlog에 11-19 밤 결과 반영 — 절차 섹션 4개·라벨링·DeepSearch 실측·Light 상한·Figma·안내 챗봇·앱 보고서 PR, 세션 작업 끝날 때마다 연동 (기록 409건) |
 | [`321f34f`](https://github.com/rev3095/hamzzi_courthouse/commit/321f34f) | 2026-11-19 21:34 | feat: Light 질문 1건 상한 $0.0015 → $0.002 (가중치 2단위), Light DeepSearch $0.004 (F-006, DEC-036, DEC-041) |
@@ -1030,4 +1040,84 @@
 | [`eb92164`](https://github.com/rev3095/hamzzi_courthouse/commit/eb92164) | 2026-10-19 16:06 | chore: 햄찌법원 초기 세팅 (기획·설계 문서 + Phase 2 리포 세팅) |
 
 </details>
+
+## 문서 아카이브
+
+저장소의 md 문서 58개. 디자인 버전의 "문서" 탭에서 읽기 좋게 볼 수 있다.
+
+### 보고서 (14)
+
+- [햄찌법원만의 LLM 만들기 — API만 쓰는 구조에서 RAG·미세조정·하네스를 어떻게 하는가](reports/2026-11-19_햄찌법원_LLM_만들기_RAG_하네스.md) — `docs/reports/2026-11-19_햄찌법원_LLM_만들기_RAG_하네스.md` · 수정 2026-11-19
+- [질문 해석 · 절차 섹션 라벨 · 타임라인 확장 보고 (2026-11-19)](reports/2026-11-19_질문해석_섹션라벨_타임라인_비용.md) — `docs/reports/2026-11-19_질문해석_섹션라벨_타임라인_비용.md` · 수정 2026-11-19
+- [홈 카테고리 예시 답변 22건 — 생성 결과와 성능 분석](reports/2026-11-19_예시_답변_22건_성능_분석.md) — `docs/reports/2026-11-19_예시_답변_22건_성능_분석.md` · 수정 2026-11-19
+- [답변 단계별 구조·API 비용 보고서 — Light · Pro · Pro Max](reports/2026-11-19_모델별_구조_비용_보고서.md) — `docs/reports/2026-11-19_모델별_구조_비용_보고서.md` · 수정 2026-11-19
+- [배포 사이트 같은 질문 — Sonnet 5.5(Pro, 2026-11-18) vs Opus 5.5(Pro Max, 2026-11-19)](reports/2026-11-19_Sonnet_Opus_실서비스_비교.md) — `docs/reports/2026-11-19_Sonnet_Opus_실서비스_비교.md` · 수정 2026-11-19
+- [DeepSearch 특화 — 무엇을 다르게 하는가, 실호출 결과, 모델별 비용](reports/2026-11-19_DeepSearch_특화_비용_분석.md) — `docs/reports/2026-11-19_DeepSearch_특화_비용_분석.md` · 수정 2026-11-19
+- [같은 질문, 다른 답변 — Haiku 라이트(지금) · Sonnet 라이트 · Opus 전체(예전 예시)](reports/2026-11-18_Haiku_Sonnet_Opus_답변_비교.md) — `docs/reports/2026-11-18_Haiku_Sonnet_Opus_답변_비교.md` · 수정 2026-11-18
+- [답변 모델 선택 분석 — 어떤 Claude 모델을 쓸까](reports/2026-11-17_모델_선택_분석.md) — `docs/reports/2026-11-17_모델_선택_분석.md` · 수정 2026-11-17
+- [운영 점검·모니터링 (데모, 2026-11-01)](reports/2026-11-01_운영_모니터링.md) — `docs/reports/2026-11-01_운영_모니터링.md` · 수정 2026-11-01
+- [배포·롤백 절차 (P11, 2026-11-01)](reports/2026-11-01_배포_롤백_절차.md) — `docs/reports/2026-11-01_배포_롤백_절차.md` · 수정 2026-11-01
+- [햄찌법원 × 참고 프로토타입 — 크레딧·비용 비교 분석](reports/2026-10-22_크레딧_비용_비교분석.md) — `docs/reports/2026-10-22_크레딧_비용_비교분석.md` · 수정 2026-10-22
+- [유료 AI 분석 버전 보존 노트 (2026-10-22)](reports/2026-10-22_유료_AI_버전_보존.md) — `docs/reports/2026-10-22_유료_AI_버전_보존.md` · 수정 2026-10-22
+- [질문 1건 비용 분석 · 최저가 설계 · Light/Pro 모델 추천](reports/2026-10-22_모델_비용_분석_Light_Pro.md) — `docs/reports/2026-10-22_모델_비용_분석_Light_Pro.md` · 수정 2026-10-22
+- [햄찌법원 × 참고 프로토타입 비교 분석 보고서](reports/2026-10-21_프로토타입_비교분석.md) — `docs/reports/2026-10-21_프로토타입_비교분석.md` · 수정 2026-11-01
+
+### 제품 기획·설계 (12)
+
+- [01. AI Native 개발 파이프라인 (Claude Code 기반 Legal Tech)](01_AI_Native_개발_파이프라인.md) — `docs/01_AI_Native_개발_파이프라인.md` · 수정 2026-10-19
+- [02. Legal Tech 프로젝트에 추천하는 PRD 구조](02_LegalTech_PRD_추천구조.md) — `docs/02_LegalTech_PRD_추천구조.md` · 수정 2026-10-19
+- [PRD — 햄찌법원 (Hamzzi Court): 열린 법률 아카이브 & AI 법률 길잡이](03_PRD_햄찌법원.md) — `docs/03_PRD_햄찌법원.md` · 수정 2026-10-19
+- [04. 추가로 작성할 것 · 생각하고 결정해야 할 것](04_추가_결정사항.md) — `docs/04_추가_결정사항.md` · 수정 2026-10-19
+- [05. 햄찌법원 브랜드 가이드 v0.1](05_브랜드_가이드.md) — `docs/05_브랜드_가이드.md` · 수정 2026-10-19
+- [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-19
+- [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-17
+- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-19
+- [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-17
+- [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-19
+- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-19
+- [PRD 초안 검토·수정·검증 결과](PRD_review.md) — `docs/PRD_review.md` · 수정 2026-10-19
+
+### 조사 (6)
+
+- [리서치 1. 판결문·법령 데이터 공식 소스와 이용 조건](research/01_데이터_소스.md) — `docs/research/01_데이터_소스.md` · 수정 2026-10-19
+- [리서치 2. 국내 경쟁·유사 서비스 비교](research/02_경쟁사_비교.md) — `docs/research/02_경쟁사_비교.md` · 수정 2026-10-19
+- [리서치 3. 규제 쟁점 — 변호사법 · 개인정보보호법 · AI 기본법](research/03_규제_쟁점.md) — `docs/research/03_규제_쟁점.md` · 수정 2026-10-19
+- [04. 화면설계 도구 조사 — Figma·Claude·AI 디자인 툴 비교와 작업 절차](research/04_화면설계_도구_조사.md) — `docs/research/04_화면설계_도구_조사.md` · 수정 2026-10-21
+- [단계별 공식 서식 출처 조사 (DEC-025)](research/05_공식_서식_출처.md) — `docs/research/05_공식_서식_출처.md` · 수정 2026-11-18
+- [06. 홈 카테고리 분류 조사 (DEC-028)](research/06_카테고리_분류_조사.md) — `docs/research/06_카테고리_분류_조사.md` · 수정 2026-11-18
+
+### Claude Code 답변 기록 (1)
+
+- [devlog — Claude Code 섹션 (답변 전문, 최신순)](devlog/claude-code.md) — `docs/devlog/claude-code.md` · 수정 2026-11-19
+
+### 모듈 설명 (18)
+
+- [햄찌법원 (Hamzzi Court)](../README.md) — `README.md` · 수정 2026-10-21
+- [햄찌법원 수집기 (collector)](../collector/README.md) — `collector/README.md` · 수정 2026-10-19
+- [evals — AI 평가셋 (PRD 8.4)](../evals/README.md) — `evals/README.md` · 수정 2026-10-22
+- [lib/ai — AI 오케스트레이터 (F-002, F-006, F-008)](../lib/ai/README.md) — `lib/ai/README.md` · 수정 2026-11-19
+- [lib/api — API 라우트 공통 (docs/API.md 2·3·6절)](../lib/api/README.md) — `lib/api/README.md` · 수정 2026-10-19
+- [lib/calc — 계산 모듈 (F-014)](../lib/calc/README.md) — `lib/calc/README.md` · 수정 2026-10-19
+- [lib/citations — 인용 검증기 (F-005)](../lib/citations/README.md) — `lib/citations/README.md` · 수정 2026-10-21
+- [lib/community — 커뮤니티와 씨앗 (DEC-047)](../lib/community/README.md) — `lib/community/README.md` · 수정 2026-11-19
+- [lib/demo — 무료 모드 (DEC-015)](../lib/demo/README.md) — `lib/demo/README.md` · 수정 2026-11-19
+- [lib/documents — 단계별 공식 서식 설문·편집·내보내기 [게이트] (DEC-022·023·025)](../lib/documents/README.md) — `lib/documents/README.md` · 수정 2026-11-18
+- [lib/gate — 기능 게이트 (F-013)](../lib/gate/README.md) — `lib/gate/README.md` · 수정 2026-10-19
+- [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-19
+- [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-19
+- [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-10-19
+- [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-19
+- [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-18
+- [lib/supabase — DB·인증 클라이언트](../lib/supabase/README.md) — `lib/supabase/README.md` · 수정 2026-10-21
+- [햄찌법원 Android 앱 버전 기록](../twa/CHANGELOG.md) — `twa/CHANGELOG.md` · 수정 2026-11-17
+
+### Claude Code 지침 (7)
+
+- [legal-reviewer.md](../.claude/agents/legal-reviewer.md) — `.claude/agents/legal-reviewer.md` · 수정 2026-10-19
+- [데이터 소스 추가](../.claude/skills/add-crawler/SKILL.md) — `.claude/skills/add-crawler/SKILL.md` · 수정 2026-10-19
+- [API 엔드포인트 추가](../.claude/skills/add-endpoint/SKILL.md) — `.claude/skills/add-endpoint/SKILL.md` · 수정 2026-10-19
+- [DB 마이그레이션 추가](../.claude/skills/add-migration/SKILL.md) — `.claude/skills/add-migration/SKILL.md` · 수정 2026-10-19
+- [Figma → 코드 반영](../.claude/skills/figma-sync/SKILL.md) — `.claude/skills/figma-sync/SKILL.md` · 수정 2026-10-22
+- [AGENTS.md](../AGENTS.md) — `AGENTS.md` · 수정 2026-10-19
+- [CLAUDE.md](../CLAUDE.md) — `CLAUDE.md` · 수정 2026-11-19
 

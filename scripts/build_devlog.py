@@ -1,11 +1,13 @@
-# 개발 아카이브 만들기. 사용: python -X utf8 scripts/build_devlog.py
-# 입력: docs/devlog/data.json (세션·날짜별 기록) + git log(main) + docs/PRD.md 16.2 결정 로그
-# 출력: docs/devlog.md (GitHub에서 읽는 글 버전) · docs/devlog/index.html (브라우저로 여는 디자인 버전, 데이터 포함 한 파일)
+# 개발 아카이브 만들기. 사용:
+#   uv run --no-project --with markdown-it-py --with mdit-py-plugins python -X utf8 scripts/build_devlog.py
+# 입력: docs/devlog/data.json (세션·날짜별 기록) + git log(main) + docs/PRD.md 16.2 결정 로그 + 저장소의 md 문서(scripts/devlog_docs.py)
+# 출력: docs/devlog.md (GitHub에서 읽는 글 버전) · docs/devlog/index.html (브라우저로 여는 디자인 버전, 데이터·문서 포함 한 파일)
 # 기록을 더할 때는 data.json의 entries에 항목을 더하고 다시 실행한다. 공개 저장소이므로 이메일·IP·키·실명은 넣지 않는다.
 import base64
 import datetime as dt
 import json
 import pathlib
+import posixpath
 import re
 import subprocess
 
@@ -78,7 +80,7 @@ def ordered_sessions(sessions):
     return out
 
 
-def build_md(data, commits, decs):
+def build_md(data, commits, decs, lib):
     sessions = data["sessions"]
     order = ordered_sessions(sessions)
     depth = {s["key"]: d for s, d in order}
@@ -97,7 +99,8 @@ def build_md(data, commits, decs):
         "- 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).\n"
         "- Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.\n"
         "- 원본: 각 세션의 대화 기록을 읽고 요약했다. 측정하지 않은 값은 \"추정\", 확인하지 못한 것은 그렇다고 적었다.\n"
-        "- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `python -X utf8 scripts/build_devlog.py`.\n"
+        "- 문서 아카이브: 저장소의 보고서·PRD·조사·모듈 README 등 md 문서 전체를 디자인 버전의 \"문서\" 탭에 넣었다(목록은 이 파일 맨 끝).\n"
+        "- 다시 만들기: `docs/devlog/data.json`에 기록을 더하고 `uv run --no-project --with markdown-it-py --with mdit-py-plugins python -X utf8 scripts/build_devlog.py`.\n"
     )
     L.append("## 세션 계층\n")
     for s, d in order:
@@ -157,11 +160,29 @@ def build_md(data, commits, decs):
     for c in commits:
         L.append(f"| [`{c['hash']}`]({REPO}/commit/{c['hash']}) | {c['date']} | {c['subject'].replace('|', '/')} |")
     L.append("\n</details>\n")
+    build_docs_md(L, lib)
     OUT_MD.write_text("\n".join(L) + "\n", encoding="utf-8", newline="\n")
 
 
-def build_html(data, commits, decs):
+def build_docs_md(L, lib):
+    """글 버전 끝에 문서 아카이브 목록을 붙인다"""
+    L.append("## 문서 아카이브\n")
+    L.append(f"저장소의 md 문서 {len(lib['docs'])}개. 디자인 버전의 \"문서\" 탭에서 읽기 좋게 볼 수 있다.\n")
+    for g in lib["groups"]:
+        ds = [d for d in lib["docs"] if d["group"] == g["name"]]
+        if not ds:
+            continue
+        L.append(f"### {g['name']} ({len(ds)})\n")
+        for d in ds:
+            rel = posixpath.relpath(d["path"], "docs")
+            L.append(f"- [{d['title']}]({rel}) — `{d['path']}` · 수정 {d['updated']}")
+        L.append("")
+
+
+def build_html(data, commits, decs, lib):
     payload = {
+        "docs": lib["docs"],
+        "docGroups": lib["groups"],
         "sessions": [dict(s, depth=d) for s, d in ordered_sessions(data["sessions"])],
         "entries": data["entries"],
         "decisions": data.get("decisions", []),
@@ -185,9 +206,18 @@ def main():
     data = json.loads(DATA.read_text(encoding="utf-8"))
     commits = git_commits()
     decs = prd_decisions()
-    build_md(data, commits, decs)
-    build_html(data, commits, decs)
-    print(f"devlog: 세션 {len(data['sessions'])} · 기록 {len(data['entries'])} · 커밋 {len(commits)} · 결정 {len(decs)}")
+    try:
+        from devlog_docs import collect
+    except ImportError:
+        raise SystemExit(
+            "markdown-it-py가 필요합니다: uv run --no-project --with markdown-it-py --with mdit-py-plugins python -X utf8 scripts/build_devlog.py"
+        )
+    lib = collect(ROOT, REPO)
+    build_md(data, commits, decs, lib)
+    build_html(data, commits, decs, lib)
+    print(
+        f"devlog: 세션 {len(data['sessions'])} · 기록 {len(data['entries'])} · 커밋 {len(commits)} · 결정 {len(decs)} · 문서 {len(lib['docs'])}"
+    )
 
 
 if __name__ == "__main__":

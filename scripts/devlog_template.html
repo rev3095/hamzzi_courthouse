@@ -32,7 +32,7 @@ h1 em{font:italic 600 .62em var(--accent);color:var(--gold);letter-spacing:0;mar
 .mascot{width:168px;height:168px;border-radius:50%;background:var(--honey);border:6px solid #fff;box-shadow:var(--shadow);
   display:grid;place-items:center;overflow:hidden}
 .mascot img{width:100%;height:100%;object-fit:cover}
-.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:30px}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:30px}
 .stat{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
 .stat b{display:block;font:800 30px/1.1 var(--accent);color:var(--ink)}
 .stat span{font-size:12px;color:var(--muted);letter-spacing:.04em}
@@ -133,6 +133,88 @@ p.sub{color:var(--muted);margin:0 0 18px}
 .bar{display:flex;gap:2px;margin-top:10px;height:8px}
 .bar i{flex:1;border-radius:2px;background:var(--line)}
 .bar i.on{background:var(--c)}
+/* 문서 */
+.dlayout{display:grid;grid-template-columns:290px minmax(0,1fr) 220px;gap:32px;align-items:start}
+.dlayout aside{top:70px}
+.dlayout.home{grid-template-columns:290px minmax(0,1fr)}
+.dlayout.home .outline{display:none}
+.dgroup{margin:0 0 14px}
+.dgroup>b{display:flex;justify-content:space-between;font:700 13px var(--serif);padding:6px 8px;color:var(--ink);border-bottom:1px solid var(--line)}
+.dgroup>b small{font:500 11px var(--mono);color:var(--gold)}
+.ditem{display:block;padding:8px 10px;border-radius:9px;text-decoration:none;font-size:13.5px;line-height:1.4;margin:2px 0;border-left:3px solid transparent}
+.ditem:hover{background:var(--cream)}
+.ditem.on{background:var(--honey);border-left-color:var(--gold);font-weight:600}
+.ditem .m{display:block;font:400 11px var(--mono);color:var(--muted);margin-top:3px;font-weight:400}
+.ditem .hit{float:right;font:600 10px var(--mono);background:var(--ink);color:#fff;border-radius:999px;padding:1px 6px;margin-left:6px}
+.reader{background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:44px 56px 56px;min-width:0}
+.dhead{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:30px}
+.dhead .g{display:inline-block;font:600 11px var(--sans);letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+.dhead h1{font:900 clamp(26px,3.2vw,38px)/1.3 var(--serif);margin:10px 0 14px;letter-spacing:-.01em;word-break:keep-all}
+.dmeta{display:flex;flex-wrap:wrap;gap:8px 16px;font:500 12px var(--mono);color:var(--muted);align-items:center}
+.dtools{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{appearance:none;border:0;background:none;padding:7px 11px;font:600 12px var(--sans);color:var(--muted);cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+a.btn{text-decoration:none;display:inline-block}
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--gold);z-index:40;width:0;transition:width .1s}
+.prose{--fs:17px;font:var(--fs)/1.9 var(--body,var(--sans));color:#232B3A;max-width:780px;word-break:keep-all;overflow-wrap:anywhere}
+.prose.serif{--body:var(--serif)}
+.prose>*:first-child{margin-top:0}
+.prose h1,.prose h2,.prose h3,.prose h4{font-family:var(--serif);color:var(--ink);scroll-margin-top:80px;line-height:1.4;word-break:keep-all}
+.prose h1{font-size:1.75em;font-weight:900;margin:1.6em 0 .7em}
+.prose h2{font-size:1.42em;font-weight:700;margin:2.3em 0 .8em;padding-bottom:.4em;border-bottom:1px solid var(--line);position:relative}
+.prose h2:before{content:"";position:absolute;left:0;bottom:-1px;width:48px;height:2px;background:var(--gold)}
+.prose h3{font-size:1.18em;font-weight:700;margin:1.9em 0 .6em}
+.prose h4{font-size:1.02em;font-weight:700;margin:1.6em 0 .5em;font-family:var(--sans)}
+.prose p{margin:0 0 1.1em}
+.prose ul,.prose ol{margin:0 0 1.1em;padding-left:1.5em}
+.prose li{margin:.32em 0}
+.prose li>ul,.prose li>ol{margin:.3em 0}
+.prose li::marker{color:var(--gold)}
+.prose strong{color:var(--ink);font-weight:700}
+.prose a{color:#2F5E8A;text-decoration:underline;text-decoration-color:rgba(47,94,138,.35);text-underline-offset:3px}
+.prose a:hover{text-decoration-color:currentColor}
+.prose code{font:500 .86em var(--mono);background:var(--cream);border:1px solid #EAE3D2;border-radius:5px;padding:.08em .38em;word-break:break-all}
+.prose pre{background:#1E2634;color:#ECE7DB;border-radius:12px;padding:18px 20px;overflow:auto;margin:0 0 1.3em;font:13.5px/1.7 var(--mono)}
+.prose pre code{background:none;border:0;padding:0;color:inherit;font:inherit;word-break:normal;white-space:pre}
+.prose pre.mermaid-src{position:relative;padding-top:34px}
+.prose pre.mermaid-src:before{content:"다이어그램 원문 (mermaid)";position:absolute;top:10px;left:20px;font:600 11px var(--sans);color:#C9B27A;letter-spacing:.06em}
+.prose blockquote{margin:0 0 1.2em;padding:14px 20px;border-left:4px solid var(--gold);background:linear-gradient(90deg,var(--honey),#fff);border-radius:0 12px 12px 0;color:#3A4252}
+.prose blockquote p:last-child{margin:0}
+.prose hr{border:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:2.4em 0}
+.prose .tw{overflow:auto;margin:0 0 1.4em;border:1px solid var(--line);border-radius:12px}
+.prose table{font-size:.86em;line-height:1.65;margin:0}
+.prose th{position:static;background:var(--cream);color:var(--ink);font:700 .92em var(--sans);letter-spacing:0;border-bottom:1px solid #DCD3BE;padding:10px 14px;white-space:nowrap}
+.prose td{padding:10px 14px;border-bottom:1px solid #EFEBE2}
+.prose tr:nth-child(even) td{background:#FCFBF8}
+.prose tr:last-child td{border-bottom:0}
+.prose details{border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin:0 0 1.2em;background:#FCFBF8}
+.prose summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.prose input[type=checkbox]{accent-color:var(--gold);margin-right:6px}
+.prose mark{background:#FCE29A}
+.dnav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}
+.dnav a{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;font-size:14px}
+.dnav a:hover{border-color:var(--gold);background:#FFFDF8}
+.dnav a small{display:block;font:500 11px var(--mono);color:var(--muted);margin-bottom:4px}
+.dnav a.next{text-align:right}
+.outline{position:sticky;top:76px;max-height:calc(100vh - 100px);overflow:auto;font-size:13px}
+.outline b{display:block;font:700 12px var(--sans);letter-spacing:.14em;color:var(--gold);margin:0 0 10px;text-transform:uppercase}
+.outline a{display:block;text-decoration:none;color:var(--muted);padding:5px 0 5px 12px;border-left:2px solid var(--line);line-height:1.4}
+.outline a.l3{padding-left:24px;font-size:12.5px}
+.outline a:hover{color:var(--ink)}
+.outline a.on{color:var(--ink);border-left-color:var(--gold);font-weight:600}
+.dhome h2{font:900 30px var(--serif);margin:0 0 8px}
+.dcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
+.dcard{padding:20px 22px}
+.dcard h4{font:700 17px var(--serif);margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline}
+.dcard h4 small{font:800 22px var(--accent);color:var(--gold)}
+.dcard p{margin:0 0 12px;color:var(--muted);font-size:13px}
+.dcard a{display:block;text-decoration:none;padding:6px 0;border-top:1px dashed #EFEBE2;font-size:14px}
+.dcard a:hover{color:var(--gold)}
+.dcard a span{float:right;font:500 11px var(--mono);color:var(--muted)}
+@media (max-width:1180px){.dlayout{grid-template-columns:270px minmax(0,1fr)}.outline{display:none}}
+@media (max-width:980px){.dlayout,.dlayout.home{grid-template-columns:1fr}.reader{padding:26px 20px 34px}.dcards{grid-template-columns:1fr}.dnav{grid-template-columns:1fr}}
 footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);font-size:12px}
 @media (max-width:980px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}.stats{grid-template-columns:repeat(2,1fr)}.hero .wrap{grid-template-columns:1fr}.mascot{display:none}.grid2{grid-template-columns:1fr}ol.entries li{grid-template-columns:46px 1fr}ol.entries li .badge{grid-column:2}ol.entries li>div{grid-column:1/-1}}
 @media print{nav.tabs,aside{display:none}.panel{display:block!important}.layout{grid-template-columns:1fr}.sess,.card{box-shadow:none}body{background:#fff}}
@@ -188,6 +270,24 @@ footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--muted);f
     </div>
   </section>
 
+  <section class="panel" id="p-docs" role="tabpanel">
+    <div class="progress" id="progress"></div>
+    <div class="dlayout home" id="dlayout">
+      <aside>
+        <div class="card box" style="margin-bottom:14px">
+          <h3>문서 찾기</h3>
+          <label class="f">제목·경로·본문
+            <input type="search" id="dq" placeholder="예: Opus, 롤백, DEC-036, RLS">
+          </label>
+          <p class="count" id="dcount" style="margin:8px 0 0"></p>
+        </div>
+        <div class="card box" id="dlist"></div>
+      </aside>
+      <article class="reader" id="reader"></article>
+      <nav class="outline" id="outline" aria-label="이 문서 차례"></nav>
+    </div>
+  </section>
+
   <section class="panel" id="p-sessions" role="tabpanel">
     <h2 class="sec">세션</h2>
     <p class="sub">누가 누구를 시작했는지 계층대로. 막대는 그 세션이 기록을 남긴 날입니다.</p>
@@ -234,19 +334,24 @@ const wk=d=>WEEK[new Date(d+"T00:00:00+09:00").getUTCDay()===undefined?0:new Dat
 const state={q:"",from:"",to:"",kinds:new Set(Object.keys(KIND)),off:new Set(),sort:"desc"};
 
 // 머리
-$("#lede").textContent=`${days[0]} ~ ${days.at(-1)} · 세션 ${S.length}개가 남긴 작업 ${E.length}건을 날짜와 세션 계층으로 모았습니다. 사용자 결정, PRD 결정 로그, main 커밋 ${D.commits.length}개를 함께 찾아볼 수 있습니다.`;
-const stats=[[S.length,"세션"],[days.length,"작업한 날"],[E.length,"기록"],[D.commits.length,"커밋"],[D.prd.length,"PRD 결정"]];
+const DOCS=D.docs||[];
+$("#lede").textContent=`${days[0]} ~ ${days.at(-1)} · 세션 ${S.length}개가 남긴 작업 ${E.length}건을 날짜와 세션 계층으로 모았습니다. 보고서·PRD·조사·모듈 설명 등 문서 ${DOCS.length}개, 사용자 결정, PRD 결정 로그, main 커밋 ${D.commits.length}개를 함께 찾아볼 수 있습니다.`;
+const stats=[[S.length,"세션"],[days.length,"작업한 날"],[E.length,"기록"],[DOCS.length,"문서"],[D.commits.length,"커밋"],[D.prd.length,"PRD 결정"]];
 $("#stats").innerHTML=stats.map(([n,l])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
 
 // 탭
-const TABS=[["timeline","타임라인",E.length],["sessions","세션",S.length],["decisions","결정",D.decisions.length+D.prd.length],["commits","커밋 색인",D.commits.length],["open","남은 일",Object.values(D.unresolved).flat().length]];
+const TABS=[["timeline","타임라인",E.length],["docs","문서",DOCS.length],["sessions","세션",S.length],["decisions","결정",D.decisions.length+D.prd.length],["commits","커밋 색인",D.commits.length],["open","남은 일",Object.values(D.unresolved).flat().length]];
 $("#tabs").innerHTML=TABS.map(([k,l,n],i)=>`<button role="tab" data-k="${k}" aria-selected="${i===0}">${l}<small>${n}</small></button>`).join("");
-$("#tabs").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;
-  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
-  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+b.dataset.k));
-  history.replaceState(null,"","#"+b.dataset.k);});
-function fromHash(){const b=document.querySelector(`#tabs button[data-k="${location.hash.slice(1)}"]`);b&&b.getAttribute("aria-selected")!=="true"&&b.click();}
-fromHash();window.addEventListener("hashchange",fromHash);
+function showTab(k){document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-selected",x.dataset.k===k));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+k));
+  $("#progress").style.display=k==="docs"?"":"none";}
+$("#tabs").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;const k=b.dataset.k;showTab(k);
+  history.replaceState(null,"",k==="docs"&&curDoc?"#doc/"+curDoc:"#"+k);if(k==="docs"&&!curDoc)docHome();});
+function route(){let h="";try{h=decodeURIComponent(location.hash.slice(1));}catch{h=location.hash.slice(1);}
+  if(h.startsWith("doc/")){const rest=h.slice(4);const i=rest.indexOf("#");showTab("docs");openDoc(i<0?rest:rest.slice(0,i),i<0?"":rest.slice(i+1));return;}
+  if(h==="docs"){showTab("docs");docHome();return;}
+  if(TABS.some(t=>t[0]===h))showTab(h);}
+window.addEventListener("hashchange",route);
 
 // 종류 체크
 $("#kinds").innerHTML=Object.entries(KIND).map(([k,l])=>`<label><input type="checkbox" value="${k}" checked>${l}</label>`).join("");
@@ -300,7 +405,56 @@ $("#cq").addEventListener("input",commits);commits();
 // 남은 일
 $("#open").innerHTML=S.filter(s=>(D.unresolved[s.key]||[]).length).map(s=>`<div class="card box ucard" style="border-top:4px solid ${s.color}"><h4><span class="dot" style="background:${s.color}"></span>${esc(s.title)}</h4><ul>${D.unresolved[s.key].map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
 
-$("#foot").innerHTML=`만든 시각 ${esc(D.built)} · <code>scripts/build_devlog.py</code>가 <code>docs/devlog/data.json</code>·git log·PRD 16.2로 만들었습니다. 각 세션 대화 기록을 읽고 요약한 것이며, 다른 세션의 작업은 그 세션의 보고를 옮겼습니다. · <a href="${D.repo}">${esc(D.repo.replace("https://",""))}</a>`;
+// 문서
+const G=D.docGroups||[];const byPath=Object.fromEntries(DOCS.map(d=>[d.path,d]));
+let curDoc="",dq="";
+const pref={fs:+(localStorage.getItem("hzdl:fs")||17),serif:localStorage.getItem("hzdl:serif")==="1"};
+const textOf=d=>d._t??=(()=>{const t=document.createElement("template");t.innerHTML=d.html;return t.content.textContent.toLowerCase();})();
+const hitsOf=d=>{if(!dq)return 0;const t=textOf(d);let n=0,i=0;while((i=t.indexOf(dq,i))>=0&&n<999){n++;i+=dq.length;}return n;};
+const minutes=d=>Math.max(1,Math.round(d.chars/600));
+function docList(){const q=dq;const rows=DOCS.map(d=>({d,n:hitsOf(d),t:(d.title+" "+d.path).toLowerCase().includes(q)})).filter(r=>!q||r.n||r.t);
+  $("#dcount").textContent=q?`${rows.length} / ${DOCS.length}개 문서에서 찾음`:`문서 ${DOCS.length}개 · 묶음 ${G.filter(g=>DOCS.some(d=>d.group===g.name)).length}개`;
+  $("#dlist").innerHTML=G.map(g=>{const rs=rows.filter(r=>r.d.group===g.name);if(!rs.length)return"";
+    return `<div class="dgroup"><b>${esc(g.name)}<small>${rs.length}</small></b>${rs.map(({d,n})=>`<a class="ditem${d.path===curDoc?" on":""}" href="#doc/${esc(d.path)}">${n?`<span class="hit">${n}</span>`:""}${esc(d.title)}<span class="m">${esc(d.path)} · ${esc(d.updated)}</span></a>`).join("")}</div>`;}).join("")||`<p class="count">맞는 문서가 없습니다.</p>`;}
+function docHome(){curDoc="";$("#dlayout").classList.add("home");$("#outline").innerHTML="";docList();
+  $("#reader").innerHTML=`<div class="dhome"><div class="g" style="font:600 11px var(--sans);letter-spacing:.14em;color:var(--gold)">DOCUMENT ARCHIVE</div><h2>문서 아카이브</h2><p class="sub" style="margin:0">저장소에 올라간 md 문서 ${DOCS.length}개를 묶음별로 모았습니다. 보고서는 최신이 위입니다. 왼쪽에서 제목·본문을 찾거나 아래에서 고르세요.</p>
+  <div class="dcards">${G.map(g=>{const ds=DOCS.filter(d=>d.group===g.name);if(!ds.length)return"";return `<div class="card dcard"><h4>${esc(g.name)}<small>${ds.length}</small></h4><p>${esc(g.desc)}</p>${ds.map(d=>`<a href="#doc/${esc(d.path)}">${esc(d.title)}<span>${esc(d.updated)}</span></a>`).join("")}</div>`;}).join("")}</div></div>`;}
+function markText(root,q){if(!q)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode.closest("script,style,mark")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  const nodes=[];while(w.nextNode())nodes.push(w.currentNode);let count=0;
+  for(const n of nodes){const low=n.nodeValue.toLowerCase();if(!low.includes(q))continue;const frag=document.createDocumentFragment();let i=0,j;
+    while((j=low.indexOf(q,i))>=0){frag.append(n.nodeValue.slice(i,j));const m=document.createElement("mark");m.textContent=n.nodeValue.slice(j,j+q.length);frag.append(m);i=j+q.length;count++;}
+    frag.append(n.nodeValue.slice(i));n.replaceWith(frag);if(count>400)break;}}
+function applyPref(){const p=$("#prose");if(!p)return;p.style.setProperty("--fs",pref.fs+"px");p.classList.toggle("serif",pref.serif);
+  document.querySelectorAll("[data-fs]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.fs===pref.fs));
+  document.querySelectorAll("[data-font]").forEach(b=>b.setAttribute("aria-pressed",(b.dataset.font==="serif")===pref.serif));}
+function openDoc(path,frag){const d=byPath[path];if(!d){docHome();return;}
+  if(path!==curDoc){curDoc=path;$("#dlayout").classList.remove("home");
+    const i=DOCS.indexOf(d),prev=DOCS[i-1],next=DOCS[i+1];
+    $("#reader").innerHTML=`<header class="dhead"><span class="g">${esc(d.group)}</span><h1>${esc(d.title)}</h1>
+      <div class="dmeta"><span>${esc(d.path)}</span><span>처음 ${esc(d.created)}</span><span>수정 ${esc(d.updated)}</span><span>${d.chars.toLocaleString()}자 · 약 ${minutes(d)}분</span></div>
+      <div class="dtools"><span class="seg" aria-label="글자 크기">${[15,17,19,21].map((s,k)=>`<button type="button" data-fs="${s}">${["작게","보통","크게","아주 크게"][k]}</button>`).join("")}</span>
+      <span class="seg" aria-label="본문 글꼴"><button type="button" data-font="sans">고딕</button><button type="button" data-font="serif">명조</button></span>
+      <a class="btn ghost" href="${D.repo}/blob/main/${esc(d.path)}" target="_blank" rel="noopener">GitHub에서 보기</a><a class="btn ghost" href="#docs">문서 목록</a></div></header>
+      <div class="prose" id="prose">${d.html}</div>
+      <div class="dnav">${prev?`<a href="#doc/${esc(prev.path)}"><small>← 이전 · ${esc(prev.group)}</small>${esc(prev.title)}</a>`:"<span></span>"}${next?`<a class="next" href="#doc/${esc(next.path)}"><small>다음 · ${esc(next.group)} →</small>${esc(next.title)}</a>`:""}</div>`;
+    const pr=$("#prose");pr.querySelectorAll("table").forEach(t=>{const w=document.createElement("div");w.className="tw";t.replaceWith(w);w.append(t);});
+    markText(pr,dq);applyPref();
+    const hs=[...pr.querySelectorAll("h2[id],h3[id]")];
+    $("#outline").innerHTML=hs.length?`<b>이 문서 차례</b>${hs.map(h=>`<a class="${h.tagName==="H3"?"l3":""}" href="#doc/${esc(path)}#${esc(h.id)}" data-id="${esc(h.id)}">${esc(h.textContent)}</a>`).join("")}`:"";
+    docList();if(!frag)window.scrollTo({top:$("#p-docs").offsetTop-10,behavior:"instant"});}
+  if(frag){const pr=$("#prose");const el=pr.querySelector(`[id="${CSS.escape(frag)}"]`)||pr.querySelector(`[id="${CSS.escape("h-"+frag)}"]`)||pr.querySelector(`[name="${CSS.escape(frag)}"]`);el&&el.scrollIntoView({block:"start"});}
+  else if(dq){const m=$("#prose mark");m&&m.scrollIntoView({block:"center"});}}
+$("#reader").addEventListener("click",ev=>{const b=ev.target.closest("[data-fs],[data-font]");if(!b)return;
+  if(b.dataset.fs){pref.fs=+b.dataset.fs;localStorage.setItem("hzdl:fs",pref.fs);}else{pref.serif=b.dataset.font==="serif";localStorage.setItem("hzdl:serif",pref.serif?"1":"0");}applyPref();});
+let dqTimer;$("#dq").addEventListener("input",ev=>{clearTimeout(dqTimer);dqTimer=setTimeout(()=>{dq=ev.target.value.trim().toLowerCase();docList();
+  if(curDoc){const p=curDoc;curDoc="";openDoc(p,"");}},160);});
+addEventListener("scroll",()=>{if(!$("#p-docs").classList.contains("on")||!curDoc)return;const r=$("#reader").getBoundingClientRect();
+  const pct=Math.min(1,Math.max(0,(innerHeight-r.top)/(r.height)));$("#progress").style.width=(pct*100)+"%";
+  let on=null;document.querySelectorAll("#prose h2[id],#prose h3[id]").forEach(h=>{if(h.getBoundingClientRect().top<120)on=h.id;});
+  document.querySelectorAll("#outline a").forEach(a=>a.classList.toggle("on",a.dataset.id===on));},{passive:true});
+docList();route();
+
+$("#foot").innerHTML=`만든 시각 ${esc(D.built)} · <code>scripts/build_devlog.py</code>가 <code>docs/devlog/data.json</code>·git log·PRD 16.2·저장소 md 문서로 만들었습니다. 각 세션 대화 기록을 읽고 요약한 것이며, 다른 세션의 작업은 그 세션의 보고를 옮겼습니다. · <a href="${D.repo}">${esc(D.repo.replace("https://",""))}</a>`;
 </script>
 </body>
 </html>
