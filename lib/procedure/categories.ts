@@ -36,6 +36,11 @@ export const CATEGORY_KEYS = [
   "respond_criminal",
   "admin_appeal",
   "debt_relief",
+  // 추가 섹션 (DEC-043)
+  "auction",
+  "registration",
+  "fine_objection",
+  "business_permit",
 ] as const;
 
 export type CategoryKey = (typeof CATEGORY_KEYS)[number];
@@ -532,6 +537,65 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     ],
     examples: ["debt-relief-01"],
   },
+  auction: {
+    key: "auction",
+    label: "부동산 경매",
+    description: "경매로 집·땅 사기, 권리분석·입찰",
+    guide:
+      "경매에 입찰하려는 쪽 기준으로 안내해요. 어떤 물건인지, 무엇이 걱정되는지 적어 주세요. 살던 집이 경매에 넘어간 경우는 임대차를 골라 주세요.",
+    placeholder: "예: 경매로 나온 아파트에 입찰하려는데 무엇을 확인해야 하나요?",
+    starters: [
+      "경매 물건의 권리분석을 해 보니 먼저 들어온 임차인이 있어요. ",
+      "경매에서 낙찰받았는데 살고 있는 사람이 나가지 않아요. ",
+    ],
+    track: "auction",
+    caseQuery: "부동산 경매 매수인 인수",
+    caseKinds: "민사·집행",
+    lawHints: [{ lawName: "민사집행법", articleNos: ["제91조", "제113조", "제142조"] }],
+    examples: [],
+  },
+  registration: {
+    key: "registration",
+    label: "부동산 등기",
+    description: "소유권이전등기·가등기 신청",
+    guide:
+      "등기를 신청하려는 쪽 기준으로 안내해요. 어떤 등기인지(매매·상속·증여 등) 적어 주세요. 보증금 때문에 하는 임차권등기명령은 임대차를 골라 주세요.",
+    placeholder: "예: 집을 샀는데 소유권이전등기는 어떻게 신청하나요?",
+    starters: ["집을 샀는데 등기를 직접 신청하고 싶어요. ", "가등기를 본등기로 바꾸려고 해요. "],
+    track: "registration",
+    caseQuery: "소유권이전등기",
+    caseKinds: "민사",
+    lawHints: [{ lawName: "부동산등기법", articleNos: ["제23조", "제24조", "제29조"] }],
+    examples: [],
+  },
+  fine_objection: {
+    key: "fine_objection",
+    label: "과태료",
+    description: "과태료 통지·부과에 이의제기",
+    guide:
+      "과태료를 통지받은 쪽 기준으로 안내해요. 어떤 일로 통지를 받았는지 적어 주세요. 통지서에 적힌 기한을 먼저 확인하세요.",
+    placeholder: "예: 주차 위반 과태료 고지서를 받았는데 억울해서 이의를 제기하고 싶어요.",
+    starters: ["과태료 사전통지서를 받았어요. ", "과태료를 내지 않으면 어떻게 되는지 궁금해요. "],
+    track: "fine_objection",
+    caseQuery: "과태료 이의",
+    caseKinds: "행정·비송",
+    lawHints: [{ lawName: "질서위반행위규제법", articleNos: ["제16조", "제20조", "제21조"] }],
+    examples: [],
+  },
+  business_permit: {
+    key: "business_permit",
+    label: "영업신고·허가",
+    description: "가게를 열 때 필요한 신고·허가",
+    guide:
+      "영업을 시작하려는 쪽 기준으로 안내해요. 어떤 업종인지, 어디에서 하려는지 적어 주세요(상세 주소는 빼고).",
+    placeholder: "예: 반찬가게를 열려는데 영업신고는 어떻게 하나요?",
+    starters: ["음식점을 열려고 해요. ", "하던 가게를 넘겨받으려고 해요. "],
+    track: "business_permit",
+    caseQuery: "영업신고 수리",
+    caseKinds: "행정",
+    lawHints: [{ lawName: "식품위생법", articleNos: ["제37조", "제39조", "제41조"] }],
+    examples: [],
+  },
 };
 
 export const CATEGORY_LIST: Category[] = CATEGORY_KEYS.map((k) => CATEGORIES[k]);
@@ -548,7 +612,16 @@ export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] 
   {
     key: "home",
     label: "집·돈·계약",
-    keys: ["lease", "commercial_lease", "deposit", "loan", "consumer", "debt_relief"],
+    keys: [
+      "lease",
+      "commercial_lease",
+      "deposit",
+      "loan",
+      "consumer",
+      "debt_relief",
+      "auction",
+      "registration",
+    ],
   },
   { key: "work", label: "일터", keys: ["labor", "workplace_harassment", "industrial_accident"] },
   {
@@ -570,11 +643,15 @@ export const CATEGORY_GROUPS: { key: string; label: string; keys: CategoryKey[] 
     label: "가족·학교",
     keys: ["family", "inheritance", "domestic_violence", "school_violence"],
   },
-  { key: "life", label: "사고·생활", keys: ["traffic", "medical", "neighbor", "privacy"] },
+  {
+    key: "life",
+    label: "사고·생활",
+    keys: ["traffic", "medical", "neighbor", "privacy", "business_permit"],
+  },
   {
     key: "respond",
     label: "서류·처분을 받음",
-    keys: ["respond_civil", "respond_criminal", "admin_appeal"],
+    keys: ["respond_civil", "respond_criminal", "admin_appeal", "fine_objection"],
   },
 ];
 

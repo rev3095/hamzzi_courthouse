@@ -161,6 +161,10 @@ const RESPONDENT_LABELS: ReadonlySet<CaseType> = new Set<CaseType>([
   "debt_relief",
   "admin_appeal",
 ]);
+const FINE_WORD = /과태료/;
+const AUCTION_BIDDER_WORD = /입찰|낙찰|권리분석|매수신청|공매/;
+const REGISTRATION_WORD = /소유권이전등기|가등기|등기를?신청|등기신청/;
+const PERMIT_WORD = /영업신고|영업허가|인허가/;
 /** 형법만 찾은 질문을 범죄 피해 고소로 볼 낱말 (DEC-033: 법령 이름만으로 정하지 않는다) */
 const CRIME_REPORT_CONTEXT = /고소|신고|피해|당했|처벌|범죄/;
 
@@ -188,6 +192,11 @@ function classifyByRules(r: Input, question: string | null): CaseType {
   if (OWE_QUESTION.test(text) && !OTHER_PARTY_SUBJECT.test(text)) return "defendant";
 
   // 추가 섹션 (DEC-033): 뚜렷한 낱말이 있을 때만. 기존 섹션보다 먼저 본다 (보이스피싱 → 사기, 직장 내 괴롭힘 → 모욕 등으로 새지 않게)
+  // DEC-043: 과태료는 행정처분 불복과 절차가 달라 먼저 본다. 경매는 입찰하는 쪽 낱말이 있을 때만 (임차인 보증금 질문은 그대로)
+  if (FINE_WORD.test(text)) return "fine_objection";
+  if (AUCTION_BIDDER_WORD.test(text)) return "auction";
+  if (REGISTRATION_WORD.test(text)) return "registration";
+  if (PERMIT_WORD.test(text)) return "business_permit";
   if (ADMIN_WORD.test(text)) return "admin_appeal";
   if (SEX_CRIME_WORD.test(text)) return "sex_crime";
   if (SCHOOL_VIOLENCE_WORD.test(text)) return "school_violence";

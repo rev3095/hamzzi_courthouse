@@ -147,3 +147,43 @@ describe("카테고리 기본 조문 (DEC-041 검색 보강)", () => {
     }
   });
 });
+
+describe("DEC-043 추가 섹션 4개 (부동산 경매·부동산 등기·과태료·영업신고)", () => {
+  const empty = {
+    intent: { area: "", goal: "", laws: [], lawKeywords: [] },
+    articles: [],
+    mode: "ai" as const,
+  };
+
+  test("뚜렷한 낱말이 있으면 그 절차로 분류한다", () => {
+    for (const [q, want] of [
+      ["경매로 나온 아파트에 입찰하려는데 권리분석은 어떻게 하나요?", "auction"],
+      ["집을 샀는데 소유권이전등기는 어떻게 신청하나요?", "registration"],
+      ["주차 위반 과태료 고지서를 받았는데 억울해요", "fine_objection"],
+      ["반찬가게를 열려는데 영업신고는 어떻게 하나요?", "business_permit"],
+    ] as const) {
+      expect(classifyCase(empty, q), q).toBe(want);
+    }
+  });
+
+  test("살던 집이 경매에 넘어간 임차인·임차권등기명령은 임대차 절차 그대로다", () => {
+    expect(
+      classifyCase(empty, "전세로 사는 집이 경매에 넘어갔어요. 보증금을 돌려받을 수 있나요?"),
+    ).toBe("lease_deposit");
+    expect(classifyCase(empty, "전세 보증금을 못 받아서 임차권등기명령을 신청하려고 해요")).toBe(
+      "lease_deposit",
+    );
+  });
+
+  test("새 타임라인은 단계가 넷 이상이고 첫 추천 단계가 그 안에 있다", () => {
+    for (const key of ["auction", "registration", "fine_objection", "business_permit"] as const) {
+      const plan = procedurePlan(empty, CATEGORIES[key].placeholder, key);
+      expect(hasTimeline(plan), key).toBe(true);
+      if (hasTimeline(plan)) {
+        expect(plan.caseType).toBe(key);
+        expect(plan.steps.length).toBeGreaterThanOrEqual(4);
+        expect(plan.steps.map((s) => s.key)).toContain(plan.recommended.key);
+      }
+    }
+  });
+});

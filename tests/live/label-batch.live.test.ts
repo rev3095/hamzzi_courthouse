@@ -17,7 +17,9 @@ const { UNDERSTAND_SYSTEM } = await import("@/lib/ai/prompts");
 const { UNDERSTAND_MODEL } = await import("@/lib/ai/lite");
 
 const IN = "evals/labels/easylaw-questions.jsonl";
-const OUT = "evals/labels/labeled.jsonl";
+const OUT = process.env.LABEL_OUT ?? "evals/labels/labeled.jsonl";
+// 다시 라벨링: 이 파일에서 section이 none이었던 질문만 고른다 (섹션을 늘린 뒤 효과를 잴 때)
+const ONLY_NONE_FROM = process.env.LABEL_ONLY_NONE_FROM;
 const BUDGET_USD = Number.parseFloat(process.env.LABEL_BUDGET_USD ?? "0.4");
 const LIMIT = Number.parseInt(process.env.LABEL_LIMIT ?? "1000", 10);
 const CONCURRENCY = 4;
@@ -40,7 +42,19 @@ describe.skipIf(!process.env.ANTHROPIC_API_KEY || process.env.LABEL_BATCH !== "1
               .map((l) => (JSON.parse(l) as { id: string }).id)
           : [],
       );
-      const todo = rows.filter((r) => !done.has(r.id)).slice(0, LIMIT);
+      const wasNone = ONLY_NONE_FROM
+        ? new Set(
+            readFileSync(ONLY_NONE_FROM, "utf8")
+              .split(String.fromCharCode(10))
+              .filter(Boolean)
+              .map((l) => JSON.parse(l) as { id: string; section: string | null })
+              .filter((r) => r.section === "none")
+              .map((r) => r.id),
+          )
+        : null;
+      const todo = rows
+        .filter((r) => !done.has(r.id) && (!wasNone || wasNone.has(r.id)))
+        .slice(0, LIMIT);
       const client = createModelClient();
       let spent = 0;
       let failed = 0;

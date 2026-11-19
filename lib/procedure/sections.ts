@@ -40,6 +40,12 @@ export const SECTION_GUIDE: Record<SectionLabel, string> = {
   debt_relief: "빚을 갚기 어려워 채무조정·개인회생·파산을 알아보는 경우",
   respond_civil: "소장·지급명령 같은 법원 서류를 받은 쪽 (민사 청구를 당함)",
   respond_criminal: "고소·신고를 당했거나 수사를 받는 쪽",
+  auction:
+    "부동산 경매·공매에 입찰해 사려는 경우 (물건 확인·권리분석·입찰·대금 납부). 살던 집이 경매에 넘어간 임차인은 lease_deposit",
+  registration:
+    "부동산 등기를 신청하려는 경우 (소유권이전등기·가등기 등). 임차권등기명령은 lease_deposit",
+  fine_objection: "과태료를 통지받거나 부과받아 이의를 제기하려는 경우",
+  business_permit: "영업신고·영업허가처럼 가게를 열 때 필요한 인허가 절차를 알아보는 경우",
   none: "위 어디에도 맞지 않거나 알 수 없음. 돈을 갚아야 하는 쪽인데 서류는 받지 않았을 때도 none",
 };
 

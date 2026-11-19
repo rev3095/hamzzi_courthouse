@@ -1,6 +1,7 @@
 """법제처 찾기쉬운 생활법령정보 "100문 100답"의 질문 문장을 모은다 (DEC-042, 라벨링용).
 
-사용: python -X utf8 scripts/collect_easylaw_questions.py [쪽 수=10]
+사용: python -X utf8 scripts/collect_easylaw_questions.py [쪽 수=10] [시작 쪽=1]
+- 이미 모은 질문은 그대로 두고 새 질문만 더한다 (같은 번호는 한 번만).
 - 가져오는 것: 질문 문장과 분야 번호뿐이다. 답변 본문은 저장하지 않는다.
 - 출처: 법제처 찾기쉬운 생활법령정보 (https://www.easylaw.go.kr). 저작권정책이 출처 표기를 조건으로 이용을 허용하고,
   robots.txt가 목록 수집을 막지 않는다 (2026-11-19 확인). 정부가 쓴 질문이라 개인정보가 없다.
@@ -34,8 +35,16 @@ def fetch(page: int) -> str:
 
 def main() -> int:
     pages = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+    start = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     seen: dict[str, dict] = {}
-    for page in range(1, pages + 1):
+    try:
+        for line in io.open(OUT, encoding="utf-8"):
+            if line.startswith('{"id"'):
+                row = json.loads(line)
+                seen[row["id"].removeprefix("easylaw-")] = row
+    except FileNotFoundError:
+        pass
+    for page in range(start, start + pages):
         found = ITEM.findall(fetch(page))
         new = 0
         for area, seq, text in found:
