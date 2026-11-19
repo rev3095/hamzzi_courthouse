@@ -271,7 +271,7 @@ export async function finishAnalysis(
   input: FinishAnalysisInput,
   owner: Owner,
   headers: Headers,
-  /** 예시 질문 재생(DEC-027)은 false — 저장만 하고 비로그인 하루 3회·IP 상한을 차감하지 않는다 */
+  /** 예시 질문 재생(DEC-027)은 false — 저장만 하고 비로그인 하루 횟수·IP 상한을 차감하지 않는다 */
   opts: { consumeAnonQuota?: boolean } = {},
 ): Promise<string> {
   // 관리자 모드(DEC-024)·예시 재생(DEC-027)은 횟수를 차감하지 않는다 — 소유권은 라우트가 getOwnedInquiry로 이미 확인했다

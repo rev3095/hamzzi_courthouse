@@ -1,6 +1,6 @@
 // POST /api/v1/inquiries — 문제 입력·이어 묻기, PII 탐지·마스킹 (F-001 AC1~AC3, F-002 AC3, F-007 AC1·AC2)
 // 원문은 scanInput에서만 쓰고 저장·응답·로그에 남기지 않는다 (DEC-006).
-// 비로그인은 하루 3회까지 (DEC-010·024). 횟수는 analyze 성공 시 오르고, 여기서는 이미 다 썼는지만 본다.
+// 비로그인은 하루 ANON_QUESTION_LIMIT회까지 (DEC-010·024). 횟수는 analyze 성공 시 오르고, 여기서는 이미 다 썼는지만 본다.
 // 예시 질문은 저장된 분석을 재생할 뿐이라 횟수를 보지 않는다 (DEC-027).
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute } from "@/lib/api/route";
@@ -32,7 +32,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   const owner = await resolveOwner(scope, { create: true });
   if (!owner) throw new Error("owner 없음");
   if (countsAnonQuota(owner)) {
-    // 예시 질문은 하루 3회 대신 같은 네트워크 1시간 30회만 본다 (DEC-027)
+    // 예시 질문은 하루 횟수 대신 같은 네트워크 1시간 30회만 본다 (DEC-027)
     if (findExample(scan.maskedText) !== null) await assertRateLimit(EXAMPLE_RATE, req.headers);
     else assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
   } else if (countsUserQuota(owner) && findExample(scan.maskedText) === null) {

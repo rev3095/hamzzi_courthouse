@@ -12,7 +12,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { requestIpHash } from "./ip";
 
 // 레이트 리밋 (API.md 1절, DEC-017 제안). 요청 IP의 솔트 해시를 키로 DB 함수 hit_rate_limit가 고정 창으로 센다.
-// 비로그인 질문 3회(DEC-010)와는 별개다. 솔트가 없는 개발 환경에서는 세지 않는다.
+// 비로그인 하루 질문 횟수(DEC-010)와는 별개다. 솔트가 없는 개발 환경에서는 세지 않는다.
 
 export type RateRule = { bucket: string; limit: number; windowSeconds: number };
 
@@ -22,7 +22,7 @@ export const SEARCH_RATE: RateRule = { bucket: "search", limit: 60, windowSecond
 export const LOOKUP_RATE: RateRule = { bucket: "lookup", limit: 120, windowSeconds: 3600 };
 /** 피드백·기록 삭제: 같은 네트워크 1시간 30회 */
 export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds: 3600 };
-/** 예시 질문 재생(DEC-027): 하루 3회에 들어가지 않는 대신 같은 네트워크 1시간 30회 — 행이 끝없이 쌓이지 않게 */
+/** 예시 질문 재생(DEC-027): 하루 횟수에 들어가지 않는 대신 같은 네트워크 1시간 30회 — 행이 끝없이 쌓이지 않게 */
 export const EXAMPLE_RATE: RateRule = { bucket: "example", limit: 30, windowSeconds: 3600 };
 /** 문서 초안 도우미(DEC-023): 같은 네트워크 1시간 10회 (유료 호출이라 따로 센다) */
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };

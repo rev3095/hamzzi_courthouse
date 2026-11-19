@@ -99,7 +99,7 @@ describe("소유권", () => {
   });
 });
 
-describe("F-001 AC3 비로그인 3회 (DEC-010)", () => {
+describe("F-001 AC3 비로그인 하루 횟수 (DEC-010)", () => {
   test("F-001 AC3 한도 미만은 통과, 한도부터 LOGIN_REQUIRED (DEC-031 임시 5회)", () => {
     expect(ANON_QUESTION_LIMIT).toBe(5);
     expect(() => assertAnonQuota(4)).not.toThrow();
