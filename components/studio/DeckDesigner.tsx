@@ -1,42 +1,12 @@
 "use client";
 // 햄찌법원 편집기 · 발표 자료 디자인 탭. claude.ai 아티팩트 "발표 자료 디자인 편집기"를 옮겨 와 편집기 하나로 묶었다.
 // 시안·색·글꼴·표지·카드 모양을 바꿔 보고 "선택 결과"를 복사해 채팅에 붙이면 Claude가 그대로 PPT를 다시 만든다.
-// 표지 캐릭터는 마스코트 리소스 탭의 상태 그림을 그대로 쓴다.
+// 슬라이드 내용은 deck-slides.tsx(아티팩트 "햄찌법원 발표 자료" 2026-11-15판 9장). 표지·약속 캐릭터는 마스코트 리소스 탭의 상태 그림.
 import { useState, type CSSProperties } from "react";
 import { MASCOT_MOODS, MOOD_INFO, type MascotMood } from "@/lib/mascot/moods";
-import { HamzziJudge } from "../HamzziJudge";
+import { DeckSlides, ProblemSlide } from "./deck-slides";
 import "./deck.css";
 import { Segmented } from "./ui";
-
-// deck.css 클래스 (hzd- 접두어)
-const s = Object.fromEntries(
-  [
-    "accent",
-    "bars",
-    "big",
-    "blab",
-    "cap",
-    "ct",
-    "eyebrow",
-    "foot",
-    "h",
-    "in",
-    "mas",
-    "masnote",
-    "me",
-    "rule",
-    "slide",
-    "st",
-    "table",
-    "tile",
-    "tiles",
-    "title",
-    "ts",
-    "tt",
-    "two",
-    "who",
-  ].map((k) => [k, `hzd-${k}`]),
-) as Record<string, string>;
 
 type FontKey = "Noto Sans KR" | "IBM Plex Sans KR" | "Malgun Gothic";
 type Design = {
@@ -166,168 +136,6 @@ function vars(c: Design): CSSProperties {
   } as CSSProperties;
 }
 
-const Foot = ({ n }: { n: number }) => (
-  <div className={s.foot}>
-    <span>햄찌법원</span>
-    <span>{n}</span>
-  </div>
-);
-
-function TitleSlide({ c, mood }: { c: Design; mood: MascotMood }) {
-  return (
-    <div className={`${s.slide} ${s.title}`} style={vars(c)}>
-      <div className={s.in}>
-        <div className={s.eyebrow}>2026년 청년 창업아이디어 경진대회</div>
-        <div className={s.tt}>햄찌법원</div>
-        <div className={s.ts}>
-          변호사 없이 내 사건을 준비하는
-          <br />
-          가장 쉬운 법률 길잡이
-        </div>
-        <div className={s.who}>발표자 · 예비창업자</div>
-        <div className={s.mas}>
-          <HamzziJudge size={240} mood={mood} interactive={false} />
-          <span className={s.masnote}>AI 캐릭터</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProblemSlide({ c }: { c: Design }) {
-  return (
-    <div className={s.slide} style={vars(c)}>
-      <div className={s.in}>
-        <div className={s.h}>민사 사건 10건 중 9건은 변호사 없이 진행됩니다</div>
-        <div className={s.rule} />
-        <div className={s.two}>
-          <div>
-            <div className={s.big}>90%</div>
-            <div className={s.cap}>
-              2024년 민사 사건 가운데 약 70만 5천 건이 한쪽 이상 변호사 없이 진행됐습니다.
-              <b>당사자들은 이미 AI에게 묻고 있습니다.</b>
-            </div>
-          </div>
-          <div>
-            <div className={s.st}>
-              <i>81%</i>
-              <span>소액 사건 중 양쪽 모두 변호사 없이 진행</span>
-            </div>
-            <div className={s.st}>
-              <i className={s.accent}>80.7%</i>
-              <span>없는 판례가 인용된 서면을 받아 본 법관</span>
-            </div>
-            <div className={s.st}>
-              <i className={s.accent}>69.5%</i>
-              <span>그 서면을 낸 쪽이 소송 당사자인 경우</span>
-            </div>
-          </div>
-        </div>
-        <Foot n={2} />
-      </div>
-    </div>
-  );
-}
-
-function CompareSlide({ c }: { c: Design }) {
-  const rows: [string, string, string, string, string][] = [
-    ["대상", "변호사·전문가", "누구나", "일반인", "변호사 없이 준비하는 20~30대"],
-    ["가격", "월 2.4만~8.3만 원", "무료~구독", "20만~50만 원", "무료 (원가 약 7원)"],
-    ["근거", "판례 542만 건", "원문 확인 없음", "변호사가 처리", "법제처 원문 재확인"],
-    ["역할", "전문가 리서치", "초안 생성", "대신 해 줌", "스스로 하도록 안내"],
-  ];
-  return (
-    <div className={s.slide} style={vars(c)}>
-      <div className={s.in}>
-        <div className={s.h}>판례 수보다, 혼자 하는 사람을 위한 도구입니다</div>
-        <div className={s.rule} />
-        <table className={s.table}>
-          <thead>
-            <tr>
-              <th />
-              <th>슈퍼로이어</th>
-              <th>범용 AI 챗봇</th>
-              <th>대행·첨삭</th>
-              <th className={s.me}>햄찌법원</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r[0]}>
-                <td>{r[0]}</td>
-                <td>{r[1]}</td>
-                <td>{r[2]}</td>
-                <td>{r[3]}</td>
-                <td className={s.me}>{r[4]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <Foot n={5} />
-      </div>
-    </div>
-  );
-}
-
-function CostSlide({ c }: { c: Design }) {
-  return (
-    <div className={s.slide} style={vars(c)}>
-      <div className={s.in}>
-        <div className={s.h}>질문 1건 원가 약 7원, 그래서 무료가 가능합니다</div>
-        <div className={s.rule} />
-        <div className={s.two} style={{ gridTemplateColumns: "46% 1fr" }}>
-          <div className={s.tiles}>
-            <div className={s.tile}>
-              <i className={s.accent}>약 7원</i>
-              <div>
-                <b>질문 1건의 AI 비용</b>
-                <span>Claude Haiku 5.5 기준</span>
-              </div>
-            </div>
-            <div className={s.tile}>
-              <i>약 70원</i>
-              <div>
-                <b>사건 1건을 끝까지</b>
-                <span>질문 10번 가정</span>
-              </div>
-            </div>
-            <div className={s.tile}>
-              <i>21원</i>
-              <div>
-                <b>질문당 비용 상한</b>
-                <span>코드로 강제</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className={s.ct}>월 AI 비용 (만 원, 1인 10질문 가정)</div>
-            <div className={s.bars}>
-              <div>
-                0.7
-                <u style={{ height: "2%" }} />
-              </div>
-              <div>
-                6.7
-                <u style={{ height: "11%" }} />
-              </div>
-              <div>
-                66.5
-                <u style={{ height: "86%" }} />
-              </div>
-            </div>
-            <div className={s.blab}>
-              <span>100명</span>
-              <span>1,000명</span>
-              <span>10,000명</span>
-            </div>
-          </div>
-        </div>
-        <Foot n={6} />
-      </div>
-    </div>
-  );
-}
-
 function summary(preset: PresetKey, d: Design) {
   const tb = { dark: "어둡게", light: "밝게", accent: "포인트 색" }[d.tb];
   return [
@@ -365,9 +173,9 @@ export function DeckDesigner() {
         <div>
           <h2 className="text-ink text-lg font-semibold">발표 자료 디자인</h2>
           <p className="text-muted mt-1 max-w-[640px] text-[13px] leading-relaxed">
-            시안을 고른 뒤 색·글꼴·표지·카드 모양을 바꿔 보세요. 미리보기는 실제 발표 내용으로
-            그려요. 마음에 드는 조합의 &ldquo;선택 결과&rdquo;를 복사해 채팅에 붙여 넣으면 그대로
-            PPT를 다시 만들어요.
+            시안을 고른 뒤 색·글꼴·표지·카드 모양을 바꿔 보세요. 미리보기는 최신 발표 자료(9장,
+            2026-11-15판) 내용으로 그려요. 마음에 드는 조합의 &ldquo;선택 결과&rdquo;를 복사해
+            채팅에 붙여 넣으면 그대로 PPT를 다시 만들어요.
           </p>
         </div>
       </div>
@@ -390,7 +198,7 @@ export function DeckDesigner() {
                 on ? "border-ink ring-ink ring-1" : "border-line hover:shadow-md"
               }`}
             >
-              <ProblemSlide c={p} />
+              <ProblemSlide v={vars(p)} />
               <span className="text-ink mt-2 block px-0.5 text-[14px] font-semibold">{p.name}</span>
               <span className="text-muted block px-0.5 text-[12px] leading-snug">{p.desc}</span>
             </button>
@@ -493,7 +301,7 @@ export function DeckDesigner() {
             />
           </label>
           <label>
-            <span className={fieldLabel}>표지 캐릭터</span>
+            <span className={fieldLabel}>표지·약속 장 캐릭터</span>
             <select
               value={mood}
               onChange={(e) => setMood(e.target.value as MascotMood)}
@@ -522,10 +330,7 @@ export function DeckDesigner() {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <TitleSlide c={d} mood={mood} />
-          <ProblemSlide c={d} />
-          <CompareSlide c={d} />
-          <CostSlide c={d} />
+          <DeckSlides v={vars(d)} mood={mood} />
         </div>
       </div>
     </div>

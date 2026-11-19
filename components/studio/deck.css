@@ -65,7 +65,7 @@
   overflow: hidden;
 }
 .hzd-mas img {
-  height: 100% !important;
+  height: 84% !important;
   width: auto !important;
 }
 /* 브랜드 가이드 2.1: 마스코트는 항상 "AI 캐릭터"로 표기 */
@@ -245,4 +245,185 @@
   font-weight: 700;
   margin-bottom: 1cqw;
   color: var(--d-mu);
+}
+
+/* ---------- 2026-11-15판 9장 (deck-slides.tsx) ---------- */
+.hzd-htop {
+  margin-top: 1cqw;
+}
+.hzd-src {
+  position: absolute;
+  left: 5.6cqw;
+  right: 5.6cqw;
+  bottom: 4.9cqw;
+  font-size: 0.95cqw;
+  color: var(--d-mu);
+}
+.hzd-grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.2cqw;
+  margin-top: 3cqw;
+}
+.hzd-card {
+  background: var(--d-cardbg);
+  border-radius: var(--d-r);
+  border-bottom: var(--d-stline);
+  padding: 1.6cqw 1.8cqw;
+  min-width: 0;
+}
+.hzd-card p {
+  margin: 0.6cqw 0 0;
+  font-size: 1.2cqw;
+  line-height: 1.45;
+  color: var(--d-mu);
+}
+.hzd-card.hzd-on {
+  background: var(--d-ac);
+  color: var(--d-onac);
+}
+.hzd-card.hzd-on p,
+.hzd-card.hzd-on span,
+.hzd-card.hzd-on .hzd-tag {
+  color: inherit;
+  opacity: 0.9;
+}
+.hzd-card.hzd-tint {
+  background: var(--d-mebg);
+}
+.hzd-card.hzd-tint .hzd-cardh {
+  font-size: 1.5cqw;
+}
+.hzd-cardh {
+  font-size: 1.7cqw;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.hzd-cardh.hzd-lg {
+  font-size: 2.2cqw;
+  margin-top: 0.4cqw;
+}
+.hzd-cardh.hzd-no {
+  color: var(--d-no, #c8432b);
+}
+.hzd-tag {
+  display: block;
+  font-size: 1.1cqw;
+  font-weight: 700;
+  color: var(--d-ac);
+  margin-bottom: 0.3cqw;
+}
+.hzd-list ul {
+  margin: 0.8cqw 0 0;
+  padding-left: 1.6cqw;
+  font-size: 1.35cqw;
+  line-height: 1.75;
+}
+.hzd-stairs {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.4cqw;
+  height: 31cqw;
+  margin-top: 2.4cqw;
+}
+.hzd-stair {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2cqw;
+}
+.hzd-stair b {
+  font-size: 1.7cqw;
+  margin-bottom: 0.6cqw;
+  word-break: keep-all;
+}
+.hzd-stair span {
+  font-size: 1.2cqw;
+  line-height: 1.4;
+  color: var(--d-mu);
+}
+.hzd-bubble {
+  position: absolute;
+  top: 1.6cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  white-space: nowrap;
+  background: #fff;
+  color: #1a2233;
+  border: 0.1cqw solid #1a2233;
+  border-radius: 1.6cqw;
+  padding: 0.5cqw 1cqw;
+  font-size: 1cqw;
+  font-weight: 600;
+}
+.hzd-promise {
+  list-style: none;
+  padding: 0;
+  margin: 3cqw 0 0;
+  font-size: 1.7cqw;
+}
+.hzd-promise li {
+  display: flex;
+  gap: 2cqw;
+  margin-bottom: 1.3cqw;
+}
+.hzd-promise i {
+  font-style: normal;
+  font-weight: 700;
+}
+.hzd-url {
+  margin-top: 2.2cqw;
+  font-size: 1.3cqw;
+  opacity: 0.6;
+}
+.hzd-phone {
+  position: absolute;
+  right: 6cqw;
+  top: 5.5cqw;
+  bottom: 5.5cqw;
+  width: 25cqw;
+  background: #faf8f4;
+  color: #1a2233;
+  border-radius: 1.6cqw;
+  padding: 1.8cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5cqw;
+  text-align: center;
+}
+.hzd-phone img {
+  width: 9cqw !important;
+  height: auto !important;
+  margin-top: 1cqw;
+}
+.hzd-phone b {
+  font-size: 1.4cqw;
+}
+.hzd-phone span {
+  font-size: 1cqw;
+  color: #5a6272;
+}
+.hzd-phone .hzd-chip {
+  align-self: flex-start;
+  background: #1a2233;
+  color: #fff;
+  font-size: 0.9cqw;
+  font-weight: 700;
+  border-radius: 0.5cqw;
+  padding: 0.3cqw 0.7cqw;
+}
+.hzd-phone .hzd-line {
+  display: block;
+  width: 90%;
+  height: 1cqw;
+  margin-top: 0.8cqw;
+  border-radius: 1cqw;
+  background: #ece9e1;
+}
+.hzd-phone .hzd-line.hzd-short {
+  width: 60%;
+  margin-top: 0;
 }
