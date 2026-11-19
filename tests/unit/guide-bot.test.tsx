@@ -15,7 +15,7 @@ const quick = (dialog: HTMLElement) => within(dialog).getByRole("group", { name:
 const esc = (s: string) => s.replace(/[()]/g, "\\$&");
 
 describe("햄찌 안내 챗봇 (DEC-030)", () => {
-  test("닫혀 있을 때는 원형 햄찌 버튼만 있고, 열면 고지와 빠른 질문 메뉴 7개가 보인다", () => {
+  test("닫혀 있을 때는 원형 햄찌 버튼만 있고, 열면 고지와 빠른 질문 메뉴 8개가 보인다", () => {
     render(<GuideBot />);
     expect(screen.queryByRole("dialog")).toBeNull();
     const launcher = screen.getByRole("button", { name: /햄찌 안내 열기/ });

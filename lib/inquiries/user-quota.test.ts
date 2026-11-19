@@ -8,6 +8,7 @@ import {
   countsAnonQuota,
   countsUserQuota,
   isOwner,
+  savesToHistory,
   kstDayStartIso,
   quotaView,
 } from "./policy";
@@ -70,6 +71,19 @@ describe("DEC-035 로그인 전 질문 소유권", () => {
     expect(isOwner({ userId: null, anonSessionId: "a1" }, { kind: "user", userId: "u1" })).toBe(
       false,
     );
+  });
+});
+
+describe("DEC-039 내 질문 기록에 남기는 조건", () => {
+  const user = { kind: "user", userId: "u1" } as const;
+  test("DEC-039 로그인 사용자가 켜고 보낸 실제 질문만 남긴다", () => {
+    expect(savesToHistory(true, user, false)).toBe(true);
+    expect(savesToHistory(false, user, false)).toBe(false);
+  });
+  test("DEC-039 비로그인·관리자 모드·예시 질문은 켜 두어도 남기지 않는다", () => {
+    expect(savesToHistory(true, { kind: "anon", anonSessionId: "a" }, false)).toBe(false);
+    expect(savesToHistory(true, { ...user, admin: true }, false)).toBe(false);
+    expect(savesToHistory(true, user, true)).toBe(false);
   });
 });
 

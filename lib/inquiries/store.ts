@@ -8,6 +8,7 @@ import { getActor } from "@/lib/auth/server";
 import type { InputScan } from "@/lib/pii";
 import { requestIpHash } from "@/lib/auth/ip";
 import { createServiceClient } from "@/lib/supabase/server";
+import { findExample } from "@/lib/demo/policy";
 import {
   ANON_IP_DAILY_LIMIT,
   ANON_IP_WINDOW,
@@ -16,6 +17,7 @@ import {
   countsAnonQuota,
   kstDayStartIso,
   questionsUsedToday,
+  savesToHistory,
   type FinishResult,
   type Owner,
   type StoredPiiFindings,
@@ -145,8 +147,8 @@ export async function createInquiry(
       sensitive_consent_at: consentAt,
       parent_inquiry_id: parentInquiryId,
       status: "draft",
-      // 내 질문 기록(DEC-039)은 로그인 사용자만. 비로그인·관리자 모드 질문은 남기지 않는다
-      ...(save && owner.kind === "user" && { saved: true }),
+      // 내 질문 기록(DEC-039): 로그인 사용자만. 비로그인·관리자 모드·예시 질문은 남기지 않는다
+      ...(savesToHistory(save, owner, findExample(scan.maskedText) !== null) && { saved: true }),
     })
     .select("id")
     .single<{ id: string }>();

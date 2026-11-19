@@ -183,6 +183,14 @@ export type Owner =
   | { kind: "user"; userId: string; anonSessionId?: string | null; admin?: boolean }
   | { kind: "anon"; anonSessionId: string; admin?: boolean };
 
+/**
+ * 내 질문 기록(DEC-039)에 남길지. 로그인 사용자가 켜고 보낸 질문만 — 관리자 모드·예시 질문은 브라우저에서
+ * 기록 남기기가 켜져 있어도 서버가 다시 거른다 (DEC-035·039)
+ */
+export function savesToHistory(save: boolean, owner: Owner, isExample: boolean): boolean {
+  return save && owner.kind === "user" && owner.admin !== true && !isExample;
+}
+
 /** 비로그인 횟수 제한을 받는 소유자인지 (관리자 모드는 제외) */
 export const countsAnonQuota = (owner: Owner): owner is { kind: "anon"; anonSessionId: string } =>
   owner.kind === "anon" && owner.admin !== true;
