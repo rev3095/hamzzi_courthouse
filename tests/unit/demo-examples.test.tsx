@@ -24,7 +24,7 @@ describe.each(demoExamples().map((e) => [e.id, e] as const))("예시 %s", (_id, 
     for (const p of result.answer.points) {
       const ref = sourceRef(p.source, result);
       expect(ref.url, p.source).toMatch(/^https:\/\/www\.law\.go\.kr\//);
-      const citation = ref.label.replace(/^\S+ (?=\d{4}[가-힣])/, ""); // 판례는 "법원 사건번호" → 사건번호
+      const citation = ref.label.replace(/^\S+ (?=\d{2,4}[가-힣])/, ""); // 판례는 "법원 사건번호" → 사건번호 (옛 사건번호는 연도가 두 자리)
       const item = result.recheck.items.find((i) => norm(i.citation) === norm(citation));
       expect(item?.exists, p.source).toBe(true);
     }

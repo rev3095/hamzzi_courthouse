@@ -1,0 +1,199 @@
+{
+  "id": "respond-criminal-01",
+  "category": "respond_criminal",
+  "question": "경찰서에서 제가 고소를 당했다며 조사받으러 나오라는 연락이 왔어요. 저는 잘못한 것이 없다고 생각해요. 조사받으러 갈 때 무엇을 준비해야 하고 어떤 권리가 있나요?",
+  "at": "2026-11-19T03:50:07.440Z",
+  "elapsedMs": 22081,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10057,
+    "tokens_out": 1689,
+    "latency_ms": 21630
+  },
+  "costUsdUpperEstimate": 0.07401,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "형사소송법",
+        "공소청 인권보호사무규칙",
+        "검사와 사법경찰관의 상호협력과 일반적 수사준칙에 관한 규정",
+        "검사와 특별사법경찰관의 상호협력에 관한 규칙",
+        "공소청사건사무규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "피의자신문",
+        "피의자신문 진술거부권 변호인 참여",
+        "고소 피의자 조사 조서 열람 정정"
+      ]
+    },
+    "section": "respond_criminal",
+    "answer": {
+      "points": [
+        {
+          "text": "경찰 조사(피의자신문) 전에 사법경찰관은 권리를 먼저 알려주어야 합니다. 모든 질문 또는 개별 질문에 대해 진술하지 않을 수 있고, 진술하지 않더라도 불이익을 받지 않는다는 내용이 포함됩니다.",
+          "source": "law:형사소송법:제244조의3",
+          "quote": "일체의 진술을 하지 아니하거나 개개의 질문에 대하여 진술을 하지 아니할 수 있다는 것",
+          "check": "verified"
+        },
+        {
+          "text": "다만 진술거부권을 쓰지 않고 한 진술은 법정에서 유죄의 증거로 쓰일 수 있다는 점도 함께 고지됩니다. 또 신문받을 때 변호인을 참여하게 하는 등 변호인의 도움을 받을 수 있습니다. 미리 변호인 동석 여부를 생각해 두시면 도움이 될 수 있습니다.",
+          "source": "law:형사소송법:제244조의3",
+          "quote": "진술을 거부할 권리를 포기하고 행한 진술은 법정에서 유죄의 증거로 사용될 수 있다는 것",
+          "check": "verified"
+        },
+        {
+          "text": "권리를 알려준 뒤 경찰관은 진술거부권과 변호인 조력권을 행사할지 묻고, 그 답변을 조서에 적어야 합니다. 이 답변은 본인이 직접 쓰거나, 경찰관이 적은 부분에 기명날인 또는 서명하는 방식으로 남깁니다.",
+          "source": "law:형사소송법:제244조의3",
+          "quote": "이에 대한 피의자의 답변을 조서에 기재하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "대법원은 다른 사건에서 경찰관이 진술을 조서로 옮길 때 객관성을 지켜야 하고, 이를 어겨 방어권이 실질적으로 침해되면 국가배상책임이 생길 수 있다고 판단했습니다. 그러니 조서 내용이 실제 말한 것과 같은지 꼼꼼히 확인하시는 것이 좋겠습니다. 준비물에 관한 내용은 주어진 근거에서 확인되지 않습니다.",
+          "source": "case:2015다224797",
+          "quote": "경찰관은 피의자의 진술을 조서화하는 과정에서 조서의 객관성을 유지하여야 하고",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:형사소송법:제244조의3",
+        "lawName": "형사소송법",
+        "articleNo": "제244조의3",
+        "title": "진술거부권 등의 고지",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C244%EC%A1%B0%EC%9D%983",
+        "used": true
+      },
+      {
+        "id": "law:공소청인권보호사무규칙:제38조",
+        "lawName": "공소청 인권보호사무규칙",
+        "articleNo": "제38조",
+        "title": "진술거부권 등의 고지",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%86%8C%EC%B2%AD%20%EC%9D%B8%EA%B6%8C%EB%B3%B4%ED%98%B8%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C38%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:검사와사법경찰관의상호협력과일반적수사준칙에관한규정:제32조",
+        "lawName": "검사와 사법경찰관의 상호협력과 일반적 수사준칙에 관한 규정",
+        "articleNo": "제32조",
+        "title": "체포ㆍ구속영장 집행 시의 권리 고지",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B2%80%EC%82%AC%EC%99%80%20%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%83%81%ED%98%B8%ED%98%91%EB%A0%A5%EA%B3%BC%20%EC%9D%BC%EB%B0%98%EC%A0%81%20%EC%88%98%EC%82%AC%EC%A4%80%EC%B9%99%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C32%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:검사와특별사법경찰관의상호협력에관한규칙:제34조",
+        "lawName": "검사와 특별사법경찰관의 상호협력에 관한 규칙",
+        "articleNo": "제34조",
+        "title": "현행범인의 체포",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B2%80%EC%82%AC%EC%99%80%20%ED%8A%B9%EB%B3%84%EC%82%AC%EB%B2%95%EA%B2%BD%EC%B0%B0%EA%B4%80%EC%9D%98%20%EC%83%81%ED%98%B8%ED%98%91%EB%A0%A5%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C34%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:공소청사건사무규칙:제43조",
+        "lawName": "공소청사건사무규칙",
+        "articleNo": "제43조",
+        "title": "진술거부권 등의 고지 확인",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%B5%EC%86%8C%EC%B2%AD%EC%82%AC%EA%B1%B4%EC%82%AC%EB%AC%B4%EA%B7%9C%EC%B9%99/%EC%A0%9C43%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "211417",
+        "caseNo": "2015다224797",
+        "caseName": "손해배상(기)[성폭력범죄의 소년 피의자들이 경찰의 피의자신문조서 작성시 직무상 의무 위반을 이유로 국가배상책임을 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2020-04-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=211417",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "609369",
+        "caseNo": "2023고단4232, 2023고단4908(병합), 2024초기60, 2024초기61, 2024초기62",
+        "caseName": "특정금융거래정보의보고및이용등에관한법률위반·외국환거래법위반·사기방조·범죄수익은닉의규제및처벌등에관한법률위반·배상명령신청주1)",
+        "court": "서울북부지방법원",
+        "decidedAt": "2024-09-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=609369",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624065",
+        "caseNo": "2026노212",
+        "caseName": "특수공무집행방해, 허위공문서작성, 허위작성공문서행사, 대통령기록물관리에관한법률위반, 공용서류손상, 직권남용권리행사방해, 대통령등의경호에관한법률위반교사, 범인도피교사",
+        "court": "서울고등법원",
+        "decidedAt": "2026-04-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624065",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "211341",
+        "caseNo": "2015모2357",
+        "caseName": "준항고인용결정에대한재항고[피의자신문절차에서 인정신문 시작 전 피의자 또는 변호인으로부터 피의자에 대한 수갑 해제를 요청받았음에도, 교도관에게 수갑을 해제하여 달라고 요청하지 않고 오히려 변호인을 퇴실시킨 검사의 처분을 다투는 사건]",
+        "court": "대법원",
+        "decidedAt": "2020-03-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=211341",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "603419",
+        "caseNo": "2022노3337",
+        "caseName": "공갈·사기·외국환거래법위반",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2024-06-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=603419",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "피의자신문",
+        "total": 6
+      },
+      {
+        "keyword": "피의자신문 진술거부권 변호인 참여",
+        "total": 6
+      },
+      {
+        "keyword": "고소 피의자 조사 조서 열람 정정",
+        "total": 5
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "형사소송법 제244조의3",
+          "exists": true
+        },
+        {
+          "citation": "2015다224797",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

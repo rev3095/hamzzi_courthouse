@@ -1,0 +1,203 @@
+{
+  "id": "family-01",
+  "category": "family",
+  "question": "이혼하면서 아이는 제가 키우고 상대방이 매달 양육비를 보내기로 법원에서 정했어요. 그런데 몇 달째 양육비가 들어오지 않아요. 양육비를 받아 내려면 어떤 방법이 있나요?",
+  "at": "2026-11-19T03:43:22.250Z",
+  "elapsedMs": 21184,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 8880,
+    "tokens_out": 1654,
+    "latency_ms": 20571
+  },
+  "costUsdUpperEstimate": 0.0686,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "가사소송법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "이혼",
+        "양육비 미지급 이행명령",
+        "양육비 직접지급명령 강제집행"
+      ]
+    },
+    "section": "family",
+    "answer": {
+      "points": [
+        {
+          "text": "먼저 가정법원에 '이행명령'을 신청하는 방법이 있습니다. 판결·심판·조정조서 등으로 정해진 양육비 같은 금전 지급 의무를 정당한 이유 없이 이행하지 않으면, 신청에 따라 법원이 일정 기간 안에 이행하라고 명할 수 있습니다. 법원은 특별한 사정이 없으면 먼저 상대방을 심문하고 이행을 권고합니다.",
+          "source": "law:가사소송법:제64조",
+          "quote": "정당한 이유 없이 그 의무를 이행하지 아니하는 경우에는 당사자의 신청에 의하여",
+          "check": "verified"
+        },
+        {
+          "text": "이행명령을 받고도 상대방이 정당한 이유 없이 따르지 않으면, 법원은 직권으로 또는 권리자의 신청에 따라 결정으로 과태료를 부과할 수 있습니다. 상한은 1천만원입니다.",
+          "source": "law:가사소송법:제67조",
+          "quote": "결정으로 1천만원 이하의 과태료를 부과할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "정기적으로 돈을 지급하라는 이행명령을 받은 사람이 정당한 이유 없이 3기 이상 지급하지 않으면, 권리자의 신청에 따라 30일의 범위에서 의무를 이행할 때까지 감치를 명할 수 있습니다. 이 결정에는 즉시항고를 할 수 있습니다.",
+          "source": "law:가사소송법:제68조",
+          "quote": "정당한 이유 없이 3기(期) 이상 그 의무를 이행하지 아니한 경우",
+          "check": "verified"
+        },
+        {
+          "text": "또한 양육비가 금전 지급을 명하는 심판으로 정해졌다면, 그 심판은 집행권원이 됩니다. 따라서 이행명령과 별개로 강제집행 절차를 검토해 볼 수 있습니다. 양육비를 정한 문서가 어떤 종류인지 먼저 확인해 보시면 좋겠습니다.",
+          "source": "law:가사소송법:제41조",
+          "quote": "그 밖에 의무의 이행을 명하는 심판은 집행권원(執行權原)이 된다",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:가사소송법:제64조",
+        "lawName": "가사소송법",
+        "articleNo": "제64조",
+        "title": "이행 명령",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C64%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:가사소송법:제67조",
+        "lawName": "가사소송법",
+        "articleNo": "제67조",
+        "title": "의무 불이행에 대한 제재",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C67%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:가사소송법:제41조",
+        "lawName": "가사소송법",
+        "articleNo": "제41조",
+        "title": "심판의 집행력",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C41%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:가사소송법:제42조",
+        "lawName": "가사소송법",
+        "articleNo": "제42조",
+        "title": "가집행",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C42%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:가사소송법:제68조",
+        "lawName": "가사소송법",
+        "articleNo": "제68조",
+        "title": "특별한 의무 불이행에 대한 제재",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C68%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "624241",
+        "caseNo": "2024므15467",
+        "caseName": "이혼및위자료",
+        "court": "대법원",
+        "decidedAt": "2026-07-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624241",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "606499",
+        "caseNo": "2025으517",
+        "caseName": "이행명령[양육비부담조서에 의하여 확정된 양육비 지급 의무 중 미이행 의무의 범위를 넘어 이행명령을 한 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-05-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606499",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "241015",
+        "caseNo": "2018스724",
+        "caseName": "양육비",
+        "court": "대법원",
+        "decidedAt": "2024-07-18",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=241015",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622117",
+        "caseNo": "2024므16033, 16040",
+        "caseName": "이혼등청구의소·이혼등청구의소[비상장주식을 그 명의대로 모두 피고에게 귀속시키고 원고에게 재산분할 비율에 상응하는 금전을 지급하도록 명한 재산분할 방법이 부당한지가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622117",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "606741",
+        "caseNo": "2024즈기101",
+        "caseName": "이행명령",
+        "court": "인천가정법원",
+        "decidedAt": "2024-12-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606741",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "이혼",
+        "total": 6
+      },
+      {
+        "keyword": "양육비 미지급 이행명령",
+        "total": 6
+      },
+      {
+        "keyword": "양육비 직접지급명령 강제집행",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "가사소송법 제64조",
+          "exists": true
+        },
+        {
+          "citation": "가사소송법 제67조",
+          "exists": true
+        },
+        {
+          "citation": "가사소송법 제68조",
+          "exists": true
+        },
+        {
+          "citation": "가사소송법 제41조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "id": "crime-report-01",
+  "category": "crime_report",
+  "question": "지인에게 잠시 보관해 달라고 맡긴 노트북을 지인이 허락 없이 중고로 팔아 버렸어요. 돌려 달라고 해도 연락을 피해요. 형사 고소를 할 수 있나요?",
+  "at": "2026-11-19T03:46:49.189Z",
+  "elapsedMs": 22029,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 7986,
+    "tokens_out": 1612,
+    "latency_ms": 21590
+  },
+  "costUsdUpperEstimate": 0.06418,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "형법",
+        "민법",
+        "형사소송법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "고소",
+        "횡령 보관 임의처분",
+        "위탁물 횡령 반환거부"
+      ]
+    },
+    "section": "crime_report",
+    "answer": {
+      "points": [
+        {
+          "text": "말씀하신 상황은 형법 제355조 제1항의 횡령죄와 관련해 검토해 볼 수 있습니다. 이 조항은 남의 물건을 맡아 보관하는 사람이 그 물건을 횡령하거나, 돌려 달라는 요구를 거부하는 경우를 처벌 대상으로 정하고 있어 형사 고소를 검토할 여지가 있습니다.",
+          "source": "law:형법:제355조",
+          "quote": "타인의 재물을 보관하는 자가 그 재물을 횡령하거나 그 반환을 거부한 때에는",
+          "check": "verified"
+        },
+        {
+          "text": "이 조항에서 정한 형은 5년 이하의 징역 또는 1천500만원 이하의 벌금입니다. 다만 실제로 죄가 성립하는지, 어떤 처벌이 내려지는지는 수사와 재판에서 구체적인 사실관계에 따라 판단됩니다.",
+          "source": "law:형법:제355조",
+          "quote": "5년 이하의 징역 또는 1천500만원 이하의 벌금에 처한다",
+          "check": "verified"
+        },
+        {
+          "text": "횡령죄가 성립하려면 상대방이 '보관하는 자'의 지위에 있어야 합니다. 대법원은 채권양도와 관련된 다른 사건에서, 보관자 지위를 인정할 만한 신임관계가 없다는 이유로 횡령죄를 인정하지 않았습니다. 사안은 다르지만, 맡긴 경위가 쟁점이 될 수 있다는 점을 참고하실 수 있습니다.",
+          "source": "case:2017도3829",
+          "quote": "보관자 지위가 인정될 수 있는 신임관계에 있다고 볼 수 없어 횡령죄가 성립하지 않는다",
+          "check": "verified"
+        },
+        {
+          "text": "형사소송법은 고소를 제한하는 경우로 자기나 배우자의 직계존속을 고소하는 경우를 정하고 있습니다. 상대방이 지인이라고 하셨으므로, 이 조항의 고소 제한 대상에는 해당하지 않는 것으로 보입니다.",
+          "source": "law:형사소송법:제224조",
+          "quote": "자기 또는 배우자의 직계존속을 고소하지 못한다.",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:형법:제355조",
+        "lawName": "형법",
+        "articleNo": "제355조",
+        "title": "횡령, 배임",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C355%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제356조",
+        "lawName": "형법",
+        "articleNo": "제356조",
+        "title": "업무상의 횡령과 배임",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C356%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제142조",
+        "lawName": "형법",
+        "articleNo": "제142조",
+        "title": "공무상 보관물의 무효",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C142%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제624조",
+        "lawName": "민법",
+        "articleNo": "제624조",
+        "title": "임대인의 보존행위, 인용의무",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C624%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형사소송법:제224조",
+        "lawName": "형사소송법",
+        "articleNo": "제224조",
+        "title": "고소의 제한",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C224%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "621901",
+        "caseNo": "2025도3012",
+        "caseName": "모욕[모욕죄의 구성요건 해당 여부가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=621901",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624499",
+        "caseNo": "2025고합1194",
+        "caseName": "변호사법위반",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2026-02-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624499",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "223303",
+        "caseNo": "2017도3829",
+        "caseName": "횡령",
+        "court": "대법원",
+        "decidedAt": "2022-06-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=223303",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "625211",
+        "caseNo": "2024도5938",
+        "caseName": "개인정보보호법위반",
+        "court": "대법원",
+        "decidedAt": "2026-04-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625211",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624107",
+        "caseNo": "2024고합511, 2024고합587(병합), 2024고합637(병합), 2024고합805(병합), 2024고합807(병합)",
+        "caseName": "특정범죄가중처벌등에관한법률위반(뇌물)·범죄수익은닉의규제및처벌등에관한법률위반·뇌물공여·범죄수익은닉의규제및처벌등에관한법률위반방조·산림기술진흥및관리에관한법률위반·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·특정범죄가중처벌등에관한법률위반(알선수재)·업무상횡령방조",
+        "court": "대구지방법원",
+        "decidedAt": "2025-07-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624107",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "고소",
+        "total": 6
+      },
+      {
+        "keyword": "횡령 보관 임의처분",
+        "total": 6
+      },
+      {
+        "keyword": "위탁물 횡령 반환거부",
+        "total": 1
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "형법 제355조",
+          "exists": true
+        },
+        {
+          "citation": "2017도3829",
+          "exists": true
+        },
+        {
+          "citation": "형사소송법 제224조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "id": "domestic-violence-01",
+  "category": "domestic_violence",
+  "question": "배우자의 가정폭력이 계속되고 있어요. 술을 마시면 저에게 폭력을 써요. 아이가 있어서 당장 집을 나가기는 어려워요. 배우자가 저에게 접근하지 못하게 할 방법이 있나요?",
+  "at": "2026-11-19T03:47:54.869Z",
+  "elapsedMs": 20576,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10259,
+    "tokens_out": 1734,
+    "latency_ms": 20049
+  },
+  "costUsdUpperEstimate": 0.07572,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "가정폭력범죄의 처벌 등에 관한 특례법",
+        "가정폭력범죄의 처벌 등에 관한 특례법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "가정폭력",
+        "가정폭력범죄 접근금지 잠정조치 배우자 폭행",
+        "가정폭력처벌법 피해자보호명령 접근금지 퇴거"
+      ]
+    },
+    "section": "domestic_violence",
+    "answer": {
+      "points": [
+        {
+          "text": "네, 방법이 있습니다. 판사는 피해자 보호를 위해 필요하다고 보면 결정으로 가정폭력행위자에게 임시조치를 할 수 있습니다. 여기에는 행위자를 집에서 내보내는 퇴거 등 격리, 피해자나 가족·주거·직장 등에서 100미터 이내 접근 금지, 전화 등 전기통신을 이용한 접근 금지가 포함됩니다. 피해자가 아니라 행위자를 내보내는 조치입니다.",
+          "source": "law:가정폭력범죄의처벌등에관한특례법:제29조",
+          "quote": "피해자 또는 가정구성원의 주거 또는 점유하는 방실(房室)로부터의 퇴거 등 격리",
+          "check": "verified"
+        },
+        {
+          "text": "절차를 보면, 검사는 가정폭력범죄가 재발될 우려가 있다고 인정하면 직권이나 사법경찰관의 신청으로 법원에 퇴거·접근금지 등의 임시조치를 청구할 수 있습니다. 피해자는 검사나 경찰에게 이런 청구나 신청을 요청하거나 의견을 말할 수 있습니다. 경찰이 신청하지 않으면 그 사유를 검사에게 보고해야 합니다.",
+          "source": "law:가정폭력범죄의처벌등에관한특례법:제8조",
+          "quote": "피해자 또는 그 법정대리인은 검사 또는 사법경찰관에게",
+          "check": "verified"
+        },
+        {
+          "text": "사건이 가정보호사건으로 심리되면, 판사는 보호처분으로 행위자가 피해자나 가정구성원에게 접근하는 행위를 제한하거나 전기통신을 이용한 접근을 제한할 수 있습니다. 행위자가 친권자인 경우 친권 행사 제한, 상담위탁 등도 가능하며 여러 처분을 함께 내릴 수 있습니다.",
+          "source": "law:가정폭력범죄의처벌등에관한특례법:제40조",
+          "quote": "가정폭력행위자가 피해자 또는 가정구성원에게 접근하는 행위의 제한",
+          "check": "verified"
+        },
+        {
+          "text": "피해자가 직접 청구하는 피해자보호명령 제도도 있습니다. 관련 판례에서 대법원은 피해자의 청구로 보호명령을 받은 사람이 이를 지키지 않으면, 이후 원래 폭력행위에 무죄가 확정되었더라도 불이행죄가 성립한다고 판단했습니다. 다만 개별 사건 결과는 사실관계에 따라 달라질 수 있습니다.",
+          "source": "case:2020도5233",
+          "quote": "피해자의 청구에 따라 가정폭력행위자로 인정되어 피해자보호명령을 받았음에도",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:가정폭력범죄의처벌등에관한특례법:제29조",
+        "lawName": "가정폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제29조",
+        "title": "임시조치",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%A0%95%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C29%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:가정폭력범죄의처벌등에관한특례법시행령:제3조",
+        "lawName": "가정폭력범죄의 처벌 등에 관한 특례법 시행령",
+        "articleNo": "제3조",
+        "title": "신변안전조치의 종류",
+        "effectiveFrom": "2016-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%A0%95%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:가정폭력범죄의처벌등에관한특례법:제12조",
+        "lawName": "가정폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제12조",
+        "title": "법원의 송치",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%A0%95%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C12%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:가정폭력범죄의처벌등에관한특례법:제8조",
+        "lawName": "가정폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제8조",
+        "title": "임시조치의 청구 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%A0%95%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C8%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:가정폭력범죄의처벌등에관한특례법:제40조",
+        "lawName": "가정폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제40조",
+        "title": "보호처분의 결정 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B0%80%EC%A0%95%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C40%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "621913",
+        "caseNo": "2026터4",
+        "caseName": "피해자보호명령등에대한재항고[가정폭력처벌법에 따른 피해자보호명령에 대한 항고심에서 항고기록접수통지를 해야 하는지가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=621913",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "225189",
+        "caseNo": "2018고합266, 267(병합)",
+        "caseName": "직권남용권리행사방해·공직선거법위반",
+        "court": "수원지방법원 성남지원",
+        "decidedAt": "2019-05-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=225189",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "234979",
+        "caseNo": "2020도5233",
+        "caseName": "가정폭력범죄의처벌등에관한특례법위반",
+        "court": "대법원",
+        "decidedAt": "2023-06-01",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=234979",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "618653",
+        "caseNo": "2025도16559",
+        "caseName": "강제추행[현역 군인에 대하여 성폭력처벌법 제16조 제2항 단서가 정한 이수명령을 부과할 수 없는 특별한 사정이 있다고 보아 이수명령을 병과하지 아니한 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-04-02",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618653",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "217431",
+        "caseNo": "2020도6085",
+        "caseName": "폭력행위등처벌에관한법률위반(공동재물손괴등)·폭력행위등처벌에관한법률위반(공동주거침입)·폭력행위등처벌에관한법률위반(공동상해)",
+        "court": "대법원",
+        "decidedAt": "2021-09-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=217431",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "가정폭력",
+        "total": 6
+      },
+      {
+        "keyword": "가정폭력범죄 접근금지 잠정조치 배우자 폭행",
+        "total": 1
+      },
+      {
+        "keyword": "가정폭력처벌법 피해자보호명령 접근금지 퇴거",
+        "total": 3
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "가정폭력범죄의 처벌 등에 관한 특례법 제29조",
+          "exists": true
+        },
+        {
+          "citation": "가정폭력범죄의 처벌 등에 관한 특례법 제8조",
+          "exists": true
+        },
+        {
+          "citation": "가정폭력범죄의 처벌 등에 관한 특례법 제40조",
+          "exists": true
+        },
+        {
+          "citation": "2020도5233",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "id": "voice-phishing-01",
+  "category": "voice_phishing",
+  "question": "검찰 수사관이라는 전화를 받고 제 계좌가 범죄에 쓰였다는 말에 속아 알려 준 계좌로 돈을 보냈어요. 한 시간쯤 뒤에 보이스피싱이라는 것을 알았어요. 지금 바로 무엇을 해야 돈을 돌려받을 수 있나요?",
+  "at": "2026-11-19T03:46:27.159Z",
+  "elapsedMs": 23092,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 11567,
+    "tokens_out": 1803,
+    "latency_ms": 22679
+  },
+  "costUsdUpperEstimate": 0.08233,
+  "result": {
+    "outcome": "no_result_in_scope",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+        "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 시행령",
+        "중대범죄수사청과 그 소속기관 직제 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "전기통신금융사기",
+        "보이스피싱 사기 송금 피해환급",
+        "전기통신금융사기 피해금 환급 지급정지"
+      ]
+    },
+    "section": "voice_phishing",
+    "answer": {
+      "points": []
+    },
+    "articles": [
+      {
+        "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제4조",
+        "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+        "articleNo": "제4조",
+        "title": "지급정지",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C4%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법시행령:제3조의2",
+        "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 시행령",
+        "articleNo": "제3조의2",
+        "title": "수사기관의 지급정지 요청",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C3%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:중대범죄수사청과그소속기관직제시행규칙:제7조",
+        "lawName": "중대범죄수사청과 그 소속기관 직제 시행규칙",
+        "articleNo": "제7조",
+        "title": "경제범죄수사국",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A4%91%EB%8C%80%EB%B2%94%EC%A3%84%EC%88%98%EC%82%AC%EC%B2%AD%EA%B3%BC%20%EA%B7%B8%20%EC%86%8C%EC%86%8D%EA%B8%B0%EA%B4%80%20%EC%A7%81%EC%A0%9C%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C7%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법시행령:제5조",
+        "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법 시행령",
+        "articleNo": "제5조",
+        "title": "지급정지의 절차 및 통지",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C5%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:전기통신금융사기피해방지및피해자산환급에관한특별법:제2조",
+        "lawName": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+        "articleNo": "제2조",
+        "title": "정의",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EA%B8%B0%ED%86%B5%EC%8B%A0%EA%B8%88%EC%9C%B5%EC%82%AC%EA%B8%B0%20%ED%94%BC%ED%95%B4%20%EB%B0%A9%EC%A7%80%20%EB%B0%8F%20%ED%94%BC%ED%95%B4%EC%9E%90%EC%82%B0%20%ED%99%98%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "616027",
+        "caseNo": "2025도14142",
+        "caseName": "폭력행위등처벌에관한법률위반(단체등의구성·활동)·공갈미수·전기통신금융사기피해방지및피해금환급에관한특별법위반방조",
+        "court": "대법원",
+        "decidedAt": "2026-01-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616027",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "623961",
+        "caseNo": "2025구합56092",
+        "caseName": "환급금청구기각처분취소청구의소",
+        "court": "서울행법",
+        "decidedAt": "2026-06-24",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623961",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "614347",
+        "caseNo": "2025도8460",
+        "caseName": "전기통신금융사기피해방지및피해금환급에관한특별법위반·범죄수익은닉의규제및처벌등에관한법률위반",
+        "court": "대법원",
+        "decidedAt": "2025-12-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614347",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "606381",
+        "caseNo": "2025고합87",
+        "caseName": "전기통신금융사기피해방지및피해금환급에관한특별법위반",
+        "court": "창원지법",
+        "decidedAt": "2025-05-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=606381",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622901",
+        "caseNo": "2024가합101778",
+        "caseName": "채무존재확인",
+        "court": "서울중앙지법",
+        "decidedAt": "2026-05-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622901",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "전기통신금융사기",
+        "total": 6
+      },
+      {
+        "keyword": "보이스피싱 사기 송금 피해환급",
+        "total": 6
+      },
+      {
+        "keyword": "전기통신금융사기 피해금 환급 지급정지",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": false,
+      "items": [],
+      "removed": 4
+    }
+  }
+}

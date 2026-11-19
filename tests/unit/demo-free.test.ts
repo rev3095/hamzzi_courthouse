@@ -52,7 +52,11 @@ function source(over: Partial<LawSource> = {}): LawSource {
 describe("DEC-015 예시 질문 재생", () => {
   test("예시 질문은 공백·전각 차이를 무시하고 찾고, 오류가 지적된 예시는 목록에 없다", () => {
     const list = demoExamples();
-    expect(list.length).toBe(10);
+    // 2026-10-22 Opus 전체 파이프라인 10건 + 2026-11-19 Pro Max 19건 (검색·검증이 약한 3건은 뺐다)
+    expect(list.length).toBe(29);
+    for (const id of ["loan-01", "assault-01", "voice-phishing-01"]) {
+      expect(list.map((e) => e.id)).not.toContain(id);
+    }
     expect(list.map((e) => e.id)).not.toContain("wage-01");
     expect(list.map((e) => e.id)).not.toContain("trap-assertive");
     const q = list[0].question;

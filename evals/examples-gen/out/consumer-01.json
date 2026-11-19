@@ -1,0 +1,202 @@
+{
+  "id": "consumer-01",
+  "category": "consumer",
+  "question": "온라인 쇼핑몰에서 옷을 샀는데 받아 보니 마음에 들지 않아 배송받은 지 사흘 만에 반품을 신청했어요. 쇼핑몰은 단순 변심은 환불이 안 된다고 해요. 환불받을 수 있나요?",
+  "at": "2026-11-19T03:44:03.734Z",
+  "elapsedMs": 22803,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10252,
+    "tokens_out": 1794,
+    "latency_ms": 22316
+  },
+  "costUsdUpperEstimate": 0.07689,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "전자상거래 등에서의 소비자보호에 관한 법률",
+        "콘텐츠산업 진흥법",
+        "전자상거래 등에서의 소비자보호에 관한 법률 시행령",
+        "정보보호산업의 진흥에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문 문장 (지능형 법령검색)",
+        "청약철회",
+        "통신판매 청약철회 단순변심 환불",
+        "청약철회등"
+      ]
+    },
+    "section": "consumer",
+    "answer": {
+      "points": [
+        {
+          "text": "온라인 쇼핑몰(통신판매업자)에서 산 물건은 법에서 정한 기간 안에 청약철회등(반품·환불)을 할 수 있습니다. 계약 서면을 받은 뒤에 물건이 배송되었다면, 물건을 받은 날부터 7일 이내가 기준입니다. 조문은 이 기간 안의 철회에 별도 사유를 요구하지 않습니다. 사흘 만에 신청하셨다면 이 기간 안으로 보입니다.",
+          "source": "law:전자상거래등에서의소비자보호에관한법률:제17조",
+          "quote": "재화등을 공급받거나 재화등의 공급이 시작된 날부터 7일",
+          "check": "verified"
+        },
+        {
+          "text": "다만 법에서 정한 몇 가지 예외에 해당하면 판매자 의사에 반해 철회할 수 없습니다. 제공된 조문에서는 예외 항목이 잘려 있어 구체적 내용은 확인이 필요합니다. 또 판매자가 철회 제한 사실을 알리는 등 필요한 조치를 하지 않았다면, 일부 예외(제2호~제5호)가 적용되지 않을 수 있다는 단서도 있습니다.",
+          "source": "law:전자상거래등에서의소비자보호에관한법률:제17조",
+          "quote": "통신판매업자의 의사에 반하여 제1항에 따른 청약철회등을 할 수 없다",
+          "check": "verified"
+        },
+        {
+          "text": "대법원은 비슷한 쟁점에서, 청약철회 제한 사유가 있는지와 그 사실을 제대로 표시했는지는 사업자가 증명해야 한다고 판단했습니다. 따라서 쇼핑몰이 철회를 거절하려면 예외 사유를 스스로 증명해야 하는 구조로 볼 수 있습니다. 다만 개별 사건의 결과는 사실관계에 따라 달라질 수 있습니다.",
+          "source": "case:2018다287034",
+          "quote": "제한사유 해당 사실에 대한 표시의무를 다하였는지에 관한 증명책임의 소재(=사업자)",
+          "check": "verified"
+        },
+        {
+          "text": "협의가 되지 않아 소송까지 가게 되면, 통신판매업자와의 거래에 관한 소송은 소 제기 당시 소비자 주소지를 관할하는 지방법원이 맡습니다. 주소가 없으면 거소지 법원이 관할하며, 주소·거소가 분명하지 않은 경우는 예외입니다.",
+          "source": "law:전자상거래등에서의소비자보호에관한법률:제36조",
+          "quote": "소 제기 당시 소비자의 주소를 관할하는 지방법원의 전속관할로 하고",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:전자상거래등에서의소비자보호에관한법률:제17조",
+        "lawName": "전자상거래 등에서의 소비자보호에 관한 법률",
+        "articleNo": "제17조",
+        "title": "청약철회등",
+        "effectiveFrom": "2026-07-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%9E%90%EC%83%81%EA%B1%B0%EB%9E%98%20%EB%93%B1%EC%97%90%EC%84%9C%EC%9D%98%20%EC%86%8C%EB%B9%84%EC%9E%90%EB%B3%B4%ED%98%B8%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C17%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:콘텐츠산업진흥법:제27조",
+        "lawName": "콘텐츠산업 진흥법",
+        "articleNo": "제27조",
+        "title": "청약철회 등",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%BD%98%ED%85%90%EC%B8%A0%EC%82%B0%EC%97%85%20%EC%A7%84%ED%9D%A5%EB%B2%95/%EC%A0%9C27%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:전자상거래등에서의소비자보호에관한법률시행령:제21조",
+        "lawName": "전자상거래 등에서의 소비자보호에 관한 법률 시행령",
+        "articleNo": "제21조",
+        "title": "청약철회등의 제한",
+        "effectiveFrom": "2026-07-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%9E%90%EC%83%81%EA%B1%B0%EB%9E%98%20%EB%93%B1%EC%97%90%EC%84%9C%EC%9D%98%20%EC%86%8C%EB%B9%84%EC%9E%90%EB%B3%B4%ED%98%B8%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C21%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:정보보호산업의진흥에관한법률:제35조",
+        "lawName": "정보보호산업의 진흥에 관한 법률",
+        "articleNo": "제35조",
+        "title": "청약철회 등",
+        "effectiveFrom": "2024-07-10",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%95%EB%B3%B4%EB%B3%B4%ED%98%B8%EC%82%B0%EC%97%85%EC%9D%98%20%EC%A7%84%ED%9D%A5%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C35%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:전자상거래등에서의소비자보호에관한법률:제36조",
+        "lawName": "전자상거래 등에서의 소비자보호에 관한 법률",
+        "articleNo": "제36조",
+        "title": "전속관할",
+        "effectiveFrom": "2026-07-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%9E%90%EC%83%81%EA%B1%B0%EB%9E%98%20%EB%93%B1%EC%97%90%EC%84%9C%EC%9D%98%20%EC%86%8C%EB%B9%84%EC%9E%90%EB%B3%B4%ED%98%B8%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C36%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "237119",
+        "caseNo": "2018다287034",
+        "caseName": "소비자권익침해행위금지및중지[소비자단체인 원고가 이동통신사업자인 피고를 상대로 부당한 청약철회권 제한행위의 금지·중지를 구한 사건]",
+        "court": "대법원",
+        "decidedAt": "2023-06-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=237119",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "624697",
+        "caseNo": "2025나208215, 208216",
+        "caseName": "매매대금반환·기타분양대금청구의소",
+        "court": "서울고법",
+        "decidedAt": "2026-07-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624697",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624887",
+        "caseNo": "2025나55476(본소), 2025나55477(반소)",
+        "caseName": "렌탈계약의양수금·부당이득금",
+        "court": "수원지방법원",
+        "decidedAt": "2026-03-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624887",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624249",
+        "caseNo": "2024나2046478(본소), 2024나2046485(반소)",
+        "caseName": "공사대금등청구의소·건물철거등청구",
+        "court": "서울고등법원",
+        "decidedAt": "2026-02-05",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624249",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "609463",
+        "caseNo": "2021두59908",
+        "caseName": "경정거부처분취소",
+        "court": "대법원",
+        "decidedAt": "2025-09-18",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=609463",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "청약철회",
+        "total": 6
+      },
+      {
+        "keyword": "통신판매 청약철회 단순변심 환불",
+        "total": 0
+      },
+      {
+        "keyword": "청약철회등",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "전자상거래 등에서의 소비자보호에 관한 법률 제17조",
+          "exists": true
+        },
+        {
+          "citation": "2018다287034",
+          "exists": true
+        },
+        {
+          "citation": "전자상거래 등에서의 소비자보호에 관한 법률 제36조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

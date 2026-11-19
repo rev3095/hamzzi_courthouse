@@ -1,0 +1,204 @@
+{
+  "id": "school-violence-01",
+  "category": "school_violence",
+  "question": "초등학생 아이가 같은 반 학생 여러 명에게 몇 달 동안 따돌림과 놀림을 당했어요. 담임 선생님께 말씀드렸는데 달라진 것이 없어요. 학교폭력으로 신고하면 어떤 절차로 진행되나요?",
+  "at": "2026-11-19T03:48:17.685Z",
+  "elapsedMs": 22815,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 10434,
+    "tokens_out": 1701,
+    "latency_ms": 22251
+  },
+  "costUsdUpperEstimate": 0.07576,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "학교폭력예방 및 대책에 관한 법률",
+        "학교폭력예방 및 대책에 관한 법률 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "학교폭력",
+        "학교폭력 피해학생 보호조치 학교폭력대책자치위원회",
+        "학교폭력 따돌림 조치 처분 취소"
+      ]
+    },
+    "section": "school_violence",
+    "answer": {
+      "points": [
+        {
+          "text": "학교폭력으로 신고해 학교의 장이 사안을 알게 되면, 학교의 장은 지체 없이 전담기구나 소속 교원에게 가해·피해 사실을 확인하게 합니다. 이어 전담기구가 학교의 장이 자체해결할 사안인지를 심의합니다.",
+          "source": "law:학교폭력예방및대책에관한법률:제14조",
+          "quote": "지체 없이 전담기구 또는 소속 교원으로 하여금 가해 및 피해 사실 여부를 확인하도록",
+          "check": "verified"
+        },
+        {
+          "text": "학교의 장의 자체해결은 경미한 사안이면서 피해학생과 보호자가 심의위원회 개최를 원하지 않을 때만 가능합니다. 요건에는 '학교폭력이 지속적이지 않은 경우'도 포함되며, 보호자가 원하면 심의위원회 개최를 요구할 수 있습니다.",
+          "source": "law:학교폭력예방및대책에관한법률:제13조의2",
+          "quote": "피해학생 및 그 보호자가 심의위원회의 개최를 원하지 아니하는 경우",
+          "check": "verified"
+        },
+        {
+          "text": "학교의 장이 가해학생에게 우선 출석정지나 학급교체를 할 수 있는 경우로 '2명 이상의 학생이 고의적·지속적으로 폭력을 행사한 경우'와 '피해학생 및 보호자가 분리를 요청하는 경우' 등이 정해져 있습니다. 이때 해당 학생이나 보호자의 의견을 듣습니다.",
+          "source": "law:학교폭력예방및대책에관한법률시행령:제21조",
+          "quote": "피해학생 및 그 보호자가 가해학생과의 분리를 요청하는 경우",
+          "check": "verified"
+        },
+        {
+          "text": "학교의 장은 학교폭력을 축소하거나 은폐해서는 안 되며, 학교폭력 발생 사실과 조치 결과를 교육감에게 보고해야 합니다. 담임 선생님께 말씀드린 것과 별도로 학교에 공식 신고를 하시면 이런 절차가 진행될 수 있습니다.",
+          "source": "law:학교폭력예방및대책에관한법률:제19조",
+          "quote": "학교의 장은 학교폭력을 축소 또는 은폐해서는 아니 된다.",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:학교폭력예방및대책에관한법률:제19조",
+        "lawName": "학교폭력예방 및 대책에 관한 법률",
+        "articleNo": "제19조",
+        "title": "학교의 장의 의무",
+        "effectiveFrom": "2026-06-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%99%EA%B5%90%ED%8F%AD%EB%A0%A5%EC%98%88%EB%B0%A9%20%EB%B0%8F%20%EB%8C%80%EC%B1%85%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C19%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:학교폭력예방및대책에관한법률:제14조",
+        "lawName": "학교폭력예방 및 대책에 관한 법률",
+        "articleNo": "제14조",
+        "title": "전문상담교사 배치 및 전담기구 구성",
+        "effectiveFrom": "2026-06-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%99%EA%B5%90%ED%8F%AD%EB%A0%A5%EC%98%88%EB%B0%A9%20%EB%B0%8F%20%EB%8C%80%EC%B1%85%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C14%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:학교폭력예방및대책에관한법률시행령:제14조의3",
+        "lawName": "학교폭력예방 및 대책에 관한 법률 시행령",
+        "articleNo": "제14조의3",
+        "title": "학교의 장의 자체해결",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%99%EA%B5%90%ED%8F%AD%EB%A0%A5%EC%98%88%EB%B0%A9%20%EB%B0%8F%20%EB%8C%80%EC%B1%85%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C14%EC%A1%B0%EC%9D%983",
+        "used": false
+      },
+      {
+        "id": "law:학교폭력예방및대책에관한법률:제13조의2",
+        "lawName": "학교폭력예방 및 대책에 관한 법률",
+        "articleNo": "제13조의2",
+        "title": "학교의 장의 자체해결",
+        "effectiveFrom": "2026-06-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%99%EA%B5%90%ED%8F%AD%EB%A0%A5%EC%98%88%EB%B0%A9%20%EB%B0%8F%20%EB%8C%80%EC%B1%85%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C13%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:학교폭력예방및대책에관한법률시행령:제21조",
+        "lawName": "학교폭력예방 및 대책에 관한 법률 시행령",
+        "articleNo": "제21조",
+        "title": "가해학생에 대한 우선 출석정지 등",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%99%EA%B5%90%ED%8F%AD%EB%A0%A5%EC%98%88%EB%B0%A9%20%EB%B0%8F%20%EB%8C%80%EC%B1%85%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C21%EC%A1%B0",
+        "used": true
+      }
+    ],
+    "cases": [
+      {
+        "id": "625419",
+        "caseNo": "2026두30954",
+        "caseName": "학교폭력재결취소청구의소",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625419",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "226351",
+        "caseNo": "2019도12750",
+        "caseName": "아동복지법위반·정보통신망이용촉진및정보보호등에관한법률위반(명예훼손)[카카오톡 계정 프로필 상태메시지 게시 명예훼손 사건]",
+        "court": "대법원",
+        "decidedAt": "2020-05-28",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226351",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "609519",
+        "caseNo": "2025무565",
+        "caseName": "집행정지[학교폭력 관련 처분에 대한 집행정지결정이 있는 경우, 그 즉시 학교생활기록부에 기재된 학교폭력 관련 조치사항을 삭제해야 하는지 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-09-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=609519",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "226083",
+        "caseNo": "2017고합1008, 2017고합1241(병합), 2018고합75(병합), 2018고합112(병합), 2018고합321(병합), 2018고합375(병합), 2018고합494(병합), 2018고합622(병합), 2018고합846(병합), 2019고합13(병합)",
+        "caseName": "특정범죄가중처벌등에관한법률위반(국고등손실)[일부 예비적 죄명 특정경제범죄가중처벌등에관한법률위반(횡령), 업무상횡령, 업무상배임, 일부 인정된 죄명 업무상횡령]ㆍ위증ㆍ국가정보원법위반ㆍ업무방해ㆍ노동조합및노동관계조정법위반ㆍ업무상횡령ㆍ뇌물공여ㆍ허위공문서작성ㆍ허위작성공문서행사ㆍ정보통신망이용촉진및정보보호등에관한법률위반(명예훼손)",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2020-02-07",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226083",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "614371",
+        "caseNo": "2025다211430",
+        "caseName": "손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-12-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614371",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "학교폭력",
+        "total": 6
+      },
+      {
+        "keyword": "학교폭력 피해학생 보호조치 학교폭력대책자치위원회",
+        "total": 6
+      },
+      {
+        "keyword": "학교폭력 따돌림 조치 처분 취소",
+        "total": 4
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "학교폭력예방 및 대책에 관한 법률 제14조",
+          "exists": true
+        },
+        {
+          "citation": "학교폭력예방 및 대책에 관한 법률 제13조의2",
+          "exists": true
+        },
+        {
+          "citation": "학교폭력예방 및 대책에 관한 법률 시행령 제21조",
+          "exists": true
+        },
+        {
+          "citation": "학교폭력예방 및 대책에 관한 법률 제19조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

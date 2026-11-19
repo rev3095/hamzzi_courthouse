@@ -171,7 +171,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "family",
     caseQuery: "이혼",
     caseKinds: "가사",
-    examples: [],
+    examples: ["family-01"],
   },
   inheritance: {
     key: "inheritance",
@@ -184,7 +184,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "inheritance",
     caseQuery: "상속재산분할",
     caseKinds: "가사·민사",
-    examples: [],
+    examples: ["inheritance-01"],
   },
   consumer: {
     key: "consumer",
@@ -197,7 +197,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "consumer",
     caseQuery: "청약철회",
     caseKinds: "민사",
-    examples: [],
+    examples: ["consumer-01"],
   },
   defamation: {
     key: "defamation",
@@ -210,7 +210,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "defamation",
     caseQuery: "명예훼손",
     caseKinds: "형사·민사",
-    examples: [],
+    examples: ["defamation-01"],
   },
   // ── 추가 섹션 (DEC-034): 추가 타임라인(more-tracks.ts)과 대면 모욕 ──
   insult: {
@@ -227,7 +227,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "insult",
     caseQuery: "모욕 공연성",
     caseKinds: "형사·민사",
-    examples: [],
+    examples: ["insult-01"],
   },
   assault: {
     key: "assault",
@@ -253,7 +253,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "stalking",
     caseQuery: "스토킹범죄",
     caseKinds: "형사",
-    examples: [],
+    examples: ["stalking-01"],
   },
   sex_crime: {
     key: "sex_crime",
@@ -266,7 +266,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "sex_crime",
     caseQuery: "강제추행",
     caseKinds: "형사·민사",
-    examples: [],
+    examples: ["sex-crime-01"],
   },
   voice_phishing: {
     key: "voice_phishing",
@@ -294,7 +294,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "crime_report",
     caseQuery: "고소",
     caseKinds: "형사",
-    examples: [],
+    examples: ["crime-report-01"],
   },
   workplace_harassment: {
     key: "workplace_harassment",
@@ -307,7 +307,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "workplace_harassment",
     caseQuery: "직장 내 괴롭힘",
     caseKinds: "민사·행정",
-    examples: [],
+    examples: ["workplace-harassment-01"],
   },
   industrial_accident: {
     key: "industrial_accident",
@@ -320,7 +320,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "industrial_accident",
     caseQuery: "업무상 재해",
     caseKinds: "행정·민사",
-    examples: [],
+    examples: ["industrial-accident-01"],
   },
   domestic_violence: {
     key: "domestic_violence",
@@ -333,7 +333,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "domestic_violence",
     caseQuery: "가정폭력",
     caseKinds: "가사·형사",
-    examples: [],
+    examples: ["domestic-violence-01"],
   },
   school_violence: {
     key: "school_violence",
@@ -349,7 +349,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "school_violence",
     caseQuery: "학교폭력",
     caseKinds: "행정·민사",
-    examples: [],
+    examples: ["school-violence-01"],
   },
   medical: {
     key: "medical",
@@ -361,7 +361,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "medical",
     caseQuery: "의료과실 손해배상",
     caseKinds: "민사",
-    examples: [],
+    examples: ["medical-01"],
   },
   privacy: {
     key: "privacy",
@@ -377,7 +377,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "privacy",
     caseQuery: "개인정보 유출 손해배상",
     caseKinds: "민사·형사",
-    examples: [],
+    examples: ["privacy-01"],
   },
   commercial_lease: {
     key: "commercial_lease",
@@ -389,7 +389,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "commercial_lease",
     caseQuery: "권리금 회수 방해",
     caseKinds: "민사",
-    examples: [],
+    examples: ["commercial-lease-01"],
   },
   respond_civil: {
     key: "respond_civil",
@@ -402,7 +402,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "respond_civil",
     caseQuery: "지급명령 이의신청",
     caseKinds: "민사",
-    examples: [],
+    examples: ["respond-civil-01"],
   },
   respond_criminal: {
     key: "respond_criminal",
@@ -414,7 +414,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "respond_criminal",
     caseQuery: "피의자신문",
     caseKinds: "형사",
-    examples: [],
+    examples: ["respond-criminal-01"],
   },
   admin_appeal: {
     key: "admin_appeal",
@@ -427,7 +427,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "admin_appeal",
     caseQuery: "처분 취소",
     caseKinds: "행정",
-    examples: [],
+    examples: ["admin-appeal-01"],
   },
   debt_relief: {
     key: "debt_relief",
@@ -440,7 +440,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
     track: "debt_relief",
     caseQuery: "개인회생",
     caseKinds: "민사",
-    examples: [],
+    examples: ["debt-relief-01"],
   },
 };
 

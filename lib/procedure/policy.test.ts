@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
-import { demoExamples, findExample, replayResult } from "@/lib/demo/policy";
+import { demoExamples, findExample, replayResult, exampleCategory } from "@/lib/demo/policy";
 import { CATEGORY_LIST } from "./categories";
 import { LIFE_OFFICIAL, LIFE_STEPS, LIFE_TRACKS } from "./life-tracks";
 import { MORE_OFFICIAL, MORE_TRACKS } from "./more-tracks";
@@ -156,7 +156,12 @@ describe("F-014 섹션별 타임라인 분류 (규칙)", () => {
 
   test("섹션 예시 분야(홈 피드 칩)와 타임라인 섹션 이름이 같다", () => {
     for (const e of demoExamples()) {
-      const plan = procedurePlan(replayResult(findExample(e.question)!), e.question);
+      // 예시 답변 화면과 같은 입력: 그 예시가 속한 홈 카테고리를 함께 준다
+      const plan = procedurePlan(
+        replayResult(findExample(e.question)!),
+        e.question,
+        exampleCategory(e.id),
+      );
       if (plan.kind === "timeline") expect(plan.section, e.id).toBe(e.area);
     }
   });

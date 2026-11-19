@@ -97,7 +97,7 @@ test("DEC-028 예시 카드는 예시 답변 화면 링크다 (질문 생성 API
   for (const e of demoExamples()) {
     const link = within(feed).getByRole("link", { name: `예시 답변 보기: ${e.question}` });
     expect(link.getAttribute("href")).toBe(e.href);
-    expect(e.href).toMatch(/^\/examples\/[a-z]+-\d{2}$/);
+    expect(e.href).toMatch(/^\/examples\/[a-z]+(-[a-z]+)*-\d{2}$/);
   }
   fireEvent.click(within(feed).getAllByRole("link")[0]);
   expect(posts()).toHaveLength(0);

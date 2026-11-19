@@ -1,0 +1,205 @@
+{
+  "id": "defamation-01",
+  "category": "defamation",
+  "question": "인터넷 커뮤니티에 제 가게 이름을 적고 사실과 다른 내용을 쓴 글이 올라왔어요. 그 글 때문에 손님이 줄었어요. 글을 지우게 하고 글쓴이에게 책임을 물으려면 어떻게 해야 하나요?",
+  "at": "2026-11-19T03:44:28.646Z",
+  "elapsedMs": 24910,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-18-understand",
+    "tokens_in": 9806,
+    "tokens_out": 1989,
+    "latency_ms": 24417
+  },
+  "costUsdUpperEstimate": 0.079,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 법률 자문 아님",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+        "민법",
+        "산업 디지털 전환 및 인공지능 활용 촉진법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "명예훼손",
+        "정보통신망 명예훼손 손해배상",
+        "사실적시 명예훼손 영업 손해"
+      ]
+    },
+    "section": "defamation",
+    "answer": {
+      "points": [
+        {
+          "text": "글을 지우게 하려면, 그 글이 올라간 커뮤니티 운영자(정보통신서비스 제공자)에게 명예훼손 등 권리침해 사실을 소명하며 삭제나 반박글 게재를 요청할 수 있습니다. 요청을 받은 운영자는 지체 없이 삭제·임시조치 등 필요한 조치를 하고 신청인과 글쓴이에게 알려야 합니다.",
+          "source": "law:정보통신망이용촉진및정보보호등에관한법률:제44조의2",
+          "quote": "해당 정보를 처리한 정보통신서비스 제공자에게 침해사실을 소명하여",
+          "check": "verified"
+        },
+        {
+          "text": "글쓴이에게 금전적 책임을 묻는 방법으로는 민법상 불법행위 손해배상 청구가 있습니다. 고의나 과실로 위법한 행위를 해 손해를 입혔다면 배상책임이 생길 수 있습니다.",
+          "source": "law:민법:제750조",
+          "quote": "고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를 배상할 책임이 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "명예훼손 손해배상 사건에서 대법원은 적시된 사실이 허위인지에 대한 증명책임, 그리고 위법한 행위와 손해 사이의 상당인과관계를 어떻게 판단할지를 쟁점으로 다룬 바 있습니다. 손님이 줄어든 것이 그 글 때문이라는 점을 뒷받침할 자료가 중요할 수 있습니다.",
+          "source": "case:2022다207141",
+          "quote": "위법한 행위와 손해 사이에 상당인과관계가 있는지 판단하는 방법",
+          "check": "verified"
+        },
+        {
+          "text": "형사 절차로는, 비방할 목적으로 정보통신망에서 공공연하게 거짓 사실을 드러내 명예를 훼손하면 7년 이하의 징역, 10년 이하의 자격정지 또는 7천만원 이하의 벌금 대상이 됩니다. 다만 피해자가 처벌을 원하지 않는다는 의사를 밝히면 공소를 제기할 수 없습니다.",
+          "source": "law:정보통신망이용촉진및정보보호등에관한법률:제70조",
+          "quote": "사람을 비방할 목적으로 정보통신망을 통하여 공공연하게 거짓의 사실을 드러내어",
+          "check": "verified"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:정보통신망이용촉진및정보보호등에관한법률:제44조의2",
+        "lawName": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+        "articleNo": "제44조의2",
+        "title": "정보의 삭제요청 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%95%EB%B3%B4%ED%86%B5%EC%8B%A0%EB%A7%9D%20%EC%9D%B4%EC%9A%A9%EC%B4%89%EC%A7%84%20%EB%B0%8F%20%EC%A0%95%EB%B3%B4%EB%B3%B4%ED%98%B8%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C44%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:정보통신망이용촉진및정보보호등에관한법률:제44조",
+        "lawName": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+        "articleNo": "제44조",
+        "title": "정보통신망에서의 권리보호",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%95%EB%B3%B4%ED%86%B5%EC%8B%A0%EB%A7%9D%20%EC%9D%B4%EC%9A%A9%EC%B4%89%EC%A7%84%20%EB%B0%8F%20%EC%A0%95%EB%B3%B4%EB%B3%B4%ED%98%B8%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C44%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제750조",
+        "lawName": "민법",
+        "articleNo": "제750조",
+        "title": "불법행위의 내용",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C750%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:정보통신망이용촉진및정보보호등에관한법률:제70조",
+        "lawName": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+        "articleNo": "제70조",
+        "title": "벌칙",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%95%EB%B3%B4%ED%86%B5%EC%8B%A0%EB%A7%9D%20%EC%9D%B4%EC%9A%A9%EC%B4%89%EC%A7%84%20%EB%B0%8F%20%EC%A0%95%EB%B3%B4%EB%B3%B4%ED%98%B8%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C70%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:산업디지털전환및인공지능활용촉진법:제9조",
+        "lawName": "산업 디지털 전환 및 인공지능 활용 촉진법",
+        "articleNo": "제9조",
+        "title": "산업데이터 활용 및 보호 원칙",
+        "effectiveFrom": "2026-09-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%82%B0%EC%97%85%20%EB%94%94%EC%A7%80%ED%84%B8%20%EC%A0%84%ED%99%98%20%EB%B0%8F%20%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5%20%ED%99%9C%EC%9A%A9%20%EC%B4%89%EC%A7%84%EB%B2%95/%EC%A0%9C9%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624959",
+        "caseNo": "2026도2207",
+        "caseName": "업무방해·명예훼손",
+        "court": "대법원",
+        "decidedAt": "2026-08-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624959",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "614371",
+        "caseNo": "2025다211430",
+        "caseName": "손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-12-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=614371",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "613233",
+        "caseNo": "2022다207141",
+        "caseName": "손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2025-06-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613233",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "625355",
+        "caseNo": "2025노873",
+        "caseName": "업무방해·명예훼손",
+        "court": "청주지방법원",
+        "decidedAt": "2026-01-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625355",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "613245",
+        "caseNo": "2024도11353",
+        "caseName": "업무상횡령·업무상배임·사립학교법위반",
+        "court": "대법원",
+        "decidedAt": "2025-12-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=613245",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "명예훼손",
+        "total": 6
+      },
+      {
+        "keyword": "정보통신망 명예훼손 손해배상",
+        "total": 6
+      },
+      {
+        "keyword": "사실적시 명예훼손 영업 손해",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 제44조의2",
+          "exists": true
+        },
+        {
+          "citation": "민법 제750조",
+          "exists": true
+        },
+        {
+          "citation": "2022다207141",
+          "exists": true
+        },
+        {
+          "citation": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 제70조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}
