@@ -422,6 +422,11 @@ export function procedurePlan(
   return { kind: "notice", caseType: type, ...NOTICE[type] };
 }
 
+/** 갚거나 돌려줘야 하는 쪽 안내 (타임라인 없음). 오프라인 판독기(lib/reader, DEC-048)가 문장 대신 입장으로 정했을 때 쓴다 */
+export function respondentNotice(): ProcedurePlan {
+  return { kind: "notice", caseType: "defendant", ...NOTICE.defendant };
+}
+
 /** 타임라인에 덧붙일 별도 절차 안내 */
 function extraNote(key: TrackKey, text: string, criminalLaw: boolean): string | null {
   if (key === "lease_deposit" && FRAUD_WORD.test(text)) return LEASE_FRAUD_NOTE;

@@ -5,7 +5,12 @@
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { CATEGORIES } from "@/lib/procedure/categories";
 import { LIFE_TRACKS, type LifeTrackKey } from "@/lib/procedure/life-tracks";
-import { classifyCase, procedurePlan, type ProcedurePlan } from "@/lib/procedure/policy";
+import {
+  classifyCase,
+  procedurePlan,
+  respondentNotice,
+  type ProcedurePlan,
+} from "@/lib/procedure/policy";
 import { TRACKS } from "@/lib/procedure/steps";
 import type { SectionLabel } from "@/lib/procedure/sections";
 import { scanInput } from "@/lib/pii";
@@ -33,6 +38,10 @@ export const URGENT_NOTE =
 /** 절차를 정하지 못했을 때 (웹 안내는 찾은 법령을 보라고 하지만, 인터넷 없이는 찾은 법령이 없다) */
 export const OFFLINE_OTHER_BODY =
   "어떤 절차에 해당하는지 정하지 못해 절차 순서를 생략했어요. 아래에서 가까운 분야를 골라 보세요. 법·제도에 대한 생각이나 궁금증이라면 인터넷에 연결한 뒤 햄찌법원 커뮤니티에서 이야기해 볼 수 있어요.";
+
+/** 갚을 쪽 안내일 때 확신 정도 문구 대신 쓴다 */
+export const OWES_ONLY_TEXT =
+  "요구를 받는 쪽의 질문으로 보여요. 이 앱의 절차 순서는 요구하는 쪽 기준이라 아래 안내를 먼저 확인해 주세요.";
 
 export const MIN_CHARS = 8;
 
@@ -251,7 +260,8 @@ export function readOffline(input: ReaderInput): ReaderResult {
   let section: Section | null;
   let confidence: Confidence;
   const forced = respondentSection(role, text, scores);
-  if (isChatter(text)) {
+  const chatter = isChatter(text);
+  if (chatter) {
     // 내 사건이 아닌 이야기(법·제도 의견, 가정, 뉴스)는 절차 섹션을 고르지 않는다 — 화면이 커뮤니티와 분야 고르기를 안내
     section = null;
     confidence = "unknown";
@@ -301,8 +311,12 @@ export function readOffline(input: ReaderInput): ReaderResult {
     section && !(role === "claimant" && RESPONDENT.has(ruled)) ? masked : null,
     confidence === "chosen" ? input.category : null,
   );
-  const plan: ProcedurePlan =
-    basePlan.kind === "notice" && basePlan.caseType === "other"
+  // 갚을 쪽인데 그 사람의 절차(빚 정리·상속)가 없으면 '정하지 못함'이 아니라 갚을 쪽 안내를 보인다.
+  // 잡담·가정 질문("만약에 세입자가 돌려달라고 하면…")은 커뮤니티 안내가 먼저다
+  const owesOnly = role === "owes" && !section && !chatter;
+  const plan: ProcedurePlan = owesOnly
+    ? respondentNotice()
+    : basePlan.kind === "notice" && basePlan.caseType === "other"
       ? { ...basePlan, body: OFFLINE_OTHER_BODY }
       : basePlan;
   const facts = extractFacts(masked);
@@ -315,7 +329,7 @@ export function readOffline(input: ReaderInput): ReaderResult {
     label: section ?? "none",
     section,
     confidence,
-    confidenceText: CONFIDENCE_TEXT[confidence],
+    confidenceText: owesOnly ? OWES_ONLY_TEXT : CONFIDENCE_TEXT[confidence],
     role,
     roleText: ROLE_TEXT[role],
     also,
