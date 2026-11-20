@@ -67,10 +67,10 @@ const HONORIFIC = "씨|님|선생님|사장님|대표님|과장님|부장님|팀
 // 재현율 우선이라 뒤에 오는 말을 허용 목록으로 좁히지 않는다("박서율 양만", "김철수 군까지"도 가린다).
 // '양도'는 "양도 왔어요"(조사 도)와 겹쳐 뒤에 글자가 더 붙은 꼴('양도세')만 낱말로 본다.
 const YANG_WORDS =
-  "육|도[가-힣]|보|식|말|파|심|해|측|쪽|국|친|부|모|변|형|수|호|성|주|념|산|력|극|질|자|계|궁|복|반|상|약|" +
+  "육|도[가-힣]|보|식|말|파|심|해|측|쪽|국|친|부(?!터)|모|변|형|수|호|성|주|념|산|력|극|질|자|계|궁|복|반|상|약|" +
   "가|다리|아|딸|녀|천|평|재|치";
 const GUN_WORDS =
-  "대|인|복|사|청|수|만두|데|것|입대|필|미필|의관|생활|단|부|내|민|무원|면제|형법|법|검찰|산|포|중";
+  "대|인|복|사|청|수|만두|데|것|입대|필|미필|의관|생활|단|부(?!터)|내|민|무원|면제|형법|법|검찰|산|포|중";
 const HONORIFIC_SHORT = `(?:양(?!${YANG_WORDS})|군(?!${GUN_WORDS}))`;
 // 그런 낱말 앞이라도 앞말이 3글자 이상 이름이면 가린다("김철수 군대 갔어요", "김하은 양육비")
 const SHORT_WORD_AFTER = `(?:양(?=${YANG_WORDS})|군(?=${GUN_WORDS}))`;
@@ -147,7 +147,10 @@ const AFTER_BATCHIM = ["은", "을", "과", "과의", "으로"];
 const AFTER_VOWEL = ["는", "가", "를", "와", "와의", "랑", "라고", "라는", "예요"];
 function particleFits(stem: string, tail: string, vocativeIsName = true): boolean {
   const batchim = hasBatchim(stem);
-  if (tail === "아" || tail === "야") return vocativeIsName ? false : (tail === "아") === batchim;
+  // 부르는 말: '아'(받침 뒤)는 일반 낱말에도 거의 붙지 않아 이름으로 본다('친구 이상아', '친구 주인아').
+  // '야'는 가족 낱말 뒤면 이름으로 보고, 일반 낱말 뒤면 받침 없는 낱말의 끝말로 본다('진짜야').
+  if (tail === "아") return false;
+  if (tail === "야") return vocativeIsName ? false : !batchim;
   if (AFTER_BATCHIM.includes(tail) || tail.startsWith("이")) return batchim;
   if (AFTER_VOWEL.includes(tail)) return !batchim;
   // '로'는 받침이 없거나 ㄹ 받침 뒤
@@ -201,13 +204,16 @@ function nameStem(token: string): string | null {
   return isNameCandidate(token) ? token : null;
 }
 
-// 호칭 바로 앞에는 조사가 오지 않는다: '남편이 양다리', '나는 사장님한테'의 앞말은 낱말 + 조사다.
+// 호칭 바로 앞에는 조사가 오지 않는다: '남편이 양다리', '이번에 선생님이'의 앞말은 낱말 + 조사다.
 // 받침이 맞을 때만 나눈다 — '이하은 씨'는 '이하' + '은'이 아니라 이름이다.
+// 일반 낱말 뒤에서는 이름 끝 글자가 되기 쉬운 꼬리로 나누지 않는다 — '이상은 씨'·'이사랑 씨'는 이름이다.
+const NAME_END_TAILS = ["은", "이", "아", "야", "랑", "도", "로"];
 function isWordWithParticle(s: string): boolean {
   return NAME_TAILS.some((tail) => {
     if (!s.endsWith(tail) || s.length <= tail.length) return false;
     const stem = s.slice(0, -tail.length);
-    if (NOT_NAMES.has(stem)) return particleFits(stem, tail, false);
+    if (NOT_NAMES.has(stem))
+      return !NAME_END_TAILS.includes(tail) && particleFits(stem, tail, false);
     return isKinship(stem) && particleFits(stem, tail);
   });
 }
