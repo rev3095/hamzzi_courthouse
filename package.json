@@ -24,6 +24,7 @@
     "android:bump": "node twa/release.mjs bump",
     "android:build": "node twa/release.mjs build",
     "app:dev": "vite --config mobile/vite.config.ts",
+    "app:preview": "node scripts/build-app-preview.mjs",
     "app:version": "node mobile/release.mjs check",
     "app:bump": "node mobile/release.mjs bump",
     "app:sync": "node mobile/release.mjs sync",

@@ -287,9 +287,9 @@ describe("예시·온라인", () => {
     expect(ex.length).toBeGreaterThan(0);
     expect(ex[0].sameSection).toBe(true);
   });
-  test("온라인 판독은 꺼져 있고, 켜져 있지 않으면 언제나 오프라인 판독", () => {
-    expect(ONLINE_READER_ENABLED).toBe(false);
-    expect(chooseReader({ online: true })).toBe("offline");
+  test("DEC-049 온라인 판독은 켜져 있고, 인터넷이 없으면 언제나 오프라인 판독", () => {
+    expect(ONLINE_READER_ENABLED).toBe(true);
+    expect(chooseReader({ online: true })).toBe("online");
     expect(chooseReader({ online: false })).toBe("offline");
   });
 });
