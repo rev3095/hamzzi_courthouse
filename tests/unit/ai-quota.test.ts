@@ -59,12 +59,12 @@ describe("DEC-036 주간 상한은 단위로 센다", () => {
   });
 });
 
-describe("DEC-040 기간 예산 — 2026-11-25까지 $80 (DEC-050), 실제로 쓴 금액만 차감", () => {
+describe("DEC-040 기간 예산 — 2026-11-25까지 $95, 실제로 쓴 금액만 차감", () => {
   test("기간은 11월 25일 24시(한국 시간)까지. 끝나면 주간 규칙으로 돌아간다", () => {
     expect(periodBudget(DURING, {})).toEqual({
       bucket: "ai_period_20261125",
       startsAt: "2026-11-19T00:00:00+09:00",
-      limitMicro: 80_000_000,
+      limitMicro: 95_000_000,
     });
     expect(periodBudget(new Date("2026-11-25T23:59:59+09:00"), {})).not.toBeNull();
     expect(periodBudget(AFTER, {})).toBeNull();
@@ -85,14 +85,14 @@ describe("DEC-040 기간 예산 — 2026-11-25까지 $80 (DEC-050), 실제로 �
         {
           p_bucket: "ai_period_20261125",
           p_start: "2026-11-19T00:00:00+09:00",
-          p_limit: 80_000_000,
+          p_limit: 95_000_000,
           p_amount: 150_000,
         },
       ],
     ]);
   });
 
-  test("$80를 넘게 되는 호출은 false — 호출한 쪽이 무료 모드로 처리한다", async () => {
+  test("$95를 넘게 되는 호출은 false — 호출한 쪽이 무료 모드로 처리한다", async () => {
     db.rpc.mockResolvedValue({ data: false, error: null });
     expect(await tryAiQuota(20, {}, DURING)).toBe(false);
   });
@@ -102,7 +102,7 @@ describe("DEC-040 기간 예산 — 2026-11-25까지 $80 (DEC-050), 실제로 �
     expect(db.rpc).not.toHaveBeenCalled();
     db.rpc.mockResolvedValue({ data: true, error: null });
     await tryAiQuota(20, { AI_WEEKLY_BUDGET_USD: "1" }, DURING);
-    expect(db.rpc.mock.calls[0][1].p_limit).toBe(80_000_000);
+    expect(db.rpc.mock.calls[0][1].p_limit).toBe(95_000_000);
   });
 
   test("정산: 잡아 둔 상한에서 실제 비용을 뺀 차액을 돌려준다", async () => {

@@ -68,3 +68,6 @@ supabase/.temp/
 
 # 판독기 채점 보고서 (READER_REPORT=1로 생성)
 /evals/reader/
+
+# 발표·제출용 내보내기 파일 (이 PC에만)
+/exports/
