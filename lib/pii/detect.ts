@@ -48,7 +48,9 @@ const NOT_NAMES = new Set(
     "지난 지난달 이번달 다음달 작년 올해 이미 아직 우리 저희 그쪽 이쪽 하루 일단 유리 불리 피해 피해자 가해자 " +
     // 관계어 뒤에 자주 오는 사건 낱말 (예: "직원 정규직", "남편 이혼", "사장 임금체불")
     "이혼 정규직 비정규직 전입 전출 고용 고용주 이직 구직 구인 지원금 신용 조정 하청 차용 " +
-    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난"
+    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난 " +
+    // 성씨 글자로 시작하는 일반 낱말·대명사 (예: "친구 오해를", "이번주 양육비", "나는 사장님한테")
+    "이해 오해 장해 유해 한해 이번주 지난주 다음주 전부터 전에 나는 나도 나를 나한테 나랑 나와 나의 나에게"
   ).split(" "),
 );
 // 이름 뒤에 붙는 말(호칭·조사). 긴 것부터 떼어 본다.
@@ -57,7 +59,7 @@ const NAME_TAILS = [
   "이가", "이는", "이를", "이한테", "이에게", "은", "는", "이", "가", "의", "에", "도", "를", "을",
   "과", "와", "랑", "로", "씨", "님", "이에요", "예요", "입니다", "이고", "이며",
   "이라고", "라고", "이라는", "라는",
-  // 한 글자 어미도 떼어 본다: "이름은 김민수고", "가해자 김민수요", "친구 이상윤아"
+  // 한 글자 어미도 떼어 본다: "이름은 김민수고", "가해자 김민수요", "친구 이상온아"
   "고", "요", "면", "야", "며", "아", "이요", "이야", "이면",
 ].sort((a, b) => b.length - a.length); // prettier-ignore
 const HONORIFIC = "씨|님|선생님|사장님|대표님|과장님|부장님|팀장님|대리님|실장님|기사님";
@@ -65,8 +67,10 @@ const HONORIFIC = "씨|님|선생님|사장님|대표님|과장님|부장님|팀
 // 재현율 우선이라 뒤에 오는 말을 허용 목록으로 좁히지 않는다("박서율 양만", "김철수 군까지"도 가린다).
 // '양도'는 "양도 왔어요"(조사 도)와 겹쳐 뒤에 글자가 더 붙은 꼴('양도세')만 낱말로 본다.
 const YANG_WORDS =
-  "육|도[가-힣]|보|식|말|파|심|해|측|쪽|국|친|부모|변|형|수|호|성|주|념|산|력|극|질|자|계|궁|복|반|상|약";
-const GUN_WORDS = "대|인|복|사|청|수|만두|데|것|입대|필|미필|의관|생활|단|부|내|민";
+  "육|도[가-힣]|보|식|말|파|심|해|측|쪽|국|친|부|모|변|형|수|호|성|주|념|산|력|극|질|자|계|궁|복|반|상|약|" +
+  "가|다리|아|딸|녀|천|평|재|치";
+const GUN_WORDS =
+  "대|인|복|사|청|수|만두|데|것|입대|필|미필|의관|생활|단|부|내|민|무원|면제|형법|법|검찰|산|포|중";
 const HONORIFIC_SHORT = `(?:양(?!${YANG_WORDS})|군(?!${GUN_WORDS}))`;
 // 그런 낱말 앞이라도 앞말이 3글자 이상 이름이면 가린다("김철수 군대 갔어요", "김하은 양육비")
 const SHORT_WORD_AFTER = `(?:양(?=${YANG_WORDS})|군(?=${GUN_WORDS}))`;
@@ -97,8 +101,10 @@ function looksLikeVerb(s: string): boolean {
   if (VERB_MARK.test(given)) return true;
   if (given.length === 1) return VERB_STEM_ONE.includes(given);
   if (VERB_ENDINGS.some((e) => given.endsWith(e))) return true;
+  // '지속적'·'고정적인'처럼 '-적'으로 끝나는 말 (이름 끝에 '적'은 거의 오지 않는다)
+  if (/적인?$/.test(given)) return true;
   // 앞 두 글자가 일반 낱말이면: 4글자는 복합어('임금체불'), 3글자는 낱말 + 하다('주장하')만 거른다.
-  // 3글자 이름('이상윤'·'한도윤'·'이하은')은 앞 두 글자가 낱말이어도 남긴다.
+  // 3글자 이름('이상온'·'한도윤'·'이하은')은 앞 두 글자가 낱말이어도 남긴다.
   if (NOT_NAMES.has(s.slice(0, 2))) {
     if (s.length === 4 || VERB_AFTER_NOUN.includes(s[2])) return true;
   }
@@ -121,7 +127,8 @@ const KINSHIP = new Set(
 const EX_KINSHIP = new Set(
   (
     "처 남편 아내 부인 와이프 배우자 여자친구 남자친구 여친 남친 애인 약혼자 " +
-    "시어머니 시아버지 시부모 장모 장인어른 처형 처제 처남 사장 직원 집주인 세입자 동업자 동료 상사"
+    "시어머니 시아버지 시부모 시누이 며느리 사위 장모 장인어른 처형 처제 처남 " +
+    "사장 직원 대표 주인 집주인 세입자 임차인 임대인 고용주 사업주 동업자 동료 상사"
   ).split(" "),
 );
 function isKinship(s: string): boolean {
@@ -138,9 +145,9 @@ const hasBatchim = (s: string) => {
 };
 const AFTER_BATCHIM = ["은", "을", "과", "과의", "으로"];
 const AFTER_VOWEL = ["는", "가", "를", "와", "와의", "랑", "라고", "라는", "예요"];
-function particleFits(stem: string, tail: string): boolean {
-  if (tail === "아" || tail === "야") return false;
+function particleFits(stem: string, tail: string, vocativeIsName = true): boolean {
   const batchim = hasBatchim(stem);
+  if (tail === "아" || tail === "야") return vocativeIsName ? false : (tail === "아") === batchim;
   if (AFTER_BATCHIM.includes(tail) || tail.startsWith("이")) return batchim;
   if (AFTER_VOWEL.includes(tail)) return !batchim;
   // '로'는 받침이 없거나 ㄹ 받침 뒤
@@ -150,7 +157,7 @@ function particleFits(stem: string, tail: string): boolean {
 
 const isNameShape = (s: string) =>
   s.length >= 2 && s.length <= 4 && SURNAMES.includes(s[0]) && !NOT_NAMES.has(s);
-// 호칭 앞('김미려 씨')은 이름이 거의 확실해 활용형 검사를 하지 않는다. 관계어·"이름은" 뒤에만 쓴다.
+// 호칭 앞('김채려 씨')은 이름이 거의 확실해 활용형 검사를 하지 않는다. 관계어·"이름은" 뒤에만 쓴다.
 const isNameCandidate = (s: string) => isNameShape(s) && !looksLikeVerb(s);
 
 // 관계어 뒤에 띄어 쓴 조사만 온 경우: "사장 한테서", "친구 하고", "남편 이랑은"
@@ -168,7 +175,18 @@ function nameStem(token: string): string | null {
   for (const tail of NAME_TAILS) {
     if (token.endsWith(tail) && token.length > tail.length) {
       const stem = token.slice(0, -tail.length);
-      if (NOT_NAMES.has(stem)) return null;
+      // '이'로 끝나는 낱말 + 조사('전시누이' + '가')를 이름 + '이가'로 읽지 않는다
+      if (tail.length > 1 && tail.startsWith("이")) {
+        const word = stem + "이";
+        const rest = tail.slice(1);
+        if (NOT_NAMES.has(word) && particleFits(word, rest, false)) return null;
+        if (isKinship(word) && particleFits(word, rest)) return null;
+      }
+      // 일반 낱말 + 맞는 조사면 이름이 아니다. 받침이 안 맞으면('이하' + '은' → '이하은') 계속 본다.
+      if (NOT_NAMES.has(stem)) {
+        if (particleFits(stem, tail, false)) return null;
+        continue;
+      }
       // 가족 낱말 + 맞는 조사('전처가'·'장모님이')면 이름이 아니다. 받침이 안 맞으면('이모은') 계속 본다.
       if (isKinship(stem)) {
         if (particleFits(stem, tail)) return null;
@@ -183,13 +201,25 @@ function nameStem(token: string): string | null {
   return isNameCandidate(token) ? token : null;
 }
 
+// 호칭 바로 앞에는 조사가 오지 않는다: '남편이 양다리', '나는 사장님한테'의 앞말은 낱말 + 조사다.
+// 받침이 맞을 때만 나눈다 — '이하은 씨'는 '이하' + '은'이 아니라 이름이다.
+function isWordWithParticle(s: string): boolean {
+  return NAME_TAILS.some((tail) => {
+    if (!s.endsWith(tail) || s.length <= tail.length) return false;
+    const stem = s.slice(0, -tail.length);
+    if (NOT_NAMES.has(stem)) return particleFits(stem, tail, false);
+    return isKinship(stem) && particleFits(stem, tail);
+  });
+}
+
 function findNames(text: string): Set<string> {
   const names = new Set<string>();
   // 1) 이름 + 호칭: "김철수 씨", "이영희님", "박서율 양이"
   const honorific = new RegExp(`([가-힣]{2,4})\\s?(?:${HONORIFIC}|${HONORIFIC_SHORT})`, "g");
   for (const m of text.matchAll(honorific)) {
     // '장모님'·'이모님'처럼 '님'류 호칭 앞의 가족 낱말만 뺀다. '장인 씨' 같은 외자 이름은 가린다.
-    if (isNameShape(m[1]) && !(m[0].endsWith("님") && isKinship(m[1]))) names.add(m[1]);
+    if (!isNameShape(m[1]) || isWordWithParticle(m[1])) continue;
+    if (!(m[0].endsWith("님") && isKinship(m[1]))) names.add(m[1]);
   }
   // 1-1) '군'·'양'으로 시작하는 낱말 앞: 앞말에서 조사를 떼어 3글자 이상 이름일 때만 ("김철수 군대")
   const beforeWord = new RegExp(`(?<![가-힣])([가-힣]{3,7})\\s?${SHORT_WORD_AFTER}`, "g");
