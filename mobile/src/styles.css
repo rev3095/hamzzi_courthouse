@@ -1697,3 +1697,28 @@ main > section {
   align-items: center;
   justify-content: space-between;
 }
+
+/* 미리보기에서 웹으로 가는 안내 */
+.webcall {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px !important;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #d9c9a0;
+  background: linear-gradient(135deg, #fffdf8, var(--honey));
+}
+.webcall div {
+  flex: 1;
+  min-width: 0;
+}
+.webcall b {
+  font-family: var(--font-display);
+}
+.webcall p {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.webcall .primary {
+  flex: none;
+}

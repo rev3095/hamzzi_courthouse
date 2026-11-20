@@ -22,6 +22,7 @@ import {
   createComment,
   createPost,
   deletePost,
+  editPost,
   errorText,
   getPost,
   listPosts,
@@ -332,6 +333,7 @@ export function PostScreen({ ctx, id }: { ctx: Ctx; id: string }) {
   const [comment, setComment] = useState({ body: "", nickname: "", password: "" });
   const [note, setNote] = useState<string | null>(null);
   const [del, setDel] = useState(false);
+  const [edit, setEdit] = useState<{ title: string; body: string; ask: boolean } | null>(null);
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -413,6 +415,23 @@ export function PostScreen({ ctx, id }: { ctx: Ctx; id: string }) {
     setNote(r.data.seeds > 0 ? `씨앗 ${r.data.seeds}개가 쌓였어요.` : null);
     void load();
   };
+  const saveEdit = async (consent: boolean) => {
+    if (!edit) return;
+    setError(null);
+    const r = await editPost(post.id, {
+      title: edit.title,
+      body: edit.body,
+      ...(pw && { password: pw }),
+      ...(consent && { sensitiveConsent: true }),
+    });
+    if (!r.ok) {
+      if (r.error.code === "CONSENT_REQUIRED") return setEdit({ ...edit, ask: true });
+      return setError(errorText(r.error));
+    }
+    setEdit(null);
+    setNote(r.data.masked > 0 ? `개인정보로 보이는 ${r.data.masked}곳을 가렸어요.` : "수정했어요.");
+    void load();
+  };
   const remove = async () => {
     const r = await deletePost(post.id, pw || undefined);
     if (!r.ok) return setError(errorText(r.error));
@@ -431,6 +450,14 @@ export function PostScreen({ ctx, id }: { ctx: Ctx; id: string }) {
         </p>
         <p className="pre">{post.body}</p>
         <div className="row gap actions">
+          {(post.mine || post.needsPassword) && !post.folded && (
+            <button
+              className="textbtn"
+              onClick={() => setEdit({ title: post.title, body: post.body, ask: false })}
+            >
+              수정
+            </button>
+          )}
           {(post.mine || post.needsPassword) && (
             <button className="textbtn" onClick={() => setDel(true)}>
               삭제
@@ -511,6 +538,71 @@ export function PostScreen({ ctx, id }: { ctx: Ctx; id: string }) {
         </form>
       </section>
       <Notice>{COMMUNITY_NOTICE}</Notice>
+
+      {edit && (
+        <Sheet title="글 수정" onClose={() => setEdit(null)}>
+          {edit.ask ? (
+            <>
+              <p>{SENSITIVE_ASK}</p>
+              <div className="row end">
+                <button className="ghost" onClick={() => setEdit({ ...edit, ask: false })}>
+                  다시 고치기
+                </button>
+                <button className="primary" onClick={() => void saveEdit(true)}>
+                  그래도 올리기
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="form">
+              {post.needsPassword && (
+                <label>
+                  <span>글 비밀번호</span>
+                  <input
+                    id="e-pw"
+                    type="password"
+                    autoComplete="off"
+                    value={pw}
+                    onChange={(e) => setPw(e.target.value)}
+                  />
+                </label>
+              )}
+              <label>
+                <span>제목</span>
+                <input
+                  id="e-title"
+                  value={edit.title}
+                  maxLength={LIMITS.title.max}
+                  onChange={(e) => setEdit({ ...edit, title: e.target.value })}
+                />
+              </label>
+              <label>
+                <span>내용</span>
+                <textarea
+                  id="e-body"
+                  rows={6}
+                  value={edit.body}
+                  maxLength={LIMITS.body.max}
+                  onChange={(e) => setEdit({ ...edit, body: e.target.value })}
+                />
+              </label>
+              {error && (
+                <p role="alert" className="warn">
+                  {error}
+                </p>
+              )}
+              <div className="row end">
+                <button className="ghost" onClick={() => setEdit(null)}>
+                  취소
+                </button>
+                <button className="primary" onClick={() => void saveEdit(false)}>
+                  수정하기
+                </button>
+              </div>
+            </div>
+          )}
+        </Sheet>
+      )}
 
       {del && (
         <Sheet title="글을 지울까요?" onClose={() => setDel(false)}>

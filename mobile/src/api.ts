@@ -170,6 +170,14 @@ export const getPost = (id: string) =>
   call<{ post: PostView; comments: CommentView[] }>(`/community/posts/${id}`);
 export const createPost = (d: PostDraft) =>
   post<{ post: PostView; masked: number; seeds: number }>("/community/posts", d);
+export const editPost = (
+  id: string,
+  d: { title: string; body: string; password?: string; sensitiveConsent?: boolean },
+) =>
+  call<{ post: PostView; masked: number }>(`/community/posts/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(d),
+  });
 export const deletePost = (id: string, password?: string) =>
   call<{ deleted: boolean }>(`/community/posts/${id}`, {
     method: "DELETE",

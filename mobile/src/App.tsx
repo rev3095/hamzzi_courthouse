@@ -297,6 +297,21 @@ function Home({
         </p>
       </section>
 
+      {ctx.net === "preview" && ctx.online && (
+        <section className="webcall">
+          <div>
+            <b>실시간 AI 답변은 웹에서</b>
+            <p>
+              지금 화면은 기기 안 자료로 열렸어요. 법제처 실시간 검색과 AI 답변, 광장 글쓰기는
+              햄찌법원 웹에서 바로 쓸 수 있어요.
+            </p>
+          </div>
+          <Out href={WEB_URL} online className="primary sm">
+            웹 열기
+          </Out>
+        </section>
+      )}
+
       <section>
         <Eyebrow>분야로 시작하기</Eyebrow>
         <h2 className="h">어떤 일인가요?</h2>
@@ -663,7 +678,7 @@ function ReadScreen({ ctx, screen }: { ctx: Ctx; screen: Extract<Screen, { name:
         </section>
       )}
 
-      {r.notes.filter((n) => !r.urgent || n !== r.notes[0]).length > 0 && (
+      {!aiResult && r.notes.filter((n) => !r.urgent || n !== r.notes[0]).length > 0 && (
         <section className="card soft">
           {r.notes
             .filter((n) => !r.urgent || n !== r.notes[0])
