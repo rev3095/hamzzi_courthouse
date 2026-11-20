@@ -194,7 +194,7 @@ describe("DEC-041 심층 분석 흐름", () => {
   });
 
   test("입력이 상한을 넘으면 답변을 부르지 않고 근거만 낸다", async () => {
-    const model = fakeModel({ answerTokens: 90_000 });
+    const model = fakeModel({ answerTokens: 150_000 });
     const out = await runDeepAnalysis(
       { maskedText: Q },
       { model, lawSource: fakeSource(), tier: "max" },

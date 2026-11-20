@@ -72,7 +72,7 @@ export function questionsUsedToday(
   return quotaDay === kstDay(now) ? questionsUsed : 0;
 }
 /** 같은 IP 해시의 24시간 비로그인 분석 상한 — 쿠키 삭제 남용 방지용 느슨한 상한 (PRD OQ-009) */
-export const ANON_IP_DAILY_LIMIT = 10;
+export const ANON_IP_DAILY_LIMIT = 100;
 export const ANON_IP_WINDOW = "24 hours";
 export const ANON_IP_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** LOGIN_REQUIRED details.loginProviders — Google 로그인만 연다 (DEC-005, DEC-035) */

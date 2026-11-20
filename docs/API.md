@@ -193,7 +193,7 @@ type DemoAnalysisResult = {
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };
 }
 ```
-- **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro. 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
+- **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro Max(DEC-050, 이전 Pro). 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
 - **요청 본문(선택, DEC-038)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
 - **요청 본문(선택, DEC-028)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation"|"insult"|"assault"|"stalking"|"sex_crime"|"voice_phishing"|"crime_report"|"workplace_harassment"|"industrial_accident"|"domestic_violence"|"school_violence"|"medical"|"privacy"|"commercial_lease"|"respond_civil"|"respond_criminal"|"admin_appeal"|"debt_relief" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
 - **예시 답변 화면(DEC-028)**: 홈의 예시 카드는 이 API를 쓰지 않는다. `/examples/[id]`가 저장된 예시 분석(`mode: "replay"`와 같은 형식)을 빌드 때 정적으로 렌더링한다 — 질문 생성·분석·저장·횟수 차감 없음.

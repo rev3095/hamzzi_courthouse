@@ -116,11 +116,11 @@ const HAIKU = { tier: "light" as const };
 describe("DEC-036 단계별 답변 모델", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  test("단계를 주지 않으면 Pro = Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
+  test("Pro = Sonnet 5.5 — 생각은 between_tools로 끄고 effort low, 출력 1,200토큰 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
-      { model, lawSource: fakeSource() },
+      { model, lawSource: fakeSource(), tier: "pro" },
     );
     expect(model.calls).toHaveLength(1);
     const p = model.calls[0];
@@ -152,7 +152,7 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 5,000토큰으로 묶는다. 비용은 $0.15 이하", async () => {
+  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 5,000토큰으로 묶는다. 비용은 $0.25 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -165,12 +165,12 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(p.max_tokens).toBe(5_000);
     // 답변: 입력 5,000 × $4 + 출력 400 × $20 = $0.028 (+ 질문 해석 Haiku 몫)
     expect(out.costUsd).toBeGreaterThanOrEqual(0.028);
-    expect(out.costUsd).toBeLessThanOrEqual(0.15);
+    expect(out.costUsd).toBeLessThanOrEqual(0.25);
     expect(out.model).toBe("claude-opus-5-5");
   });
 
-  test("Pro Max 상한을 넘을 입력(40,000토큰 = $0.16)이면 부르지 않는다", async () => {
-    const model = fakeModel({ tokens: () => 40_000 });
+  test("Pro Max 상한을 넘을 입력(70,000토큰 = $0.28)이면 부르지 않는다", async () => {
+    const model = fakeModel({ tokens: () => 70_000 });
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
       { model, lawSource: fakeSource(), tier: "max" },

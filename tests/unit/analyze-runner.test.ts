@@ -76,12 +76,12 @@ describe("analyzeInquiry", () => {
     const out = await analyzeInquiry(INQ, ANON, new Headers());
     expect(calls).toEqual(["analyze", "verify", "finish"]);
     expect(out).toEqual({ resultId: "r-1", result: RESULT });
-    // 단계를 보내지 않으면 Pro (DEC-036)
+    // 단계를 보내지 않으면 Pro Max (DEC-050)
     expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
       { maskedText: "마스킹본", context: [{ question: "앞 질문", answer: "앞 답" }] },
-      expect.objectContaining({ tier: "pro" }),
+      expect.objectContaining({ tier: "max" }),
     );
-    expect(rate.tryAiQuota).toHaveBeenCalledWith(20);
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(167);
     // P3에서 거른 문단 수를 실패율에 넣는다
     expect(cite.verifyDraft).toHaveBeenCalledWith(
       expect.anything(),
@@ -209,7 +209,7 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
   test.each([
     ["light", 2],
     ["pro", 20],
-    ["max", 100],
+    ["max", 167],
   ] as const)("%s 단계는 주간 예산을 %i단위 쓰고 그 단계로 답변한다", async (tier, weight) => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier });

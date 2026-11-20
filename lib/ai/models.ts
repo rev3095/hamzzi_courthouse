@@ -14,7 +14,9 @@ type Env = Record<string, string | undefined>;
  *   (Haiku $0.0009+$0.0006 · Sonnet $0.018+$0.012 · Opus $0.036+$0.10).
  *   Light는 $0.0015 → **$0.002** (2026-11-19 사용자 결정): 질문 해석 입력이 약 4,900토큰으로 커져(DEC-033 갱신),
  *   캐시가 식은 첫 질문에서는 해석이 캐시 쓰기 포함 약 $0.0006을 써 답변 몫이 모자랐다(근거가 빠짐).
- *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서). Opus $0.15는 상한이고 실측 전이다(추정 $0.05~0.09).
+ *   실측: Haiku 약 $0.0009, Sonnet 약 $0.02 (2026-11-18 비교 보고서), Opus 약 $0.065~0.075 (2026-11-20 예시 6건).
+ *   Pro Max 상한은 $0.15 → **$0.25**, DeepSearch $0.3 → **$0.5** (DEC-050: 근거가 많은 질문에서 상한 때문에 근거를 빼지 않게 여유를 둔다).
+ *   전체 금액은 기간 예산이 막는다.
  * - weight: 주간 예산 차감 단위. 1단위 = BUDGET_UNIT_USD. capUsd ÷ 단위를 올림한 값 (단위 테스트가 확인).
  *   Light $0.002는 단위의 정수배가 아니라 2단위($0.003)로 잡는다 — 기간 예산(DEC-040)은 실제 비용과의 차액을 돌려주므로 손해가 없고,
  *   주간 규칙(상한 기준 차감)에서는 Light 1건을 $0.003로 조금 크게 센다.
@@ -53,11 +55,11 @@ export const TIERS = {
     model: "claude-opus-5-5",
     thinking: { type: "adaptive" },
     effort: "medium",
-    capUsd: 0.15,
+    capUsd: 0.25,
     answerTokens: { max: 5_000, min: 2_000 },
     timeoutMs: 60_000,
-    weight: 100,
-    deep: { capUsd: 0.3, answerTokens: { max: 7_000, min: 3_000 }, timeoutMs: 75_000, weight: 200 },
+    weight: 167,
+    deep: { capUsd: 0.5, answerTokens: { max: 7_000, min: 3_000 }, timeoutMs: 75_000, weight: 334 },
   },
 } as const;
 
@@ -65,8 +67,11 @@ export type TierId = keyof typeof TIERS;
 export type TierProfile = (typeof TIERS)[TierId] & { id: TierId };
 
 export const TIER_IDS = Object.keys(TIERS) as TierId[];
-/** 단계를 보내지 않은 요청(이전 클라이언트·API 직접 호출)은 Pro — 2026-11-18 결정한 Sonnet 답변과 같다 */
-export const DEFAULT_TIER: TierId = "pro";
+/**
+ * 처음 쓰는 사람과 단계를 보내지 않은 요청의 기본 단계 = Pro Max(Opus) (DEC-050, 2026-11-20 사용자 결정 — 이전 Pro).
+ * 이미 다른 단계를 골라 둔 기기는 그 선택을 그대로 쓴다.
+ */
+export const DEFAULT_TIER: TierId = "max";
 
 export const isTierId = (v: unknown): v is TierId =>
   typeof v === "string" && Object.hasOwn(TIERS, v);
@@ -87,7 +92,7 @@ export const DEFAULT_WEEKLY_BUDGET_USD = 80;
 
 /**
  * 주간 예산을 세는 단위 (DEC-036). 단계가 섞여도 금액이 맞도록 건수가 아니라 단위로 센다:
- * Light 2 · Pro 20 · Pro Max 100 · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
+ * Light 2 · Pro 20 · Pro Max 167 · 문서 초안 1 · 절차 분류 1. $80 = 53,333단위.
  */
 export const BUDGET_UNIT_USD = 0.0015;
 /** 문서 초안(DEC-023)·절차 분류(DEC-037) 1건. 둘 다 Haiku $0.0015 이하 */
@@ -103,7 +108,7 @@ export function weeklyBudgetUnits(env: Env = process.env): number {
 
 /**
  * 기간 예산 (DEC-040, 2026-11-19 사용자 결정). 2026-11-25(한국 시간)까지는 주간 창 대신 이 기간 하나로 센다:
- * 상한 $95(`AI_PERIOD_BUDGET_USD`), **실제로 쓴 금액만** 차감하고, 다 쓰면 기간이 끝날 때까지 무료 모드다.
+ * 상한 $80(`AI_PERIOD_BUDGET_USD`, DEC-050 — 이전 $95), **실제로 쓴 금액만** 차감하고, 다 쓰면 기간이 끝날 때까지 무료 모드다.
  * 기간이 끝나면 위 주간 규칙(AI_WEEKLY_BUDGET_USD)으로 돌아간다.
  * 카운터 행은 파기 배치가 창 시작 8일 뒤에 지우므로 기간은 8일을 넘기지 않는다 (단위 테스트가 확인).
  */
@@ -112,7 +117,7 @@ export const PERIOD_BUDGET = {
   startsAt: "2026-11-19T00:00:00+09:00",
   /** 11월 25일 24시(한국 시간) */
   endsAt: "2026-11-26T00:00:00+09:00",
-  usd: 95,
+  usd: 80,
 } as const;
 
 /** 기간 예산 카운터의 금액 단위: 100만분의 1달러 (정수) */

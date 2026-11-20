@@ -22,10 +22,10 @@ describe("DEC-036 단계 고르기", () => {
     expect(TIERS.max.model).toBe("claude-opus-5-5");
   });
 
-  test("단계를 보내지 않으면 Pro, 정해진 세 값만 단계로 인정한다", () => {
-    expect(DEFAULT_TIER).toBe("pro");
-    expect(tierOf(null).id).toBe("pro");
-    expect(tierOf(undefined).model).toBe("claude-sonnet-5-5");
+  test("DEC-050 단계를 보내지 않으면 Pro Max, 정해진 세 값만 단계로 인정한다", () => {
+    expect(DEFAULT_TIER).toBe("max");
+    expect(tierOf(null).id).toBe("max");
+    expect(tierOf(undefined).model).toBe("claude-opus-5-5");
     expect(tierOf("max").id).toBe("max");
     for (const v of ["opus", "MAX", "", null, 1, "claude-opus-5-5", "__proto__"]) {
       expect(isTierId(v)).toBe(false);
@@ -41,12 +41,12 @@ describe("DEC-036 단계 고르기", () => {
 });
 
 describe("DEC-036 질문 1건 상한", () => {
-  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.15를 넘지 않는다", () => {
+  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.25를 넘지 않는다 (DEC-050)", () => {
     for (const id of TIER_IDS) {
       expect(PRICES[TIERS[id].model]).toBeDefined();
-      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.15);
+      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.25);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.15]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.25]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -64,10 +64,10 @@ describe("DEC-036 질문 1건 상한", () => {
     }
   });
 
-  test("상한을 넘을 입력은 계획 단계에서 막힌다 (Sonnet 20,000토큰 · Opus 40,000토큰)", () => {
+  test("상한을 넘을 입력은 계획 단계에서 막힌다 (Sonnet 20,000토큰 · Opus 70,000토큰)", () => {
     for (const [id, inputTokens] of [
       ["pro", 20_000],
-      ["max", 40_000],
+      ["max", 70_000],
     ] as const) {
       const t = TIERS[id];
       expect(
