@@ -222,7 +222,7 @@ function Home({
         </div>
         {cat && (
           <p className="picked">
-            <b>{cat.label}</b> {cat.guide}
+            <b>{cat.label}</b> {cat.guide}{" "}
             <button className="textbtn" onClick={() => setCategory(null)}>
               분야 지우기
             </button>
