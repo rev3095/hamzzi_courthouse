@@ -48,7 +48,7 @@ const NOT_NAMES = new Set(
     "지난 지난달 작년 올해 이미 아직 우리 저희 그쪽 이쪽 하루 일단 유리 불리 피해 피해자 가해자 " +
     // 관계어 뒤에 자주 오는 사건 낱말 (예: "직원 정규직", "남편 이혼", "사장 임금체불")
     "이혼 정규직 비정규직 전입 전출 고용 고용주 이직 구직 구인 지원금 신용 조정 하청 차용 " +
-    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난"
+    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난 지인"
   ).split(" "),
 );
 // 이름 뒤에 붙는 말(호칭·조사). 긴 것부터 떼어 본다.
@@ -60,7 +60,10 @@ const NAME_TAILS = [
   // 한 글자 어미도 떼어 본다: "이름은 김민수고", "가해자 김민수요", "친구 이상윤아"
   "고", "요", "면", "야", "며", "아", "이요", "이야", "이면",
 ].sort((a, b) => b.length - a.length); // prettier-ignore
-const HONORIFIC = "씨|님|군|양|선생님|사장님|대표님|과장님|부장님|팀장님|대리님|실장님|기사님";
+const HONORIFIC = "씨|님|선생님|사장님|대표님|과장님|부장님|팀장님|대리님|실장님|기사님";
+// 한 글자 호칭 '군'·'양'은 뒤에 조사가 오거나 낱말이 끝날 때만 본다 — "전처가 양육비"의 '양'은 호칭이 아니다
+const HONORIFIC_SHORT =
+  "(?:군|양)(?=$|[^가-힣]|이|은|는|을|를|에게|한테|과|와|의|도|이랑|하고|께|으로|에|이에요|입니다)";
 // 바로 뒤에 이름이 오기 쉬운 관계·역할어
 const RELATIONS =
   "친구|남편|아내|와이프|동생|형|누나|언니|오빠|사장|집주인|임대인|임차인|세입자|상대방|판매자|구매자|" +
@@ -96,8 +99,29 @@ function looksLikeVerb(s: string): boolean {
   return false;
 }
 
+// --- 가족·관계 낱말 ------------------------------------------------------
+// 성씨 글자로 시작하는 가족·관계 낱말('전처'·'장모'·'이모'·'조카'·'남자친구')은 이름이 아니다.
+// '전'·'님'·'분'을 붙인 꼴('전부인'·'전남편'·'장모님'·'남편분')도 같다. '전지현'·'전수민' 같은 이름은
+// 목록 낱말이 아니라 그대로 이름 후보다.
+const KINSHIP = new Set(
+  (
+    "처 남편 아내 부인 와이프 배우자 여자친구 남자친구 여친 남친 애인 약혼자 " +
+    "장모 장인 장인어른 처형 처제 처남 시어머니 시아버지 시부모 시누이 시동생 며느리 사위 " +
+    "이모 이모부 고모 고모부 조카 손자 손녀 손주 남동생 여동생 남매 형부 제부 매형 매제 " +
+    "주인 집주인 세입자 임차인 임대인 사장 직원 대표 상사 동료 임원 사업주 고용주 동업자"
+  ).split(" "),
+);
+function isKinship(s: string): boolean {
+  let w = s.replace(/(?:님|분)$/, "");
+  if (KINSHIP.has(w)) return true;
+  // '전처'·'전남편'·'전 여자친구'를 붙여 쓴 '전여자친구'
+  if (w.startsWith("전") && w.length >= 2) w = w.slice(1);
+  return KINSHIP.has(w);
+}
+const isPlainWord = (s: string) => NOT_NAMES.has(s) || isKinship(s);
+
 const isNameShape = (s: string) =>
-  s.length >= 2 && s.length <= 4 && SURNAMES.includes(s[0]) && !NOT_NAMES.has(s);
+  s.length >= 2 && s.length <= 4 && SURNAMES.includes(s[0]) && !isPlainWord(s);
 // 호칭 앞('김미려 씨')은 이름이 거의 확실해 활용형 검사를 하지 않는다. 관계어·"이름은" 뒤에만 쓴다.
 const isNameCandidate = (s: string) => isNameShape(s) && !looksLikeVerb(s);
 
@@ -112,11 +136,11 @@ const isParticle = (s: string) =>
 
 /** '김지은은' 같은 낱말에서 조사·호칭을 떼고 이름으로 보이는 부분을 고른다. */
 function nameStem(token: string): string | null {
-  if (NOT_NAMES.has(token) || isParticle(token)) return null;
+  if (isPlainWord(token) || isParticle(token)) return null;
   for (const tail of NAME_TAILS) {
     if (token.endsWith(tail) && token.length > tail.length) {
       const stem = token.slice(0, -tail.length);
-      if (NOT_NAMES.has(stem)) return null;
+      if (isPlainWord(stem)) return null;
       // 긴 꼬리를 뗀 앞부분이 활용형이면 낱말 전체가 활용형이다: '구하라고' = '구하' + '라고'
       if (isNameShape(stem) && looksLikeVerb(stem)) return null;
       if (isNameCandidate(stem)) return stem;
@@ -127,8 +151,9 @@ function nameStem(token: string): string | null {
 
 function findNames(text: string): Set<string> {
   const names = new Set<string>();
-  // 1) 이름 + 호칭: "김철수 씨", "이영희님"
-  for (const m of text.matchAll(new RegExp(`([가-힣]{2,4})\\s?(?:${HONORIFIC})`, "g"))) {
+  // 1) 이름 + 호칭: "김철수 씨", "이영희님", "박지수 양이"
+  const honorific = new RegExp(`([가-힣]{2,4})\\s?(?:${HONORIFIC}|${HONORIFIC_SHORT})`, "g");
+  for (const m of text.matchAll(honorific)) {
     if (isNameShape(m[1])) names.add(m[1]);
   }
   // 2) 관계·역할어 + 이름: "친구 박민수한테", "집주인 최영호가"
