@@ -18,6 +18,8 @@ test("DEC-012·DEC-028 예시를 누르면 예시 답변 화면이 바로 열린
   const calls = await mockApi(page);
   const ex = demoExamples()[0];
   await page.goto("/");
+  await page.getByRole("button", { name: /^가이드/ }).click();
+  await page.getByRole("button", { name: /^예시 답변/ }).click();
   await page.getByRole("link", { name: `예시 답변 보기: ${ex.question}` }).click();
   await page.waitForURL(`**/examples/${ex.id}`);
 
@@ -144,6 +146,11 @@ test("F-006 AC2 법제처 연결 실패는 결과 없음과 구분하고 예시 
   await expect(page.getByText("오류 번호 req-9")).toBeVisible();
   await page.getByRole("link", { name: "예시 질문 보기" }).click();
   await expect(page.locator("#examples")).toBeVisible();
+  // /#examples로 오면 가이드가 예시 답변 보기로 펼쳐져 있다
+  await expect(page.getByRole("button", { name: /^예시 답변/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });
 
 test("DEC-015 무료 모드 자유 질문은 AI 답변 없이 검색 결과만", async ({ page }) => {
@@ -180,17 +187,17 @@ test("F-002 이어 묻기는 앞 질문 id를 함께 보낸다", async ({ page }
 
 test("접근성 예시 질문은 키보드로 고를 수 있다 (Tab·방향키·Enter, 포커스 링)", async ({ page }) => {
   const calls = await mockApi(page);
-  await page.goto("/");
-  const all = page.getByRole("tab", { name: "전체" });
-  await all.focus();
+  await page.goto("/#examples");
+  const first = page.getByRole("tab", { name: /^집·돈·계약/ });
+  await first.focus();
   await page.keyboard.press("ArrowRight");
-  const second = page.getByRole("tab", { name: "임대차" });
+  const second = page.getByRole("tab", { name: /^일터/ });
   await expect(second).toBeFocused();
   await expect(second).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel").getByRole("link")).toHaveCount(3);
+  await expect(page.getByRole("tabpanel").getByRole("link")).toHaveCount(4);
   await page.keyboard.press("End");
   await page.keyboard.press("Home");
-  await expect(all).toBeFocused();
+  await expect(first).toBeFocused();
   // 선택된 탭 하나만 Tab 순서에 있고, 다음 Tab은 첫 예시 카드
   await page.keyboard.press("Tab");
   const card = page.getByRole("tabpanel").getByRole("link").first();

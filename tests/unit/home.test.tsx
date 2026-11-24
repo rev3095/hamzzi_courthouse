@@ -1,5 +1,5 @@
 // S-01 홈 (P6): 서비스 이름, AI 캐릭터 표기, 예시 질문 피드(DEC-012), 범위 밖 기능 숨김 (docs/07 결정 2)
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({
@@ -28,9 +28,19 @@ test("홈에 서비스 이름이 보인다", () => {
   expect(screen.getByRole("heading", { level: 1, name: "햄찌법원" })).toBeDefined();
 });
 
-test("DEC-012 예시 질문 10건이 피드에 보이고, 평가용 태그는 보이지 않는다", () => {
+test("DEC-012 예시 질문이 가이드의 예시 답변에 모두 보이고, 평가용 태그는 보이지 않는다", () => {
   render(<Home />);
-  for (const e of demoExamples()) expect(screen.getByText(e.question)).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: /^가이드/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^예시 답변/ }));
+  const shown = new Set<string>();
+  for (const tab of screen.getAllByRole("tab")) {
+    fireEvent.click(tab);
+    for (const el of screen.getByRole("tabpanel").querySelectorAll("a")) {
+      shown.add(el.getAttribute("aria-label") ?? "");
+    }
+    expect(screen.queryByText("함정")).toBeNull();
+  }
+  for (const e of demoExamples()) expect(shown.has(`예시 답변 보기: ${e.question}`)).toBe(true);
   expect(screen.queryByText("함정")).toBeNull();
   expect(screen.queryByText("MVP")).toBeNull();
 });

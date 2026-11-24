@@ -1,4 +1,4 @@
-// S-01 홈 (Figma 03 "D+ / S-01 홈 · 기본", 02 와이어프레임). 히어로 · 질문창 · 카테고리 버튼(DEC-028) · 예시 답변 피드 · 약속 배너.
+// S-01 홈 (Figma 03 "D+ / S-01 홈 · 기본", 02 와이어프레임). 히어로 · 질문창 · 가이드 토글(카테고리 버튼 DEC-028 · 예시 답변 피드) · 약속 배너.
 // D+의 CORE 기능 소개·범위 밖 메뉴·칩은 숨긴다 (docs/07 결정 2·3). 부제에서 '기간·비용'은 뺐다 (데모 범위).
 import { HamzziJudge } from "@/components/HamzziJudge";
 import { HomeAsk } from "@/components/home/HomeAsk";

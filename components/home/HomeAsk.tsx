@@ -1,5 +1,5 @@
 "use client";
-// 홈 질문 영역 (S-01): 질문창 → 카테고리 버튼(DEC-028) → 예시 답변 피드. 하루 횟수를 다 쓰면 누를 때 데모 한도 안내 (S-06 자리).
+// 홈 질문 영역 (S-01): 질문창 → 가이드 토글(카테고리 버튼 DEC-028 · 예시 답변 피드를 한 상자에, 2026-11-24). 하루 횟수를 다 쓰면 누를 때 데모 한도 안내 (S-06 자리).
 // 카테고리를 고르면 질문창 위에 안내·문장 시작·그 분야 예시 답변이 나온다. 보내기는 지금처럼 질문 1번으로 센다(DEC-024).
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
@@ -11,11 +11,10 @@ import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { DeepAsk } from "../ask/DeepAsk";
 import { limitCopy } from "../LimitNotice";
-import { ExampleFeed, type FeedExample } from "../ask/ExampleFeed";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
-import { CategoryPicker } from "./CategoryPicker";
+import { HomeGuide, type GuideExample } from "./HomeGuide";
 
 const noSubscribe = () => () => {};
 
@@ -25,7 +24,7 @@ function urlCategory(): CategoryKey | null {
   return isCategoryKey(v) ? v : null;
 }
 
-export function HomeAsk({ examples }: { examples: FeedExample[] }) {
+export function HomeAsk({ examples }: { examples: GuideExample[] }) {
   const [text, setText] = useState("");
   const [deepOpen, setDeepOpen] = useState(false);
   // undefined = 아직 고르지 않음(주소 값을 따른다), null = 고른 것을 해제
@@ -130,21 +129,19 @@ export function HomeAsk({ examples }: { examples: FeedExample[] }) {
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
               ? limitCopy(signedIn).body
-              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 예시 질문은 횟수에 들어가지 않아요.`}
+              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 가이드의 예시 답변은 횟수에 들어가지 않아요.`}
           </p>
         )}
       </div>
-      <div className="mt-10 w-full max-w-[1120px]">
-        <CategoryPicker
+      <div className="mt-6 flex w-full justify-center">
+        <HomeGuide
+          examples={examples}
           selected={category}
           onPick={(key) => {
             setPicked(key);
             focusBox();
           }}
         />
-      </div>
-      <div className="mt-12 w-full max-w-[1120px]">
-        <ExampleFeed examples={examples} />
       </div>
       {modals}
     </>
