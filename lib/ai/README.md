@@ -25,6 +25,10 @@
 | `intent.ts` · `gather.ts` · `agent.ts` · `answer.ts` | ①·②③ 도구 실행·③·④ 단계                                                                                                                                                               |
 | `orchestrator.ts` (server-only)                      | 전체 흐름·시간 예산(기본 100초: 답변 몫 30초·검증 몫 4초를 남기고, 모자라면 재검색을 줄인다)·진행 단계 `onStep`                                                                       |
 
+### 자료 판독·첨부 자료 (F-017, DEC-058)
+
+`materials.ts` `readMaterials`: 질문·검색에 붙인 사진을 Haiku 비전 1회로 읽는다(사진은 이 호출에만, 저장·로그 없음, 상한 `MATERIALS_READ_COST_CAP_USD`). 거르기는 `lib/materials/policy.ts` `screenMaterials`. 질문에 붙은 자료는 `runLiteAnalysis`·`runDeepAnalysis`의 `materials`로 들어가 `message.ts` `userMessage`가 `<첨부_자료>`(사용자 자료 · 근거 아님)로 질문 뒤에 붙인다. 답변 형식에는 자료가 있을 때만 문단별 `materials`(자료 번호)를 더하고(`withMaterialRefs`), 문단의 `source`·인용 검증·숫자 규칙은 그대로다. 자료가 붙으면 프롬프트 버전에 `MATERIALS_ANSWER_VERSION`이 붙는다.
+
 ### 거르기 규칙 (`screenPoints`, 절대 규칙 1·2·3)
 
 - 출처가 `citableKeys`(조문, 판시사항·요지를 가져온 판례)가 아니면 뺀다.

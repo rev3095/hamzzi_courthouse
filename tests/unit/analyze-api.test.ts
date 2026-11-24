@@ -169,6 +169,24 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(runner.analyzeInquiry).toHaveBeenCalled();
   });
 
+  test("F-017 예시 질문 글이라도 자료를 붙였으면 하루 한도를 본다 (DEC-058, 절대 규칙 7)", async () => {
+    const { demoExamples } = await import("@/lib/demo/policy");
+    const materials = [{ kind: "문자", summary: "문자 화면입니다.", details: [], gaps: [] }];
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u-1" });
+    store.getOwnedInquiry.mockResolvedValue(
+      inquiry({
+        user_id: "u-1",
+        anon_session_id: null,
+        masked_text: demoExamples()[0].question,
+        materials,
+      }),
+    );
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    const res = await call();
+    expect(res.status).toBe(429);
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
+  });
+
   test("DEC-010 같은 IP 해시 24시간 상한도 모델을 부르기 전에 막는다 (429)", async () => {
     store.assertAnonIpAvailable.mockRejectedValue(
       new ApiError("RATE_LIMITED", { reason: "anon_ip_daily" }),

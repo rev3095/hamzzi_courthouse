@@ -72,6 +72,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
 | POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
+| POST `/materials/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 질문·검색에 붙인 자료 사진 판독 → 가린 자료 정리·검색어 후보 | F-017 AC1·AC2 |
 | POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
 | GET·POST `/matters` · GET·PUT·DELETE `/matters/{id}` | user (본인 사건만) | 사건 진행: 내 사건 목록·만들기·읽기·저장·삭제 | F-016 AC1 |
 | POST `/matters/read` | user | 서류 사진 읽기 → 사실·당사자·관계·요구·조항 | F-016 AC2 |
@@ -94,7 +95,11 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 // req
 { text: string;                        // 1~10,000자 (2026-11-25 사용자 요청, 이전 임시 2000자). 2,000자를 넘는 몫은 답변 상한·예산 가중치에 입력 비용을 더한다 (lib/ai/cost longInputAllowanceUsd)
   sensitiveConsent?: boolean;          // 민감정보 별도 동의 (F-007 AC2)
-  parentInquiryId?: string }           // 이어 묻기: 같은 소유자의 분석 완료 inquiry (F-002 AC3, DEC-011)
+  parentInquiryId?: string;            // 이어 묻기: 같은 소유자의 분석 완료 inquiry (F-002 AC3, DEC-011)
+  materials?: { kind: string; summary: string; details: string[]; gaps: string[] }[] }
+                                       // F-017(DEC-058): POST /materials/read 결과를 사용자가 확인·수정한 것 (30개까지).
+                                       // 서버가 판독 때와 같은 규칙으로 다시 가리고 거른 뒤 inquiries.materials에 둔다.
+                                       // 자료에서 찾은 민감정보 범주도 sensitiveConsent 검사에 들어간다. 형식이 틀리면 400 (fields: ["materials"])
 // 201
 { id: string; status: "draft";
   piiFindings: { type: "name"|"phone"|"rrn"|"account"|"email"|"address"; count: number }[];  // 값은 반환하지 않음
@@ -198,6 +203,9 @@ type DemoAnalysisResult = {
            unknowns: string[] };                                  // 답이 달라질 수 있는데 사연에 없는 사실
   assistant?: "home" | "report" | "market";        // DEC-057: 전문 에이전트 대화에서 받은 답변이면 그 에이전트
   assistantTalk?: { reply: string; asks: string[] }; // DEC-057: 에이전트 대화 한마디(Haiku). 숫자·법령·판례·판정 표현이 없게 거른 것만
+  materials?: { items: { kind: string; summary: string; details: string[]; gaps: string[];
+                         points: number[] }[] };          // F-017(DEC-058): 질문에 붙인 자료(가린 정리)와 그 자료를 사실관계로 참고한 answer.points 순번
+                                                           // (검증을 통과해 남은 것만). 자료는 출처가 아니다 — 문단의 source는 언제나 근거 키. 무료 모드면 points는 빈 배열
   procedureHint?:                                   // DEC-037: 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만). 없으면 생략
     | { kind: "track"; track: string }               // 검증해 둔 기존 타임라인 키
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };
@@ -281,6 +289,14 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - **응답**: `docTypes`는 정해진 목록(`DOC_TYPES`)의 값뿐이다. `summary`·`claims`는 가린 문장이다 — `scanInput`에 더해, 모델이 따로 적어 준 개인 이름 목록(응답에 싣지 않고 버린다)·서류 역할어 뒤의 이름 꼴·차량번호·생년월일·지번 주소를 가린다. 조문 번호·사건번호(지급명령·가사 등 사건부호 포함)가 든 문장과, 사건 개요에서 결과·유불리를 내다보는 문장은 빠지고 그 수가 `dropped`에 실린다(내용은 싣지 않는다). 서류의 주장을 옮긴 요구·주장 칸에는 판정 표현 검사를 걸지 않는다(단정 표현만). `parties`의 `name`은 표지(주식회사·법원 등)가 있는 상호·기관 이름만 있고 대표자·담당자 이름과 직함은 잘라 낸다. 개인(`person`)은 언제나 빈 문자열이다. `role`은 서류에 적힌 절차상 역할(발신인·수신인·원고·피고·피의자 등 정해진 값 — "피해자"·"가해자"는 없다), `side`는 서류에서의 자리이며 옳고 그름을 뜻하지 않는다.
 - **횟수·비용**: 하루 질문 횟수를 다 썼으면 `401 LOGIN_REQUIRED`(비로그인)·`429 RATE_LIMITED`(`reason: "user_daily"`)로 모델 전에 막는다. 차감은 하지 않는다 — 확인한 개요를 `POST /inquiries` → `/analyze`로 분석할 때 1회 센다. 같은 네트워크 1시간 10회(`reason: "casefile_hourly"`, 관리자 모드 제외). 1건 비용 상한 $0.005(임시값)와 전체 예산을 받고, 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai.used: false`로 알린다.
 - 판독 결과는 저장하지 않는다. 화면은 사용자가 확인·수정한 개요를 `POST /inquiries`(`sensitiveConsent: true`)로 보내고 `/analyze`에 `deep: true`를 붙인다. 당사자 목록은 브라우저(sessionStorage)에만 둔다.
+
+### POST `/materials/read` (F-017, DEC-058)
+`req { images?·texts? (사진·PDF·문서 글 합쳐 1~30개, /casefiles/read와 같다); question?: string (500자 이하); consent: { images: true; sensitive: true } }`
+→ `200 { materials: { kind; summary; details: string[]; gaps: string[] }[]; queries: string[]; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 법률 자문 아님" | null }` (`cache-control: no-store`)
+- **검증·동의·사진**: `/casefiles/read`와 같다(같은 검사 함수·같은 모델 입력 블록 `documentBlocks`). 동의가 없으면 `409 CONSENT_REQUIRED`, 사진·PDF는 판독 호출(Haiku 비전 1회)에만 그대로 쓰고 문서 글은 가린 글만 보낸다. 저장·로그하지 않는다(절대 규칙 4 예외 하나, DEC-052·055). 자료 정리는 파일마다 하나다.
+- **응답**: `kind`는 정해진 목록(`MATERIAL_KINDS`, lib/materials/limits.ts)의 값뿐이다. `summary`(무엇이 찍힌 자료인지)·`details`(사진에 적힌 날짜·금액·문구, 적힌 그대로)·`gaps`(확인하지 못한 것)는 가린 글이다 — `scanInput`에 더해 모델이 적어 준 개인 이름(응답에 싣지 않고 버린다)·역할어 뒤 이름 꼴·차량번호·생년월일·지번 주소를 가린다. 조문 번호·사건번호가 든 문장, 결과·유불리를 말하는 문장은 빠지고 그 수가 `dropped`에 실린다. `queries`는 검색 화면에서 고를 법률 용어 검색어(숫자·개인정보·판정 표현 없는 것, 3개까지). 자료가 증거로서 어떤 의미가 있는지는 판단하지 않는다.
+- **횟수·비용**: `/casefiles/read`와 같다 — 하루 질문 횟수를 다 썼으면 모델 전에 막고, 차감은 자료를 붙인 질문을 분석할 때 1회. 같은 네트워크 1시간 한도는 서류 판독과 함께 센다(`reason: "casefile_hourly"`). 1건 상한 $0.015(서류 판독과 같은 임시값), 예산 10단위.
+- 판독 결과는 저장하지 않는다. 질문 화면은 사용자가 확인·수정한 정리를 `POST /inquiries`의 `materials`(`sensitiveConsent: true`)로 보낸다. 검색 화면은 정리를 그 화면 메모리에만 두고, 고른 검색어로 지금처럼 법제처만 찾는다.
 
 ### POST `/businesses/lookup` (F-015 AC4, DEC-052)
 `req { name: string (2~40자) }` → `200 { places: Source<{ title; category; address; roadAddress; link }>; corps: Source<{ corpName; address; establishedAt; industry; homepage }>; links: { label; url }[]; notice: "공개 자료 검색 결과 · AI 생성 아님 · 같은 곳인지 직접 확인 필요" }` (`no-store`), `Source<T> = { status: "ok" | "empty" | "no_key" | "failed"; items: T[] }`

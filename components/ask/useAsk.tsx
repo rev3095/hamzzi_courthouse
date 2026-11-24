@@ -14,6 +14,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import { readSave } from "@/lib/client/save";
+import type { MaterialReading } from "@/lib/materials/limits";
 import type { PiiFinding } from "@/lib/pii";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
@@ -27,6 +28,7 @@ type Pending =
       deep: boolean;
       categories: string[];
       onCreated?: (id: string) => void;
+      materials?: MaterialReading[];
     }
   | { kind: "pii"; id: string; findings: PiiFinding[]; maskedText: string }
   | { kind: "login" };
@@ -76,12 +78,16 @@ export function useAsk(
     else router.push(`/inquiries/${id}`);
   };
 
-  /** onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015) */
+  /**
+   * onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015).
+   * materials: 질문과 함께 보낼 첨부 자료 판독 정리 (F-017, DEC-058). 서버가 다시 거른 뒤 질문 행에 저장한다.
+   */
   async function send(
     text: string,
     sensitiveConsent = false,
     deep = false,
     onCreated?: (id: string) => void,
+    materials?: MaterialReading[],
   ) {
     setError(null);
     if (!text.trim()) {
@@ -95,6 +101,7 @@ export function useAsk(
       ...(opts.parentInquiryId && { parentInquiryId: opts.parentInquiryId }),
       // 로그인 사용자가 "내 기록에 남기기"를 켜 두었을 때만 (DEC-039). 서버가 비로그인 요청에서는 무시한다
       ...(readSave() && { save: true }),
+      ...(materials && materials.length > 0 && { materials }),
     });
     setBusy(false);
     if (!r.ok) {
@@ -106,6 +113,7 @@ export function useAsk(
           deep,
           categories: Array.isArray(cats) ? cats : [],
           onCreated,
+          materials,
         });
       } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
@@ -153,9 +161,9 @@ export function useAsk(
         categories={pending.categories}
         busy={busy}
         onAccept={() => {
-          const { text, deep, onCreated } = pending;
+          const { text, deep, onCreated, materials } = pending;
           close();
-          void send(text, true, deep, onCreated);
+          void send(text, true, deep, onCreated, materials);
         }}
         onClose={close}
       />

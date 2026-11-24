@@ -39,6 +39,15 @@ import {
   type LiteAnalysisOutput,
 } from "./lite";
 import { userMessage } from "./message";
+import type { MaterialReading } from "@/lib/materials/limits";
+import {
+  MATERIALS_ANSWER_VERSION,
+  materialRefsOf,
+  materialsInstruction,
+  materialsPlainText,
+  withMaterialRefs,
+  type MaterialRef,
+} from "@/lib/materials/policy";
 import { tierOf, type TierId } from "./models";
 import {
   STEP_MESSAGES,
@@ -80,7 +89,7 @@ export function structDigest(s: DeepStruct): string {
 }
 
 export async function runDeepAnalysis(
-  input: { maskedText: string; context?: FollowupTurn[] },
+  input: { maskedText: string; context?: FollowupTurn[]; materials?: MaterialReading[] },
   deps: {
     model?: ModelClient;
     lawSource?: LawSource;
@@ -101,6 +110,8 @@ export async function runDeepAnalysis(
 ): Promise<DeepAnalysisOutput> {
   const tier = tierOf(deps.tier);
   const context = input.context ?? [];
+  // 첨부 자료(DEC-058)는 사용자 자료로 구조화·답변에 함께 넘긴다. 근거 키가 아니라 인용할 수 없다
+  const materials = input.materials ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   // 구조화와 답변이 질문 1건 상한 하나를 함께 쓴다
   const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.deep.capUsd);
@@ -121,14 +132,21 @@ export async function runDeepAnalysis(
         thinking: { type: "disabled" },
         system: [{ type: "text", text: DEEP_STRUCT_SYSTEM }],
         output_config: { format: { type: "json_schema", schema: DEEP_STRUCT_SCHEMA } },
-        messages: [{ role: "user", content: userMessage(input.maskedText, context) }],
+        messages: [{ role: "user", content: userMessage(input.maskedText, context, materials) }],
       },
       STRUCT_TIMEOUT_MS,
       { minOutputTokens: DEEP_STRUCT_TOKENS.min },
     );
     usage = addUsage(usage, res);
     const parsed = DeepStructZ.safeParse(JSON.parse(textOf(res)));
-    if (parsed.success) struct = screenStruct(parsed.data, input.maskedText);
+    // 사건 구조의 항목은 사용자가 적은 글(질문 + 가린 첨부 자료)에 있는 숫자만 쓸 수 있다
+    if (parsed.success)
+      struct = screenStruct(
+        parsed.data,
+        materials.length
+          ? `${input.maskedText}\n${materialsPlainText(materials)}`
+          : input.maskedText,
+      );
     else structFailure = "format";
   } catch (e) {
     if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
@@ -205,6 +223,7 @@ export async function runDeepAnalysis(
   let points: DraftPoint[] = [];
   let drafted: DeepDraftPoint[] = [];
   let dropped: DropReason[] = [];
+  let materialRefs: MaterialRef[] = [];
   let costCapped = false;
   let keys = liteEvidenceKeys(evidence, {
     articles: DEEP_LIMITS.articles,
@@ -226,13 +245,19 @@ export async function runDeepAnalysis(
             system: [{ type: "text", text: DEEP_ANSWER_SYSTEM }],
             output_config: {
               effort: (deps.effort ?? tier.effort) as typeof tier.effort,
-              format: { type: "json_schema", schema: deepAnswerSchema(keys, struct.issues.length) },
+              format: {
+                type: "json_schema",
+                schema: withMaterialRefs(
+                  deepAnswerSchema(keys, struct.issues.length),
+                  materials.length,
+                ),
+              },
             },
             messages: [
               {
                 role: "user",
                 content: [
-                  userMessage(input.maskedText, context),
+                  userMessage(input.maskedText, context, materials),
                   `<사건_구조>\n${structDigest(struct)}\n</사건_구조>`,
                   ...(deps.notes
                     ? [
@@ -241,7 +266,10 @@ export async function runDeepAnalysis(
                     : []),
                   `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
-                ].join("\n\n"),
+                  materialsInstruction(materials.length),
+                ]
+                  .filter(Boolean)
+                  .join("\n\n"),
               },
             ],
           },
@@ -249,9 +277,11 @@ export async function runDeepAnalysis(
           { minOutputTokens: tier.deep.answerTokens.min },
         );
         usage = addUsage(usage, res);
-        const parsed = DeepAnswerZ.safeParse(JSON.parse(textOf(res)));
+        const json: unknown = JSON.parse(textOf(res));
+        const parsed = DeepAnswerZ.safeParse(json);
         if (parsed.success) {
           drafted = parsed.data.points;
+          materialRefs = materialRefsOf(json, materials.length);
           // 1차 거르기는 일반 답변과 같은 규칙. 쟁점마다 따로 걸러 문단 수 한도를 쟁점 단위로 적용한다
           for (let n = 1; n <= struct.issues.length; n++) {
             const mine = drafted.filter((p) => p.issue === n).slice(0, DEEP_LIMITS.pointsPerIssue);
@@ -304,9 +334,12 @@ export async function runDeepAnalysis(
     dropped,
     usage,
     model: tier.model,
-    promptVersion: `${DEEP_PROMPT_VERSION}+${LITE_PROMPT_VERSION}`,
+    promptVersion: `${DEEP_PROMPT_VERSION}+${LITE_PROMPT_VERSION}${
+      materials.length > 0 ? `+${MATERIALS_ANSWER_VERSION}` : ""
+    }`,
     costUsd: model.spentUsd(),
     costCapped,
+    materialRefs,
     struct,
     drafted: drafted.map((d) => ({ issue: d.issue, text: d.text })),
   };

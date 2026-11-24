@@ -15,8 +15,9 @@ import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
 import { CATEGORIES, type CategoryKey } from "@/lib/procedure/categories";
-import { FREE_PROMPT_VERSION, findExample } from "@/lib/demo/policy";
+import { FREE_PROMPT_VERSION, findExampleFor } from "@/lib/demo/policy";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
+import { buildMaterialsMap, materialsChars, readStoredMaterials } from "@/lib/materials/policy";
 import {
   finishAnalysis,
   loadFollowupContext,
@@ -63,13 +64,25 @@ export async function analyzeInquiry(
     // 전문 에이전트 질문은 DeepSearch를 쓰지 않는다 — 지시문·대화 한마디가 일반 답변 경로에만 있다 (DEC-057)
     const deep = opts.deep === true && !assistant;
     // 긴 질문(2,000자 넘게)은 입력 몫만큼 상한과 예산 가중치를 늘린다 (2026-11-25 질문 한도 10,000자)
-    const allowance = longInputAllowanceUsd(tier.model, inquiry.masked_text.length);
+    // 첨부 자료(F-017, DEC-058): 질문 행에 둔 가린 판독 정리. 모델 입력이 그만큼 길어지므로 긴 질문 상한 계산에도 넣는다
+    const materials = readStoredMaterials(inquiry.materials);
+    const allowance = longInputAllowanceUsd(
+      tier.model,
+      inquiry.masked_text.length + materialsChars(materials),
+    );
     const capUsd = (deep ? tier.deep.capUsd : tier.capUsd) + allowance;
     const weight =
       (deep ? tier.deep.weight : tier.weight) + Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9);
-    const example = findExample(inquiry.masked_text) !== null;
+    // 자료가 붙은 질문은 예시 재생으로 보지 않는다
+    const example = findExampleFor(inquiry.masked_text, materials) !== null;
     if (aiMode() === "free" || example || !(await tryAiQuota(weight))) {
-      const free = await runFreeAnalysis(inquiry.masked_text, { onStep, caseHint, lawHints });
+      // 자료가 붙은 질문은 예시 답변을 재생하지 않는다 (자료와 상관없는 저장 답변이 자료 옆에 보이지 않게)
+      const free = await runFreeAnalysis(inquiry.masked_text, {
+        onStep,
+        caseHint,
+        lawHints,
+        ...(materials.length > 0 && { noReplay: true }),
+      });
       // 저장해 둔 절차 라벨만 본다 (모델 없음, DEC-037). 예시 재생은 규칙으로 이미 정해져 있다
       if (free.model !== "replay") {
         const hint = await procedureHintFor(free.result, inquiry.masked_text, {
@@ -79,6 +92,11 @@ export async function analyzeInquiry(
         if (hint) free.result.procedureHint = hint;
       }
       if (assistant) free.result.assistant = assistant.id;
+      // 무료 모드에서도 이미 읽은 자료 정리와 활용 안내는 보인다 (답변 문단과의 연결만 없다)
+      if (materials.length > 0) {
+        const freeMaterials = buildMaterialsMap(materials, [], []);
+        if (freeMaterials) free.result.materials = freeMaterials;
+      }
       const resultId = await finishAnalysis(
         {
           inquiryId: inquiry.id,
@@ -102,14 +120,14 @@ export async function analyzeInquiry(
     // DeepSearch: 사건 구조화(Haiku) + 쟁점별 검색 + 쟁점별 답변 1회 (DEC-041). 답변 모델은 둘 다 고른 단계
     const deepRun = deep
       ? await runDeepAnalysis(
-          { maskedText: inquiry.masked_text, context },
+          { maskedText: inquiry.masked_text, context, ...(materials.length > 0 && { materials }) },
           { onStep, caseHint, lawHints, tier: tier.id, costCapUsd: capUsd },
         )
       : null;
     const analysis =
       deepRun ??
       (await runLiteAnalysis(
-        { maskedText: inquiry.masked_text, context },
+        { maskedText: inquiry.masked_text, context, ...(materials.length > 0 && { materials }) },
         {
           onStep,
           caseHint,
@@ -135,6 +153,15 @@ export async function analyzeInquiry(
         deepRun.drafted,
         verified.result.answer.points,
       );
+    }
+    // 자료 지도: 자료마다 검증을 통과해 남은 문단 중 그 자료를 참고한 것만 잇는다 (빠진 문단은 연결에서도 빠진다)
+    if (materials.length > 0) {
+      const materialsMap = buildMaterialsMap(
+        materials,
+        analysis.materialRefs ?? [],
+        verified.result.answer.points,
+      );
+      if (materialsMap) verified.result.materials = materialsMap;
     }
     // 규칙이 절차를 정하지 못한 질문만: 저장된 라벨 → 없으면 Haiku 분류 1회 후 저장 (DEC-037)
     // 질문 해석이 새 섹션을 제안했으면 그것을 저장하고 분류 호출은 다시 하지 않는다 (같은 일을 두 번 하지 않기, DEC-042)

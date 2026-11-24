@@ -1,5 +1,6 @@
 // 브라우저에서 부르는 API 도우미 (docs/API.md 2·4.1절). 화면(app/, components/)은 이 모듈로만 서버를 부른다.
 // 입력 원문은 요청 본문으로만 보내고 저장하지 않는다. 브라우저에 남기는 것은 마스킹본뿐이다 (DEC-006).
+import type { MaterialReading } from "@/lib/materials/limits";
 import { readTier } from "./tier";
 import type { StepEvent } from "@/lib/ai/policy";
 import type { ErrorCode, ErrorDetails } from "@/lib/api/errors";
@@ -78,6 +79,8 @@ export const createInquiry = (input: {
   parentInquiryId?: string;
   /** 내 세션에 남기기 (DEC-039·056). 로그인 사용자에게만 적용된다 */
   save?: boolean;
+  /** 첨부 자료 판독 정리 (F-017, DEC-058) — 서버가 가린 것을 사용자가 확인·수정한 것. 서버가 다시 거른다 */
+  materials?: MaterialReading[];
 }) => call<CreatedInquiry>("/api/v1/inquiries", { method: "POST", body: JSON.stringify(input) });
 
 export type SavedInquiry = {
