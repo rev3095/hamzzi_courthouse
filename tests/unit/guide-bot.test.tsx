@@ -73,23 +73,31 @@ describe("햄찌 안내 챗봇 (DEC-030)", () => {
     expect(await within(dialog).findByText(sub.lines[0])).toBeTruthy();
     fireEvent.click(within(quick(dialog)).getByRole("button", { name: "처음 메뉴로" }));
     expect(
-      await within(quick(dialog)).findByRole("button", { name: "개발자 연락처" }),
+      await within(quick(dialog)).findByRole("button", { name: "문의 · 개발자 연락처" }),
     ).toBeTruthy();
   });
 
   test("개발자 이메일은 '이메일 보기'를 눌러야 나타나고 mailto 링크다", async () => {
     render(<GuideBot />);
     const dialog = open();
-    fireEvent.click(within(quick(dialog)).getByRole("button", { name: "개발자 연락처" }));
+    fireEvent.click(within(quick(dialog)).getByRole("button", { name: "문의 · 개발자 연락처" }));
     fireEvent.click(await within(dialog).findByRole("button", { name: "이메일 보기" }));
     const mail = within(dialog).getByRole("link", { name: guideEmail() });
     expect(mail.getAttribute("href")).toBe(`mailto:${guideEmail()}`);
   });
 
+  test("DEC-051 연락처 항목에서 문의 남기기 화면으로 이어진다", async () => {
+    render(<GuideBot />);
+    const dialog = open();
+    fireEvent.click(within(quick(dialog)).getByRole("button", { name: "문의 · 개발자 연락처" }));
+    const link = await within(dialog).findByRole("link", { name: /문의 남기기/ });
+    expect(link.getAttribute("href")).toBe("/about/developer#contact");
+  });
+
   test("이메일 보기 전에는 주소가 화면에 없다", async () => {
     render(<GuideBot />);
     const dialog = open();
-    fireEvent.click(within(quick(dialog)).getByRole("button", { name: "개발자 연락처" }));
+    fireEvent.click(within(quick(dialog)).getByRole("button", { name: "문의 · 개발자 연락처" }));
     await within(dialog).findByRole("button", { name: "이메일 보기" });
     expect(dialog.textContent).not.toContain(guideEmail());
   });

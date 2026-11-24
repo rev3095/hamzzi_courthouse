@@ -2,9 +2,11 @@
 // 3절은 분석 모드(lib/ai/mode, DEC-015·036)에 따라 바뀐다 — 유료(AI_MODE=free가 아니고 키가 있음)면 마스킹본이 AI 모델 제공자(Anthropic)로 간다.
 // 환경변수는 빌드 때 읽으므로 AI_MODE를 바꾸면 재배포해야 이 문서도 바뀐다.
 import type { Metadata } from "next";
+import Link from "next/link";
 import { DeleteMyData } from "@/components/DeleteMyData";
 import { PolicyPage, Section } from "@/components/PolicyPage";
 import { aiMode } from "@/lib/ai/mode";
+import { contactMailConfigured } from "@/lib/contact/policy";
 import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 
 export const metadata: Metadata = { title: "개인정보처리방침 · 햄찌법원" };
@@ -13,6 +15,8 @@ export default function PrivacyPage() {
   const sendsToAi = aiMode() !== "free";
   // Google 로그인(DEC-035)은 NEXT_PUBLIC_GOOGLE_LOGIN=1일 때만 열린다 — 켜져 있을 때만 고지한다
   const googleLogin = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1";
+  // 문의 메일 발송(DEC-051)은 RESEND_API_KEY가 있을 때만 켜진다 — 켜져 있을 때만 발송 업체를 고지한다
+  const contactMail = contactMailConfigured();
   return (
     <PolicyPage current="/privacy" title="개인정보처리방침">
       <Section title="1. 처리하는 정보">
@@ -80,6 +84,14 @@ export default function PrivacyPage() {
           닉네임은 다음에 다시 쓰기 편하도록 이 브라우저의 저장소(localStorage)에 둬요.
         </p>
         <p>
+          &lsquo;문의 남기기&rsquo;로 보낸 문의는 이름·전화번호·주소처럼 보이는 부분을 가린 문장만
+          개발자 이메일로 전달하고, 햄찌법원 데이터베이스와 운영 기록에는 남기지 않아요. 답장 받을
+          이메일을 적으시면 답장을 위해 개발자 이메일로만 함께 전달해요. 건강·범죄경력처럼 민감한
+          내용으로 보이는 문의는 보내지 않고 빼 달라고 안내해요. 문의 횟수는 위와 같은 해시 값으로
+          1시간 단위 횟수만 세요. 전달된 메일은 개발자의 이메일 함에 남고, 보관 기간은 법무 검토 후
+          정해요.
+        </p>
+        <p>
           마이페이지에서 햄찌 안내 챗봇을 끄면 &lsquo;꺼짐&rsquo; 값 하나만 이 브라우저의
           저장소(localStorage)에 두고, 다시 켜면 지워요. 서버로 보내지 않고, 챗봇과 나눈 대화는
           어디에도 저장하지 않아요.
@@ -131,6 +143,20 @@ export default function PrivacyPage() {
             계정 정보를 Supabase로 보내요. Google에 질문 내용은 보내지 않아요.
           </p>
         )}
+        {contactMail ? (
+          <p>
+            문의를 사이트에서 바로 보내면 메일 발송 서비스(Resend)를 거쳐 개발자 이메일(Gmail)로
+            전달돼요. 보내는 내용은 가린 문의 문장과, 적으신 경우 답장 받을 이메일뿐이에요. 발송
+            업체에도 발송 기록이 남을 수 있어요. 바로 보내지 못하면 이용하시는 메일 앱으로 가린 문의
+            문장을 채워 열어 드리고, 그때는 그 메일 계정에서 개발자 이메일로 보내져요. (국외
+            이전·처리 위탁 여부, 발송 기록 보관 기간과 고지 문구는 법무 검토 중이에요.)
+          </p>
+        ) : (
+          <p>
+            지금은 문의를 사이트에서 바로 보내지 않고, 이용하시는 메일 앱으로 가린 문의 문장을 채워
+            열어 드려요.
+          </p>
+        )}
         <p>서비스는 Vercel(웹 서버)과 Supabase(데이터베이스·로그인)에서 운영해요.</p>
       </Section>
       <Section title="4. 보관 기간과 삭제">
@@ -154,6 +180,13 @@ export default function PrivacyPage() {
       </Section>
       <Section title="5. 문의">
         <p>개인정보 보호 책임자와 연락처는 정식 출시 전에 적을 예정이에요.</p>
+        <p>
+          서비스 문의는{" "}
+          <Link href="/about/developer#contact" className="text-link underline underline-offset-2">
+            문의 남기기
+          </Link>
+          로 보내 주세요.
+        </p>
       </Section>
     </PolicyPage>
   );

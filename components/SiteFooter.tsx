@@ -15,6 +15,12 @@ export function SiteFooter() {
           aria-label="정책"
           className="text-muted flex flex-wrap justify-center gap-x-4 gap-y-1 text-[13px]"
         >
+          <Link href="/about" className="underline-offset-2 hover:underline">
+            소개
+          </Link>
+          <Link href="/about/developer#contact" className="underline-offset-2 hover:underline">
+            문의
+          </Link>
           <Link href="/privacy" className="underline-offset-2 hover:underline">
             개인정보처리방침
           </Link>
