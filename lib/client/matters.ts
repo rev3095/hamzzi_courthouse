@@ -28,6 +28,8 @@ export const deleteMatter = (id: string) =>
 
 export type MatterReadResult = {
   reading: MatterReading | null;
+  /** 서류 속 법령 조문·사건번호 재조회 (개수만). removed = 확인되지 않아 가리거나 뺀 수 */
+  citations: { checked: number; removed: number; failed: boolean } | null;
   ai: AiState<Common | "unreadable">;
   notice: string | null;
 };
@@ -44,8 +46,10 @@ export type IssuesResult = {
   ai: AiState<"free_mode" | "budget">;
   notice: string | null;
 };
-export const organizeIssues = (text: string, personNames: string[]) =>
+/** matterId: 서버가 그 사건의 당사자 이름을 직접 모아 가린다. personNames는 아직 저장 전인 이름을 더할 뿐이다 */
+export const organizeIssues = (matterId: string, text: string, personNames: string[]) =>
   post<IssuesResult>("/api/v1/matters/issues", {
+    matterId,
     text,
     personNames,
     tier: readTier(),
@@ -66,12 +70,15 @@ export type CompanyResult = {
     };
   };
   links: { label: string; url: string }[];
-  ai: AiState<Common | "empty">;
+  ai: AiState<Common | "empty" | "person">;
   notice: string | null;
   sourceNotice: string;
 };
 export const researchCompany = (input: {
+  matterId: string;
   name: string;
+  /** 사용자가 "회사·기관 이름"이라고 확인함 — 표지 없는 이름은 이것 없이 서버가 거절한다 */
+  isBusiness: boolean;
   urls: string[];
   pasted: string;
   personNames: string[];
@@ -83,8 +90,14 @@ export type SummaryResult = {
   ai: AiState<Common | "empty">;
   notice: string | null;
 };
-export const summarizeText = (text: string, personNames: string[], consent = false) =>
+export const summarizeText = (
+  matterId: string,
+  text: string,
+  personNames: string[],
+  consent = false,
+) =>
   post<SummaryResult>("/api/v1/matters/summarize", {
+    matterId,
     text,
     personNames,
     ...(consent && { consent: true }),
@@ -100,6 +113,8 @@ export function aiSkipText(reason: string): string {
   if (reason === "unreadable")
     return "사진에서 글자를 읽지 못했어요. 더 밝고 또렷한 사진으로 다시 올려 주세요.";
   if (reason === "empty") return "정리할 내용을 찾지 못했어요. 링크나 본문을 더해 다시 해 주세요.";
+  if (reason === "person")
+    return "사람을 가리키는 이름으로 보여 조사하지 않았어요. 회사·기관만 조사해요.";
   return "처리하는 중에 문제가 생겼어요. 잠시 뒤에 다시 해 주세요.";
 }
 
@@ -116,6 +131,7 @@ export function matterErrorText(code: string, reason?: unknown): string {
       return "사건을 더 만들 수 없어요. 쓰지 않는 사건을 지워 주세요.";
     if (reason === "not_business")
       return "회사 이름만 조사할 수 있어요. 사람 이름은 조사하지 않아요.";
+    if (reason === "confirm_business") return "회사·기관 이름이 맞는지 확인란에 표시해 주세요.";
     if (reason === "personal_site") return "개인 계정 사이트의 링크는 받지 않아요.";
     if (reason === "too_large") return "내용이 너무 커요. 오래된 노트를 지우거나 줄여 주세요.";
     return "입력한 내용을 확인해 주세요.";

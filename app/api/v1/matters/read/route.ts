@@ -2,6 +2,7 @@
 // 본문 { images, consent: { images: true, sensitive: true } } — 서류 분석(F-015)과 같은 검증·동의를 쓴다.
 // 사진은 이 호출 한 번에만 모델로 가고 저장·로그하지 않는다. 결과도 여기서 저장하지 않는다 — 화면이 사건 자료에 합친 뒤 저장한다.
 // 본인 사건의 정리라 서류에 적힌 이름은 결과에 남긴다(사용자 결정, DEC-053). 연락처·등록번호 꼴은 가린다.
+// 결과 속 법령 조문·사건번호는 법제처 재조회로 확인된 것만 남고, 나머지는 가려진다 (절대 규칙 1). citations는 개수만 싣는다.
 import { readMatterDocs } from "@/lib/ai/matter";
 import { MATTER_READ_WEIGHT } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
@@ -11,8 +12,8 @@ import { CASEFILE_LIMITS, parseReadRequest } from "@/lib/casefile/policy";
 import { runMatterAi } from "@/lib/matters/ai-gate";
 import { requireMatterUser } from "@/lib/matters/store";
 
-/** 사진 올리기 + 읽기 1회 (시간 한도 80초) */
-export const maxDuration = 100;
+/** 사진 올리기 + 읽기 1회 (시간 한도 80초) + 서류 속 조문·사건번호 법제처 재조회 (시간 한도 25초) */
+export const maxDuration = 120;
 
 export const POST = withRoute(async (req, _ctx, scope) => {
   const user = await requireMatterUser(scope);
@@ -25,8 +26,12 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   const ai =
     r.skipped ??
     (r.out.ok ? { used: true as const } : { used: false as const, reason: r.out.reason });
-  const reading = !r.skipped && r.out.ok ? r.out.reading : null;
-  const res = ok({ reading, ai, notice: reading ? AI_NOTICE : null }, scope.requestId);
+  const done = !r.skipped && r.out.ok ? r.out : null;
+  const reading = done?.reading ?? null;
+  const res = ok(
+    { reading, citations: done?.citations ?? null, ai, notice: reading ? AI_NOTICE : null },
+    scope.requestId,
+  );
   res.headers.set("cache-control", "no-store");
   return res;
 });

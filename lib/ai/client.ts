@@ -35,7 +35,11 @@ export class CostCapReached extends Error {
   }
 }
 
-export type CostTracked = ModelClient & { spentUsd(): number };
+export type CostTracked = ModelClient & {
+  spentUsd(): number;
+  /** 토큰 밖의 요금(웹 검색 건당 요금 등)을 장부에 더한다 — 다음 호출 계획과 정산에 들어간다 */
+  charge(usd: number): void;
+};
 
 /**
  * 호출마다 (지금까지 쓴 돈 + 이번 입력 정가 + max_tokens 출력)이 상한 안인지 확인하고, 남은 예산에 맞춰 max_tokens를 줄인다.
@@ -45,6 +49,9 @@ export function withCostCap(inner: ModelClient, capUsd: number = COST_CAP_USD): 
   let spent = 0;
   return {
     spentUsd: () => spent,
+    charge(usd) {
+      if (Number.isFinite(usd) && usd > 0) spent += usd;
+    },
     countTokens: inner.countTokens?.bind(inner),
     async create(params, options) {
       const stage = typeof params.model === "string" ? params.model : "model";

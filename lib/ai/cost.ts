@@ -49,9 +49,9 @@ export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
  * 사건 진행(F-016, DEC-053)의 호출별 상한 — 모두 **임시값**.
  * - 서류 읽기: Haiku 비전 1회. 서류 분석(F-015)보다 자세히 뽑아 출력이 길다 (입력 약 27,000토큰 $0.0027 + 출력 6,000토큰 $0.003).
  * - 요약: Haiku 1회 (입력 약 8,000토큰 + 출력 700토큰).
- * - 기업 조사: Sonnet + 웹 검색·웹 가져오기. 도구가 가져온 글은 호출 전에 셀 수 없어 도구 횟수(max_uses)와
- *   가져올 글 길이로 묶는다. 웹 검색은 토큰과 별도로 건당 WEB_SEARCH_USD가 붙는다.
- *   그래서 $0.2는 호출 전에 지켜지는 상한이 아니라 도구 한도로 맞추는 목표값이다 (실측은 lib/ai/company.ts COMPANY_TOOL_LIMITS 주석).
+ * - 기업 조사: Opus 5.5 + 웹 검색·웹 가져오기. 도구가 가져온 글은 호출 전에 셀 수 없어 도구 횟수(max_uses)와
+ *   가져올 글 길이로 묶는다. 웹 검색은 토큰과 별도로 건당 WEB_SEARCH_USD가 붙는다(비용 장부에 더한다).
+ *   건당 상한은 없다 — 아래 COMPANY_RESERVE_USD 참고 (실측은 lib/ai/company.ts COMPANY_TOOL_LIMITS 주석, Opus $0.56).
  */
 export const MATTER_READ_COST_CAP_USD = 0.015;
 export const MATTER_READ_TOKENS = { max: 6_000, min: 1_500 } as const;

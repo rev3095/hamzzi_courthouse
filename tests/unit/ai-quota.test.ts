@@ -72,7 +72,8 @@ describe("DEC-040 기간 예산 — 2026-11-25까지 $95, 실제로 쓴 금액�
   });
 
   test("카운터 행이 기간 중에 파기되지 않는다 — 창 시작부터 끝까지 8일 이하", () => {
-    const days = (Date.parse(PERIOD_BUDGET.endsAt) - Date.parse(PERIOD_BUDGET.startsAt)) / 86_400_000;
+    const days =
+      (Date.parse(PERIOD_BUDGET.endsAt) - Date.parse(PERIOD_BUDGET.startsAt)) / 86_400_000;
     expect(days).toBeLessThanOrEqual(8);
   });
 
@@ -123,13 +124,33 @@ describe("DEC-040 기간 예산 — 2026-11-25까지 $95, 실제로 쓴 금액�
     expect(db.rpc.mock.calls[0][1].p_refund).toBe(1_500);
     db.rpc.mockReset();
     await settleAiQuota(1, 0.0015, {}, DURING);
-    await settleAiQuota(1, 0.002, {}, DURING);
     expect(db.rpc).not.toHaveBeenCalled();
   });
 
-  test("정산: 주간 규칙일 때는 아무 일도 하지 않는다", async () => {
+  test("정산: 잡아 둔 금액보다 더 썼으면(도구가 가져온 글 — 기업 조사) 넘은 몫을 상한 검사 없이 더 차감한다", async () => {
+    db.rpc.mockResolvedValue({ data: true, error: null });
+    await settleAiQuota(1, 0.002, {}, DURING);
+    expect(db.rpc.mock.calls).toEqual([
+      [
+        "reserve_ai_budget",
+        {
+          p_bucket: "ai_period_20261125",
+          p_start: "2026-11-19T00:00:00+09:00",
+          p_limit: 2_147_483_647,
+          p_amount: 500,
+        },
+      ],
+    ]);
+  });
+
+  test("정산: 주간 규칙일 때는 돌려주지 않고, 넘은 몫만 단위로 바꿔 주간 카운터에 더한다", async () => {
     await settleAiQuota(20, 0.01, {}, AFTER);
     expect(db.rpc).not.toHaveBeenCalled();
+    db.rpc.mockResolvedValue({ data: true, error: null });
+    await settleAiQuota(1, 0.0031, {}, AFTER);
+    expect(db.rpc).toHaveBeenCalledTimes(1);
+    expect(db.rpc.mock.calls[0][0]).toBe("hit_rate_limit_weighted");
+    expect(db.rpc.mock.calls[0][1]).toMatchObject({ p_bucket: "ai_units", p_weight: 2 });
   });
 
   test("정산: DB 오류가 나도 예외를 내지 않는다 (분석 결과를 막지 않는다)", async () => {
