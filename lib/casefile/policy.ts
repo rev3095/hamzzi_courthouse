@@ -5,6 +5,7 @@
 // - 조문 번호·사건번호가 든 문장은 뺀다 — 검증 근거가 아닌 서류 속 인용을 그대로 내보내지 않는다 (절대 규칙 1).
 // - 결과를 단정하는 문장은 뺀다 (절대 규칙 2). 누가 잘못했는지는 정하지 않고 서류에 적힌 역할만 옮긴다.
 import { z } from "zod";
+import { pdfPageCount } from "@/lib/ai/cost";
 import { citationsIn, isAssertive } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import { nameAfterRelation, scanInput, type PiiFinding, type SensitiveCategory } from "@/lib/pii";
@@ -78,6 +79,7 @@ export function parseReadRequest(body: unknown): ReadRequest {
   }
 
   let total = 0;
+  let pdfPages = 0;
   const images: CaseImage[] = [];
   for (const raw of rawImages) {
     const img = (raw ?? {}) as Record<string, unknown>;
@@ -97,6 +99,10 @@ export function parseReadRequest(body: unknown): ReadRequest {
     if (!BASE64.test(img.data)) throw bad("encoding");
     // 적어 보낸 종류와 실제 내용이 같아야 한다
     if (sniffImage(img.data) !== img.mediaType) throw bad("media_type");
+    if (img.mediaType === "application/pdf") {
+      pdfPages += Math.max(1, pdfPageCount(img.data));
+      if (pdfPages > CASEFILE_LIMITS.maxPdfPages) throw bad("too_many_pages");
+    }
     images.push({ mediaType: img.mediaType as CaseFileMediaType, data: img.data });
   }
 

@@ -10,8 +10,10 @@ export const CASEFILE_LIMITS = {
   maxImages: 30,
   /** 사진 한 장의 base64 글자 수 (약 600KB) */
   maxImageChars: 820_000,
-  /** PDF 한 개의 base64 글자 수 (약 1.5MB 파일) */
-  maxPdfChars: 2_000_000,
+  /** PDF 한 개의 base64 글자 수 (약 900KB 파일). PDF 쪽 수 합계는 maxPdfPages까지 */
+  maxPdfChars: 1_200_000,
+  /** PDF 쪽 수 합계 (쪽마다 글 + 그림 토큰이 들어가 장문 구간을 넘지 않게) */
+  maxPdfPages: 20,
   /** 사진·PDF 전체의 base64 글자 수 */
   maxTotalChars: 4_000_000,
   /** 문서에서 꺼낸 글(한글·워드·파워포인트·엑셀·텍스트) 전체 글자 수 */

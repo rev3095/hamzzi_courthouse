@@ -197,12 +197,16 @@ function Consent({
     <>
       <ul className="text-ink list-disc space-y-2 pl-5 text-[15px] leading-relaxed">
         <li>
-          서류 사진 {count}장을 AI 모델 제공자(Anthropic)에게 보내 글자를 읽어요. 사진에는 나와
-          상대방의 이름·주소 같은 개인정보가 가려지지 않은 채 들어 있어요.
+          서류 {count}개를 AI 모델 제공자(Anthropic)에게 보내 읽어요. 사진과 PDF는 나와 상대방의
+          이름·주소 같은 개인정보가 가려지지 않은 채 그대로 가요.
         </li>
         <li>
-          사진은 읽는 데만 쓰고 햄찌법원 서버에 저장하지 않아요. 읽은 내용은 개인정보를 가린 사건
-          개요만 남겨요.
+          한글·워드·파워포인트·엑셀·텍스트 문서는 글만 꺼내 이름·연락처·주소 같은 개인정보를 가린 뒤
+          보내요. 다만 모든 이름을 빠짐없이 가리지는 못할 수 있어요.
+        </li>
+        <li>
+          사진·파일은 읽는 데만 쓰고 햄찌법원 서버에 저장하지 않아요. 읽은 내용은 개인정보를 가린
+          사건 개요만 남겨요.
         </li>
         <li>
           개인의 이름은 결과에 보이지 않고, 개인을 찾아보는 검색도 하지 않아요. 법인·사업자만 공개된
@@ -217,7 +221,7 @@ function Consent({
           onChange={(e) => setSend(e.target.checked)}
           className="size-5 shrink-0 accent-[var(--ink)]"
         />
-        서류 사진을 AI에게 보내 읽는 데 동의합니다 (필수)
+        서류 사진·PDF·문서를 AI에게 보내 읽는 데 동의합니다 (필수)
       </label>
       <label className="text-ink flex min-h-11 items-center gap-2.5 text-[15px]">
         <input

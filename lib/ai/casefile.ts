@@ -81,7 +81,8 @@ export function documentBlocks(input: { images: CaseImage[]; texts?: CaseText[] 
     })),
     ...texts.map((t, i) => ({
       type: "text" as const,
-      text: `<첨부_문서 번호="${i + 1}" 종류="${t.name}">\n${scanInput(t.text).maskedText}\n</첨부_문서>`,
+      // 문서 글 속 꺾쇠를 바꿔 경계 태그를 흉내 내지 못하게 한다 (legal-reviewer 2026-11-24)
+      text: `<첨부_문서 번호="${i + 1}" 종류="${t.name}">\n${scanInput(t.text).maskedText.replace(/</g, "‹").replace(/>/g, "›")}\n</첨부_문서>`,
     })),
   ];
   const parts = [

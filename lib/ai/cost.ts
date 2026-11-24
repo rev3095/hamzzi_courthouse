@@ -122,9 +122,23 @@ export const IMAGE_TOKEN_ESTIMATE = 5_000;
  * 사진이 많을 때(10장 넘게)의 장당 추정. 브라우저가 이때는 긴 변 1,200px 이하로 줄여 보내므로(lib/client/casefile fitToBudget)
  * 실제 약 1,400토큰이다. 5,000으로 치면 30장이 장문 구간 한도에 걸려 읽지 못한다 (2026-11-24 사진 30장 요청).
  */
-export const MANY_IMAGES_TOKEN_ESTIMATE = 1_600;
-/** PDF(document 블록)는 base64 글자 20자를 1토큰으로 친다 (쪽마다 글 + 그림이 들어간다). 최소 3,000토큰 */
-const PDF_CHARS_PER_TOKEN = 20;
+export const MANY_IMAGES_TOKEN_ESTIMATE = 2_000;
+/**
+ * PDF(document 블록) 추정: 쪽마다 글 + 쪽 그림이 들어가므로 쪽당 PDF_PAGE_TOKENS.
+ * 쪽 수를 못 세면(압축된 객체 스트림) base64 12자를 1토큰으로 친다. 최소 3,000토큰 (legal-reviewer 2026-11-24 지적)
+ */
+export const PDF_PAGE_TOKENS = 3_500;
+const PDF_CHARS_PER_TOKEN = 12;
+
+/** base64 PDF의 쪽 수 (/Type /Page 개수). 못 세면 0 */
+export function pdfPageCount(base64: string): number {
+  try {
+    const bin = atob(base64);
+    return (bin.match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length;
+  } catch {
+    return 0;
+  }
+}
 
 /**
  * 요청 전체(system·messages·tools)의 보수적 토큰 추정. 사진(base64)은 글자 수로 세면 터무니없이 커지므로
@@ -142,7 +156,11 @@ export function estimateRequestTokens(parts: unknown): number {
     if (type === "document") {
       const data = (value as { source?: { data?: unknown } }).source?.data;
       const chars = typeof data === "string" ? data.length : 0;
-      pdfTokens += Math.max(3_000, Math.ceil(chars / PDF_CHARS_PER_TOKEN));
+      const pages = typeof data === "string" ? pdfPageCount(data) : 0;
+      pdfTokens += Math.max(
+        3_000,
+        pages > 0 ? pages * PDF_PAGE_TOKENS : Math.ceil(chars / PDF_CHARS_PER_TOKEN),
+      );
       return { type: "document" };
     }
     return value;

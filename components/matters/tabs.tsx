@@ -271,8 +271,8 @@ export function DocsTab({ data, update, go }: TabProps & { go: (tab: TabKey) => 
                 checked={agree.images}
                 onChange={(e) => setAgree({ ...agree, images: e.target.checked })}
               />
-              서류 사진을 AI에게 보내 읽는 데 동의합니다 (사진에는 이름·주소가 가려지지 않은 채 들어
-              있어요)
+              서류 사진·PDF·문서를 AI에게 보내 읽는 데 동의합니다 (사진·PDF에는 이름·주소가 가려지지
+              않은 채 들어 있어요. 문서는 글만 꺼내 개인정보를 가린 뒤 보내요)
             </label>
             <label className="text-ink flex min-h-10 items-center gap-2 text-[13px]">
               <input

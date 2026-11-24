@@ -199,7 +199,10 @@ export async function attachmentBody(items: PreparedImage[]) {
     images: fitted.flatMap((i) =>
       i.kind === "text" ? [] : [{ mediaType: i.mediaType, data: i.data }],
     ),
-    texts: fitted.flatMap((i) => (i.kind === "text" ? [{ name: i.name, text: i.text }] : [])),
+    // 파일 이름에는 사람 이름이 들어 있을 수 있어 확장자만 보낸다
+    texts: fitted.flatMap((i) =>
+      i.kind === "text" ? [{ name: `문서.${i.name.split(".").pop() ?? ""}`, text: i.text }] : [],
+    ),
   };
 }
 
@@ -236,6 +239,8 @@ export function readErrorText(code: ErrorCode, reason?: unknown): string {
       return `사진·문서는 ${CASEFILE_LIMITS.maxImages}개까지 올릴 수 있어요.`;
     if (reason === "too_large")
       return "자료가 너무 커요. 개수를 줄이거나 더 작은 파일로 올려 주세요.";
+    if (reason === "too_many_pages")
+      return `PDF는 모두 합쳐 ${CASEFILE_LIMITS.maxPdfPages}쪽까지 읽어요. 필요한 쪽만 남겨 올려 주세요.`;
     return "올릴 수 없는 파일이 있어요. 사진·PDF·한글·워드·파워포인트·엑셀·텍스트 파일로 다시 올려 주세요.";
   }
   if (code === "RATE_LIMITED") {
