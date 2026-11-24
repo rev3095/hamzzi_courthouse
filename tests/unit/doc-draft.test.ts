@@ -7,7 +7,13 @@ vi.mock("server-only", () => ({}));
 const { draftFacts } = await import("@/lib/ai/doc-draft");
 const { ApiError } = await import("@/lib/api/errors");
 import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
-import { factsText, ruleSuggestions, screenFacts, screenMissing } from "@/lib/documents/draft";
+import {
+  factsText,
+  ruleSuggestions,
+  screenFacts,
+  screenLegal,
+  screenMissing,
+} from "@/lib/documents/draft";
 
 const STORY =
   "2023년 3월에 [이름1]에게 보증금 5,000만 원을 주고 전세 계약을 했습니다. 올해 2월에 계약이 끝났는데 집주인이 보증금을 돌려주지 않아요.";
@@ -80,6 +86,29 @@ describe("DEC-023 사실관계 문장 거르기 (절대 규칙 1·2·3, F-007)",
   });
 });
 
+describe("DEC-055 법적 근거·주장 문장 (무료 AI 대리 작성)", () => {
+  test("법령·판례 언급과 법률 판단은 남기고, 지어낸 숫자·단정 표현은 뺀다 (최대 4문장)", () => {
+    const { kept, dropped } = screenLegal(
+      [
+        "임대인은 주택임대차보호법 제3조의2 제2항에 따라 보증금을 돌려줄 의무가 있습니다.",
+        "대법원 2020다12345 판결도 같은 취지로 판단했습니다.",
+        "임대인은 지연손해금 300만 원도 줘야 합니다.",
+        "반드시 돌려받을 수 있습니다.",
+      ],
+      STORY,
+    );
+    expect(kept).toEqual([
+      "임대인은 주택임대차보호법 제3조의2 제2항에 따라 보증금을 돌려줄 의무가 있습니다.",
+      "대법원 2020다12345 판결도 같은 취지로 판단했습니다.",
+    ]);
+    expect(dropped).toEqual(["number", "assertive"]);
+  });
+
+  test("청구원인은 사실 다음에 법적 근거를 이어 번호를 붙인다", () => {
+    expect(factsText("complaint", ["가", "나"], ["다"])).toBe("1. 가\n2. 나\n3. 다");
+  });
+});
+
 const OUT = JSON.stringify({
   sentences: [
     "원고는 2023년 3월 [이름1]과 전세 계약을 맺었습니다.",
@@ -110,14 +139,14 @@ function fakeModel(opts: { tokens?: number; fail?: unknown; text?: string } = {}
 }
 
 describe("DEC-023 Haiku 사실관계 초안", () => {
-  test("Haiku 1회, thinking 끔, 마스킹본만 보낸다, 출력 900토큰 이하, 1건 $0.0015 이하", async () => {
+  test("Haiku 1회, thinking 끔, 마스킹본만 보낸다, 출력 1,500토큰 이하, 1건 $0.0015 이하", async () => {
     const model = fakeModel();
     const out = await draftFacts({ kind: "complaint", maskedStory: STORY }, { model });
     expect(model.calls).toHaveLength(1);
     const p = model.calls[0];
     expect(p.model).toBe("claude-haiku-5-5");
     expect(p.thinking).toEqual({ type: "disabled" });
-    expect(p.max_tokens).toBeLessThanOrEqual(900);
+    expect(p.max_tokens).toBeLessThanOrEqual(1_500);
     expect(JSON.stringify(p.messages)).toContain("[이름1]");
     expect(JSON.stringify(p.system)).toContain("원고");
     expect(out.ok).toBe(true);

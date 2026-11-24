@@ -251,12 +251,9 @@ describe("댓글·신고·씨앗", () => {
     auth.getActor.mockResolvedValue({ userId: "u1", role: "user" });
     store.getSeedCounts.mockResolvedValue({ balance: 120, posts: 1, comments: 2 });
     const body = await (await seeds.GET(req("GET"), {})).json();
-    expect(body.data).toMatchObject({
-      balance: 120,
-      won: 120,
-      redeemEnabled: false,
-      redeemableWon: 0,
-    });
+    expect(body.data).toMatchObject({ balance: 120 });
+    // DEC-055: 전면 무료 — 씨앗에 돈·할인 값이 없다
+    expect(body.data).not.toHaveProperty("won");
   });
 });
 

@@ -48,7 +48,7 @@ describe("고정 문구", () => {
   });
   test("AI가 만들지 않았다는 고지를 쓴다", () => {
     expect(READER_NOTICE).toContain("AI 생성 아님");
-    expect(READER_NOTICE).toContain("법률 자문 아님");
+    expect(READER_NOTICE).toContain("AI 생성 아님");
   });
 });
 

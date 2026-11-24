@@ -10,14 +10,14 @@
 |---|---|
 | 방식 | Supabase Auth 세션 토큰 (`Authorization: Bearer <token>` 또는 보안 쿠키) · 소셜 로그인(Google 등) (DEC-004, DEC-005) |
 | 역할 | `anon`(비로그인) · `user` · `lawyer`(F-010 승인 후) · `admin` |
-| 비로그인 | 익명 세션 쿠키 + IP 해시로 **하루 질문 5회**(이어 묻기 포함, DEC-031 공모전 임시값 — 이전 3회, `ANON_QUESTION_LIMIT`)까지 허용. 아래의 "3회"는 이 값으로 읽는다. 네 번째 질문·추가 질문 답변·사실관계 수정은 `401 LOGIN_REQUIRED` (DEC-005, DEC-010, F-001 AC3) |
+| 비로그인 | 익명 세션 쿠키 + IP 해시로 **하루 질문 10회**(이어 묻기 포함, DEC-055 — 이전 5회, `ANON_QUESTION_LIMIT`)까지 허용. 아래의 "3회"는 이 값으로 읽는다. 그다음 질문·추가 질문 답변·사실관계 수정은 `401 LOGIN_REQUIRED` (DEC-005, DEC-010, F-001 AC3) |
 | 레이트 리밋 | 분석: 비로그인 세션 3회 + IP 해시 24시간 10회(DEC-010). 판례·조문 검색: IP 해시 1시간 목록 60회·상세 120회(DEC-017 제안). 피드백·기록 삭제: IP 해시 1시간 30회. 초과 시 `429 RATE_LIMITED` (`details.reason`) |
 | 멱등성 | 생성 POST는 `Idempotency-Key` 헤더 지원 (제안, OQ-API-03) |
 
 ## 2. 공통 형식
 **성공**: `{ "data": T, "meta"?: { "requestId": string, "page"?: Page } }`
 **실패**: `{ "error": { "code": ErrorCode, "message": string, "details"?: object, "requestId": string } }`
-**모든 AI 결과**에 `"aiNotice": "AI 생성 · 법률 자문 아님"` 포함 (8.3).
+**모든 AI 결과**에 `"aiNotice": "AI 생성 · 무료 법률 상담"` 포함 (8.3).
 
 ```ts
 type Page = { cursor?: string; nextCursor?: string; limit: number }
@@ -123,7 +123,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 { id: string; maskedText: string; status: "draft"|"need_info"|"analyzed"|"failed"; createdAt: string; followup: boolean }[]
 ```
 POST `/inquiries` 본문의 `save?: boolean`(선택)이 참이고 요청자가 로그인 사용자일 때만 기록에 남긴다. 비로그인·관리자 모드 요청에서는 무시한다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["save"]`).
-로그인 사용자의 하루 한도는 DEC-035(하루 10회)를 따른다.
+로그인 사용자의 하루 한도는 DEC-035·055(하루 30회, `USER_QUESTION_LIMIT`)를 따른다.
 
 
 ### GET `/me/quota`
@@ -137,14 +137,14 @@ POST `/inquiries` 본문의 `save?: boolean`(선택)이 참이고 요청자가 �
   admin: boolean;              // 관리자 모드(DEC-024) — 횟수 제한 없음
   ai: boolean }                // AI 답변이 켜져 있는지(DEC-036). false면 화면이 답변 모드 선택을 숨긴다
 ```
-비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 3회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다. **예시 질문**(홈에 보이는 질문과 같은 문장, 공백·전각 차이 무시)은 저장된 분석을 재생하므로 `POST /inquiries`·`analyze` 모두 횟수를 보지 않고 차감도 하지 않는다(DEC-027) — 3회를 다 쓴 뒤에도 열 수 있다. 대신 같은 네트워크 1시간 30회까지(`429 RATE_LIMITED`, `reason: example_hourly`). 이어 묻기라도 문장이 예시와 같으면 맥락 없이 예시를 재생하고 세지 않는다.
+비로그인 횟수는 `analyze` 성공 때 DB 함수 `consume_anon_question`이 올린다(세션 하루 `ANON_QUESTION_LIMIT`회 — 한국 시간 0시에 0부터 다시, 같은 IP 해시 24시간 10회, DATA_MODEL `anon_usage`). 관리자 모드는 차감·사전 검사를 하지 않는다. **예시 질문**(홈에 보이는 질문과 같은 문장, 공백·전각 차이 무시)은 저장된 분석을 재생하므로 `POST /inquiries`·`analyze` 모두 횟수를 보지 않고 차감도 하지 않는다(DEC-027) — 하루 횟수를 다 쓴 뒤에도 열 수 있다. 대신 같은 네트워크 1시간 30회까지(`429 RATE_LIMITED`, `reason: example_hourly`). 이어 묻기라도 문장이 예시와 같으면 맥락 없이 예시를 재생하고 세지 않는다.
 
 ### POST·DELETE `/admin/session` (DEC-024)
 ```ts
 // POST req { passcode: string } — 서버 환경변수 ADMIN_PASSCODE(또는 ADMIN_PASSWORD)와 대조. 맞으면 httpOnly 쿠키 hz_admin(서명된 만료 시각, 7일)
 // 200 { admin: true } · 틀리면 401 UNAUTHENTICATED · 둘 다 없으면 404 · 같은 네트워크 1시간 5번/사이트 하루 30번 넘으면 429
 // DELETE → 쿠키 삭제, 200 { admin: false }. 본문·비밀번호는 로그에 남기지 않는다
-``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). Google 로그인 사용자(DEC-035)는 하루 10회(`USER_QUESTION_LIMIT`, 한국 시간 0시 초기화, 예시 질문 제외)로, 오늘 저장된 분석 결과 수(`model` ≠ `replay`)를 `POST /inquiries`·`analyze`가 모델 전에 세어 넘으면 `429 RATE_LIMITED`(`details.reason: "user_daily"`). 로그인 전에 같은 브라우저에서 만든 질문을 로그인 뒤 분석하면 분석 전에 그 행을 계정에 연결(`claimInquiryForUser`)해 이 한도에 넣는다. 차감 트랜잭션이 따로 없어 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로). 관리자 모드로 로그인하면 이 한도도 받지 않는다. 로그인 사용자는 같은 브라우저 익명 세션의 로그인 전 질문도 소유자로 본다.
+``` 세션 초과는 `401 LOGIN_REQUIRED`, IP 상한 초과는 `429 RATE_LIMITED`(`details.reason: "anon_ip_daily"`). Google 로그인 사용자(DEC-035)는 하루 30회(`USER_QUESTION_LIMIT`, DEC-055, 한국 시간 0시 초기화, 예시 질문 제외)로, 오늘 저장된 분석 결과 수(`model` ≠ `replay`)를 `POST /inquiries`·`analyze`가 모델 전에 세어 넘으면 `429 RATE_LIMITED`(`details.reason: "user_daily"`). 로그인 전에 같은 브라우저에서 만든 질문을 로그인 뒤 분석하면 분석 전에 그 행을 계정에 연결(`claimInquiryForUser`)해 이 한도에 넣는다. 차감 트랜잭션이 따로 없어 같은 순간의 동시 요청은 한도를 조금 넘을 수 있다(질문 1건·주간 비용 상한은 그대로). 관리자 모드로 로그인하면 이 한도도 받지 않는다. 로그인 사용자는 같은 브라우저 익명 세션의 로그인 전 질문도 소유자로 본다.
 
 ### POST `/inquiries/{id}/analyze`
 ```ts
@@ -179,7 +179,7 @@ type AnalysisResult = {
 type DemoAnalysisResult = {
   mode: "ai" | "replay" | "search_only";            // DEC-015: ai = Claude 분석(Pro), replay = 예시 질문 재생, search_only = 법제처 검색 전용(answer.points 빈 배열)
   outcome: "grounded" | "no_result_in_scope";       // 근거 자료가 없으면 no_result_in_scope (F-006)
-  aiNotice: "AI 생성 · 법률 자문 아님";              // 고정 문구. LLM이 만들지 않음
+  aiNotice: "AI 생성 · 무료 법률 상담";              // 고정 문구. LLM이 만들지 않음
   intent: { area: string; goal: string; laws: string[]; lawKeywords: string[] };
   section?: string;                                 // DEC-033: 질문 해석 호출이 고정 목록(lib/procedure/sections.ts)에서 고른 절차 섹션 라벨. 타임라인 선택에만 쓴다. 없으면 화면이 규칙으로 정한다
   answer: { points: { text: string; source: string; quote: string;          // quote = 원문 그대로 20~60자. quote_mismatch면 "" (원문에 없는 구절은 내보내지 않음)
@@ -230,7 +230,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 같은 검색을 `POST /cases` `{ q, limit? }` 본문으로도 받는다. 화면은 POST를 쓴다 — 검색어가 주소·브라우저 기록·플랫폼 접속 기록에 남지 않게(F-007).
 - 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게). `court`·`caseType`·`from`·`to`·`cursor` 필터는 수집 DB 도입 후.
 - 검색어도 법제처로 보내므로 개인정보로 보이면 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "personal_info"`) (F-007).
-- `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
+- `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
 - 개인정보 필드는 반환하지 않는다(F-003 AC1). 수집 DB를 쓰게 되면 `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외). 법제처 판례는 법원이 비실명 처리한 공개본이다.
 - 레이트 리밋: 같은 IP 해시 1시간 60회 → `429 RATE_LIMITED` (`details.reason: "search_hourly"`). 법제처 실패는 `502 SEARCH_UPSTREAM_FAILED`.
 
@@ -270,7 +270,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 
 ### POST `/casefiles/read` (F-015, DEC-052)
 `req { images?: { mediaType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf"; data: string(base64) }[]; texts?: { name: string; text: string }[]; question?: string (500자 이하); consent: { images: true; sensitive: true } }` — images·texts 합쳐 1~30개 (2026-11-24, 이전 사진 1~5장)
-→ `200 { reading: { docTypes: string[]; summary: string; claims: string[]; parties: { role; side: "claimant" | "respondent" | "other"; kind: "business" | "agency" | "person"; name }[] } | null; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 법률 자문 아님" | null }` (`cache-control: no-store`)
+→ `200 { reading: { docTypes: string[]; summary: string; claims: string[]; parties: { role; side: "claimant" | "respondent" | "other"; kind: "business" | "agency" | "person"; name }[] } | null; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 무료 법률 상담" | null }` (`cache-control: no-store`)
 - **동의**: 사진 전송(`consent.images`)과 민감정보 처리(`consent.sensitive`)를 따로 받는다. 하나라도 `true`가 아니면 `409 CONSENT_REQUIRED` + `details.kind` `casefile_images`·`sensitive_info` — 사진을 모델로 보내지 않는다.
 - **사진**: 서류 사진은 미리 가릴 수 없어 판독 호출(Haiku 비전 1회)에만 그대로 쓴다(절대 규칙 4의 예외) — 토큰 세기 호출에도 사진을 보내지 않고 장당 고정값으로 상한을 확인한다. 사진·판독 원문은 저장·로그하지 않는다. 사진 한 장 base64 820,000자, 전체 4,000,000자까지. 종류는 내용 앞부분으로 다시 확인한다. 넘으면 `400 VALIDATION_ERROR` + `details.reason` `too_many`·`too_large`·`media_type`·`encoding`(값은 싣지 않는다), 사진이 없으면 `400 EMPTY_INPUT`.
 - **PDF·문서 (2026-11-24 사용자 요청)**: PDF는 사진과 같은 동의 뒤 document 블록으로 그대로 보낸다(한 개 base64 1,200,000자, 쪽 수 합계 20쪽 — 넘으면 `too_large`·`too_many_pages`). 한글·워드·파워포인트·엑셀·텍스트 문서는 브라우저가 글만 꺼내 `texts`로 보내고(전체 20,000자, `name`은 확장자만 쓴다), 서버가 `scanInput`으로 가린 글만 모델에 보낸다. 사건 진행 `POST /matters/read`도 같은 본문을 받는다. 판독 1건 상한 $0.015(임시값, 실제 쓴 금액만 기간 예산에서 뺀다).
@@ -325,7 +325,7 @@ AI를 부르지 않는다. 글은 이용자 의견이라 `AI_NOTICE` 대신 화�
 - **댓글** `POST /community/posts/{id}/comments` `{ body, nickname?, password? }` → `201 { comment, masked, seeds }` · `DELETE /community/comments/{id}` `{ password? }`. 댓글 수정은 없다.
 - **신고** `POST /community/posts/{id}/report` → `{ reported: true }`. 누가 신고했는지 저장하지 않고, 같은 네트워크의 같은 글 신고는 하루 한 번만 센다. 신고가 5건(`REPORT_FOLD_AT`) 쌓이면 응답의 `folded`가 true가 되고 제목·본문 대신 안내 문구가 간다(관리자 모드에는 원래 내용). `DELETE /community/posts/{id}/report`는 관리자 모드만 — 신고 수를 0으로 되돌린다(`{ cleared: true }`, 아니면 `403`).
 - **민감정보 동의**: 글·수정·댓글의 제목·본문이 건강·범죄경력 같은 민감정보로 보이면 `sensitiveConsent: true` 없이는 `409 CONSENT_REQUIRED` + `details { kind: "sensitive_info", categories }`를 주고 저장하지 않는다. 동의하면 시각·종류만 남긴다(F-007 AC2).
-- **씨앗** `GET /me/seeds` → `{ balance, won, redeemableWon, redeemEnabled, today: { posts, postsLimit, comments, commentsLimit } }`. 비로그인 `401`. 사용(할인)은 `billing` 게이트 승인 전이라 `redeemEnabled: false`·`redeemableWon: 0`이다.
+- **씨앗** `GET /me/seeds` → `{ balance, today: { posts, postsLimit, comments, commentsLimit } }`. 비로그인 `401`. 씨앗은 활동 기록이고 돈·할인 값이 없다(DEC-055).
 - 입력 오류는 `400 VALIDATION_ERROR` + `details { field, reason }`(값은 싣지 않는다). 레이트 리밋(같은 네트워크 1시간): 글쓰기 10 · 댓글 30 · 수정·삭제·신고 20 → `429 RATE_LIMITED`.
 
 ### GET `/health`
@@ -353,14 +353,15 @@ AI를 부르지 않는다. 글은 이용자 의견이라 `AI_NOTICE` 대신 화�
 `GET /admin/feature-gates`는 게이트마다 `unresolved`(승인 전에 끝내야 할 항목)를 함께 준다.
 구현: DB 함수 `change_feature_gate`가 상태 변경·`gate_changes`·`audit_logs`를 한 트랜잭션으로 남기고, `feature_gates`는 이 함수 밖에서 수정·삭제할 수 없다(트리거).
 
-## 5. Phase 2 엔드포인트 `[게이트]`
+## 5. 문서 작성 · (폐기된) Phase 2 엔드포인트
+> DEC-055: 문서 작성 두 경로는 게이트 없이 열려 있다. 아래 표의 F-008~F-012 경로는 폐기 — 만들지 않는다.
 PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`proposals`)다. `consult_agent`(F-008, OQ-003 검토 대상)와 `procedure_guide`(F-014)는 같은 `feature_gates` 테이블로 켜고 끄는 **Phase 2 출시 플래그**로 쓴다.
 
 | 메서드 · 경로 | 인증 | 설명 | 게이트 키 | F-ID |
 |---|---|---|---|---|
 | GET `/procedures?caseType=` | user | 절차 단계·기간·난이도 라벨 | `procedure_guide` | F-014 |
-| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`·`wage-petition`·`wage-advance`·`dismissal-remedy`·`dismissal-review`·`lease-mediation`·`civil-mediation`·`financial-mediation`·`property-disclosure`) | anon·user | 단계별 공식 서식 14종(lib/documents/README.md 표) 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | `legal_documents` | F-013 (DEC-022·025) |
-| POST `/documents/{kind}/draft` | 질문 소유자 | 초안 도우미: 질문 마스킹본으로 규칙 칸 + Haiku 사실관계 초안(1건 $0.0015, 저장 안 함) | `legal_documents` | F-013 (DEC-023) |
+| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`·`wage-petition`·`wage-advance`·`dismissal-remedy`·`dismissal-review`·`lease-mediation`·`civil-mediation`·`financial-mediation`·`property-disclosure`) | anon·user | 단계별 공식 서식 14종(lib/documents/README.md 표) 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | — (DEC-055) | F-013 (DEC-022·025) |
+| POST `/documents/{kind}/draft` | 질문 소유자 | 초안 도우미(무료 AI 대리 작성): 질문 마스킹본으로 규칙 칸 + Haiku 사실관계·법적 근거 초안(1건 $0.0015, 저장 안 함) | — (DEC-055) | DEC-023·055 |
 | POST `/inquiries/{id}/agent/messages` | 소유자 | 방향 제안·동의/비동의 대화 | `consult_agent` | F-008 |
 | POST `/inquiries/{id}/summary` | 소유자 | 사건 요약서 생성 | `consult_agent` | F-008 AC2 |
 | POST `/summaries/{id}/confirm` | 소유자 | 내용 확인 | `brief_posting` | F-009 AC1 |
@@ -376,12 +377,12 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 
 핵심 스키마:
 ```ts
-// POST /documents/{kind} (DEC-022) — 게이트 검사가 맨 앞. 승인 전이면 403 FEATURE_GATED(details.featureKey = "legal_documents")
+// POST /documents/{kind} (DEC-022) — DEC-055로 게이트 없음
 // req: 문서마다 정해진 문자열 필드(lib/documents/policy DOCUMENT_SPECS). 칸 형식: text(한 줄)·textarea·date(YYYY-MM-DD)·money(숫자, 쉼표·"원" 허용)·rate(연 %)·choice(정해진 값)·checks(정해진 값 쉼표 목록).
 // when 조건이 맞지 않는 칸(예: 이율을 비우면 이자 시작일)은 묻지 않고 비운다. 빈 칸·형식 오류 → 400 VALIDATION_ERROR(details.fields, 값은 넣지 않음). 모르는 kind → 404
 { data: { kind: DocumentKind; title: string; basename: string; blocks: { kind: "title"|"heading"|"text"|"center"|"right"|"blank"; text: string }[]; text: string; filename: string; notice: string } }  // Cache-Control: no-store, 입력·결과 저장·로그 없음
 
-// POST /documents/{kind}/draft (DEC-023) — 게이트 검사가 맨 앞(403 FEATURE_GATED). 이름·주소·금액은 받지 않는다
+// POST /documents/{kind}/draft (DEC-023) — DEC-055로 게이트 없음. 이름·주소·금액은 받지 않는다
 // req: { inquiryId: string }  없으면 400 VALIDATION_ERROR(fields: ["inquiryId"]) · 남의 질문 403 · 없는 질문 404 · 분석 전 409 INVALID_STATE · 1시간 10회 넘으면 429
 { data: {
     kind: DocumentKind;                      // lib/procedure/steps DocumentKind

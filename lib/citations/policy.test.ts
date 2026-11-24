@@ -182,6 +182,31 @@ describe("F-005 AC2 최종 결과 조립", () => {
     expect(result.outcome).toBe("no_result_in_scope");
     expect(result.answer.points).toEqual([]);
   });
+
+  test("DEC-055 법제처 근거 없이 모델이 쓴 문단은 재조회 없이 model로 남기고 DB 인용 행을 만들지 않는다", () => {
+    const { result, citations, stats } = assembleResult({
+      draft: draft([
+        {
+          text: "민법 제750조에 따라 손해배상을 청구해 볼 수 있습니다.",
+          source: "model",
+          quote: "x",
+        },
+      ]),
+      evidence: evidence(),
+      checks: checks(),
+    });
+    expect(result.outcome).toBe("grounded");
+    expect(result.answer.points).toEqual([
+      {
+        text: "민법 제750조에 따라 손해배상을 청구해 볼 수 있습니다.",
+        source: "model",
+        quote: "",
+        check: "model",
+      },
+    ]);
+    expect(citations).toEqual([]);
+    expect(stats.removed).toBe(0);
+  });
 });
 
 describe("legal-reviewer 지적 보강 (F-005 ③ 법령명 연결·추출 빈틈)", () => {

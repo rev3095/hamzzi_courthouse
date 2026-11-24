@@ -18,9 +18,7 @@ import {
   passwordError,
   postSummary,
   postView,
-  redeemableWon,
   seedSummary,
-  seedsToWon,
   type PostRow,
 } from "./policy";
 
@@ -148,11 +146,6 @@ describe("DEC-047 화면으로 내보내는 모양", () => {
 });
 
 describe("DEC-047 씨앗", () => {
-  test("글 100개와 댓글 200개가 각각 1,000원 가치다", () => {
-    expect(seedsToWon(SEEDS.post * 100)).toBe(1000);
-    expect(seedsToWon(SEEDS.comment * 200)).toBe(1000);
-  });
-
   test("너무 짧은 글·댓글에는 쌓이지 않는다 (공백 제외)", () => {
     expect(earnsSeeds("post", "가".repeat(SEEDS.postMinChars))).toBe(true);
     expect(earnsSeeds("post", "가 ".repeat(SEEDS.postMinChars - 1))).toBe(false);
@@ -160,14 +153,10 @@ describe("DEC-047 씨앗", () => {
     expect(earnsSeeds("comment", "가".repeat(SEEDS.commentMinChars))).toBe(true);
   });
 
-  test("절대 규칙 5: 과금 게이트 승인 전이라 할인 사용은 꺼져 있다", () => {
-    expect(SEEDS.redeemEnabled).toBe(false);
-    expect(redeemableWon(50_000)).toBe(0);
+  test("DEC-055: 씨앗은 활동 기록뿐 — 돈·할인 값이 없다", () => {
+    expect(SEEDS).not.toHaveProperty("wonPerSeed");
     expect(seedSummary(1234.9, 2, 3)).toEqual({
       balance: 1234,
-      won: 1234,
-      redeemableWon: 0,
-      redeemEnabled: false,
       today: {
         posts: 2,
         postsLimit: SEEDS.postsPerDay,

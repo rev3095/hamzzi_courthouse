@@ -1,6 +1,6 @@
 // 광장 = 커뮤니티 (DEC-047). 서버에 닿으면 웹과 같은 게시판을 읽고 쓴다(비로그인은 글마다 비밀번호).
 // 닿지 않으면 직접 쓴 예시 글을 보여 주고, 쓴 글은 이 화면에만 잠깐 보인다(저장·전송 없음)고 알린다.
-// 글은 이용자 의견이라 AI_NOTICE 대신 COMMUNITY_NOTICE를 붙인다. 씨앗을 할인에 쓰는 기능은 없다(절대 규칙 5).
+// 글은 이용자 의견이라 AI_NOTICE 대신 COMMUNITY_NOTICE를 붙인다. 씨앗은 활동 기록이고 돈·할인으로 바꾸지 않는다(DEC-055).
 import { useEffect, useState, type FormEvent } from "react";
 import {
   BOARDS,
@@ -55,8 +55,8 @@ function SeedStrip({ ctx }: { ctx: Ctx }) {
       <div>
         <b>씨앗을 모아 보세요</b>
         <p>
-          로그인하고 글을 쓰면 씨앗 {SEEDS.post}개, 댓글은 {SEEDS.comment}개가 쌓여요. 씨앗 하나는
-          할인 {SEEDS.wonPerSeed}원의 가치이고, 지금은 쌓이기만 해요.
+          로그인하고 글을 쓰면 씨앗 {SEEDS.post}개, 댓글은 {SEEDS.comment}개가 쌓여요. 씨앗은 활동
+          기록이고 돈이나 할인으로 바꾸지 않아요.
         </p>
         <Out href={`${WEB_URL}/me`} online={ctx.online} className="textlink">
           웹에서 Google로 로그인

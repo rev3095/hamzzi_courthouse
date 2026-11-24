@@ -5,7 +5,11 @@ import { describe, expect, test, vi } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import { SEEDS } from "@/lib/community/policy";
-import { ANON_IP_DAILY_LIMIT, ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
+import {
+  ANON_IP_DAILY_LIMIT,
+  ANON_QUESTION_LIMIT,
+  USER_QUESTION_LIMIT,
+} from "@/lib/inquiries/policy";
 import { EXAMPLE_RATE, LOOKUP_RATE, SEARCH_RATE } from "@/lib/auth/rate-limit";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import {
@@ -34,8 +38,8 @@ const JUDGING =
   /승률|승소|패소|이길|이깁|질\s*거|성공\s*(확률|가능)|가능성|확률|유리|불리|합법|적법|불법|위법(이|은|하지)?\s*아니|위반(이|은|하지)?\s*아니|문제(가)?\s*없|걸리지\s*않|안\s*걸|괜찮(아|습)|보장(합|해)|무료\s*상담|최저가|변호사\s*필요\s*없/;
 
 describe("햄찌 안내 문안 (DEC-030)", () => {
-  test("메뉴는 8개이고 모두 문안이 있다", () => {
-    expect(MENU_IDS).toHaveLength(8);
+  test("메뉴는 7개이고 모두 문안이 있다 (DEC-055로 변호사 연결 메뉴 폐기)", () => {
+    expect(MENU_IDS).toHaveLength(7);
     for (const id of MENU_IDS) expect(guideTopic(id), id).toBeDefined();
   });
 
@@ -66,29 +70,20 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     for (const [id, s] of allTexts) expect(JUDGING.test(s), `${id}: ${s}`).toBe(false);
   });
 
-  test("변호사법 항목은 판단하지 않는다고 밝히고, 사실(배정·수수료 없음, 기능 꺼 둠)만 말한다", () => {
+  test("변호사법 항목은 운영 사실(돈을 받지 않음, 협업 변호사, 배정·수수료 없음)만 말한다 (DEC-055)", () => {
     const t = GUIDE_TOPICS["lawyer-act"];
-    expect(t.lines.join(" ")).toContain("판단해 드릴 수 없어요");
     const list = t.list!.join(" ");
-    expect(t.lines.join(" ")).toContain("법 위반 여부가 정해지지는 않아요");
-    expect(list).toContain("법률 자문이 아니며 변호사·법무사의 상담을 대신하지 않아요");
+    expect(list).toContain("돈을 받지 않아요");
+    expect(list).toContain("협업 변호사");
     expect(list).toContain("배정하지 않고");
-    expect(list).toContain("아직 만들지 않았고");
     // 조항 이름은 docs/research/03 1-1절에 있는 것만
     const articles = GUIDE_TOPICS["lawyer-act-articles"].lines.join(" ");
     expect(articles.match(/제\d+조/g)?.sort()).toEqual(["제109조", "제34조"]);
   });
 
-  test("Phase 2·3 계획은 계획·검토 중으로만 말한다", () => {
-    for (const id of [
-      "matching",
-      "matching-assign",
-      "matching-verify",
-      "matching-data",
-      "roadmap",
-    ]) {
-      expect(textsOf(GUIDE_TOPICS[id]).join(" "), id).toMatch(/계획|검토 중|정하는 중/);
-    }
+  test("앞으로의 계획은 계획으로만 말하고, 변호사 연결 항목은 없다 (DEC-055)", () => {
+    expect(textsOf(GUIDE_TOPICS.roadmap).join(" ")).toMatch(/계획/);
+    expect(Object.keys(GUIDE_TOPICS).filter((id) => id.startsWith("matching"))).toEqual([]);
   });
 
   test("요금제: 받는 요금이 없고 가격을 만들지 않는다", () => {
@@ -96,6 +91,7 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       textsOf(GUIDE_TOPICS[id]),
     );
     expect(pricing.join(" ")).toContain("요금을 받지 않아요");
+    expect(pricing.join(" ")).toContain("유료로 바꿀 계획이 없어요");
     for (const s of pricing) expect(s, s).not.toMatch(/\d|\$|달러|만\s*원/);
   });
 
@@ -133,6 +129,7 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
   test("절대 규칙 3: 숫자는 코드 상수·공식 기준 값뿐이다", () => {
     expect(GUIDE_LIMITS).toEqual({
       anonDaily: ANON_QUESTION_LIMIT,
+      userDaily: USER_QUESTION_LIMIT,
       ipDaily: ANON_IP_DAILY_LIMIT,
       exampleHourly: EXAMPLE_RATE.limit,
       searchHourly: SEARCH_RATE.limit,
@@ -197,6 +194,6 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
   });
 
   test("절대 규칙 6: AI 생성물이 아니라는 고지를 단다", () => {
-    expect(GUIDE_NOTICE).toBe("정해진 안내 · AI 생성 아님 · 법률 자문 아님");
+    expect(GUIDE_NOTICE).toBe("정해진 안내 · AI 생성 아님");
   });
 });

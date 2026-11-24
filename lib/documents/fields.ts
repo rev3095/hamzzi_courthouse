@@ -2,7 +2,7 @@
 import type { DocumentKind, OfficialLink } from "@/lib/procedure/steps";
 
 /** 문서 결과 표시 (AI 생성물이 아니므로 AI_NOTICE 대신 이 문구) */
-export const DOCUMENT_NOTICE = "입력하신 내용으로 채운 양식 · AI 생성 아님 · 법률 자문 아님";
+export const DOCUMENT_NOTICE = "입력하신 내용으로 채운 양식 · AI 생성 아님";
 /** 초안 도우미(DEC-023)의 AI 문장이 들어간 문서 표시. AI_NOTICE(서버 응답의 notice)와 함께 보인다 */
 export const DRAFT_NOTICE = "초안 · 법률 검토 필요";
 /** 모든 서식 공통 — 제출·발송 전 확인 (절대 규칙 2: 결과를 단정하지 않는다) */
@@ -134,4 +134,3 @@ export const interestFields = (servedLabel: string): Field[] => [
     when: { key: "interestFrom", value: "date" },
   },
 ];
-

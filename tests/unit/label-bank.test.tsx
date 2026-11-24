@@ -182,7 +182,7 @@ describe("DEC-042 함께 살펴볼 절차 (결과 화면)", () => {
     ({
       mode: "ai",
       outcome: "grounded",
-      aiNotice: "AI 생성 · 법률 자문 아님",
+      aiNotice: "AI 생성 · 무료 법률 상담",
       intent: { area: "", goal: "", laws: [], lawKeywords: [] },
       answer: { points: [] },
       articles: [],
@@ -203,7 +203,7 @@ describe("DEC-042 함께 살펴볼 절차 (결과 화면)", () => {
       />,
     );
     const box = screen.getByRole("region", { name: "함께 살펴볼 절차" });
-    expect(box.textContent).toContain("AI 생성 · 법률 자문 아님");
+    expect(box.textContent).toContain("AI 생성 · 무료 법률 상담");
     expect(screen.getByRole("link", { name: "사기 따로 물어보기" }).getAttribute("href")).toBe(
       "/?category=fraud#ask",
     );

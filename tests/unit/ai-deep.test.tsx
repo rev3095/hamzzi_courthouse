@@ -214,7 +214,7 @@ describe("DEC-041 사건 구조와 시각자료", () => {
     [kept[1], kept[0]], // 검증 뒤 순서가 바뀌어도 글자로 다시 찾는다
   );
   const result = {
-    aiNotice: "AI 생성 · 법률 자문 아님",
+    aiNotice: "AI 생성 · 무료 법률 상담",
     deep: map,
     answer: { points: [kept[1], kept[0]].map((p) => ({ ...p, check: "verified" })) },
     articles: [{ ...ART, used: true }],
@@ -241,7 +241,7 @@ describe("DEC-041 사건 구조와 시각자료", () => {
     ).toBeDefined();
     expect(screen.getByText("사실관계 흐름")).toBeDefined();
     expect(screen.getByText("쟁점별 근거")).toBeDefined();
-    expect(screen.getByText(/AI 생성 · 법률 자문 아님/)).toBeDefined();
+    expect(screen.getByText(/AI 생성 · 무료 법률 상담/)).toBeDefined();
     expect(screen.getByText("답변 문단 2번 · 근거 1개")).toBeDefined();
     expect(document.body.textContent).not.toMatch(/유리|불리|승소|가능성|확률|점수/);
   });

@@ -1,5 +1,5 @@
 // 절차와 서식 (F-014 DEC-021, DEC-022·025). 분야별 절차 순서는 규칙으로 고른 고정 문안이고 인터넷 없이 열린다.
-// 서식은 공식 기관 서식 안내와 작성 요령을 보여 주고, 작성 화면은 웹에서 연다(문서 작성은 게이트 뒤, 절대 규칙 5).
+// 서식은 공식 기관 서식 안내와 작성 요령을 보여 주고, 작성 화면은 웹에서 연다(DEC-055 무료 AI 대리 작성, 게이트 없음).
 import { useState } from "react";
 import { DOCUMENT_KINDS, DOCUMENT_NOTICE, DOCUMENT_SPECS } from "@/lib/documents/policy";
 import { CATEGORIES, CATEGORY_GROUPS, type CategoryKey } from "@/lib/procedure/categories";
@@ -174,8 +174,7 @@ export function DocScreen({ ctx, kind }: { ctx: Ctx; kind: DocumentKind }) {
         웹에서 작성 화면 열기
       </Out>
       <p className="muted small">
-        적은 이름·주소는 저장하지 않아요. 작성 기능은 검토가 끝나기 전에는 안내와 공식 서식 링크만
-        열릴 수 있어요.
+        적은 이름·주소는 저장하지 않아요. 웹 작성 화면에서 햄찌법원이 무료로 대신 작성해 드려요.
       </p>
       <Notice>{DOCUMENT_NOTICE}</Notice>
     </>

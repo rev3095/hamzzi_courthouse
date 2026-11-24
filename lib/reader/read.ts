@@ -28,7 +28,7 @@ import {
 import { detectRole, isPlaintiff, ROLE_TEXT, type Role } from "./role";
 
 /** 판독 결과에 붙이는 고지 — AI가 만들지 않았으므로 AI_NOTICE 대신 쓴다 */
-export const READER_NOTICE = "규칙으로 정리한 안내 · AI 생성 아님 · 법률 자문 아님";
+export const READER_NOTICE = "규칙으로 정리한 안내 · AI 생성 아님";
 /** 법령·판례 데이터가 없을 때 안내 */
 export const NO_DATA_NOTE =
   "지금은 인터넷 없이 정리했어요. 관련 법령과 판례는 인터넷에 연결한 뒤 햄찌법원에서 확인할 수 있어요.";
@@ -134,7 +134,9 @@ const RESPONDENT_SECTIONS: ReadonlySet<Section> = new Set<Section>([
 
 /** 화면에 보일 섹션 이름 (타임라인의 분야·제목). 모델용 설명(SECTION_GUIDE)은 내부 이름이 섞여 쓰지 않는다 */
 export function sectionName(s: Section): string {
-  const t = (TRACKS as Record<string, { section: string; title: string }>)[s] ?? LIFE_TRACKS[s as LifeTrackKey];
+  const t =
+    (TRACKS as Record<string, { section: string; title: string }>)[s] ??
+    LIFE_TRACKS[s as LifeTrackKey];
   return t ? `${t.section} · ${t.title}` : s;
 }
 
@@ -207,7 +209,8 @@ function respondentSection(role: Role, text: string, scores: Map<Section, number
   if (role === "sued") return "respond_civil";
   // 갚을 쪽이어도 빚 정리·상속(상속 빚을 갚으라는 요구) 절차는 그 사람의 절차다
   if (role === "owes") {
-    for (const k of ["debt_relief", "inheritance"] as Section[]) if ((scores.get(k) ?? 0) >= CLEAR_AT) return k;
+    for (const k of ["debt_relief", "inheritance"] as Section[])
+      if ((scores.get(k) ?? 0) >= CLEAR_AT) return k;
   }
   return null;
 }
@@ -228,7 +231,13 @@ export function readOffline(input: ReaderInput): ReaderResult {
   // 기존 규칙은 내용증명만 받아도 서류를 받은 쪽으로 본다 — 법원 서류가 아니므로 이 판독기는 갚을 쪽 여부만 본다
   if (role === "claimant" && RESPONDENT.has(ruled) && !isPlaintiff(text)) {
     const onlyNotice = ruled === "respond_civil" && !COURT_PAPER.test(text);
-    role = onlyNotice ? "claimant" : ruled === "respond_civil" ? "sued" : ruled === "defendant" ? "owes" : "accused";
+    role = onlyNotice
+      ? "claimant"
+      : ruled === "respond_civil"
+        ? "sued"
+        : ruled === "defendant"
+          ? "owes"
+          : "accused";
   }
 
   // 섹션 점수: 낱말 사전 + 기존 규칙이 고른 섹션에 보너스

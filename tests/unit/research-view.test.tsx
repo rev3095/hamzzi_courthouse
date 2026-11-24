@@ -19,7 +19,7 @@ vi.mock("@/lib/client/api", async (orig) => ({
 const { ResearchView, citationLine, refine } = await import("@/components/search/ResearchView");
 type Row = import("@/components/search/ResearchView").Row;
 
-const NOTICE = "법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님";
+const NOTICE = "법제처 검색 결과 · AI 생성 아님";
 const item = (id: string, caseName: string, court: string, decidedAt: string, caseNo: string) => ({
   id,
   caseName,

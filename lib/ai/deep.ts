@@ -32,6 +32,7 @@ import {
 } from "./deep-policy";
 import {
   LITE_PROMPT_VERSION,
+  NO_EVIDENCE,
   liteDigest,
   liteEvidenceKeys,
   runLiteAnalysis,
@@ -43,6 +44,7 @@ import {
   STEP_MESSAGES,
   assembleDraft,
   screenPoints,
+  sourceEnum,
   type DraftPoint,
   type DropReason,
   type FollowupTurn,
@@ -50,7 +52,7 @@ import {
 } from "./policy";
 import { DEEP_ANSWER_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prompts";
 
-export const DEEP_PROMPT_VERSION = "deep-2026-11-19";
+export const DEEP_PROMPT_VERSION = "deep-2026-11-25-free-consult";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
 // 2026-11-19 첫 실호출에서 구조화가 실패해 일반 답변으로 내려갔다. 사실 8개·쟁점 4개·확인할 사실 5개를 한국어 JSON으로
 // 쓰면 1,000토큰을 넘을 수 있어(출력 한도 초과 = 실패) 한도를 2,000으로 늘렸다. Haiku 출력 2,000토큰 = $0.001
@@ -195,7 +197,8 @@ export async function runDeepAnalysis(
     articles: DEEP_LIMITS.articles,
     cases: DEEP_LIMITS.cases,
   });
-  if (keys.length > 0) {
+  // DEC-055: 법제처 근거가 없어도 모델이 아는 판례·조문으로 답한다 (출처 MODEL_SOURCE)
+  {
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
     // 예산을 넘으면 마지막 근거를 하나 빼고 다시 잰다 (토큰 세기는 무과금, 생성 호출은 한 번뿐)
     for (;;) {
@@ -218,8 +221,8 @@ export async function runDeepAnalysis(
                 content: [
                   userMessage(input.maskedText, context),
                   `<사건_구조>\n${structDigest(struct)}\n</사건_구조>`,
-                  `<근거_목록>\n${liteDigest(evidence, keys)}\n</근거_목록>`,
-                  `출처로 쓸 수 있는 근거 키: ${keys.join(", ")}`,
+                  `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
+                  `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
                 ].join("\n\n"),
               },
             ],

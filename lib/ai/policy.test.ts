@@ -4,6 +4,7 @@ import { EvidenceSet } from "@/lib/search/evidence";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import { userMessage } from "./message";
 import {
+  MODEL_SOURCE,
   answerSchema,
   assembleDraft,
   citableKeys,
@@ -101,6 +102,29 @@ describe("F-005 답변 문단 1차 거르기", () => {
   const ev = evidence();
   const quote = "임대인의 보증금 반환 의무와 임차인의 목적물 반환 의무는";
 
+  test("DEC-055 법제처 근거가 없는 내용은 model 출처로 남긴다 (판례·조문은 그대로, 단정·숫자는 뺀다)", () => {
+    const r = screenPoints(
+      [
+        {
+          text: "민법 제750조와 대법원 2099다99999 판결에 따라 손해배상을 청구해 볼 수 있습니다.",
+          source: MODEL_SOURCE,
+          quote: "아무 구절",
+        },
+        { text: "반드시 이깁니다.", source: MODEL_SOURCE, quote: "" },
+        { text: "보통 3년 안에 청구해야 합니다.", source: MODEL_SOURCE, quote: "" },
+      ],
+      ev,
+    );
+    expect(r.kept).toEqual([
+      {
+        text: "민법 제750조와 대법원 2099다99999 판결에 따라 손해배상을 청구해 볼 수 있습니다.",
+        source: MODEL_SOURCE,
+        quote: "",
+      },
+    ]);
+    expect(r.dropped).toEqual(["assertive", "number_not_in_source"]);
+  });
+
   test("근거 키 밖 출처는 뺀다", () => {
     const r = screenPoints([{ text: "설명", source: "case:2099다99999", quote }], ev);
     expect(r.kept).toEqual([]);
@@ -138,9 +162,12 @@ describe("F-005 답변 문단 1차 거르기", () => {
     expect(citableKeys(ev)).toEqual([article.id, "case:2020다12345"]);
   });
 
-  test("답변 스키마의 출처는 근거 키 enum이다", () => {
+  test("답변 스키마의 출처는 근거 키 + model enum이다 (DEC-055)", () => {
     const schema = answerSchema(["law:a:제1조"]);
-    expect(schema.properties.points.items.properties.source.enum).toEqual(["law:a:제1조"]);
+    expect(schema.properties.points.items.properties.source.enum).toEqual([
+      "law:a:제1조",
+      MODEL_SOURCE,
+    ]);
   });
 });
 

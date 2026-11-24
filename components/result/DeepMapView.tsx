@@ -33,7 +33,8 @@ export function issueSources(map: DeepMap, result: Result): string[][] {
     const labels: string[] = [];
     for (const i of issue.points) {
       const p = result.answer.points[i];
-      if (!p) continue;
+      // 모델이 쓴 문단(DEC-055)은 출처 칩·근거 수에 넣지 않는다 (사용자 결정: 따로 표시하지 않음)
+      if (!p || p.check === "model") continue;
       const label = sourceRef(p.source, result as DemoAnalysisResult).label;
       if (!labels.includes(label)) labels.push(label);
     }

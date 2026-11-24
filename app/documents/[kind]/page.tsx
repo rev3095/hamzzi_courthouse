@@ -1,23 +1,18 @@
 // 문서 작성 안내 (내용증명·임차권등기명령·지급명령·소장, DEC-022·025). 결과 화면 '바로 가기'·타임라인 단계 '서식 작성하기'가 여기로 온다.
-// 작성 요령·공식 서식 링크는 미리 렌더링하고, 설문·편집·내보내기는 legal_documents 게이트가 승인됐을 때만 보인다 (절대 규칙 5).
-// 예외: 관리자 모드(DEC-024) 브라우저는 게이트가 꺼져 있어도 미리보기로 연다(발표·시연용, 공개 화면에는 안 보임).
-// 게이트·관리자 확인은 요청 때 서버에서 한다 — 클라이언트 플래그로 열지 않는다. 조회에 실패하면 닫힌 것으로 본다.
-// 결과 화면에서 ?from=<질문 번호>로 오면 초안 도우미(DEC-023)로 칸을 채울 수 있다 (게이트가 열렸을 때만).
+// 설문·편집·내보내기와 AI 대리 작성(초안 도우미)은 DEC-055로 게이트 없이 모두에게 열려 있다 (무료).
+// 결과 화면에서 ?from=<질문 번호>로 오면 초안 도우미(DEC-023)로 칸을 채울 수 있다.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { DocumentStudio } from "@/components/documents/DocumentStudio";
-import { isAdminRequest } from "@/lib/auth/admin-session";
 import { DOCUMENT_KINDS, DOCUMENT_SPECS, isDocumentKind } from "@/lib/documents/policy";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
-import { isOpen } from "@/lib/gate/policy";
-import { getGate } from "@/lib/gate/store";
 
 export const metadata: Metadata = {
-  title: "문서 작성 안내 · 햄찌법원",
+  title: "문서 작성 · 햄찌법원",
   robots: { index: false, follow: false },
 };
 
@@ -43,17 +38,15 @@ export default async function DocumentPage({
             · 절차 안내 · {spec.stepLabel}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Suspense fallback={<DocTitle title={spec.title} writable={false} />}>
-              <GatedTitle title={spec.title} />
-            </Suspense>
+            <DocTitle title={spec.title} />
             <span className="bg-cream text-label rounded-[6px] px-2 py-0.5 text-xs font-semibold">
               {PROCEDURE_NOTICE}
             </span>
           </div>
           <p className="text-muted mt-2 text-[15px] leading-relaxed">{spec.intro}</p>
 
-          <Suspense fallback={<GatedNotice />}>
-            <GateArea kind={kind} searchParams={searchParams} />
+          <Suspense fallback={null}>
+            <StudioArea kind={kind} searchParams={searchParams} />
           </Suspense>
 
           <section aria-labelledby="tips-title" className="mt-8">
@@ -110,8 +103,8 @@ export default async function DocumentPage({
           </section>
 
           <p className="border-line text-muted mt-8 border-t pt-4 text-[13px] leading-relaxed">
-            햄찌법원은 법률 정보를 제공할 뿐 법률 자문을 하지 않습니다. 문서를 보내거나 내기 전에는
-            변호사·법무사 또는 대한법률구조공단 상담을 권해요.
+            햄찌법원이 무료로 대신 작성해 드리는 문서예요. 내기 전에 내용을 한 번 더 읽어 보시고,
+            궁금한 점은 햄찌법원 상담으로 이어서 물어보세요.
           </p>
         </article>
       </div>
@@ -119,29 +112,12 @@ export default async function DocumentPage({
   );
 }
 
-/** 작성기가 열려 있으면(게이트 승인 또는 관리자 미리보기) "작성", 안내만 보이면 "작성 안내" */
-async function canWrite(): Promise<boolean> {
-  const open = await getGate("legal_documents")
-    .then(isOpen)
-    .catch(() => false);
-  return open || (await isAdminRequest().catch(() => false));
-}
-
-async function GatedTitle({ title }: { title: string }) {
-  await connection();
-  return <DocTitle title={title} writable={await canWrite()} />;
-}
-
-function DocTitle({ title, writable }: { title: string; writable: boolean }) {
-  return (
-    <h1 className="font-display text-ink text-[26px] font-bold">
-      {title} {writable ? "작성" : "작성 안내"}
-    </h1>
-  );
+function DocTitle({ title }: { title: string }) {
+  return <h1 className="font-display text-ink text-[26px] font-bold">{title} 작성</h1>;
 }
 
 /** 결과 화면에서 온 질문 번호 (?from=). 초안 도우미(DEC-023)가 서버에서 소유권을 다시 확인한다 */
-async function GateArea({
+async function StudioArea({
   kind,
   searchParams,
 }: {
@@ -149,34 +125,7 @@ async function GateArea({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await connection();
-  const open = await getGate("legal_documents")
-    .then(isOpen)
-    .catch(() => false);
-  const admin = open ? false : await isAdminRequest().catch(() => false);
-  if (!open && !admin) return <GatedNotice />;
   const from = (await searchParams).from;
   const inquiryId = typeof from === "string" && /^[0-9a-f-]{36}$/i.test(from) ? from : null;
-  return (
-    <DocumentStudio
-      kind={kind}
-      inquiryId={inquiryId}
-      draftEnabled={open}
-      preview={!open && admin}
-    />
-  );
-}
-
-function GatedNotice() {
-  return (
-    <section
-      aria-label="문서 자동 작성"
-      className="rounded-card border-note-line bg-note mt-6 border px-5 py-4"
-    >
-      <p className="text-ink text-[15px] font-semibold">법률 검토 후 열릴 기능이에요</p>
-      <p className="text-muted mt-1 text-sm leading-relaxed">
-        설문으로 서식을 채워 한글·워드·PDF로 내려받는 기능은 법률 검토를 마친 뒤에 열어요. 지금은
-        아래 작성 요령과 공식 서식을 참고해 주세요.
-      </p>
-    </section>
-  );
+  return <DocumentStudio kind={kind} inquiryId={inquiryId} draftEnabled preview={false} />;
 }

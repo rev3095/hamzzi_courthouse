@@ -1,12 +1,20 @@
-// 문서 초안 도우미 순수 규칙 (DEC-023). legal_documents 게이트 뒤 — 화면·API 모두 게이트가 열렸을 때만 쓴다.
-// 규칙으로 채우는 칸(사건명·제목·입증방법)과, Haiku가 사연을 시간 순서로 정리한 사실관계 문장을 거르는 검사.
+// 문서 초안 도우미 순수 규칙 (DEC-023, DEC-055 무료 AI 대리 작성 — 게이트 없이 모두에게 열림).
+// 규칙으로 채우는 칸(사건명·제목·입증방법)과, Haiku가 쓴 사실관계 문장·법적 근거·주장 문장을 거르는 검사.
 // 이름·주소·금액은 사용자가 화면에서 직접 적는다 — 이 모듈과 모델은 그 값을 보지 않는다 (F-007).
 import { citationsIn, isAssertive } from "@/lib/ai/policy";
+import { stripCitations } from "@/lib/citations/patterns";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { TRACKS, type TrackKey } from "@/lib/procedure/steps";
 
-/** 사실관계 문장 수·길이 (모델 출력 상한과 맞춘다) */
-export const DRAFT_LIMITS = { sentences: 8, sentenceChars: 140, missing: 4, missingChars: 60 };
+/** 사실관계·법적 근거 문장 수·길이 (모델 출력 상한과 맞춘다) */
+export const DRAFT_LIMITS = {
+  sentences: 8,
+  sentenceChars: 140,
+  legal: 4,
+  legalChars: 200,
+  missing: 4,
+  missingChars: 60,
+};
 
 /** 사건명 추천 (소장). 타임라인 섹션으로 고른 고정 문구 — 모르면 비워 둔다 */
 const CASE_NAMES: Partial<Record<TrackKey, string>> = {
@@ -171,9 +179,43 @@ export function screenMissing(items: string[]): string[] {
     .slice(0, DRAFT_LIMITS.missing);
 }
 
-/** 사실관계 칸에 넣을 글. 문단 번호는 코드가 매긴다 */
-export function factsText(kind: DocumentKind, kept: string[]): string {
+/**
+ * 법적 근거·주장 문장 거르기 (DEC-055 AI 대리 작성). 법령·판례 언급과 법률 판단은 허용한다.
+ * 숫자는 조문·사건번호 밖에서는 사연에 있는 것만, 가림 표시는 사연에 있는 것만 쓴다. 단정 표현은 뺀다.
+ */
+export function screenLegal(
+  sentences: string[],
+  maskedStory: string,
+): { kept: string[]; dropped: FactDrop[] } {
+  const storyDigits = new Set(digitsOf(maskedStory));
+  const storyMasks = new Set(masksOf(maskedStory));
+  const kept: string[] = [];
+  const dropped: FactDrop[] = [];
+  for (const raw of sentences.slice(0, DRAFT_LIMITS.legal)) {
+    const s = raw.replace(/\s+/g, " ").trim();
+    const reason: FactDrop | null = !s
+      ? "empty"
+      : s.length > DRAFT_LIMITS.legalChars
+        ? "length"
+        : digitsOf(stripCitations(s).replace(/제\s*\d+\s*[항호목]/g, " ")).some(
+              (d) => !storyDigits.has(d),
+            )
+          ? "number"
+          : masksOf(s).some((m) => !storyMasks.has(m))
+            ? "mask"
+            : isAssertive(s)
+              ? "assertive"
+              : null;
+    if (reason) dropped.push(reason);
+    else kept.push(s);
+  }
+  return { kept, dropped };
+}
+
+/** 사실관계 칸에 넣을 글. 문단 번호는 코드가 매긴다. 법적 근거·주장(DEC-055)은 사실 뒤에 이어 붙인다 */
+export function factsText(kind: DocumentKind, kept: string[], legal: string[] = []): string {
+  const all = [...kept, ...legal];
   if (kind === "complaint" || kind === "payment-order")
-    return kept.map((s, i) => `${i + 1}. ${s}`).join("\n");
-  return kept.join("\n");
+    return all.map((s, i) => `${i + 1}. ${s}`).join("\n");
+  return all.join("\n");
 }

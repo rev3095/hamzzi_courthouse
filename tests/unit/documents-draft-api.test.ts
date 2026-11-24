@@ -73,15 +73,13 @@ beforeEach(() => {
 });
 
 describe("POST /documents/{kind}/draft", () => {
-  test("F-013 AC1 게이트가 승인 전이면 맨 앞에서 403, 질문을 읽거나 모델을 부르지 않는다", async () => {
+  test("DEC-055 초안 도우미(AI 대리 작성)는 게이트 없이 열려 있다", async () => {
     gate.requireFeature.mockRejectedValue(
       new ApiError("FEATURE_GATED", { featureKey: "legal_documents", status: "pending_review" }),
     );
     const res = await call("complaint", { inquiryId: ID });
-    expect(res.status).toBe(403);
-    expect(gate.requireFeature).toHaveBeenCalledWith("legal_documents");
-    expect(store.getOwnedInquiry).not.toHaveBeenCalled();
-    expect(ai.draftFacts).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(gate.requireFeature).not.toHaveBeenCalled();
   });
 
   test("DEC-023 규칙 칸 + Haiku 사실관계, AI 고지, 저장 없음(no-store)", async () => {
@@ -93,7 +91,7 @@ describe("POST /documents/{kind}/draft", () => {
     expect(data.suggestions.evidence).toMatch(/^갑 제1호증/);
     expect(data.suggestions.claimCause).toBe("1. 원고는 전세 계약을 맺었습니다.");
     expect(data.ai).toEqual({ used: true });
-    expect(data.notice).toBe("AI 생성 · 법률 자문 아님");
+    expect(data.notice).toBe("AI 생성 · 무료 법률 상담");
     // 모델에는 마스킹본 사연만 넘긴다 (이름·주소 칸은 이 API가 받지 않는다)
     expect(ai.draftFacts).toHaveBeenCalledWith({ kind: "complaint", maskedStory: lease.question });
   });

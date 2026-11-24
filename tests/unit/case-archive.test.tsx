@@ -21,7 +21,7 @@ const { SearchView, QUICK_QUERIES } = await import("@/components/search/SearchVi
 const { ResearchView } = await import("@/components/search/ResearchView");
 const { rememberSearch } = await import("@/components/search/parts");
 
-const NOTICE = "법제처 검색 결과 · AI 생성 아님 · 법률 자문 아님";
+const NOTICE = "법제처 검색 결과 · AI 생성 아님";
 const CASE = {
   id: "111",
   caseNo: "가상다1",

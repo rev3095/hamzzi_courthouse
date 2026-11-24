@@ -1,7 +1,7 @@
 // 인용 검증 실행 (F-005 AC2, DEC-009). P3 초안의 출처·본문 인용을 법제처 verify_citations로 재조회하고 최종 결과를 만든다.
 // 재조회가 실패하면 검증할 수 없으므로 결과를 내보내지 않고 SEARCH_UPSTREAM_FAILED를 그대로 올린다 (F-006 AC2).
 import "server-only";
-import type { DemoDraft, StepEvent } from "@/lib/ai/policy";
+import { MODEL_SOURCE, type DemoDraft, type StepEvent } from "@/lib/ai/policy";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import type { CitationCheck } from "@/lib/search/types";
@@ -18,6 +18,8 @@ export async function verifyDraft(
   const sourceClaims: Claim[] = [];
   const textClaims: Claim[] = [];
   for (const p of draft.answer.points) {
+    // 모델이 직접 쓴 문단(DEC-055)은 재조회하지 않는다
+    if (p.source === MODEL_SOURCE) continue;
     const c = claimForKey(p.source, evidence);
     if (c) sourceClaims.push(c);
     textClaims.push(...claimsInText(p.text, evidence).claims);

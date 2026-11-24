@@ -265,7 +265,17 @@ export function screenUnderstanding(
   };
 }
 
-/** 출처는 이번 요청의 근거 키 중 하나만 고를 수 있다 (enum). 키가 요청마다 달라 이 스키마는 캐시하지 않는다 */
+/**
+ * 법제처 근거에 없는 내용을 모델이 직접 쓴 문단의 출처 값 (DEC-055). 법제처 근거로 먼저 답하고,
+ * 근거가 없거나 모자란 부분은 모델이 아는 판례·조문으로 채운다. 이 문단은 재조회·원문 대조를 하지 않는다.
+ */
+export const MODEL_SOURCE = "model";
+
+/** 출처로 고를 수 있는 값: 이번 요청의 근거 키 + MODEL_SOURCE (enum). 키가 요청마다 달라 이 스키마는 캐시하지 않는다 */
+export function sourceEnum(keys: string[]): string[] {
+  return [...keys, MODEL_SOURCE];
+}
+
 export function answerSchema(keys: string[]) {
   return {
     type: "object",
@@ -275,9 +285,16 @@ export function answerSchema(keys: string[]) {
         items: {
           type: "object",
           properties: {
-            text: { type: "string", description: "답변 문단. 근거 자료로 뒷받침되는 내용만" },
-            source: { type: "string", enum: keys, description: "이 문단의 근거 키" },
-            quote: { type: "string", description: "근거 원문에서 글자 그대로 옮긴 20~60자 구절" },
+            text: { type: "string", description: "답변 문단" },
+            source: {
+              type: "string",
+              enum: sourceEnum(keys),
+              description: `이 문단의 근거 키. 근거 목록에 없는 내용이면 "${MODEL_SOURCE}"`,
+            },
+            quote: {
+              type: "string",
+              description: `근거 원문에서 글자 그대로 옮긴 20~60자 구절. source가 "${MODEL_SOURCE}"면 빈 문자열`,
+            },
           },
           required: ["text", "source", "quote"],
           additionalProperties: false,
@@ -370,6 +387,7 @@ export type DropReason =
 
 /**
  * 답변 문단 1차 거르기 (절대 규칙 1·2·3). 원문 구절 일치·재조회는 P4 검증기가 한다.
+ * - 출처가 MODEL_SOURCE인 문단(DEC-055)은 근거 대조 없이 남긴다. 단정 표현·숫자 규칙만 본다 (숫자는 조문·사건번호 밖에서 쓰지 않는다)
  * - 출처가 이번 요청에서 출처로 쓸 수 있는 근거 키(citableKeys)가 아니면 뺀다
  * - 본문에 적힌 사건번호·조문번호가 근거에 없으면 뺀다 (P4는 source·quote만 대조하므로 여기서 막는다)
  * - 단정 표현이 있으면 뺀다
@@ -395,6 +413,19 @@ export function screenPoints(
     const text = p.text.trim();
     if (!text) {
       dropped.push("empty");
+      continue;
+    }
+    if (p.source === MODEL_SOURCE) {
+      if (isAssertive(text)) {
+        dropped.push("assertive");
+        continue;
+      }
+      const mine = numberTokens(text);
+      if (mine.digits.length > 0 || mine.words.length > 0) {
+        dropped.push("number_not_in_source");
+        continue;
+      }
+      kept.push({ text, source: MODEL_SOURCE, quote: "" });
       continue;
     }
     if (!allowed.has(p.source)) {
