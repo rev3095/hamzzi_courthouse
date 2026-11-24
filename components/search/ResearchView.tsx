@@ -469,9 +469,14 @@ export function ResearchView() {
   };
 
   return (
-    <div className="bg-soft flex-1">
-      <div className="bg-ink text-white">
-        <div className="mx-auto w-full max-w-[1320px] px-4 py-6 lg:py-8">
+    // 묶음 화면 (2026-11-24 사용자 요청): 화면 좌우 끝까지 칠하던 검정 띠·회색 바탕을 없애고,
+    // /search처럼 사이트 기본 바탕 위에 같은 폭의 패널로 담는다. 머리 패널의 색·톤(ink·honey·gold)은 그대로.
+    <div className="flex-1">
+      <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 lg:pt-12">
+        <section
+          aria-label="판례 리서치 검색"
+          className="rounded-panel bg-ink px-[18px] py-[22px] text-white lg:px-8 lg:py-8"
+        >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
@@ -523,7 +528,7 @@ export function ResearchView() {
               }}
             />
           </div>
-        </div>
+        </section>
       </div>
 
       <div className="mx-auto grid w-full max-w-[1320px] gap-4 px-4 py-5 lg:grid-cols-[250px_minmax(0,1fr)_minmax(0,430px)]">
