@@ -55,6 +55,8 @@ export type DemoExample = {
   question: string;
   /** 첫 쪽(또는 단일) 답변 */
   result: DemoAnalysisResult;
+  /** 바꾸기 전의 짧은 질문 — 원래 질문한 쪽(첫 쪽)의 답변이 남아 있을 때만 둔다 (DEC-059, 비서 질문 예가 이 글자를 쓴다) */
+  aliases?: string[];
   sides?: ExampleSide[];
 };
 
@@ -116,7 +118,7 @@ const normalize = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim()
 export function findExample(maskedText: string): DemoExample | null {
   const q = normalize(maskedText);
   for (const e of EXAMPLES) {
-    if (normalize(e.question) === q) return e;
+    if (normalize(e.question) === q || e.aliases?.some((a) => normalize(a) === q)) return e;
     // 다른 쪽의 요약 질문이면 그 쪽 답변을 재생한다 (DEC-059)
     const side = e.sides?.find((s) => normalize(s.question) === q);
     if (side) return { ...e, question: side.question, result: side.result };

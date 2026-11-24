@@ -337,7 +337,11 @@ for ex in data["examples"]:
         continue
     ex["question"] = sides[0]["question"]
     ex["result"] = sides[0]["result"]
-    ex.pop("aliases", None)
+    # 바꾸기 전의 짧은 질문은 원래 질문한 쪽(사연의 첫 쪽) 답변이 남았을 때만 재생한다 — 반대쪽 답이 나가지 않게
+    if sides[0]["key"] == sc["sides"][0]["key"]:
+        ex["aliases"] = [sc["original"]]
+    else:
+        ex.pop("aliases", None)
     ex["sides"] = sides
 
 note = " + 2026-11-25 복잡한 사연 예시 (DEC-059, 쪽별: Opus 5.5 high 사연 → Pro Max DeepSearch 답변, 검증 통과 문단만 · 문서 작성 절차 초안)"

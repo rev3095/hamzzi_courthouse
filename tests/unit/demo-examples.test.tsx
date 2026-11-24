@@ -123,6 +123,12 @@ describe.each(SIDES)("예시 쪽 %s", (_label, ex, side) => {
     }
   });
 
+  test("예전 짧은 질문은 원래 질문한 쪽(첫 쪽) 답변만 재생한다", () => {
+    const full = exampleBySlug(ex.href.split("/").pop()!)!;
+    for (const a of full.aliases ?? [])
+      expect(findExample(a)?.result.answer.points).toEqual(full.sides![0].result.answer.points);
+  });
+
   test("예시 목록의 질문은 첫 쪽의 요약 질문이다", () => {
     expect(ex.question).toBe(exampleBySlug(ex.href.split("/").pop()!)!.sides![0].question);
   });
