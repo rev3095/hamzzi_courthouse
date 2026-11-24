@@ -82,7 +82,8 @@ describe("DEC-039 내 질문 기록에 남기는 조건", () => {
   });
   test("DEC-039 비로그인·관리자 모드·예시 질문은 켜 두어도 남기지 않는다", () => {
     expect(savesToHistory(true, { kind: "anon", anonSessionId: "a" }, false)).toBe(false);
-    expect(savesToHistory(true, { ...user, admin: true }, false)).toBe(false);
+    // 로그인 + 관리자 모드도 본인 기록에 남긴다 (2026-11-25 사용자 결정)
+    expect(savesToHistory(true, { ...user, admin: true }, false)).toBe(true);
     expect(savesToHistory(true, user, true)).toBe(false);
   });
 });

@@ -189,7 +189,8 @@ export type Owner =
  * 기록 남기기가 켜져 있어도 서버가 다시 거른다 (DEC-035·039)
  */
 export function savesToHistory(save: boolean, owner: Owner, isExample: boolean): boolean {
-  return save && owner.kind === "user" && owner.admin !== true && !isExample;
+  // 2026-11-25 사용자 결정: 로그인한 본인이 관리자 모드로 시험한 질문도 본인 기록에 남긴다(다른 계정·비로그인에는 보이지 않는다)
+  return save && owner.kind === "user" && !isExample;
 }
 
 /** 비로그인 횟수 제한을 받는 소유자인지 (관리자 모드는 제외) */
