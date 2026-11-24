@@ -46,7 +46,7 @@ const W = 760;
 const LINE = 17;
 
 /** 좁은 화면(md 미만) 사건 구조: 그림 대신 세로 목록 (2026-11-19 사용자 승인 — 가로 스크롤 없이) */
-function MindmapCompact({ map, sources }: { map: DeepMap; sources: string[][] }) {
+export function MindmapCompact({ map, sources }: { map: DeepMap; sources: string[][] }) {
   return (
     <div
       role="group"
@@ -99,7 +99,7 @@ function MindmapCompact({ map, sources }: { map: DeepMap; sources: string[][] })
   );
 }
 
-function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] }) {
+export function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] }) {
   // 오른쪽: 쟁점(아래에 근거 이름). 왼쪽: 당사자, 그 아래 확인할 사실
   const right = map.issues.map((issue, i) => {
     const title = wrapText(`${i + 1}. ${issue.title}`, 17, 3);

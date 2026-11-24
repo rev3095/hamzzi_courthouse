@@ -26,7 +26,9 @@ import {
   DeepAnswerZ,
   DeepStructZ,
   deepAnswerSchema,
+  screenPlan,
   screenStruct,
+  type DeepPlan,
   type DeepDraftPoint,
   type DeepStruct,
 } from "./deep-policy";
@@ -48,7 +50,7 @@ import {
   withMaterialRefs,
   type MaterialRef,
 } from "@/lib/materials/policy";
-import { tierOf, type TierId } from "./models";
+import { LONG_DEEP, tierOf, type TierId } from "./models";
 import {
   STEP_MESSAGES,
   assembleDraft,
@@ -59,9 +61,11 @@ import {
   type FollowupTurn,
   type StepEvent,
 } from "./policy";
-import { DEEP_ANSWER_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prompts";
+import { DEEP_ANSWER_SYSTEM, DEEP_PLAN_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prompts";
 
 export const DEEP_PROMPT_VERSION = "deep-2026-11-25b-title60";
+/** 긴 질문(DEC-062) 답변의 프롬프트 꼬리표. 정리판 지시문을 바꾸면 올린다 */
+export const LONG_PROMPT_TAG = "long-xhigh-plan-1";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
 // 2026-11-19 첫 실호출에서 구조화가 실패해 일반 답변으로 내려갔다. 사실 8개·쟁점 4개·확인할 사실 5개를 한국어 JSON으로
 // 쓰면 1,000토큰을 넘을 수 있어(출력 한도 초과 = 실패) 한도를 2,000으로 늘렸다. Haiku 출력 2,000토큰 = $0.001
@@ -73,6 +77,8 @@ export type DeepAnalysisOutput = LiteAnalysisOutput & {
   struct: DeepStruct | null;
   /** 쟁점 번호가 붙은 초안 문단 (검증 뒤 쟁점에 다시 잇는 데 쓴다) */
   drafted: { issue: number; text: string }[];
+  /** 사건 정리판 (DEC-062, 긴 질문만). 없거나 모두 걸러졌으면 null */
+  plan?: DeepPlan | null;
 };
 
 /** 사건 구조를 답변 모델에 보여 주는 글 */
@@ -102,19 +108,43 @@ export async function runDeepAnalysis(
     pinnedCaseIds?: string[];
     /** 답변이 어긋나지 않게 할 검토 메모 (아카이브 만들기 전용, 사용자 입력이 아니다) */
     notes?: string;
+    /** 긴 질문(DEC-062): Opus 5.5 effort xhigh로 답하고 사건 정리판(종류·당사자 자리와 대응·준비 자료)을 함께 받는다 */
+    long?: boolean;
+    /** 분야별 비서(DEC-057)의 말투 지시문 — 긴 비서 질문도 DeepSearch로 간다 (DEC-062) */
+    persona?: string;
+    /** 프롬프트 버전 꼬리표 (비서 지시문 버전 등) */
+    promptTag?: string;
     /** 답변 effort를 단계 값 대신 쓴다 — 미리 만드는 예시(가상 사건 프리셋 보강)에서만 쓴다. 서비스 요청 경로는 단계 값 그대로 */
     effort?: "low" | "medium" | "high" | "xhigh";
     /** 답변 출력 한도를 단계 값 대신 쓴다 — xhigh는 생각 토큰이 많아 단계 한도로는 답이 잘린다 (미리 만드는 예시 전용) */
     answerMaxTokens?: number;
   } = {},
 ): Promise<DeepAnalysisOutput> {
-  const tier = tierOf(deps.tier);
+  const tier = tierOf(deps.long ? LONG_DEEP.tier : deps.tier);
+  // 답변 호출 설정: 긴 질문은 xhigh 설정, 그 밖은 고른 단계의 DeepSearch 설정
+  const answer = deps.long
+    ? {
+        effort: LONG_DEEP.effort,
+        tokens: LONG_DEEP.answerTokens,
+        timeoutMs: LONG_DEEP.timeoutMs,
+        capUsd: LONG_DEEP.capUsd,
+      }
+    : {
+        effort: tier.effort,
+        tokens: tier.deep.answerTokens,
+        timeoutMs: tier.deep.timeoutMs,
+        capUsd: tier.deep.capUsd,
+      };
   const context = input.context ?? [];
   // 첨부 자료(DEC-058)는 사용자 자료로 구조화·답변에 함께 넘긴다. 근거 키가 아니라 인용할 수 없다
   const materials = input.materials ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
+  // 구조·정리판에 쓸 수 있는 숫자의 원문 = 사용자가 적은 글 (질문 + 가린 첨부 자료)
+  const userText = materials.length
+    ? `${input.maskedText}\n${materialsPlainText(materials)}`
+    : input.maskedText;
   // 구조화와 답변이 질문 1건 상한 하나를 함께 쓴다
-  const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.deep.capUsd);
+  const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? answer.capUsd);
   let usage: Usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 };
 
   // ① 사건 구조화
@@ -167,7 +197,7 @@ export async function runDeepAnalysis(
       // 긴 질문 몫(analyze가 deep 상한에 더한 값)은 일반 답변으로 내려가도 그대로 넘긴다
       costCapUsd: Math.max(
         0,
-        (deps.costCapUsd !== undefined ? deps.costCapUsd - tier.deep.capUsd : 0) +
+        (deps.costCapUsd !== undefined ? deps.costCapUsd - answer.capUsd : 0) +
           tier.capUsd -
           spentOnStruct,
       ),
@@ -224,6 +254,7 @@ export async function runDeepAnalysis(
   let drafted: DeepDraftPoint[] = [];
   let dropped: DropReason[] = [];
   let materialRefs: MaterialRef[] = [];
+  let plan: DeepPlan | null = null;
   let costCapped = false;
   let keys = liteEvidenceKeys(evidence, {
     articles: DEEP_LIMITS.articles,
@@ -240,15 +271,23 @@ export async function runDeepAnalysis(
           "deep_answer",
           {
             model: tier.model,
-            max_tokens: deps.answerMaxTokens ?? tier.deep.answerTokens.max,
+            max_tokens: deps.answerMaxTokens ?? answer.tokens.max,
             thinking: tier.thinking,
-            system: [{ type: "text", text: DEEP_ANSWER_SYSTEM }],
+            system: [
+              { type: "text", text: DEEP_ANSWER_SYSTEM },
+              ...(deps.long ? [{ type: "text" as const, text: DEEP_PLAN_SYSTEM }] : []),
+              ...(deps.persona ? [{ type: "text" as const, text: deps.persona }] : []),
+            ],
             output_config: {
-              effort: (deps.effort ?? tier.effort) as typeof tier.effort,
+              effort: deps.effort ?? answer.effort,
               format: {
                 type: "json_schema",
                 schema: withMaterialRefs(
-                  deepAnswerSchema(keys, struct.issues.length),
+                  deepAnswerSchema(
+                    keys,
+                    struct.issues.length,
+                    deps.long ? struct.parties.map((p) => p.label) : undefined,
+                  ),
                   materials.length,
                 ),
               },
@@ -273,14 +312,21 @@ export async function runDeepAnalysis(
               },
             ],
           },
-          tier.deep.timeoutMs,
-          { minOutputTokens: tier.deep.answerTokens.min },
+          answer.timeoutMs,
+          { minOutputTokens: answer.tokens.min },
         );
         usage = addUsage(usage, res);
         const json: unknown = JSON.parse(textOf(res));
         const parsed = DeepAnswerZ.safeParse(json);
         if (parsed.success) {
           drafted = parsed.data.points;
+          // 사건 정리판(DEC-062)도 구조와 같은 규칙으로 거른다 — 숫자는 사용자가 적은 글에 있는 것만
+          if (deps.long)
+            plan = screenPlan(
+              parsed.data.plan,
+              struct.parties.map((p) => p.label),
+              userText,
+            );
           materialRefs = materialRefsOf(json, materials.length);
           // 1차 거르기는 일반 답변과 같은 규칙. 쟁점마다 따로 걸러 문단 수 한도를 쟁점 단위로 적용한다
           for (let n = 1; n <= struct.issues.length; n++) {
@@ -334,13 +380,14 @@ export async function runDeepAnalysis(
     dropped,
     usage,
     model: tier.model,
-    promptVersion: `${DEEP_PROMPT_VERSION}+${LITE_PROMPT_VERSION}${
+    promptVersion: `${DEEP_PROMPT_VERSION}${deps.long ? `+${LONG_PROMPT_TAG}` : ""}${deps.promptTag ? `+${deps.promptTag}` : ""}+${LITE_PROMPT_VERSION}${
       materials.length > 0 ? `+${MATERIALS_ANSWER_VERSION}` : ""
     }`,
     costUsd: model.spentUsd(),
     costCapped,
     materialRefs,
     struct,
+    plan,
     drafted: drafted.map((d) => ({ issue: d.issue, text: d.text })),
   };
 }

@@ -1,6 +1,14 @@
 // DeepSearch 사건 구조 거르기 (DEC-041) — 숫자는 사용자가 적은 글에 같은 낱말로 있어야 한다 (절대 규칙 3, F-017 legal-reviewer 반영)
 import { describe, expect, it } from "vitest";
-import { screenStruct, type DeepStructRaw } from "./deep-policy";
+import {
+  deepAnswerSchema,
+  parseDeepMap,
+  screenPlan,
+  screenStruct,
+  type DeepPlanRaw,
+  type DeepStructRaw,
+} from "./deep-policy";
+import { BUDGET_UNIT_USD, LONG_DEEP, LONG_QUESTION_CHARS, TIERS, isLongQuestion } from "./models";
 
 const raw = (what: string, when = ""): DeepStructRaw => ({
   parties: [{ label: "임차인", role: "질문자" }],
@@ -29,5 +37,126 @@ describe("DEC-041 사건 구조의 숫자", () => {
   it("가린 자리표시([이름1])의 숫자는 허용 원문에 넣지 않는다", () => {
     const s = screenStruct(raw("1년 뒤에 연락했다"), "[이름1]에게 보증금을 못 받았어요");
     expect(s.events).toHaveLength(0);
+  });
+});
+
+describe("DEC-062 사건 정리판 거르기", () => {
+  const q = "임대인이 보증금 1,500,000원을 돌려주지 않아요. 이사는 이미 했어요.";
+  const plan = (over: Partial<DeepPlanRaw> = {}): DeepPlanRaw => ({
+    kinds: ["civil", "criminal", "civil", "unknown"],
+    sides: [
+      { party: "임차인", side: "claimant", actions: ["내용증명으로 반환을 요구한다"] },
+      { party: "임대인", side: "respondent", actions: ["반환 시기를 협의한다"] },
+      { party: "모르는 사람", side: "third", actions: ["상관없다"] },
+    ],
+    prep: [{ item: "임대차계약서 사본", why: "보증금 액수와 기간을 보여 준다" }],
+    ...over,
+  });
+
+  it("정해진 사건 종류만, 겹치지 않게 남긴다", () => {
+    const p = screenPlan(plan(), ["임차인", "임대인"], q);
+    expect(p?.kinds).toEqual(["civil", "criminal"]);
+  });
+
+  it("사건 구조에 없는 당사자는 버린다", () => {
+    const p = screenPlan(plan(), ["임차인", "임대인"], q);
+    expect(p?.sides.map((s) => s.party)).toEqual(["임차인", "임대인"]);
+  });
+
+  it("단정 표현·질문에 없는 숫자·조문 번호가 든 대응은 그 줄만 버린다", () => {
+    const p = screenPlan(
+      plan({
+        sides: [
+          {
+            party: "임차인",
+            side: "claimant",
+            actions: [
+              "반드시 돌려받을 수 있다",
+              "30일 안에 소송을 낸다",
+              "주택임대차보호법 제3조를 근거로 주장한다",
+              "임차권등기명령을 신청한다",
+            ],
+          },
+        ],
+      }),
+      ["임차인"],
+      q,
+    );
+    expect(p?.sides[0].actions).toEqual(["임차권등기명령을 신청한다"]);
+  });
+
+  it("한글 수사 기간·유불리 표현이 든 줄은 버린다 (legal-reviewer)", () => {
+    const p = screenPlan(
+      plan({
+        sides: [
+          {
+            party: "임차인",
+            side: "claimant",
+            actions: [
+              "두 달 안에 소송을 낸다",
+              "열흘 뒤 다시 요구한다",
+              "임차인에게 유리하니 소송을 낸다",
+              "이길 가능성이 높아 보인다",
+              "지급명령을 신청한다",
+            ],
+          },
+        ],
+      }),
+      ["임차인"],
+      q,
+    );
+    expect(p?.sides[0].actions).toEqual(["지급명령을 신청한다"]);
+  });
+
+  it("질문에 있는 숫자는 쓸 수 있다", () => {
+    const p = screenPlan(
+      plan({ prep: [{ item: "1,500,000원 입금 내역", why: "" }] }),
+      ["임차인"],
+      q,
+    );
+    expect(p?.prep[0].item).toBe("1,500,000원 입금 내역");
+  });
+
+  it("정리판이 없으면 null", () => {
+    expect(screenPlan(undefined, ["임차인"], q)).toBeNull();
+  });
+
+  it("예전 결과(정리판 없음)도 그대로 읽고, 모양이 틀린 정리판은 빼고 읽는다", () => {
+    const base = {
+      parties: [{ label: "임차인", role: "질문자" }],
+      events: [],
+      issues: [{ title: "보증금 반환", points: [0] }],
+      unknowns: [],
+    };
+    expect(parseDeepMap(base)?.plan).toBeUndefined();
+    expect(parseDeepMap({ ...base, plan: { kinds: ["nope"] } })?.plan).toBeUndefined();
+    const ok = parseDeepMap({
+      ...base,
+      plan: { kinds: ["civil"], sides: [], prep: [{ item: "계약서", why: "" }] },
+    });
+    expect(ok?.plan?.kinds).toEqual(["civil"]);
+  });
+
+  it("긴 질문이면 답변 형식에 정리판 칸이 필수, 짧은 질문이면 칸이 없다", () => {
+    const long = deepAnswerSchema(["law:a"], 2, ["임차인"]);
+    expect(long.required).toEqual(["points", "plan"]);
+    const short = deepAnswerSchema(["law:a"], 2);
+    expect(short.required).toEqual(["points"]);
+    expect("plan" in short.properties).toBe(false);
+  });
+});
+
+describe("DEC-062 긴 질문 기준", () => {
+  it("가린 질문이 100자를 넘을 때만 긴 질문이다", () => {
+    expect(LONG_QUESTION_CHARS).toBe(100);
+    expect(isLongQuestion("가".repeat(100))).toBe(false);
+    expect(isLongQuestion("가".repeat(101))).toBe(true);
+    expect(isLongQuestion(`  ${"가".repeat(100)}  `)).toBe(false);
+  });
+
+  it("긴 질문은 Opus 5.5 xhigh, 가중치는 상한 ÷ 단위 올림", () => {
+    expect(TIERS[LONG_DEEP.tier].model).toBe("claude-opus-5-5");
+    expect(LONG_DEEP.effort).toBe("xhigh");
+    expect(LONG_DEEP.weight).toBe(Math.ceil(LONG_DEEP.capUsd / BUDGET_UNIT_USD - 1e-9));
   });
 });
