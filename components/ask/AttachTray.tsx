@@ -2,7 +2,7 @@
 // 질문창의 사진 붙이기 버튼과 붙인 사진 줄 (F-015, DEC-052). Figma에 없는 추가 요소.
 // 미리보기는 브라우저 메모리의 사진을 그대로 보여 주므로 next/image 대신 img를 쓴다 (서버 최적화 대상이 아니다).
 import { useId, useRef } from "react";
-import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
+import { ATTACH_ACCEPT, CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import type { Attachments } from "./useAttachments";
 
 export function AttachButton({ attach, disabled }: { attach: Attachments; disabled?: boolean }) {
@@ -15,7 +15,7 @@ export function AttachButton({ attach, disabled }: { attach: Attachments; disabl
         ref={input}
         id={id}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={ATTACH_ACCEPT}
         multiple
         className="sr-only"
         tabIndex={-1}
@@ -30,8 +30,8 @@ export function AttachButton({ attach, disabled }: { attach: Attachments; disabl
         type="button"
         onClick={() => input.current?.click()}
         disabled={disabled || attach.busy || full}
-        aria-label={full ? "사진을 더 붙일 수 없어요" : "서류 사진 붙이기"}
-        title="서류 사진 붙이기"
+        aria-label={full ? "사진·문서를 더 붙일 수 없어요" : "서류 사진·문서 붙이기"}
+        title="서류 사진·문서 붙이기 (사진·PDF·한글·워드·파워포인트·엑셀·텍스트)"
         className="text-ink hover:bg-soft flex w-12 shrink-0 items-center justify-center self-stretch bg-white disabled:opacity-40"
       >
         {attach.busy ? (
@@ -74,19 +74,33 @@ export function AttachTray({ attach }: { attach: Attachments }) {
     <div className="border-line mx-1 mt-1 border-t px-2 pt-2 pb-1" data-testid="attach-tray">
       {attach.items.length > 0 && (
         <>
-          <ul className="flex flex-wrap gap-2" aria-label="붙인 서류 사진">
+          <ul className="flex flex-wrap gap-2" aria-label="붙인 서류 사진·문서">
             {attach.items.map((img, i) => (
               <li key={img.id} className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.previewUrl}
-                  alt={`서류 사진 ${i + 1}`}
-                  className="border-line size-[68px] rounded-[8px] border object-cover"
-                />
+                {img.kind === "pdf" || img.kind === "text" ? (
+                  <div
+                    title={img.name}
+                    className="border-line bg-soft text-ink flex size-[68px] flex-col items-center justify-center rounded-[8px] border px-1 text-center"
+                  >
+                    <span className="text-[13px] font-bold uppercase">
+                      {img.name.split(".").pop()?.slice(0, 4) || "문서"}
+                    </span>
+                    <span className="text-muted mt-0.5 line-clamp-2 text-[10px] leading-tight break-all">
+                      {img.name}
+                    </span>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={img.previewUrl}
+                    alt={`서류 사진 ${i + 1}`}
+                    className="border-line size-[68px] rounded-[8px] border object-cover"
+                  />
+                )}
                 <button
                   type="button"
                   onClick={() => attach.remove(img.id)}
-                  aria-label={`서류 사진 ${i + 1} 빼기`}
+                  aria-label={`서류 ${i + 1} 빼기`}
                   className="bg-ink absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full text-white shadow"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -102,8 +116,9 @@ export function AttachTray({ attach }: { attach: Attachments }) {
             ))}
           </ul>
           <p className="text-muted mt-2 text-[12px] leading-relaxed">
-            사진 {attach.items.length}/{CASEFILE_LIMITS.maxImages} · 사진은 서류를 읽는 데만 쓰고
-            저장하지 않아요. 보내기 전에 한 번 더 동의를 받아요.
+            사진·문서 {attach.items.length}/{CASEFILE_LIMITS.maxImages} · 서류를 읽는 데만 쓰고
+            저장하지 않아요. 문서는 글만 꺼내 개인정보를 가린 뒤 읽어요. 보내기 전에 한 번 더 동의를
+            받아요.
           </p>
         </>
       )}

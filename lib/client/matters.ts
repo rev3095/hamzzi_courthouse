@@ -3,7 +3,7 @@
 import type { CompanyReport } from "@/lib/matters/policy";
 import type { MatterData, MatterReading, MatterSource, MatterSummary } from "@/lib/matters/model";
 import { call } from "./api";
-import type { BusinessLookup, PreparedImage } from "./casefile";
+import { attachmentBody, type BusinessLookup, type PreparedImage } from "./casefile";
 import { readTier } from "./tier";
 
 export type LoadedMatter = { id: string; title: string; updatedAt: string; data: MatterData };
@@ -32,9 +32,9 @@ export type MatterReadResult = {
   notice: string | null;
 };
 /** 화면에서 사진 전송·민감정보 처리 두 항목을 모두 동의한 뒤에만 부른다 */
-export const readMatterDocs = (images: PreparedImage[]) =>
+export const readMatterDocs = async (images: PreparedImage[]) =>
   post<MatterReadResult>("/api/v1/matters/read", {
-    images: images.map((i) => ({ mediaType: i.mediaType, data: i.data })),
+    ...(await attachmentBody(images)),
     consent: { images: true, sensitive: true },
   });
 

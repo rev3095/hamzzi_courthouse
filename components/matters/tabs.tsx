@@ -245,7 +245,7 @@ export function DocsTab({ data, update, go }: TabProps & { go: (tab: TabKey) => 
     <section>
       <SectionTitle
         title="자료"
-        hint={`서류 사진을 ${CASEFILE_LIMITS.maxImages}장까지 올리면 AI가 읽어 사실관계·당사자·요구를 나눠 담아요. 사진은 저장하지 않아요.`}
+        hint={`서류 사진·문서(PDF·한글·워드·파워포인트·엑셀·텍스트)를 ${CASEFILE_LIMITS.maxImages}개까지 올리면 AI가 읽어 사실관계·당사자·요구를 나눠 담아요. 사진·파일은 저장하지 않아요.`}
       />
       <div
         className={`${card} mt-3 p-3`}

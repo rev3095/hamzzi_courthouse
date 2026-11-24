@@ -38,9 +38,11 @@ export const DOC_DRAFT_TOKENS = { max: 900, min: 300 } as const;
 /**
  * 서류 판독(F-015, DEC-052) 1건 상한 — Haiku 비전 1회. **임시값, 사용자 확인 전**.
  * 계산: 사진 5장을 장당 IMAGE_TOKEN_ESTIMATE(5,000)토큰으로 넉넉히 잡은 입력 약 27,000토큰($0.0027) + 출력 2,000토큰($0.001).
+ * 2026-11-24 사진 30장·문서 읽기(사용자 요청)로 $0.005 → $0.015: 사진 30장(장당 약 1,600토큰) + 문서 글 20,000자 + PDF까지 들어간다.
+ * 실제로 쓴 금액만 기간 예산에서 빠진다(DEC-040).
  * 실제 입력은 호출 전에 무과금 토큰 세기로 재고, 상한을 넘으면 부르지 않는다.
  */
-export const CASEFILE_READ_COST_CAP_USD = 0.005;
+export const CASEFILE_READ_COST_CAP_USD = 0.015;
 export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
 
 /**
@@ -51,7 +53,7 @@ export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
  *   가져올 글 길이로 묶는다. 웹 검색은 토큰과 별도로 건당 WEB_SEARCH_USD가 붙는다.
  *   그래서 $0.2는 호출 전에 지켜지는 상한이 아니라 도구 한도로 맞추는 목표값이다 (실측은 lib/ai/company.ts COMPANY_TOOL_LIMITS 주석).
  */
-export const MATTER_READ_COST_CAP_USD = 0.008;
+export const MATTER_READ_COST_CAP_USD = 0.015;
 export const MATTER_READ_TOKENS = { max: 6_000, min: 1_500 } as const;
 export const MATTER_SUMMARY_COST_CAP_USD = 0.002;
 export const MATTER_SUMMARY_TOKENS = { max: 700, min: 200 } as const;
@@ -116,6 +118,13 @@ export function estimateTokens(text: string): number {
 
 /** 토큰 세기를 못 쓸 때 사진 한 장을 이만큼으로 친다 (고해상도 사진의 최대치보다 크게) */
 export const IMAGE_TOKEN_ESTIMATE = 5_000;
+/**
+ * 사진이 많을 때(10장 넘게)의 장당 추정. 브라우저가 이때는 긴 변 1,200px 이하로 줄여 보내므로(lib/client/casefile fitToBudget)
+ * 실제 약 1,400토큰이다. 5,000으로 치면 30장이 장문 구간 한도에 걸려 읽지 못한다 (2026-11-24 사진 30장 요청).
+ */
+export const MANY_IMAGES_TOKEN_ESTIMATE = 1_600;
+/** PDF(document 블록)는 base64 글자 20자를 1토큰으로 친다 (쪽마다 글 + 그림이 들어간다). 최소 3,000토큰 */
+const PDF_CHARS_PER_TOKEN = 20;
 
 /**
  * 요청 전체(system·messages·tools)의 보수적 토큰 추정. 사진(base64)은 글자 수로 세면 터무니없이 커지므로
@@ -123,14 +132,23 @@ export const IMAGE_TOKEN_ESTIMATE = 5_000;
  */
 export function estimateRequestTokens(parts: unknown): number {
   let images = 0;
+  let pdfTokens = 0;
   const text = JSON.stringify(parts, (_key, value: unknown) => {
-    if (value && typeof value === "object" && (value as { type?: unknown }).type === "image") {
+    const type = value && typeof value === "object" ? (value as { type?: unknown }).type : null;
+    if (type === "image") {
       images += 1;
       return { type: "image" };
     }
+    if (type === "document") {
+      const data = (value as { source?: { data?: unknown } }).source?.data;
+      const chars = typeof data === "string" ? data.length : 0;
+      pdfTokens += Math.max(3_000, Math.ceil(chars / PDF_CHARS_PER_TOKEN));
+      return { type: "document" };
+    }
     return value;
   });
-  return estimateTokens(text ?? "") + images * IMAGE_TOKEN_ESTIMATE;
+  const perImage = images > 10 ? MANY_IMAGES_TOKEN_ESTIMATE : IMAGE_TOKEN_ESTIMATE;
+  return estimateTokens(text ?? "") + images * perImage + pdfTokens;
 }
 
 export type CallPlan =

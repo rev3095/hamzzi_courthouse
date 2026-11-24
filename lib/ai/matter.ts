@@ -6,7 +6,8 @@
 // 모든 호출은 withCostCap을 거치고 재시도하지 않는다.
 import "server-only";
 import { ApiError } from "@/lib/api/errors";
-import { hasCitation, type CaseImage } from "@/lib/casefile/policy";
+import { hasCitation, type CaseImage, type CaseText } from "@/lib/casefile/policy";
+import { documentBlocks } from "./casefile";
 import { verifyDraft } from "@/lib/citations/verify";
 import {
   MATTER_READING_SCHEMA,
@@ -74,7 +75,7 @@ export type ReadMatterOutput =
   | { ok: false; reason: Failure | "unreadable"; costUsd: number };
 
 export async function readMatterDocs(
-  input: { images: CaseImage[] },
+  input: { images: CaseImage[]; texts?: CaseText[] },
   deps: { model?: ModelClient; costCapUsd?: number } = {},
 ): Promise<ReadMatterOutput> {
   // 사진은 이 호출 한 번에만 보낸다 — 토큰 세기 호출에도 보내지 않는다 (lib/ai/casefile.ts와 같다)
@@ -83,14 +84,12 @@ export async function readMatterDocs(
     { create: (params, options) => base.create(params, options) },
     deps.costCapUsd ?? MATTER_READ_COST_CAP_USD,
   );
+  const docs = documentBlocks(input);
   const content: Extract<CreateParams["messages"][number]["content"], unknown[]> = [
-    ...input.images.map((img) => ({
-      type: "image" as const,
-      source: { type: "base64" as const, media_type: img.mediaType, data: img.data },
-    })),
+    ...docs.blocks,
     {
       type: "text" as const,
-      text: `위 사진 ${input.images.length}장은 한 사건의 서류입니다(쪽 순서가 뒤섞여 있을 수 있습니다). 쪽 번호를 보고 순서를 맞춰 정해진 형식으로 옮겨 주세요.`,
+      text: `위 자료(${docs.describe})는 한 사건의 서류입니다(쪽 순서가 뒤섞여 있을 수 있습니다). 쪽 번호를 보고 순서를 맞춰 정해진 형식으로 옮겨 주세요.`,
     },
   ];
   try {

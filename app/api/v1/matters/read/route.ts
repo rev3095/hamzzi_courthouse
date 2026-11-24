@@ -20,8 +20,8 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   if (Number.isFinite(declared) && declared > CASEFILE_LIMITS.maxTotalChars + 100_000) {
     throw new ApiError("VALIDATION_ERROR", { fields: ["images"], reason: "too_large" });
   }
-  const { images } = parseReadRequest(await readJson(req));
-  const r = await runMatterAi(user, MATTER_READ_WEIGHT, () => readMatterDocs({ images }));
+  const { images, texts } = parseReadRequest(await readJson(req));
+  const r = await runMatterAi(user, MATTER_READ_WEIGHT, () => readMatterDocs({ images, texts }));
   const ai =
     r.skipped ??
     (r.out.ok ? { used: true as const } : { used: false as const, reason: r.out.reason });

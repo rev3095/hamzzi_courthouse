@@ -14,18 +14,37 @@ import {
 } from "@/lib/casefile/limits";
 import type { PiiFinding } from "@/lib/pii";
 import { call } from "./api";
+import { extractDocText, isTextDoc } from "./docs";
 
-export type PreparedImage = {
-  id: string;
-  name: string;
-  mediaType: "image/jpeg";
-  /** base64 (data: 머리말 없음) */
-  data: string;
-  /** 화면 미리보기용 주소 (URL.revokeObjectURL로 푼다) */
-  previewUrl: string;
-};
+/**
+ * 붙인 서류 한 개 (2026-11-24: 사진 30장 + PDF·문서). 이름은 하위 호환으로 PreparedImage.
+ * - 사진: 줄인 JPEG base64. 원본 File을 들고 있다가 보내기 직전 전체 한도에 맞춰 다시 줄인다(fitToBudget)
+ * - PDF: base64 그대로 (모델이 쪽마다 읽는다)
+ * - 문서(hwp·hwpx·docx·pptx·xlsx·txt): 브라우저에서 꺼낸 글만. 서버가 개인정보를 가린 뒤 모델에 보낸다
+ */
+export type PreparedImage =
+  | {
+      kind?: "image";
+      id: string;
+      name: string;
+      mediaType: "image/jpeg";
+      /** base64 (data: 머리말 없음) */
+      data: string;
+      /** 화면 미리보기용 주소 (URL.revokeObjectURL로 푼다) */
+      previewUrl: string;
+      file?: File;
+    }
+  | {
+      kind: "pdf";
+      id: string;
+      name: string;
+      mediaType: "application/pdf";
+      data: string;
+      previewUrl: "";
+    }
+  | { kind: "text"; id: string; name: string; text: string; previewUrl: "" };
 
-export type PrepareError = "not_image" | "decode_failed" | "too_large";
+export type PrepareError = "not_image" | "decode_failed" | "too_large" | "empty" | "unsupported";
 
 const blobOf = (canvas: HTMLCanvasElement, quality: number) =>
   new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
@@ -46,6 +65,8 @@ async function toBase64(blob: Blob): Promise<string> {
  */
 export async function prepareImage(
   file: File,
+  maxChars: number = CASEFILE_LIMITS.maxImageChars,
+  longEdges: readonly number[] = CASEFILE_LIMITS.longEdges,
 ): Promise<{ ok: true; image: PreparedImage } | { ok: false; error: PrepareError }> {
   if (!file.type.startsWith("image/")) return { ok: false, error: "not_image" };
   let bitmap: ImageBitmap;
@@ -55,7 +76,7 @@ export async function prepareImage(
     return { ok: false, error: "decode_failed" };
   }
   try {
-    for (const longEdge of CASEFILE_LIMITS.longEdges) {
+    for (const longEdge of longEdges) {
       const scale = Math.min(1, longEdge / Math.max(bitmap.width, bitmap.height));
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
@@ -66,19 +87,21 @@ export async function prepareImage(
       ctx.fillStyle = "#fff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      for (const quality of [0.85, 0.72, 0.6]) {
+      for (const quality of [0.85, 0.72, 0.6, 0.5]) {
         const blob = await blobOf(canvas, quality);
         if (!blob) continue;
         const data = await toBase64(blob);
-        if (data.length <= CASEFILE_LIMITS.maxImageChars) {
+        if (data.length <= maxChars) {
           return {
             ok: true,
             image: {
+              kind: "image",
               id: crypto.randomUUID(),
               name: file.name,
               mediaType: "image/jpeg",
               data,
               previewUrl: URL.createObjectURL(blob),
+              file,
             },
           };
         }
@@ -88,6 +111,96 @@ export async function prepareImage(
   } finally {
     bitmap.close();
   }
+}
+
+const isPdf = (file: File) => file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+
+/** 사진·PDF·문서를 붙일 수 있는 꼴로 바꾼다 */
+export async function prepareAttachment(
+  file: File,
+): Promise<{ ok: true; image: PreparedImage } | { ok: false; error: PrepareError }> {
+  if (file.type.startsWith("image/")) return prepareImage(file);
+  if (isPdf(file)) {
+    const data = await toBase64(file);
+    if (data.length > CASEFILE_LIMITS.maxPdfChars) return { ok: false, error: "too_large" };
+    return {
+      ok: true,
+      image: {
+        kind: "pdf",
+        id: crypto.randomUUID(),
+        name: file.name,
+        mediaType: "application/pdf",
+        data,
+        previewUrl: "",
+      },
+    };
+  }
+  if (isTextDoc(file)) {
+    const r = await extractDocText(file);
+    if (!r.ok) {
+      return {
+        ok: false,
+        error: r.error === "broken" ? "decode_failed" : r.error,
+      };
+    }
+    return {
+      ok: true,
+      image: {
+        kind: "text",
+        id: crypto.randomUUID(),
+        name: file.name,
+        text: r.text.slice(0, CASEFILE_LIMITS.maxTextChars),
+        previewUrl: "",
+      },
+    };
+  }
+  return { ok: false, error: "unsupported" };
+}
+
+export const isAttachable = (file: File) =>
+  file.type.startsWith("image/") || isPdf(file) || isTextDoc(file);
+
+/**
+ * 보내기 직전에 사진들을 전체 한도(약 4MB) 안으로 다시 줄인다. 사진이 10장을 넘으면 긴 변 1,200px 이하로 맞춘다
+ * (서버의 토큰 추정 MANY_IMAGES_TOKEN_ESTIMATE와 맞춘 값). 원본 File이 없는 사진은 그대로 둔다.
+ */
+export async function fitToBudget(items: PreparedImage[]): Promise<PreparedImage[]> {
+  const pictures = items.filter((i) => (i.kind ?? "image") === "image");
+  if (pictures.length === 0) return items;
+  const pdfChars = items.reduce((n, i) => n + (i.kind === "pdf" ? i.data.length : 0), 0);
+  const budget = CASEFILE_LIMITS.maxTotalChars - pdfChars - 60_000;
+  const picChars = pictures.reduce((n, i) => n + ("data" in i ? i.data.length : 0), 0);
+  const many = pictures.length > 10;
+  if (picChars <= budget && !many) return items;
+  const per = Math.max(
+    40_000,
+    Math.min(CASEFILE_LIMITS.maxImageChars, Math.floor(budget / pictures.length)),
+  );
+  const edges = many ? [1200, 1000, 800] : [1568, 1200, 1000, 800];
+  const out: PreparedImage[] = [];
+  for (const item of items) {
+    if (item.kind === "pdf" || item.kind === "text" || !item.file) {
+      out.push(item);
+      continue;
+    }
+    const r = await prepareImage(item.file, per, edges);
+    if (r.ok && r.image.kind !== "pdf" && r.image.kind !== "text") {
+      URL.revokeObjectURL(r.image.previewUrl);
+      out.push({ ...r.image, id: item.id, previewUrl: item.previewUrl });
+    } else out.push(item);
+  }
+  return out;
+}
+
+/** 판독 요청 본문의 images·texts */
+export async function attachmentBody(items: PreparedImage[]) {
+  const fitted = await fitToBudget(items);
+  return {
+    images: fitted.flatMap((i) =>
+      i.kind === "text" ? [] : [{ mediaType: i.mediaType, data: i.data }],
+    ),
+    texts: fitted.flatMap((i) => (i.kind === "text" ? [{ name: i.name, text: i.text }] : [])),
+  };
 }
 
 export type ReadAi =
@@ -105,11 +218,11 @@ export type ReadResult = {
 };
 
 /** POST /casefiles/read */
-export const readCaseFiles = (images: PreparedImage[], question: string) =>
+export const readCaseFiles = async (images: PreparedImage[], question: string) =>
   call<ReadResult>("/api/v1/casefiles/read", {
     method: "POST",
     body: JSON.stringify({
-      images: images.map((i) => ({ mediaType: i.mediaType, data: i.data })),
+      ...(await attachmentBody(images)),
       question,
       // 화면에서 사진 전송·민감정보 처리 두 항목을 모두 동의한 뒤에만 부른다
       consent: { images: true, sensitive: true },
@@ -119,10 +232,11 @@ export const readCaseFiles = (images: PreparedImage[], question: string) =>
 /** 판독 오류를 사용자 문장으로. 서버 고정 값만 쓰고 입력 내용은 넣지 않는다 */
 export function readErrorText(code: ErrorCode, reason?: unknown): string {
   if (code === "VALIDATION_ERROR") {
-    if (reason === "too_many") return `사진은 ${CASEFILE_LIMITS.maxImages}장까지 올릴 수 있어요.`;
+    if (reason === "too_many")
+      return `사진·문서는 ${CASEFILE_LIMITS.maxImages}개까지 올릴 수 있어요.`;
     if (reason === "too_large")
-      return "사진이 너무 커요. 장수를 줄이거나 더 작은 사진으로 올려 주세요.";
-    return "올릴 수 없는 사진이 있어요. JPG·PNG·WebP 사진으로 다시 올려 주세요.";
+      return "자료가 너무 커요. 개수를 줄이거나 더 작은 파일로 올려 주세요.";
+    return "올릴 수 없는 파일이 있어요. 사진·PDF·한글·워드·파워포인트·엑셀·텍스트 파일로 다시 올려 주세요.";
   }
   if (code === "RATE_LIMITED") {
     return reason === "casefile_hourly"

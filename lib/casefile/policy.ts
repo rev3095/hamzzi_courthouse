@@ -18,6 +18,7 @@ import {
   type CaseFileMediaType,
   type CaseParty,
   type CaseReading,
+  type CaseText,
   type DocType,
   type PartyRole,
 } from "./limits";
@@ -25,7 +26,7 @@ import {
 export * from "./limits";
 
 export type CaseImage = { mediaType: CaseFileMediaType; data: string };
-export type ReadRequest = { images: CaseImage[]; question: string };
+export type ReadRequest = { images: CaseImage[]; texts: CaseText[]; question: string };
 
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
@@ -42,6 +43,7 @@ export function sniffImage(data: string): CaseFileMediaType | null {
   if (at(0) === 0x89 && at(1) === 0x50 && at(2) === 0x4e && at(3) === 0x47) return "image/png";
   const ascii = (from: number, to: number) => String.fromCharCode(...head.slice(from, to));
   if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp";
+  if (ascii(0, 5) === "%PDF-") return "application/pdf";
   return null;
 }
 
@@ -54,8 +56,11 @@ export function parseReadRequest(body: unknown): ReadRequest {
   const bad = (reason: string, field = "images") =>
     new ApiError("VALIDATION_ERROR", { fields: [field], reason });
 
-  if (!Array.isArray(b.images) || b.images.length === 0) throw new ApiError("EMPTY_INPUT");
-  if (b.images.length > CASEFILE_LIMITS.maxImages) {
+  const rawImages = b.images === undefined ? [] : b.images;
+  const rawTexts = b.texts === undefined ? [] : b.texts;
+  if (!Array.isArray(rawImages) || !Array.isArray(rawTexts)) throw bad("type");
+  if (rawImages.length + rawTexts.length === 0) throw new ApiError("EMPTY_INPUT");
+  if (rawImages.length + rawTexts.length > CASEFILE_LIMITS.maxImages) {
     throw new ApiError("VALIDATION_ERROR", {
       fields: ["images"],
       reason: "too_many",
@@ -74,13 +79,17 @@ export function parseReadRequest(body: unknown): ReadRequest {
 
   let total = 0;
   const images: CaseImage[] = [];
-  for (const raw of b.images) {
+  for (const raw of rawImages) {
     const img = (raw ?? {}) as Record<string, unknown>;
     if (typeof img.data !== "string" || typeof img.mediaType !== "string") throw bad("type");
     if (!(CASEFILE_MEDIA_TYPES as readonly string[]).includes(img.mediaType)) {
       throw bad("media_type");
     }
-    if (img.data.length === 0 || img.data.length > CASEFILE_LIMITS.maxImageChars) {
+    const max =
+      img.mediaType === "application/pdf"
+        ? CASEFILE_LIMITS.maxPdfChars
+        : CASEFILE_LIMITS.maxImageChars;
+    if (img.data.length === 0 || img.data.length > max) {
       throw bad("too_large");
     }
     total += img.data.length;
@@ -91,6 +100,24 @@ export function parseReadRequest(body: unknown): ReadRequest {
     images.push({ mediaType: img.mediaType as CaseFileMediaType, data: img.data });
   }
 
+  // 문서에서 꺼낸 글 (한글·워드·파워포인트·엑셀·텍스트). 모델에 보내기 전에 lib/ai/casefile이 개인정보를 가린다
+  let textTotal = 0;
+  const texts: CaseText[] = [];
+  for (const raw of rawTexts) {
+    const t = (raw ?? {}) as Record<string, unknown>;
+    if (typeof t.text !== "string" || (t.name !== undefined && typeof t.name !== "string")) {
+      throw bad("type", "texts");
+    }
+    const text = t.text.replace(/\u0000/g, "").trim();
+    if (!text) continue;
+    textTotal += text.length;
+    if (textTotal > CASEFILE_LIMITS.maxTextChars) throw bad("too_large", "texts");
+    // 파일 이름에는 사람 이름이 들어 있을 수 있어 확장자만 남긴다
+    const ext = (typeof t.name === "string" ? t.name : "").split(".").pop()?.toLowerCase() ?? "";
+    texts.push({ name: /^[a-z0-9]{1,5}$/.test(ext) ? ext : "문서", text });
+  }
+  if (images.length + texts.length === 0) throw new ApiError("EMPTY_INPUT");
+
   // 사진 전송 동의와 민감정보 처리 동의를 따로 받는다 (DEC-052). 검증을 통과한 요청만 동의를 따진다
   const consent = (b.consent ?? {}) as Record<string, unknown>;
   if (typeof b.consent !== "object" || consent.images !== true) {
@@ -98,7 +125,7 @@ export function parseReadRequest(body: unknown): ReadRequest {
   }
   if (consent.sensitive !== true)
     throw new ApiError("CONSENT_REQUIRED", { kind: "sensitive_info" });
-  return { images, question };
+  return { images, texts, question };
 }
 
 // --- 모델 출력 -------------------------------------------------------------------------

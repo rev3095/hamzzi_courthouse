@@ -16,7 +16,7 @@ import { useCaseFileAsk } from "./useCaseFileAsk";
 const STEPS = [
   {
     title: "서류 사진 붙이기",
-    body: `내용증명·소장·고소장·계약서·문자 캡처를 ${CASEFILE_LIMITS.maxImages}장까지 붙여요.`,
+    body: `내용증명·소장·고소장·계약서·문자 캡처 사진이나 PDF·한글·워드·파워포인트·엑셀·텍스트 문서를 ${CASEFILE_LIMITS.maxImages}개까지 붙여요.`,
   },
   {
     title: "읽은 내용 확인",

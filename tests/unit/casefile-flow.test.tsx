@@ -62,7 +62,7 @@ afterEach(cleanup);
 describe("F-015 사진 붙이기 UI", () => {
   test("attach가 없으면 붙이기 버튼이 없다 (판례 검색창 등)", () => {
     render(<QuestionBox value="" onChange={() => {}} onSubmit={() => {}} busy={false} />);
-    expect(screen.queryByRole("button", { name: "서류 사진 붙이기" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "서류 사진·문서 붙이기" })).toBeNull();
   });
 
   test("붙인 사진을 미리보기로 보이고 뺄 수 있다. 저장하지 않는다는 안내가 있다", () => {
@@ -70,10 +70,10 @@ describe("F-015 사진 붙이기 UI", () => {
     render(
       <QuestionBox value="" onChange={() => {}} onSubmit={() => {}} busy={false} attach={attach} />,
     );
-    expect(screen.getByRole("button", { name: "서류 사진 붙이기" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "서류 사진·문서 붙이기" })).toBeTruthy();
     expect(screen.getByAltText("서류 사진 1").getAttribute("src")).toBe("blob:preview-1");
     expect(screen.getByTestId("attach-tray").textContent).toContain("저장하지 않아요");
-    fireEvent.click(screen.getByRole("button", { name: "서류 사진 1 빼기" }));
+    fireEvent.click(screen.getByRole("button", { name: "서류 1 빼기" }));
     expect(attach.remove).toHaveBeenCalledWith("i-1");
   });
 

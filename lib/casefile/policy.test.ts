@@ -62,6 +62,7 @@ describe("F-015 AC1 요청 검증", () => {
     ).toEqual({ kind: "casefile_images" });
     expect(parseReadRequest({ images: [jpeg], consent: BOTH, question: " 어떻게 하죠 " })).toEqual({
       images: [jpeg],
+      texts: [],
       question: "어떻게 하죠",
     });
   });
