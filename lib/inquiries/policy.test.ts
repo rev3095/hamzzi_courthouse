@@ -100,10 +100,10 @@ describe("소유권", () => {
 });
 
 describe("F-001 AC3 비로그인 하루 횟수 (DEC-010)", () => {
-  test("F-001 AC3 한도 미만은 통과, 한도부터 LOGIN_REQUIRED (DEC-031 임시 5회)", () => {
-    expect(ANON_QUESTION_LIMIT).toBe(5);
-    expect(() => assertAnonQuota(4)).not.toThrow();
-    const err = caught(() => assertAnonQuota(5));
+  test("F-001 AC3 한도 미만은 통과, 한도부터 LOGIN_REQUIRED (DEC-055 10회)", () => {
+    expect(ANON_QUESTION_LIMIT).toBe(10);
+    expect(() => assertAnonQuota(9)).not.toThrow();
+    const err = caught(() => assertAnonQuota(10));
     expect(err.code).toBe("LOGIN_REQUIRED");
     expect(err.details).toEqual({ loginProviders: ["google"] });
   });
@@ -120,11 +120,11 @@ describe("F-001 AC3 비로그인 하루 횟수 (DEC-010)", () => {
   test("F-001 AC3 quota 보기", () => {
     expect(quotaView(null, 0)).toMatchObject({
       anonymous: true,
-      remaining: 5,
+      remaining: 10,
       loginRequired: false,
     });
-    expect(quotaView({ kind: "anon", anonSessionId: "a" }, 7)).toMatchObject({
-      used: 5,
+    expect(quotaView({ kind: "anon", anonSessionId: "a" }, 12)).toMatchObject({
+      used: 10,
       remaining: 0,
       loginRequired: true,
     });

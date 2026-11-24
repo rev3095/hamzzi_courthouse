@@ -55,9 +55,9 @@ export function parseCreateRequest(body: unknown): CreateRequest {
 // --- 비로그인 질문 횟수 (F-001 AC3, DEC-005, DEC-010, DEC-024) -----------------------------
 /**
  * 비로그인 하루 질문 횟수 (이어 묻기 포함). 1회 = analyze 성공 1건. 한국 시간 0시에 다시 채운다 (DEC-024).
- * 5회 — 공모전(2026-11-20) 대비 임시값 (DEC-031, 이전 3회). 화면 문구도 이 값을 쓴다. DB 함수는 이 값을 인자로 받는다
+ * 10회 — DEC-055 (2026-11-25, 이전 5회). 화면 문구도 이 값을 쓴다. DB 함수는 이 값을 인자로 받는다
  */
-export const ANON_QUESTION_LIMIT = 5;
+export const ANON_QUESTION_LIMIT = 10;
 
 /** 한국 시간(UTC+9, 서머타임 없음) 날짜 "YYYY-MM-DD" — DB의 (now() at time zone 'Asia/Seoul')::date와 같다 */
 export function kstDay(now: number = Date.now()): string {
@@ -82,9 +82,9 @@ export const LOGIN_PROVIDERS = ["google"];
 // --- 로그인 사용자 질문 횟수 (DEC-035) ---------------------------------------------------------
 /**
  * Google 로그인 사용자 하루 질문 횟수 (이어 묻기 포함, 예시 질문 제외). 한국 시간 0시에 다시 센다.
- * 10회 — 2026-11-18 사용자 결정 (DEC-035). 화면 문구도 이 값을 쓴다
+ * 30회 — DEC-055 (2026-11-25, 이전 10회·DEC-035). 화면 문구도 이 값을 쓴다
  */
-export const USER_QUESTION_LIMIT = 10;
+export const USER_QUESTION_LIMIT = 30;
 
 /** 오늘(한국 시간) 0시 시각 ISO 문자열 — 로그인 사용자의 오늘 분석 수를 셀 때 쓴다 */
 export function kstDayStartIso(now: number = Date.now()): string {

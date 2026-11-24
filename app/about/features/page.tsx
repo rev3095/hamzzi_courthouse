@@ -49,14 +49,16 @@ export default function FeaturesPage() {
           </li>
         ))}
       </ul>
-      <section>
-        <h2 className="font-display text-ink text-lg font-bold">준비 중</h2>
-        <ul className="text-muted mt-2 flex flex-col gap-1.5">
-          {FEATURES_PENDING.map((p) => (
-            <li key={p}>{p}</li>
-          ))}
-        </ul>
-      </section>
+      {FEATURES_PENDING.length > 0 && (
+        <section>
+          <h2 className="font-display text-ink text-lg font-bold">준비 중</h2>
+          <ul className="text-muted mt-2 flex flex-col gap-1.5">
+            {FEATURES_PENDING.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </section>
+      )}
     </AboutShell>
   );
 }

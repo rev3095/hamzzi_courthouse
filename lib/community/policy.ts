@@ -42,33 +42,19 @@ export const SENSITIVE_ASK =
 export const DEFAULT_NICKNAME = "익명 햄찌";
 
 /**
- * 씨앗 (DEC-047): 로그인 사용자의 커뮤니티 활동에 쌓이는 포인트. 씨앗 하나가 할인 1원의 가치다.
- * 글 100개 = 1,000씨앗 = 1,000원, 댓글 200개 = 1,000씨앗 = 1,000원.
- * 사용(구독·유료 결제 할인)은 과금 게이트(F-013) 승인 전까지 꺼져 있다(절대 규칙 5) — 지금은 쌓이기만 한다.
- * 현금으로 바꾸거나 남에게 줄 수 없다.
+ * 씨앗 (DEC-047): 로그인 사용자의 커뮤니티 활동에 쌓이는 활동 기록.
+ * 전면 무료(DEC-055)라 돈·할인·현금으로 바꾸지 않고 남에게 줄 수 없다.
  */
 export const SEEDS = {
   post: 10,
   comment: 5,
-  wonPerSeed: 1,
   /** 하루에 씨앗을 받는 글·댓글 수 (그 뒤에도 글은 쓸 수 있고 씨앗만 쌓이지 않는다) */
   postsPerDay: 5,
   commentsPerDay: 10,
   /** 이보다 짧은 글·댓글에는 씨앗이 쌓이지 않는다 */
   postMinChars: 30,
   commentMinChars: 10,
-  /** 할인에 쓸 수 있는 최소 단위 (사용이 열렸을 때) */
-  redeemUnit: 1000,
-  redeemEnabled: false,
 } as const;
-
-export const seedsToWon = (seeds: number) => Math.max(0, Math.floor(seeds)) * SEEDS.wonPerSeed;
-
-/** 지금 할인에 쓸 수 있는 금액(원). 사용이 꺼져 있으면 0 */
-export function redeemableWon(balance: number): number {
-  if (!SEEDS.redeemEnabled) return 0;
-  return Math.floor(seedsToWon(balance) / SEEDS.redeemUnit) * SEEDS.redeemUnit;
-}
 
 /** 이 글·댓글이 씨앗을 받을 길이인지 (공백을 뺀 글자 수) */
 export function earnsSeeds(kind: "post" | "comment", body: string): boolean {
@@ -242,10 +228,6 @@ export function commentView(row: CommentRow, viewer: Viewer): CommentView {
 
 export type SeedSummary = {
   balance: number;
-  /** 씨앗을 원으로 바꾼 값 (할인 가치) */
-  won: number;
-  redeemableWon: number;
-  redeemEnabled: boolean;
   today: { posts: number; postsLimit: number; comments: number; commentsLimit: number };
 };
 
@@ -253,9 +235,6 @@ export function seedSummary(balance: number, posts: number, comments: number): S
   const b = Math.max(0, Math.floor(balance));
   return {
     balance: b,
-    won: seedsToWon(b),
-    redeemableWon: redeemableWon(b),
-    redeemEnabled: SEEDS.redeemEnabled,
     today: {
       posts,
       postsLimit: SEEDS.postsPerDay,

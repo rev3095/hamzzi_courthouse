@@ -46,7 +46,7 @@ test("F-014 절차 타임라인: 호버·포커스로 팝업, Esc로 닫고 '이
   await expect(page.locator("article")).not.toContainText(/확률|승소 가능성|개월|예상 비용/);
 });
 
-test("DEC-022 '내용증명 바로 가기'는 법률 검토 전 안내와 공식 양식만 보여 준다", async ({
+test("DEC-055 '내용증명 바로 가기'는 게이트 안내 없이 작성 화면과 공식 양식을 보여 준다", async ({
   page,
 }) => {
   await mockApi(page, { analyze: { result: replayOf(lease.question) } });
@@ -54,19 +54,18 @@ test("DEC-022 '내용증명 바로 가기'는 법률 검토 전 안내와 공식
   await page.getByRole("link", { name: /내용증명 바로 가기/ }).click();
   await page.waitForURL("**/documents/demand-letter**");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("내용증명 작성");
-  await expect(page.getByText("법률 검토 후 열릴 기능이에요")).toBeVisible();
+  await expect(page.getByText("법률 검토 후 열릴 기능이에요")).toHaveCount(0);
   // 공식 창구 링크가 여러 개라(서식·안내) 첫 번째를 본다
   await expect(page.getByRole("link", { name: /인터넷우체국/ }).first()).toHaveAttribute(
     "href",
     "https://www.epost.go.kr",
   );
-  await expect(page.getByRole("button", { name: "양식 채우기" })).toHaveCount(0);
 });
 
-test("DEC-022 게이트 승인 전 문서 API는 403 FEATURE_GATED", async ({ request }) => {
+test("DEC-055 문서 API는 게이트 없이 열려 있다 (빈 입력은 형식 오류)", async ({ request }) => {
   const res = await request.post("/api/v1/documents/demand-letter", { data: {} });
-  expect(res.status()).toBe(403);
-  expect((await res.json()).error.code).toBe("FEATURE_GATED");
+  expect(res.status()).not.toBe(403);
+  expect((await res.json()).error?.code).not.toBe("FEATURE_GATED");
 });
 
 test("모바일 375px에서 타임라인이 화면 밖으로 넘치지 않고 탭으로 팝업이 열린다", async ({

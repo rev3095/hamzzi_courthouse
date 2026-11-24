@@ -132,16 +132,15 @@ export function MeScreen({ ctx }: { ctx: Ctx }) {
         </div>
         {seeds ? (
           <p className="muted">
-            할인 가치 {seeds.won.toLocaleString("ko-KR")}원 · 오늘 글 {seeds.today.posts}/
-            {seeds.today.postsLimit} · 댓글 {seeds.today.comments}/{seeds.today.commentsLimit}
+            오늘 글 {seeds.today.posts}/{seeds.today.postsLimit} · 댓글 {seeds.today.comments}/
+            {seeds.today.commentsLimit}
           </p>
         ) : (
           <p className="muted">로그인하고 광장에 글·댓글을 쓰면 쌓여요.</p>
         )}
         <p className="muted small">
-          글 하나에 {SEEDS.post}개, 댓글 하나에 {SEEDS.comment}개. 씨앗 하나는 할인{" "}
-          {SEEDS.wonPerSeed}원의 가치예요. 유료 기능이 열리면 할인에 쓸 수 있고, 지금은 쌓이기만
-          해요.
+          글 하나에 {SEEDS.post}개, 댓글 하나에 {SEEDS.comment}개. 씨앗은 활동 기록이에요.
+          햄찌법원은 전면 무료라 씨앗을 돈이나 할인으로 바꾸지 않아요.
         </p>
         <button className="ghost" onClick={() => ctx.go({ name: "community" })}>
           광장으로 가기

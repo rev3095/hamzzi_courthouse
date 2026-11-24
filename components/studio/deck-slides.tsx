@@ -111,8 +111,8 @@ function GapSlide({ v }: { v: Vars }) {
   const steps: { price: string; lines: string[]; h: number; on?: boolean }[] = [
     { price: "4,850원", lines: ["내용증명 직접 발송"], h: 26 },
     {
-      price: "무료~1만 원 이내",
-      lines: ["햄찌법원", "기본 기능 무료", "Pro 월 9,900원", "첫 3개월 2,900원"],
+      price: "무료",
+      lines: ["햄찌법원", "모든 기능 무료", "상담·문서 작성", "수익 0원"],
       h: 50,
       on: true,
     },
@@ -192,13 +192,7 @@ function SolutionSlide({ v }: { v: Vars }) {
 function CompareSlide({ v }: { v: Vars }) {
   const rows: [string, string, string, string, string][] = [
     ["대상", "변호사·법률 전문가 (자격 인증)", "누구나", "일반인", "변호사 없이 준비하는 일반인"],
-    [
-      "가격",
-      "월 23,760~83,160원 (할인가)",
-      "무료~월 구독",
-      "20만~50만 원",
-      "기본 무료 · Pro 월 9,900원 (첫 3개월 2,900원)",
-    ],
+    ["가격", "월 23,760~83,160원 (할인가)", "무료~월 구독", "20만~50만 원", "전면 무료 (수익 0원)"],
     [
       "근거",
       "판례 542만 건 연동",
@@ -296,38 +290,38 @@ function CostSlide({ v }: { v: Vars }) {
   );
 }
 
-/** 7 · 법과 수익 */
+/** 7 · 운영 원칙 (DEC-055 전면 무료) */
 function LawSlide({ v }: { v: Vars }) {
   const revenue: [string, string, string][] = [
-    ["수익 1", "서식 자동 완성", "문답으로 빈칸을 채우는 표준 서식"],
-    ["수익 2", "편의 기능 구독", "기록 보관, 기한 알림, 비용 계산"],
-    ["수익 3", "기관 납품", "지자체·청년센터·법률구조 기관"],
+    ["무료 1", "법률 상담", "법령·판례를 근거로 바로 답해요"],
+    ["무료 2", "문서 대리 작성", "소장·내용증명을 햄찌법원이 대신 써요"],
+    ["무료 3", "협업 변호사 자문", "이고업 변호사 자문으로 운영해요"],
   ];
   return (
     <Slide
       v={v}
       n={7}
-      eyebrow="법과 수익"
-      title="정보는 무료로, 판단은 전문가에게 맡깁니다"
-      source="근거: 변호사법 제109조·제34조, 표준 서식 자동 작성 적법 판결 보도(2026.3). 유료 기능은 변호사 검토 후 도입합니다."
+      eyebrow="운영 원칙"
+      title="모든 기능을 무료로, 수익은 0원입니다"
+      source="협업 변호사: 이고업 변호사(한일법무법인 구성원 변호사, 드림위드파트너스 대표). 유료화 계획은 없습니다."
     >
       <div className={k("grid12")}>
         <div className={k("card", "list")} style={{ gridColumn: "span 6" }}>
           <div className={k("cardh", "accent")}>DO</div>
           <ul>
-            <li>법령·판례 검색과 쉬운 요약</li>
+            <li>법령·판례를 근거로 한 무료 상담</li>
+            <li>소장 같은 문서의 무료 대리 작성</li>
             <li>절차와 필요한 서류 안내</li>
-            <li>공공 서식과 상담 기관으로 연결</li>
-            <li>AI 생성임과 법률 자문이 아님을 표시</li>
+            <li>AI가 만든 답변임을 표시</li>
           </ul>
         </div>
         <div className={k("card", "list")} style={{ gridColumn: "span 6" }}>
           <div className={k("cardh", "no")}>DON&apos;T</div>
           <ul>
-            <li>승패 판단과 결과 단정</li>
-            <li>돈을 받는 개별 사건 상담</li>
-            <li>소장 같은 문서의 대리 작성 판매</li>
-            <li>변호사 알선 수수료</li>
+            <li>결과 단정과 승률 숫자</li>
+            <li>어떤 형태든 돈을 받는 일</li>
+            <li>변호사 자동 배정·알선 수수료</li>
+            <li>문서 자동 제출</li>
           </ul>
         </div>
         {revenue.map(([tag, head, sub]) => (
@@ -414,7 +408,7 @@ function PromiseSlide({ v, mood }: { v: Vars; mood: MascotMood }) {
       </ol>
       <div className={k("url")}>hamzzi-courthouse.vercel.app</div>
       <div className={k("phone")}>
-        <span className={k("chip")}>AI 생성 · 법률 자문 아님</span>
+        <span className={k("chip")}>AI 생성 · 무료 법률 상담</span>
         <HamzziJudge size={120} mood={mood} interactive={false} />
         <b>햄찌 판사의 정리</b>
         <span>AI 캐릭터 · 근거 법령·판례 인용</span>

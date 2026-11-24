@@ -5,7 +5,7 @@
 // - 시각자료(사건 구조도 등)는 이 구조와 검증을 통과한 문단으로 코드가 그린다. 그림을 위해 모델을 더 부르지 않는다.
 import { z } from "zod";
 import { scanInput } from "@/lib/pii";
-import { citationsIn, isAssertive, safeQuery } from "./policy";
+import { MODEL_SOURCE, citationsIn, isAssertive, safeQuery, sourceEnum } from "./policy";
 
 export const DEEP_LIMITS = {
   parties: 4,
@@ -211,7 +211,7 @@ export const DeepAnswerZ = z.object({
 });
 export type DeepDraftPoint = z.infer<typeof DeepAnswerZ>["points"][number];
 
-/** 출처는 이번 요청의 근거 키 중 하나, 쟁점은 구조에서 뽑은 번호 중 하나만 고를 수 있다 */
+/** 출처는 이번 요청의 근거 키 중 하나 또는 MODEL_SOURCE(DEC-055), 쟁점은 구조에서 뽑은 번호 중 하나만 고를 수 있다 */
 export function deepAnswerSchema(keys: string[], issueCount: number) {
   return {
     type: "object",
@@ -230,9 +230,16 @@ export function deepAnswerSchema(keys: string[], issueCount: number) {
               enum: Array.from({ length: Math.max(1, issueCount) }, (_, i) => i + 1),
               description: "이 문단이 답하는 쟁점 번호",
             },
-            text: { type: "string", description: "답변 문단. 근거 자료로 뒷받침되는 내용만" },
-            source: { type: "string", enum: keys, description: "이 문단의 근거 키" },
-            quote: { type: "string", description: "근거 원문에서 글자 그대로 옮긴 20~60자 구절" },
+            text: { type: "string", description: "답변 문단" },
+            source: {
+              type: "string",
+              enum: sourceEnum(keys),
+              description: `이 문단의 근거 키. 근거 목록에 없는 내용이면 "${MODEL_SOURCE}"`,
+            },
+            quote: {
+              type: "string",
+              description: `근거 원문에서 글자 그대로 옮긴 20~60자 구절. source가 "${MODEL_SOURCE}"면 빈 문자열`,
+            },
           },
         },
       },

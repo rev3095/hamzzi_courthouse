@@ -86,7 +86,8 @@ export function AnswerView({ result, online }: { result: DemoAnalysisResult; onl
   const searchOnly = result.mode === "search_only";
   // AI 답변 없이 검색 결과만 있을 때는 찾은 법령부터 보여 준다
   const [tab, setTab] = useState<Tab>(searchOnly ? "laws" : "answer");
-  const points = result.answer.points.filter((p) => p.check === "verified");
+  // 검증된 문단 + 법제처 근거 없이 모델이 쓴 문단(DEC-055, 웹과 같음). 원문과 다른 구절(quote_mismatch)은 앱에서 빼 둔다
+  const points = result.answer.points.filter((p) => p.check === "verified" || p.check === "model");
   const usedArticles = result.articles.filter((a) => a.used);
   const tabs: [Tab, string][] = [
     ["answer", "답변"],

@@ -47,7 +47,7 @@ describe("공통 응답 형식 (API.md 2절)", () => {
   });
 
   test("AI 고지 문구가 정해져 있다 (8.3)", () => {
-    expect(AI_NOTICE).toBe("AI 생성 · 법률 자문 아님");
+    expect(AI_NOTICE).toBe("AI 생성 · 무료 법률 상담");
   });
 });
 

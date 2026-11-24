@@ -2,6 +2,8 @@
 
 응답 속 사건번호·조문을 DB와 대조. 불일치는 제거하거나 unverified.
 
+**DEC-055**: 출처가 `model`(`MODEL_SOURCE`)인 문단 — 법제처 근거가 없어 모델이 아는 판례·조문으로 쓴 문단 — 은 아래 세 단계를 거치지 않고 `check: "model"`로 남긴다. `result_citations` 행을 만들지 않고 `recheck.items`·제거 건수에도 넣지 않는다. 화면은 출처 상자 없이 문단만 보인다.
+
 ## 데모 검증 (F-005 AC2, DEC-009)
 
 `verifyDraft(draft, evidence, { onStep, screened })` — lib/ai `runDemoAnalysis`의 초안과 그 요청의 `EvidenceSet`을 받아 최종 `DemoAnalysisResult`(API.md 4.1), DB 저장용 `CitationRow[]`(`result_citations`), 실패율 `stats`(`analysis_results.citations_total/removed`)를 만든다. `screened`에는 P3 `dropped.length`를 넘겨 실패율에 포함한다.

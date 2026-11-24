@@ -15,15 +15,15 @@ const get = () => GET(new Request("http://localhost/api/v1/me/quota"), undefined
 beforeEach(() => vi.clearAllMocks());
 
 describe("GET /me/quota", () => {
-  test("F-001 AC3 첫 방문자는 세션을 만들지 않고 하루 한도(5회, DEC-031) 남음", async () => {
+  test("F-001 AC3 첫 방문자는 세션을 만들지 않고 하루 한도(10회, DEC-055) 남음", async () => {
     store.resolveOwner.mockResolvedValue(null);
     const res = await get();
     expect(res.status).toBe(200);
     expect((await res.json()).data).toEqual({
       anonymous: true,
       used: 0,
-      limit: 5,
-      remaining: 5,
+      limit: 10,
+      remaining: 10,
       loginRequired: false,
       admin: false,
       ai: false,
@@ -33,18 +33,18 @@ describe("GET /me/quota", () => {
 
   test("F-001 AC3 한도를 다 쓴 비로그인은 loginRequired", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "anon", anonSessionId: "a1" });
-    store.getAnonQuestionsUsed.mockResolvedValue(5);
+    store.getAnonQuestionsUsed.mockResolvedValue(10);
     expect((await (await get()).json()).data).toMatchObject({ remaining: 0, loginRequired: true });
   });
 
-  test("DEC-035 Google 로그인 사용자는 하루 10회 기준 남은 횟수", async () => {
+  test("DEC-035 Google 로그인 사용자는 하루 30회(DEC-055) 기준 남은 횟수", async () => {
     store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u1" });
     store.getUserQuestionsUsed.mockResolvedValue(4);
     expect((await (await get()).json()).data).toEqual({
       anonymous: false,
       used: 4,
-      limit: 10,
-      remaining: 6,
+      limit: 30,
+      remaining: 26,
       loginRequired: false,
       admin: false,
       ai: false,

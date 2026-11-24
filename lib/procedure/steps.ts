@@ -1,5 +1,5 @@
 // 섹션별 절차 단계 상수 (F-014 데모 축소판, DEC-021). 홈 예시 질문 섹션(임대차·계약금·노동·사기·교통사고·이웃 분쟁)마다
-// 절차가 다르므로 타임라인(track)을 따로 둔다. 법률 검토 전이라 화면에 "참고용"을 함께 표시한다.
+// 절차가 다르므로 타임라인(track)을 따로 둔다. 화면에 PROCEDURE_NOTICE("일반적인 절차 안내")를 함께 표시한다.
 // 기간·비용·인원 숫자는 넣지 않는다 (절대 규칙 3) — 공식 기준 출처를 정하는 일은 OQ-DM-09.
 // 결과(승패)를 판정하지 않고 단계별 난이도 라벨만 단다 (DEC-002). 숫자·단정 표현은 policy.test.ts가 검사한다.
 
@@ -722,4 +722,4 @@ export const TRACKS: Record<TrackKey, Track> = {
 /** 모든 타임라인의 모든 단계 (검사용) */
 export const ALL_STEPS: ProcedureStep[] = Object.values(TRACKS).flatMap((t) => t.steps);
 
-export const PROCEDURE_NOTICE = "참고용 · 법률 검토 전";
+export const PROCEDURE_NOTICE = "일반적인 절차 안내";

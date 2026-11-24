@@ -34,6 +34,7 @@ import {
   describeArticle,
   describeCase,
   screenPoints,
+  sourceEnum,
   type DemoDraft,
   type DraftPoint,
   type DropReason,
@@ -42,7 +43,7 @@ import {
 } from "./policy";
 import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-19-sections3";
+export const LITE_PROMPT_VERSION = "lite-2026-11-25-free-consult";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -82,6 +83,9 @@ export function liteEvidenceKeys(
   const cases = items.filter((i) => i.kind === "case").slice(0, max.cases);
   return [...statutes, ...cases].map((i) => i.key);
 }
+
+/** 법제처 근거가 하나도 없을 때 근거 목록 자리에 넣는 문구 (DEC-055) */
+export const NO_EVIDENCE = "(법제처에서 찾은 근거 없음 — 아는 법령·판례로 답하고 source는 model)";
 
 export function liteDigest(evidence: EvidenceSet, keys: string[]): string {
   return keys
@@ -176,7 +180,8 @@ export async function runLiteAnalysis(
   let spent = 0;
 
   let keys = liteEvidenceKeys(evidence, deps.deep ? DEEP_EVIDENCE : undefined);
-  if (keys.length > 0) {
+  // DEC-055: 법제처 근거가 없어도 모델이 아는 판례·조문으로 답한다 (출처 MODEL_SOURCE)
+  {
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
     // 예산을 넘으면 마지막 근거를 하나 빼고 다시 잰다 (토큰 세기는 무과금, 생성 호출은 하지 않음)
     for (;;) {
@@ -200,8 +205,8 @@ export async function runLiteAnalysis(
                 role: "user",
                 content: [
                   userMessage(input.maskedText, context),
-                  `<근거_목록>\n${liteDigest(evidence, keys)}\n</근거_목록>`,
-                  `출처로 쓸 수 있는 근거 키: ${keys.join(", ")}`,
+                  `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
+                  `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
                 ].join("\n\n"),
               },
             ],

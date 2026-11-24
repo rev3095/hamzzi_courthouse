@@ -55,7 +55,7 @@ describe("F-014 결과 요약형 레이아웃", () => {
     expect(within(list).getAllByRole("button", { expanded: false }).length).toBeGreaterThanOrEqual(
       6,
     );
-    expect(screen.getByText("참고용 · 법률 검토 전")).toBeDefined();
+    expect(screen.getByText("일반적인 절차 안내")).toBeDefined();
     expect(within(list).getAllByText("전문가 권장").length).toBeGreaterThan(0);
   });
 
@@ -65,13 +65,13 @@ describe("F-014 결과 요약형 레이아웃", () => {
     expect(link.getAttribute("href")).toBe("/documents/demand-letter");
   });
 
-  test("DEC-023 질문 번호를 ?from=으로 넘기고, 소송 단계가 있으면 소장 작성 안내도 보인다", () => {
+  test("DEC-023 질문 번호를 ?from=으로 넘기고, 소송 단계가 있으면 소장 작성도 보인다", () => {
     const id = "11111111-2222-3333-4444-555555555555";
     renderLease({ inquiryId: id });
     expect(screen.getByRole("link", { name: /내용증명 바로 가기/ }).getAttribute("href")).toBe(
       `/documents/demand-letter?from=${id}`,
     );
-    expect(screen.getByRole("link", { name: /소장 작성 안내/ }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: /소장 작성/ }).getAttribute("href")).toBe(
       `/documents/complaint?from=${id}`,
     );
   });

@@ -1,5 +1,5 @@
 "use client";
-// 하루 질문 한도 안내 (S-06 자리). 비로그인 하루 한도(ANON_QUESTION_LIMIT, DEC-031 임시 5회)를 다 쓰면 서버가 LOGIN_REQUIRED로 막는다 (DEC-005, DEC-010).
+// 하루 질문 한도 안내 (S-06 자리). 비로그인 하루 한도(ANON_QUESTION_LIMIT, DEC-055 10회)를 다 쓰면 서버가 LOGIN_REQUIRED로 막는다 (DEC-005, DEC-010).
 // Google 로그인(DEC-035)이 켜져 있으면 비로그인에게 Google 로그인 버튼을 보여 준다. 로그인 사용자는 하루 USER_QUESTION_LIMIT회.
 import { useState } from "react";
 import { isSignedIn } from "@/lib/client/api";

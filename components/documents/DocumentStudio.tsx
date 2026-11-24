@@ -1,5 +1,5 @@
 "use client";
-// 단계별 서식 작성 (DEC-022·023·025). legal_documents 게이트가 열렸거나 관리자 미리보기(DEC-024)일 때만 서버가 그린다.
+// 단계별 서식 작성 (DEC-022·023·025). DEC-055로 게이트 없이 모두에게 열림 — 무료 AI 대리 작성 포함.
 // 흐름: 설문 팝업 → 입력대로 곧바로 완성 → "이대로 내보낼까요?" 예 / 아니요(직접 수정할게요)
 //       → 아니요면 웹 안 편집기 → 저장(확정) → 다시 "이대로 내보낼까요?" 예 / 아니요(계속 수정할게요).
 // 1회용: 입력값·문서는 이 화면의 메모리에만 있다 — 쿠키·localStorage·서버 어디에도 저장하지 않고, 새로고침하면 사라진다.
@@ -58,9 +58,9 @@ export function DocumentStudio({
   kind: DocumentKind;
   /** 결과 화면에서 온 질문 번호 (초안 도우미) */
   inquiryId: string | null;
-  /** 초안 도우미 API가 열려 있는지 (게이트 승인 시에만) */
+  /** 초안 도우미(무료 AI 대리 작성)를 쓸지. DEC-055 뒤로 늘 true */
   draftEnabled: boolean;
-  /** 관리자 미리보기 (게이트는 꺼져 있음) */
+  /** 관리자 미리보기 띠 (DEC-055 뒤로 쓰지 않음, 늘 false) */
   preview: boolean;
 }) {
   const spec = DOCUMENT_SPECS[kind];
@@ -134,13 +134,11 @@ export function DocumentStudio({
       setDraft({
         kind: "error",
         message:
-          code === "FEATURE_GATED"
-            ? "법률 검토 후 열릴 기능이에요."
-            : code === "RATE_LIMITED"
-              ? "요청이 많아요. 잠시 후 다시 시도해 주세요."
-              : code === "FORBIDDEN" || code === "NOT_FOUND" || code === "INVALID_STATE"
-                ? "이 질문으로는 초안을 만들 수 없어요. 칸을 직접 채워 주세요."
-                : "초안을 만들지 못했어요. 칸을 직접 채워 주세요.",
+          code === "RATE_LIMITED"
+            ? "요청이 많아요. 잠시 후 다시 시도해 주세요."
+            : code === "FORBIDDEN" || code === "NOT_FOUND" || code === "INVALID_STATE"
+              ? "이 질문으로는 초안을 만들 수 없어요. 칸을 직접 채워 주세요."
+              : "초안을 만들지 못했어요. 칸을 직접 채워 주세요.",
       });
       return;
     }
@@ -189,7 +187,7 @@ export function DocumentStudio({
     <section aria-label={`${spec.title} 작성`} className="mt-6">
       {preview && (
         <p className="rounded-card border-gold bg-honey text-label mb-3 border border-dashed px-4 py-2 text-[13px] font-semibold">
-          관리자 미리보기 · 법률 검토 전이라 공개 화면에는 보이지 않아요
+          관리자 미리보기
         </p>
       )}
       <p className="rounded-card border-line bg-cream text-ink border px-4 py-3 text-sm leading-relaxed">

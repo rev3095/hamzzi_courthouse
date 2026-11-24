@@ -3,7 +3,7 @@
 // ①·③ 실패(실존 미확인 포함)는 문단을 빼고, ②만 실패하면 "확인 필요"(quote_mismatch)로 표시한다.
 import type { DeepMap } from "@/lib/ai/deep-policy";
 import type { ProcedureHint } from "@/lib/procedure/labels";
-import { citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
+import { MODEL_SOURCE, citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
 import type { EvidenceSet } from "@/lib/search/evidence";
 import type { CitationCheck } from "@/lib/search/types";
 import { articlesIn, caseNumbersIn } from "./patterns";
@@ -100,7 +100,8 @@ export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: stri
 
 // ── 결과 조립 ────────────────────────────────────────────────
 
-export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" };
+/** verified·quote_mismatch = 법제처 근거 문단, model = 법제처 근거 없이 모델이 쓴 문단 (DEC-055, 재조회 안 함) */
+export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" | "model" };
 
 /** API.md 4.1 DemoAnalysisResult */
 export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
@@ -163,6 +164,10 @@ export function assembleResult(input: {
   const confirmedCitations = new Set<string>();
 
   for (const p of draft.answer.points) {
+    if (p.source === MODEL_SOURCE) {
+      kept.push({ ...p, quote: "", check: "model" });
+      continue;
+    }
     const sourceClaim = claimForKey(p.source, evidence);
     const kind = sourceClaim?.kind ?? (p.source.startsWith("case:") ? "case" : "statute");
     const row = (status: CitationRow["status"], quote: string | null): CitationRow => ({

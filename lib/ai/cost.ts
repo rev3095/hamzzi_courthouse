@@ -33,7 +33,7 @@ export const UNDERSTAND_TOKENS = { max: 450, min: 150 } as const;
 
 /** 문서 초안 도우미(DEC-023) 1건 상한 — 라이트와 같은 $0.0015. 사연 정리만 하므로 출력이 짧다 */
 export const DOC_DRAFT_COST_CAP_USD = 0.0015;
-export const DOC_DRAFT_TOKENS = { max: 900, min: 300 } as const;
+export const DOC_DRAFT_TOKENS = { max: 1_500, min: 400 } as const;
 
 /**
  * 서류 판독(F-015, DEC-052) 1건 상한 — Haiku 비전 1회. **임시값, 사용자 확인 전**.

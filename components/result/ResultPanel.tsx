@@ -4,7 +4,7 @@
 // → 절차 타임라인(또는 유형 안내) → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·법령·판례·검증 탭·더 찾아본 과정)
 // → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·심층 질문하기) → 의견 → 법제처 출처.
 // 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
-// 문서 작성은 legal_documents 게이트 뒤라 '바로 가기'는 안내 화면으로 간다 (절대 규칙 5, DEC-022).
+// 문서 작성은 DEC-055로 모두에게 열려 있어 '바로 가기'는 작성 화면(무료 AI 대리 작성)으로 간다.
 import { rememberSearch } from "../search/parts";
 import Link from "next/link";
 import { useState } from "react";
@@ -309,7 +309,7 @@ function Details({ result }: { result: DemoAnalysisResult }) {
   );
 }
 
-/** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 게이트 안내 화면, 그 밖에는 그 단계의 공식 창구로 간다 */
+/** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 작성 화면, 그 밖에는 그 단계의 공식 창구로 간다 */
 function NextSteps({
   plan,
   onDeepAsk,
@@ -338,7 +338,7 @@ function NextSteps({
           <span>
             <span className="block text-base font-bold">{title}</span>
             <span className="mt-0.5 block text-[13px] text-white/75">
-              작성 요령 · 공식 서식 안내 (서식 작성·내보내기는 법률 검토 후 열려요)
+              설문으로 서식 채우기 · AI가 대신 작성 · 한글·워드·PDF 내려받기
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">
@@ -365,9 +365,9 @@ function NextSteps({
           className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4"
         >
           <span>
-            <span className="block text-base font-bold">소장 작성 안내</span>
+            <span className="block text-base font-bold">소장 작성</span>
             <span className="text-muted mt-0.5 block text-[13px]">
-              작성 요령 · 공식 양식 (초안 도우미는 법률 검토 후 열려요)
+              AI가 사연으로 청구원인까지 대신 작성해요
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">
@@ -456,6 +456,14 @@ function AnswerTab({ result }: { result: DemoAnalysisResult }) {
   return (
     <ol className="flex flex-col gap-4">
       {result.answer.points.map((p, i) => {
+        // 법제처 근거 없이 모델이 쓴 문단(DEC-055)은 출처 상자 없이 문단만 보인다 (사용자 결정: 따로 표시하지 않음)
+        if (p.check === "model") {
+          return (
+            <li key={i} className="rounded-card border-line border p-5">
+              <p className="text-ink text-base leading-[1.75]">{p.text}</p>
+            </li>
+          );
+        }
         const ref = sourceRef(p.source, result);
         const ok = p.check === "verified";
         return (

@@ -41,7 +41,7 @@ const ALL: string[] = [
   ...DEVELOPER.flatMap(sectionTexts),
 ].filter(Boolean);
 
-/** 승패·가능성·유불리 판정 표현 (절대 규칙 2) + 변협 광고규정 금지 표현 (lib/guide/policy.test.ts와 같은 기준) */
+/** 승패·가능성 확정 표현 (절대 규칙 2, DEC-055: 상담식 의견은 허용하되 승률·결과 보장은 금지) + 변협 광고규정 금지 표현 */
 const JUDGING =
   /승률|승소|패소|이길|이깁|성공\s*(확률|가능)|가능성|확률|유리|불리|합법|적법|보장(합|해)|무료\s*상담|최저가|변호사\s*필요\s*없/;
 
@@ -50,7 +50,7 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
     for (const s of ALL) expect(isAssertive(s), s).toBe(false);
   });
 
-  test("절대 규칙 2: 승패·가능성·유불리를 판정하는 표현이 없다", () => {
+  test("절대 규칙 2: 승률·결과 보장 같은 확정 표현이 없다", () => {
     for (const s of ALL) expect(s, s).not.toMatch(JUDGING);
   });
 
@@ -64,7 +64,6 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
 
   // 싣지 않기로 한 이름은 공개 저장소에 쓰지 않으려고 글자 수와 SHA-256 해시로만 둔다
   const HIDDEN_NAMES: [number, string][] = [
-    [2, "b044f304fc7071c6a53e18934ef5130bfc8cee9f2e61efed2174d2131cd1eea7"],
     [5, "a89cec968fd8620b8bc5315a2ce84536b7155840885c60a4782917dfed6b1f2b"],
     [3, "c9f20e4be7fef1aec9e1b7dd910fdbfe90e68a0691ebf9832d76f42127abe7ce"],
     [3, "026809c140a9503fc4e76193ecd65e4350b4c44e796cd925dde044495d32f728"],
@@ -72,7 +71,8 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
   ];
   const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
-  test("싣지 않기로 한 이름(협업 기관·경쟁 서비스·시범 지역)이 없다 (사용자 결정 2026-11-24)", () => {
+  // 협업 변호사·법무법인 이름은 DEC-055(2026-11-25)로 싣는다 — 목록에서 뺐다
+  test("싣지 않기로 한 이름(경쟁 서비스·시범 지역)이 없다 (사용자 결정 2026-11-24)", () => {
     for (const s of ALL) {
       const chars = [...s];
       for (const [len, hash] of HIDDEN_NAMES) {
@@ -85,7 +85,14 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
 
   test("향후 계획은 모두 계획으로 쓴다", () => {
     expect(ROADMAP_NOTICE).toContain("바뀔 수 있어요");
-    expect(SERVICE_STEPS.find((s) => s.title.includes("구독"))?.title).toContain("검토 중");
+  });
+
+  test("DEC-055: 전면 무료 — 구독·유료·결제 계획을 쓰지 않는다", () => {
+    for (const s of ALL) {
+      expect(s, s).not.toMatch(/구독\s*(기능|결제)|유료\s*(범위|기능|화)|결제\s*기능|가격/);
+    }
+    expect(SERVICE_STEPS.some((s) => s.title.includes("구독"))).toBe(false);
+    expect(NOT_CHARGED).toContain("유료로 바꿀 계획이 없어요");
   });
 
   test("링크는 모두 사이트 안의 실제 페이지다", () => {

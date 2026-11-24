@@ -42,18 +42,13 @@ beforeEach(() => {
 });
 
 describe("POST /documents/{kind}", () => {
-  test("F-013 AC1 legal_documents 게이트가 승인 전이면 맨 앞에서 403 FEATURE_GATED, 입력을 읽지 않는다", async () => {
+  test("DEC-055 문서 작성은 게이트 없이 모두에게 열려 있다 (게이트를 보지 않는다)", async () => {
     gate.requireFeature.mockRejectedValue(
       new ApiError("FEATURE_GATED", { featureKey: "legal_documents", status: "pending_review" }),
     );
     const res = await call("demand-letter", LETTER);
-    expect(res.status).toBe(403);
-    const body = await res.json();
-    expect(body.error.code).toBe("FEATURE_GATED");
-    expect(body.error.details.featureKey).toBe("legal_documents");
-    expect(JSON.stringify(body)).not.toContain("김햄찌");
-    expect(gate.requireFeature).toHaveBeenCalledWith("legal_documents");
-    expect(rate.assertRateLimit).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(gate.requireFeature).not.toHaveBeenCalled();
   });
 
   test("F-013 AC3 승인되면 입력값을 양식에 채워 돌려주고 저장하지 않는다 (no-store)", async () => {
@@ -64,7 +59,7 @@ describe("POST /documents/{kind}", () => {
     expect(data.kind).toBe("demand-letter");
     expect(data.filename).toBe("내용증명.txt");
     expect(data.text).toContain("받는 사람: 이도토리");
-    expect(data.notice).toMatch(/AI 생성 아님 · 법률 자문 아님/);
+    expect(data.notice).toMatch(/AI 생성 아님/);
   });
 
   test("모르는 문서 종류는 404", async () => {

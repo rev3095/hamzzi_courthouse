@@ -1,5 +1,5 @@
-// POST /api/v1/documents/{kind}/draft — 문서 초안 도우미 (DEC-023, API.md 5절). [게이트] legal_documents.
-// 게이트가 승인되기 전에는 맨 앞에서 403 FEATURE_GATED (절대 규칙 5). 본문은 { inquiryId }뿐 — 이름·주소·금액은 받지 않는다.
+// POST /api/v1/documents/{kind}/draft — 문서 초안 도우미 (DEC-023, API.md 5절). DEC-055로 게이트 없이 모두에게 열림(무료 AI 대리 작성).
+// 본문은 { inquiryId }뿐 — 이름·주소·금액은 받지 않는다.
 // 그 질문의 마스킹본(DEC-006)과 저장된 분석 결과로 규칙 칸(사건명·제목·입증방법)을 채우고, 유료 모드면 Haiku 1회로
 // 사실관계 문장 초안을 만든다(1건 $0.0015 상한, 주간 전체 상한은 분석과 함께 센다, DEC-026). 결과는 저장하지 않고 no-store로 돌려준다.
 import { ApiError } from "@/lib/api/errors";
@@ -8,16 +8,10 @@ import { readJson, withRoute } from "@/lib/api/route";
 import { draftFacts } from "@/lib/ai/doc-draft";
 import { aiMode } from "@/lib/ai/mode";
 import { HELPER_WEIGHT } from "@/lib/ai/models";
-import {
-  DOC_DRAFT_RATE,
-  assertRateLimit,
-  settleAiQuota,
-  tryAiQuota,
-} from "@/lib/auth/rate-limit";
+import { DOC_DRAFT_RATE, assertRateLimit, settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { FACTS_FIELD, ruleSuggestions } from "@/lib/documents/draft";
 import { isDocumentKind } from "@/lib/documents/policy";
-import { requireFeature } from "@/lib/gate/store";
 import {
   getLatestResult,
   getOwnedInquiry,
@@ -34,7 +28,6 @@ type AiState =
   | { used: false; reason: "free_mode" | "daily_limit" | "cost_cap" | "model_failed" | "no_facts" };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
-  await requireFeature("legal_documents");
   const { kind } = await ctx.params;
   if (!isDocumentKind(kind)) throw new ApiError("NOT_FOUND");
   const body = await readJson<{ inquiryId?: unknown }>(req);
