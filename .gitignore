@@ -75,3 +75,6 @@ supabase/.temp/
 # 변호사 협업 실제 법률 자료 — 극비, 이 PC에만 둔다 (2026-11-25 사용자 지시). 공개 저장소·로그·보고서에 올리지 않는다
 evals/raw-data/
 evals/raw-data-*/
+
+# 서류 분석 예시 생성 원본 결과 (검증 안 된 모델 인용 문단 포함) — 화면에는 검증 통과분만 lib/casefile/examples.json으로 반영
+evals/casefile-examples/out/
