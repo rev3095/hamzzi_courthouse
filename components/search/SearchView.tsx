@@ -2,9 +2,9 @@
 // 검색 화면 /search (F-003, DEC-029 제안). 하루 질문 횟수와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
 // 종류 탭: 판례 · 법령해석례 · 헌재 결정례 · 조세심판 재결례 · 관세청 해석 · 자치법규 · 행정규칙.
 // "민법 750조"·사건번호처럼 대상이 분명한 입력은 목록 대신 그 조문·판례로 바로 간다.
-// 검색 패널은 판례 아카이브(DEC-052)에서 간결하게 줄였다: 제목·검색/리서치 전환 → 종류 탭 → 검색창 → 출처 한 줄,
+// 검색 패널은 판례 아카이브(DEC-053)에서 간결하게 줄였다: 제목·검색/리서치 전환 → 종류 탭 → 검색창 → 출처 한 줄,
 // 자주 찾는 검색어는 처음 화면에만, 검색 요령은 접어 둔다. 결과 카드(건수·칩·19px 제목)는 F-003 가독성 개편(e08a9e2) 구성.
-// 결과 카드에서 리서치와 같은 보관함(hz:pins)에 바로 담는다 (DEC-052).
+// 결과 카드에서 리서치와 같은 보관함(hz:pins)에 바로 담는다 (DEC-053).
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -73,7 +73,7 @@ type Item = {
   agencySite?: { label: string; url: string } | null;
   /** 자치법규만: 나란히 비교에 쓰는 번호 */
   compareId?: string;
-  /** 보관함에 담을 때 쓰는 자료 행 (리서치와 같은 모양, DEC-052) */
+  /** 보관함에 담을 때 쓰는 자료 행 (리서치와 같은 모양, DEC-053) */
   row: Row;
 };
 type Result = { items: Item[]; notice: string; searchScopeNote: string };
@@ -257,7 +257,7 @@ export function SearchView() {
     setState({ kind: "done", q, data: r.data });
   };
 
-  // 리서치 화면의 전환(?from=research, DEC-052)에서 오면 이 기기에 건네 둔 검색어로 바로 찾는다.
+  // 리서치 화면의 전환(?from=research, DEC-053)에서 오면 이 기기에 건네 둔 검색어로 바로 찾는다.
   // 라우트 훅 대신 첫 렌더 뒤 주소를 한 번 읽는다 (cacheComponents)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

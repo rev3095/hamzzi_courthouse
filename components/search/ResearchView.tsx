@@ -3,7 +3,7 @@
 // 목록에서 고른 자료의 요지를 화면을 떠나지 않고 읽고, 법원·기간·정렬로 걸러 보고, 담아 둔 자료의 인용 표기를 복사한다.
 // 법제처가 준 값만 보여 주고 거르기·정렬만 한다 — 관련도 점수·유불리 판단을 만들지 않는다 (PRD 8.3, 절대 규칙 2).
 // 검색어는 주소에 두지 않는다. 결과 화면·검색 화면에서 넘어올 때도 이 기기(sessionStorage)로만 건넨다 (F-007).
-// 판례 아카이브(DEC-052): 위쪽 전환으로 검색(/search)과 오가고, 보관함은 검색 화면과 같다.
+// 판례 아카이브(DEC-053): 위쪽 전환으로 검색(/search)과 오가고, 보관함은 검색 화면과 같다.
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -429,7 +429,7 @@ export function ResearchView() {
     setSelected(r.data.rows[0] ? `${r.data.rows[0].kind}:${r.data.rows[0].id}` : null);
   };
 
-  // 결과 화면의 '판례 더 찾아보기'(?from=result)나 검색 화면의 전환(?from=search, DEC-052)에서 오면
+  // 결과 화면의 '판례 더 찾아보기'(?from=result)나 검색 화면의 전환(?from=search, DEC-053)에서 오면
   // 이 기기에 건네 둔 검색어로 바로 찾는다. 주소에는 자료 종류만 있고 검색어는 없다 (F-007)
   const handoff = params.get("from");
   const handoffKind = params.get("kind");

@@ -1,5 +1,5 @@
 "use client";
-// 판례 아카이브 전환 (DEC-052): 검색(/search) ↔ 리서치(/research)를 한 번에 오간다.
+// 판례 아카이브 전환 (DEC-053): 검색(/search) ↔ 리서치(/research)를 한 번에 오간다.
 // 마지막으로 서버가 받아 준 검색어만 넘긴다 — 검색어는 이미 이 기기(sessionStorage hz:sq)에 있고 주소에는 자료 종류만 싣는다 (F-007).
 // 보관함(localStorage hz:pins)은 두 화면이 같은 것을 쓴다.
 import Link from "next/link";

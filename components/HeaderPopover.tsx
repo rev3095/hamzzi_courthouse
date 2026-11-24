@@ -1,5 +1,5 @@
 "use client";
-// 헤더의 펼침 메뉴 공통 (DEC-051 소개 메뉴, DEC-052 판례 아카이브). Figma에 없는 메뉴라 브랜드 토큰(ink·line·cream)으로 그린다.
+// 헤더의 펼침 메뉴 공통 (DEC-051 소개 메뉴, DEC-053 판례 아카이브). Figma에 없는 메뉴라 브랜드 토큰(ink·line·cream)으로 그린다.
 // 라우트 훅을 쓰지 않는다(cacheComponents) — 링크를 누르면 닫는다. 바깥을 누르거나 Esc를 누르면 닫힌다.
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
