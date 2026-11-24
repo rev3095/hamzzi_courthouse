@@ -152,7 +152,7 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("Pro Max = Opus 5.5 — adaptive + effort high, 생각 + 답변을 12,000토큰으로 묶는다. 비용은 $0.5 이하", async () => {
+  test("Pro Max = Opus 5.5 — adaptive + effort xhigh, 생각 + 답변을 20,000토큰으로 묶는다. 비용은 $0.6 이하", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -161,16 +161,16 @@ describe("DEC-036 단계별 답변 모델", () => {
     const p = model.calls.find((c) => c.model === "claude-opus-5-5");
     if (!p) throw new Error("Opus 답변 호출 없음");
     expect(p.thinking).toEqual({ type: "adaptive" });
-    expect(p.output_config?.effort).toBe("high");
-    expect(p.max_tokens).toBe(12_000);
+    expect(p.output_config?.effort).toBe("xhigh");
+    expect(p.max_tokens).toBe(20_000);
     // 답변: 입력 5,000 × $4 + 출력 400 × $20 = $0.028 (+ 질문 해석 Haiku 몫)
     expect(out.costUsd).toBeGreaterThanOrEqual(0.028);
-    expect(out.costUsd).toBeLessThanOrEqual(0.5);
+    expect(out.costUsd).toBeLessThanOrEqual(0.6);
     expect(out.model).toBe("claude-opus-5-5");
   });
 
-  test("Pro Max 상한을 넘을 입력(120,000토큰 = $0.48 + 최소 출력)이면 부르지 않는다", async () => {
-    const model = fakeModel({ tokens: () => 120_000 });
+  test("Pro Max 상한을 넘을 입력(140,000토큰 = $0.56 + 최소 출력 $0.06)이면 부르지 않는다", async () => {
+    const model = fakeModel({ tokens: () => 140_000 });
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
       { model, lawSource: fakeSource(), tier: "max" },
