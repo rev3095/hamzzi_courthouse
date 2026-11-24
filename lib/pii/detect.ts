@@ -48,7 +48,7 @@ const NOT_NAMES = new Set(
     "지난 지난달 이번달 다음달 작년 올해 이미 아직 우리 저희 그쪽 이쪽 하루 일단 유리 불리 피해 피해자 가해자 " +
     // 관계어 뒤에 자주 오는 사건 낱말 (예: "직원 정규직", "남편 이혼", "사장 임금체불")
     "이혼 정규직 비정규직 전입 전출 고용 고용주 이직 구직 구인 지원금 신용 조정 하청 차용 " +
-    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난 " +
+    "차용증 양육 양육비 양육권 임금체불 진단 진단서 진정 진정서 장난 손님 남자 이제 주로 정작 하지만 이렇게 주말 " +
     // 성씨 글자로 시작하는 일반 낱말·대명사 (예: "친구 오해를", "이번주 양육비", "나는 사장님한테")
     "이해 오해 장해 유해 한해 이번주 지난주 다음주 전부터 전에 나는 나도 나를 나한테 나랑 나와 나의 나에게"
   ).split(" "),
@@ -96,6 +96,8 @@ const VERB_STEM_ONE = "하해했할합";
 // '이혼' + 하다, '주장' + 하는처럼 낱말 + 하다
 const VERB_AFTER_NOUN = "하해했되돼";
 
+const ADVERB_PREFIX = new Set(["이제", "주로", "정작"]);
+
 function looksLikeVerb(s: string): boolean {
   const given = s.slice(1);
   if (VERB_MARK.test(given)) return true;
@@ -105,7 +107,8 @@ function looksLikeVerb(s: string): boolean {
   if (/적인?$/.test(given)) return true;
   // 앞 두 글자가 일반 낱말이면: 4글자는 복합어('임금체불'), 3글자는 낱말 + 하다('주장하')만 거른다.
   // 3글자 이름('이상온'·'한도윤'·'이하은')은 앞 두 글자가 낱말이어도 남긴다.
-  if (NOT_NAMES.has(s.slice(0, 2))) {
+  // 부사('이제'·'주로'·'정작')는 이름 앞부분과 겹쳐('이제해') 이 검사에서 뺀다.
+  if (NOT_NAMES.has(s.slice(0, 2)) && !ADVERB_PREFIX.has(s.slice(0, 2))) {
     if (s.length === 4 || VERB_AFTER_NOUN.includes(s[2])) return true;
   }
   return false;
@@ -119,7 +122,7 @@ const KINSHIP = new Set(
   (
     "처 남편 아내 부인 와이프 배우자 여자친구 남자친구 여친 남친 애인 약혼자 " +
     "장모 장인 장인어른 처형 처제 처남 시어머니 시아버지 시부모 시누이 시동생 며느리 사위 " +
-    "이모 이모부 고모 고모부 조카 손자 손녀 손주 남동생 여동생 남매 형부 제부 매형 매제 지인 " +
+    "오빠 이모 이모부 고모 고모부 조카 손자 손녀 손주 남동생 여동생 남매 형부 제부 매형 매제 지인 " +
     "주인 집주인 세입자 임차인 임대인 사장 직원 대표 상사 동료 임원 사업주 고용주 동업자"
   ).split(" "),
 );
@@ -147,7 +150,7 @@ const AFTER_BATCHIM = ["은", "을", "과", "과의", "으로"];
 const AFTER_VOWEL = ["는", "가", "를", "와", "와의", "랑", "라고", "라는", "예요"];
 function particleFits(stem: string, tail: string, vocativeIsName = true): boolean {
   const batchim = hasBatchim(stem);
-  // 부르는 말: '아'(받침 뒤)는 일반 낱말에도 거의 붙지 않아 이름으로 본다('친구 이상아', '친구 주인아').
+  // 부르는 말: '아'(받침 뒤)는 일반 낱말에도 거의 붙지 않아 이름으로 본다('친구 신분아', '친구 주인아').
   // '야'는 가족 낱말 뒤면 이름으로 보고, 일반 낱말 뒤면 받침 없는 낱말의 끝말로 본다('진짜야').
   if (tail === "아") return false;
   if (tail === "야") return vocativeIsName ? false : !batchim;
@@ -206,15 +209,27 @@ function nameStem(token: string): string | null {
 
 // 호칭 바로 앞에는 조사가 오지 않는다: '남편이 양다리', '이번에 선생님이'의 앞말은 낱말 + 조사다.
 // 받침이 맞을 때만 나눈다 — '이하은 씨'는 '이하' + '은'이 아니라 이름이다.
-// 일반 낱말 뒤에서는 이름 끝 글자가 되기 쉬운 꼬리로 나누지 않는다 — '이상은 씨'·'이사랑 씨'는 이름이다.
+// 가족 낱말은 늘 나눈다('남편이 군 복무', '남친이 사장님한테'). 일반 낱말은 호칭과 상관없이 이름 끝 글자가
+// 되기 쉬운 꼬리(은·이·아·야·랑·도·로)로 나누지 않는다 — '이상은 사장님', '이웃도 씨', '이사야 씨'는 이름이다.
+// 다만 이름 앞부분이 되기 어려운 때·부사·기관 낱말은 늘 나눈다('지금은 사장님이', '오늘도 사장님이').
 const NAME_END_TAILS = ["은", "이", "아", "야", "랑", "도", "로"];
+const ALWAYS_SPLIT = new Set(
+  (
+    "오늘 어제 내일 지금 이제 이번 이전 이후 나중 지난 지난달 이번달 다음달 이번주 지난주 다음주 " +
+    "작년 올해 하루 한달 한번 아직 일단 정말 진짜 주로 정작 전부 전원 전체 우리 저희 " +
+    "정부 고객 손님 회원 회사 법인 학교 병원 은행 보험사 경찰 검찰 법원 구청 공단 한국 남자 주말 " +
+    // 직위 낱말('차장이 사장님한테'). '강사'·'이사'는 '강사랑'·'이사랑' 같은 이름과 겹쳐 넣지 않는다.
+    "차장 주임 조장 전무 고문 이사장 지점장 구청장 장관"
+  ).split(" "),
+);
 function isWordWithParticle(s: string): boolean {
   return NAME_TAILS.some((tail) => {
     if (!s.endsWith(tail) || s.length <= tail.length) return false;
     const stem = s.slice(0, -tail.length);
-    if (NOT_NAMES.has(stem))
-      return !NAME_END_TAILS.includes(tail) && particleFits(stem, tail, false);
-    return isKinship(stem) && particleFits(stem, tail);
+    if (isKinship(stem) && particleFits(stem, tail)) return true;
+    if (!NOT_NAMES.has(stem)) return false;
+    if (NAME_END_TAILS.includes(tail) && !ALWAYS_SPLIT.has(stem)) return false;
+    return particleFits(stem, tail, false);
   });
 }
 
