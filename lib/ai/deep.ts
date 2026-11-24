@@ -93,6 +93,10 @@ export async function runDeepAnalysis(
     pinnedCaseIds?: string[];
     /** 답변이 어긋나지 않게 할 검토 메모 (아카이브 만들기 전용, 사용자 입력이 아니다) */
     notes?: string;
+    /** 답변 effort를 단계 값 대신 쓴다 — 미리 만드는 예시(가상 사건 프리셋 보강)에서만 쓴다. 서비스 요청 경로는 단계 값 그대로 */
+    effort?: "low" | "medium" | "high" | "xhigh";
+    /** 답변 출력 한도를 단계 값 대신 쓴다 — xhigh는 생각 토큰이 많아 단계 한도로는 답이 잘린다 (미리 만드는 예시 전용) */
+    answerMaxTokens?: number;
   } = {},
 ): Promise<DeepAnalysisOutput> {
   const tier = tierOf(deps.tier);
@@ -217,11 +221,11 @@ export async function runDeepAnalysis(
           "deep_answer",
           {
             model: tier.model,
-            max_tokens: tier.deep.answerTokens.max,
+            max_tokens: deps.answerMaxTokens ?? tier.deep.answerTokens.max,
             thinking: tier.thinking,
             system: [{ type: "text", text: DEEP_ANSWER_SYSTEM }],
             output_config: {
-              effort: tier.effort,
+              effort: (deps.effort ?? tier.effort) as typeof tier.effort,
               format: { type: "json_schema", schema: deepAnswerSchema(keys, struct.issues.length) },
             },
             messages: [

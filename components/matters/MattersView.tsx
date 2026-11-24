@@ -56,12 +56,42 @@ export function MattersView() {
             불러오는 중…
           </p>
         ) : signedIn ? (
-          <Workspace />
+          <SignedIn />
         ) : (
           // 로그인 전에는 가상 사건 프리셋으로 기능을 둘러본다 (DEC-061). 내 사건 저장은 로그인 뒤
           <PresetWorkspace />
         )}
       </div>
+    </div>
+  );
+}
+
+/** 로그인 화면: 내 사건과 가상 사건 예시(DEC-061)를 오간다. 예시는 '내 사건으로 가져오기'로 계정에 복사할 수 있다 */
+function SignedIn() {
+  const [view, setView] = useState<"mine" | "presets">("mine");
+  return (
+    <div>
+      <div role="tablist" aria-label="사건 보기" className="mb-4 flex gap-1.5">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "mine"}
+          onClick={() => setView("mine")}
+          className={view === "mine" ? btn : btnLine}
+        >
+          내 사건
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "presets"}
+          onClick={() => setView("presets")}
+          className={view === "presets" ? btn : btnLine}
+        >
+          가상 사건 예시
+        </button>
+      </div>
+      {view === "mine" ? <Workspace /> : <PresetWorkspace signedIn />}
     </div>
   );
 }

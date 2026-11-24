@@ -32,3 +32,25 @@ test("F-016 DEC-061 로그인 없이 가상 사건 목록·안내·탭이 보이
   expect(fetchSpy.mock.calls.filter(([u]) => String(u).includes("/matters"))).toHaveLength(0);
   fetchSpy.mockRestore();
 });
+
+test("F-016 DEC-061 로그인 사용자는 '내 사건으로 가져오기'로 지금 보이는 가상 사건을 계정에 새 사건으로 담는다", async () => {
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(new Response(JSON.stringify({ data: { id: "m-1" } }), { status: 201 }));
+  render(<PresetWorkspace signedIn />);
+  fireEvent.click(screen.getByRole("button", { name: "내 사건으로 가져오기" }));
+  expect(await screen.findByText(/내 사건 목록에 담았어요/)).toBeDefined();
+  const [url, init] = fetchSpy.mock.calls[0];
+  expect(String(url)).toBe("/api/v1/matters");
+  const body = JSON.parse(String((init as RequestInit).body));
+  expect(body.title).toBe(MATTER_PRESETS[0].title);
+  expect(body.data.docs.length).toBe(MATTER_PRESETS[0].data.docs.length);
+  fetchSpy.mockRestore();
+});
+
+test("F-016 DEC-061 자료 탭에서 서류 원본을 펼쳐 본다", () => {
+  render(<PresetWorkspace />);
+  fireEvent.click(screen.getByRole("tab", { name: /자료/ }));
+  const withBody = MATTER_PRESETS[0].data.docs.filter((d) => d.body);
+  expect(screen.getAllByText("원본 보기 (가상 서류)")).toHaveLength(withBody.length);
+});

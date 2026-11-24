@@ -49,6 +49,8 @@ export type MatterDocEntry = {
   gist: string;
   pages: number;
   addedAt: string;
+  /** 서류 원본 글 (가상 사건 프리셋의 지어낸 서류 본문, DEC-061 보강). 읽은 서류에는 없다 — 사진·파일 원본은 저장하지 않는다 */
+  body?: string;
 };
 export type MatterFact = { id: string; when: string; what: string; docId: string | null };
 export type MatterParty = {

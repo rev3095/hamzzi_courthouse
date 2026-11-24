@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AI_NOTICE } from "@/lib/api/respond";
 import type { MatterData, MatterParty } from "@/lib/matters/model";
 import { MATTER_PRESETS, PRESET_NOTICE } from "@/lib/matters/presets";
+import { createMatter } from "@/lib/client/matters";
 import { GoogleLoginButton } from "../LimitNotice";
 import { ResearchTab, type ResearchSeed } from "./ResearchTab";
 import { StructureMap } from "./StructureMap";
@@ -22,13 +23,15 @@ const TABS: { key: TabKey; name: string }[] = [
   { key: "notes", name: "노트" },
 ];
 
-export function PresetWorkspace() {
+export function PresetWorkspace({ signedIn = false }: { signedIn?: boolean }) {
   const [at, setAt] = useState(0);
   // 고친 내용은 프리셋별로 이 화면 메모리에만 둔다
   const [edits, setEdits] = useState<Record<string, MatterData>>({});
   const [tab, setTab] = useState<TabKey>("overview");
   const [seed, setSeed] = useState<ResearchSeed>({});
   const [noteSeed, setNoteSeed] = useState<{ partyId: string; name: string } | null>(null);
+  // 내 사건으로 가져오기 (로그인 사용자) — 지금 보이는 내용(고친 것 포함)을 계정에 새 사건으로 저장한다
+  const [copied, setCopied] = useState<{ id: string; message: string } | null>(null);
   const preset = MATTER_PRESETS[at];
   if (!preset) return null;
   const data = edits[preset.id] ?? preset.data;
@@ -61,7 +64,32 @@ export function PresetWorkspace() {
           <p className="text-muted mt-0.5 text-[13px] leading-relaxed">{PRESET_NOTICE}</p>
           <p className="text-muted mt-0.5 text-[12px]">{AI_NOTICE}</p>
         </div>
-        <GoogleLoginButton next="/matters" />
+        {signedIn ? (
+          <div className="flex flex-col items-end gap-1">
+            <button
+              type="button"
+              className={btn}
+              onClick={async () => {
+                const r = await createMatter(preset.title, data);
+                setCopied({
+                  id: preset.id,
+                  message: r.ok
+                    ? "내 사건 목록에 담았어요. '내 사건'에서 이어서 정리할 수 있어요."
+                    : "담지 못했어요. 사건 수 한도를 확인하거나 잠시 뒤 다시 해 주세요.",
+                });
+              }}
+            >
+              내 사건으로 가져오기
+            </button>
+            {copied?.id === preset.id && (
+              <p role="status" className="text-muted text-[12px]">
+                {copied.message}
+              </p>
+            )}
+          </div>
+        ) : (
+          <GoogleLoginButton next="/matters" />
+        )}
       </section>
       <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside aria-label="가상 사건">

@@ -377,6 +377,16 @@ export function DocsTab({ data, update, go }: TabProps & { go: (tab: TabKey) => 
                     </span>
                   </div>
                   {d.gist && <p className="text-ink mt-1 text-[14px] leading-relaxed">{d.gist}</p>}
+                  {d.body && (
+                    <details className="group mt-2">
+                      <summary className="text-ink min-h-9 cursor-pointer text-[13px] font-semibold underline underline-offset-2">
+                        원본 보기 (가상 서류)
+                      </summary>
+                      <pre className="border-line bg-soft text-ink mt-2 max-h-[420px] overflow-y-auto rounded-[6px] border p-3 font-sans text-[13px] leading-relaxed whitespace-pre-wrap">
+                        {d.body}
+                      </pre>
+                    </details>
+                  )}
                 </li>
               );
             })}

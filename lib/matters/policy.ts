@@ -56,6 +56,8 @@ export const MatterDataZ = z.object({
         gist: clean(L.line),
         pages: z.number().int().min(0).max(50),
         addedAt: z.string().max(40),
+        // 가상 사건 프리셋을 내 사건으로 가져올 때 함께 오는 지어낸 서류 본문 (DEC-061)
+        body: clean(L.body).optional(),
       }),
     )
     .max(L.docs),
