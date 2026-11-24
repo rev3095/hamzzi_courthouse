@@ -1,7 +1,7 @@
 "use client";
 // 결과 패널 (S-04, F-003~F-006, F-014 데모 축소판 DEC-021). 답변 요약형 순서:
-// AI 고지 → 질문 → 판사 → 제목 → 사실 요약(근거 개수·추천 첫 단계 난이도) → 절차 타임라인(또는 유형 안내)
-// → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·답변·법령·판례·검증 탭·더 찾아본 과정)
+// AI 고지 → 질문 → 판사 → 제목 → 답변 먼저(한눈에 보기 + 검증된 답변 문단, 2026-11-24) → 사실 요약(근거 개수·추천 첫 단계 난이도)
+// → 절차 타임라인(또는 유형 안내) → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·법령·판례·검증 탭·더 찾아본 과정)
 // → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·심층 질문하기) → 의견 → 법제처 출처.
 // 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
 // 문서 작성은 legal_documents 게이트 뒤라 '바로 가기'는 안내 화면으로 간다 (절대 규칙 5, DEC-022).
@@ -102,6 +102,8 @@ export function ResultPanel({
         </Link>
       </div>
 
+      <AnswerFirst result={result} />
+
       <SummaryStrip result={result} plan={plan} />
 
       {parties}
@@ -147,6 +149,46 @@ export function ResultPanel({
       {footer}
       <SourceCredit note={result.searchScopeNote} />
     </article>
+  );
+}
+
+/** 문단의 첫 문장 (검증을 통과한 문단에서만 뽑는다 — 새 문장을 만들지 않는다) */
+function firstSentence(text: string): string {
+  const t = text.trim();
+  const m = t.match(/^.+?[.?!](?=\s|$)/);
+  return (m ? m[0] : t).trim();
+}
+
+/**
+ * 답변 먼저 (2026-11-24 사용자 요청): 검증을 통과한 AI 답변을 결과 맨 위에 펼쳐 보인다.
+ * 한 문단 요약은 남은 문단들의 첫 문장을 이어 붙인 것이라 모델이 새로 쓴 문장이 아니다 (절대 규칙 1·2·3 그대로).
+ * 절차 타임라인·법령·판례는 그 아래·세부 내용에 둔다.
+ */
+function AnswerFirst({ result }: { result: DemoAnalysisResult }) {
+  const points = result.answer.points;
+  if (points.length === 0) {
+    return (
+      <section aria-label="답변" className="mt-5">
+        <AnswerTab result={result} />
+      </section>
+    );
+  }
+  const summary = points
+    .slice(0, 3)
+    .map((p) => firstSentence(p.text))
+    .join(" ");
+  return (
+    <section aria-label="답변" className="mt-5">
+      <div className="rounded-card border-honey-line bg-honey border px-5 py-4">
+        <p className="text-label text-[13px] font-semibold">한눈에 보기</p>
+        <p className="text-ink mt-1 text-[17px] leading-[1.75]">{summary}</p>
+        <p className="text-muted mt-2 text-[12px]">
+          {result.aiNotice} · 아래 답변 문단의 첫 문장을 모은 요약이에요
+        </p>
+      </div>
+      <h2 className="font-display text-ink mt-6 mb-3 text-[19px] font-bold">답변</h2>
+      <AnswerTab result={result} />
+    </section>
   );
 }
 
@@ -208,10 +250,12 @@ function TypeNotice({ plan }: { plan: Extract<ProcedurePlan, { kind: "notice" }>
 
 /** 세부 내용 (접힘). 기존 의도 요약·탭·검색 과정을 그대로 쓴다. 검색 전용은 답변이 없어 펼쳐 둔다 */
 function Details({ result }: { result: DemoAnalysisResult }) {
-  const [tab, setTab] = useState<ResultTab>(firstTab(result));
+  // 답변은 결과 맨 위(AnswerFirst)에 펼쳐 두므로 세부 내용에는 법령·판례·검증만 둔다
+  const answerAbove = result.answer.points.length > 0;
+  const [tab, setTab] = useState<ResultTab>(answerAbove ? "articles" : firstTab(result));
   const searchOnly = result.mode === "search_only";
   const tabs: { key: ResultTab; label: string }[] = [
-    { key: "answer", label: "답변" },
+    ...(answerAbove ? [] : [{ key: "answer" as const, label: "답변" }]),
     { key: "articles", label: `법령 ${result.articles.length}` },
     { key: "cases", label: `판례 ${result.cases.length}` },
     { key: "verify", label: "검증" },

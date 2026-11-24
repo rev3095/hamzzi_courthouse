@@ -94,11 +94,14 @@ describe("F-014 결과 요약형 레이아웃", () => {
     }
   });
 
-  test("세부 내용(기존 답변·법령·판례·검증 탭)은 접혀 있다", () => {
+  test("답변은 맨 위에 펼쳐 보이고, 세부 내용(법령·판례·검증 탭)은 접혀 있다", () => {
     const { container } = renderLease();
+    const answer = screen.getByRole("region", { name: "답변" });
+    expect(within(answer).getByText("한눈에 보기")).toBeDefined();
     const details = container.querySelector("details")!;
     expect(details.open).toBe(false);
-    expect(within(details).getByRole("tab", { name: "답변" })).toBeDefined();
+    expect(within(details).queryByRole("tab", { name: "답변" })).toBeNull();
+    expect(within(details).getByRole("tab", { name: /법령/ })).toBeDefined();
   });
 
   test("DEC-021 노동(임금·퇴직금)은 고용노동부 진정 타임라인, 바로 가기는 공식 창구(새 창)", () => {
