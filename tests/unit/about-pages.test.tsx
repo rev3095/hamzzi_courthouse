@@ -31,6 +31,7 @@ describe("헤더 메뉴 (DEC-051)", () => {
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
       "/community",
+      "/assistants",
       "/about",
       "/about/features",
       "/about/roadmap",

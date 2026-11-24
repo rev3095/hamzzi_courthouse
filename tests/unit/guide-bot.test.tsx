@@ -35,6 +35,23 @@ describe("햄찌 안내 챗봇 (DEC-030)", () => {
     expect(dialog.querySelector("input, textarea")).toBeNull();
   });
 
+  test("F-018 DEC-057 맨 위 선택기로 대화 상대(햄찌 안내 · 전문 에이전트 셋)를 고른다 — 처음은 햄찌 안내, 서버를 부르지 않는다", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(<GuideBot />);
+    const dialog = open();
+    const picker = within(dialog).getByRole("radiogroup", { name: /대화 상대 고르기/ });
+    const radios = within(picker).getAllByRole("radio");
+    expect(radios.map((r) => r.textContent)).toEqual([
+      "햄찌 안내",
+      "내집마련",
+      "고소미",
+      "중고천국",
+    ]);
+    expect(radios[0].getAttribute("aria-checked")).toBe("true");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+  });
+
   test.each(MENU_IDS.map((id) => [id] as const))(
     "메뉴 %s를 고르면 답하는 중 표시 뒤 답변·링크·하위 질문이 나온다",
     async (id) => {

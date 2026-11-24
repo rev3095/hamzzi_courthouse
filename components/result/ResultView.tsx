@@ -17,6 +17,7 @@ import {
   recallQuestion,
   type ClientError,
 } from "@/lib/client/api";
+import { ASSISTANTS, isAssistantId } from "@/lib/assistants/agents";
 import { moodForError } from "@/lib/mascot/moods";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { HamzziJudge } from "../HamzziJudge";
@@ -116,9 +117,22 @@ export function ResultView({ id }: { id: string }) {
   }, [id, analyze]);
 
   const retry = () => void analyze();
+  // 분야별 비서 대화에서 받은 답변이면 그 대화로 돌아가는 길을 둔다 (DEC-057)
+  const fromAssistant =
+    view.kind === "done" && isAssistantId(view.result.assistant)
+      ? ASSISTANTS[view.result.assistant]
+      : null;
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
+      {fromAssistant && (
+        <p className="text-muted mb-4 text-sm">
+          {fromAssistant.name} 비서와의 대화에서 받은 답변이에요 ·{" "}
+          <Link href={fromAssistant.href} className="text-link underline">
+            대화로 돌아가기 →
+          </Link>
+        </p>
+      )}
       {question.parentId && (
         <p className="text-muted mb-4 text-sm">
           이어 묻기 ·{" "}

@@ -366,7 +366,10 @@ export async function analyzeStream(
   id: string,
   onStep: (e: StepEvent) => void,
   category?: string | null,
+  /** 분야별 비서 대화(DEC-057). 정해진 값만 서버가 받는다 */
+  extra: { assistant?: string } = {},
 ): Promise<ApiResult<AnalyzedResult>> {
+  const assistant = extra.assistant ?? recallAssistant(id);
   let res: Response;
   try {
     // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
@@ -378,6 +381,7 @@ export async function analyzeStream(
         tier: readTier(),
         ...(category && { category }),
         ...(recallDeep(id) && { deep: true }),
+        ...(assistant && { assistant }),
       }),
       credentials: "same-origin",
     });
@@ -427,6 +431,24 @@ export function rememberDeep(id: string) {
     sessionStorage.setItem(DKEY(id), "1");
   } catch {
     // 저장소를 못 쓰면 일반 질문으로 분석된다
+  }
+}
+
+/** 분야별 비서 대화로 보낸 질문 (DEC-057). 비서 이름 값 하나만 이 기기에 둔다 — 결과 화면에서 다시 분석해도 같은 비서로 */
+const AKEY = (id: string) => `hz:a:${id}`;
+export function rememberAssistant(id: string, assistant: string) {
+  try {
+    sessionStorage.setItem(AKEY(id), assistant);
+  } catch {
+    // 저장소를 못 쓰면 일반 질문으로 다시 분석된다
+  }
+}
+
+export function recallAssistant(id: string): string | null {
+  try {
+    return sessionStorage.getItem(AKEY(id));
+  } catch {
+    return null;
   }
 }
 
