@@ -7,7 +7,8 @@ import { defineConfig } from "vitest/config";
 
 function readKey(name: string): Record<string, string> {
   if (process.env[name]) return { [name]: process.env[name] };
-  const file = path.join(process.cwd(), ".env.local");
+  // 별도 작업 폴더(worktree)에는 .env.local이 없다 — HZ_ENV_FILE로 파일 위치를 알려 줄 수 있다 (값은 읽기만 하고 출력하지 않는다)
+  const file = process.env.HZ_ENV_FILE ?? path.join(process.cwd(), ".env.local");
   if (!fs.existsSync(file)) return {};
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
     const m = line.match(/^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)\s*$/);

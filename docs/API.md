@@ -72,6 +72,11 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
 | POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
 | POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
+| GET·POST `/matters` · GET·PUT·DELETE `/matters/{id}` | user (본인 사건만) | 사건 진행: 내 사건 목록·만들기·읽기·저장·삭제 | F-016 AC1 |
+| POST `/matters/read` | user | 서류 사진 읽기 → 사실·당사자·관계·요구·조항 | F-016 AC2 |
+| POST `/matters/issues` | user | 쟁점 정리(가린 글 → 검색·답변·인용 검증) | F-016 AC3 |
+| POST `/matters/company` | user | 기업 조사(웹 검색·가져오기 요약 + 공식 API) | F-016 AC4 |
+| POST `/matters/summarize` | user | 찾은 글을 노트용으로 줄이기 | F-016 AC5 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
@@ -277,6 +282,18 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 대표자 이름·법인등록번호·사업자등록번호·전화번호는 싣지 않는다. 찾은 곳이 서류의 당사자와 같은 곳인지, 어떤 곳인지는 판단하지 않는다.
 - 이름은 본문으로만 받는다(주소·접속 기록에 남지 않게). 연락처·주소·번호가 섞인 이름은 `400 VALIDATION_ERROR` + `details.reason: "contact_info"`, 상호·기관 표지(주식회사·법인·은행·법원 등)가 없는 이름(개인 이름·일반 낱말)은 `reason: "not_business"`로 외부에 보내지 않는다. 대표자·담당자 이름과 직함이 붙어 오면 잘라 낸 상호만 쓴다. 조회한 이름·결과는 저장하지 않는다.
 - 키가 없으면 그 출처는 `no_key`, 외부 오류는 `failed`(오류 내용·키·요청 주소는 싣지 않는다). `links`(네이버 지도·인터넷등기소·DART)는 언제나 있다. 레이트 리밋: 같은 네트워크 1시간 30회(`reason: "business_hourly"`).
+
+### 사건 진행 `/matters/*` (F-016, DEC-053)
+모두 로그인 사용자만(비로그인 `401 UNAUTHENTICATED`), 응답은 `cache-control: no-store`. 정리 도구라 승패·유불리 항목이 없다. 규칙은 lib/matters/policy.ts, DB는 lib/matters/store.ts, AI 호출의 횟수·예산·정산은 lib/matters/ai-gate.ts 한 곳.
+
+- **목록·만들기** `GET /matters` → `{ items: { id, title, updatedAt, counts: { docs, parties, issues, notes } }[] }` · `POST /matters` `{ title (80자 이하), data? }` → `201 { id, title, updatedAt, data }`. 계정당 30건(넘으면 `400` + `reason: "too_many_matters"`).
+- **한 건** `GET /matters/{id}` → `{ id, title, updatedAt, data }` · `PUT` `{ title?, data? }` → `{ id, updatedAt }` · `DELETE` → `{ deleted: true }`. 남의 사건·없는 사건·모양이 다른 번호는 똑같이 `404 NOT_FOUND`.
+- **`data`(MatterData)** `{ version: 1, summary, mySide, docs[], facts[], parties[], relations[], demands[], clauses[], issues[], notes[] }` — 모양은 lib/matters/model.ts. 서버가 모양·글자 수·개수·전체 크기(400KB)를 확인하고 모르는 키는 버린다. 이름은 그대로 저장하고 연락처·등록번호·계좌·주소 꼴은 저장 전에 가린다. 오류에는 필드 이름만 싣는다.
+- **서류 읽기** `POST /matters/read` `{ images, consent: { images: true, sensitive: true } }`(검증·동의는 `/casefiles/read`와 같다) → `{ reading: { doc, parties[], relations[], facts[], demands[], clauses[] } | null, ai, notice }`. 사진은 Haiku 비전 호출 한 번에만 가고 저장하지 않는다. 결과도 여기서 저장하지 않는다(화면이 사건 자료에 합쳐 `PUT`으로 저장).
+- **쟁점 정리** `POST /matters/issues` `{ text (2,000자 이하), personNames?, tier?, consent: true }` → `{ issues: { title, points: { text, label, url }[] }[], unknowns: string[], ai, notice }`. 글은 서버가 `scanInput` + 사건의 개인 이름 목록으로 가린 뒤에만 모델·법제처 검색으로 보낸다. `points`는 인용 검증을 통과하고 출처가 응답 목록에 있는 문단뿐이다. 동의가 없으면 `409 CONSENT_REQUIRED`.
+- **기업 조사** `POST /matters/company` `{ name (2~60자), urls? (공개 http(s) 주소 4개까지), pasted? (6,000자 이하), personNames?, consent? }` → `{ report: { overview, products[], business, items[], basics[], unknowns[] } | null, sources: { title, url }[], found: { title, url }[], unread: string[], official: { places, corps, blogs }, links, ai, notice, sourceNotice }`. Opus 5.5 + Claude 웹 검색(4회)·웹 가져오기(6회, 글 3,000토큰까지) 도구를 쓴다. `sources`는 도구가 실제로 읽은 페이지, `found`는 검색 결과에 나온 페이지, `unread`는 준 링크 가운데 읽지 못한 것(자동 접근을 막은 것으로 확인된 네이버 블로그는 도구에 넘기지 않고 바로 여기에 싣는다). 사람 이름 꼴의 이름은 `reason: "not_business"`, 개인 계정 사이트 링크는 `reason: "personal_site"`로 거절한다. 붙여 넣은 글에 민감정보가 보이면 `consent: true` 없이는 `409`. 붙여 넣은 글과 검색 요약문은 `personNames`와 함께 가린 뒤 보낸다. 붙여 넣은 글은 가린 뒤 보낸다. 사설·로컬 주소나 연락처가 섞인 이름은 `400`. 평가·전망 문장과 검증하지 않은 조문·사건번호가 든 문장은 결과에서 뺀다.
+- **요약** `POST /matters/summarize` `{ text (6,000자 이하), personNames?, consent? }` → `{ lines: string[], ai, notice }`. 민감정보로 보이는 글은 `consent: true` 없이는 `409`.
+- **AI 사용량**: 네 AI 경로는 사용자별 하루 30회(`429 RATE_LIMITED`, `reason: "matter_ai_daily"`, 관리자 모드 제외)와 전체 예산을 받는다. 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai: { used: false, reason }`으로 알린다. 호출별 상한(임시값): 서류 읽기 $0.008 · 요약 $0.002 · 쟁점 정리는 고른 단계의 DeepSearch 상한. 기업 조사는 건당 상한이 없고(예산에서 $1.5를 잡아 두고 실제 금액으로 정산) 전체 예산만 받는다.
 
 ### POST `/results/{id}/feedback`
 `req { helpful: boolean; comment?: string (500자 이하) }` → `204`. 결과 소유자만(비로그인은 같은 익명 세션) — 남의 결과 `403`, 없으면 `404`.

@@ -110,6 +110,8 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       "features-examples",
       "features-procedure",
       "features-history",
+      "features-casefile",
+      "features-matters",
     ]
       .map((id) => guideTopic(id)!.lines.join(" "))
       .join(" ");

@@ -1,6 +1,7 @@
 "use client";
 // 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 아카이브(F-003, DEC-054 — 누르면 검색·리서치 선택, Figma에 없는 메뉴), 오늘 남은 질문 n/한도(DEC-024·031·033) 또는 관리자 · 무제한.
 // 커뮤니티(DEC-047, Figma에 없는 메뉴): 게시판으로 가는 말풍선 버튼. 좁은 화면에서는 버튼 대신 메뉴 아이콘 안에 둔다(DEC-051, 가로 넘침 방지).
+// 사건 진행(F-016·DEC-053, Figma에 없는 메뉴): 판례 검색 바로 옆, 흑백 버튼 — 로그인 전용 사건 정리 도구로 간다.
 // 서류 분석(F-015·DEC-052, Figma에 없는 메뉴): 서류 사진을 올려 분석하는 화면으로 가는 버튼.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
 // 메뉴 아이콘(DEC-051, Figma에 없는 메뉴): 소개·기능 가이드·향후 계획·개발자·문의 (components/about/AboutMenu).
@@ -38,8 +39,30 @@ export function SiteHeader() {
         <nav aria-label="주요 메뉴" className="flex items-center gap-1.5 sm:gap-2">
           <ArchiveMenu />
           <Link
+            href="/matters"
+            className="bg-ink hover:bg-ink/90 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold text-white"
+          >
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <rect
+                x="3"
+                y="6.5"
+                width="16"
+                height="11.5"
+                rx="1.5"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <path
+                d="M8 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 14 5v1.5M3 11.5h16"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+            </svg>
+            <span className="max-md:sr-only">사건 진행</span>
+          </Link>
+          <Link
             href="/casefile"
-            className="text-ink border-line hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-bold"
+            className="text-ink border-line hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-bold max-[480px]:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
               <path

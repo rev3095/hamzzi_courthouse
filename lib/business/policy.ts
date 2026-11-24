@@ -152,3 +152,23 @@ export function parseCorpOutline(json: unknown): CorpItem[] {
 
 export const toResult = <T>(items: T[]): SourceResult<T> =>
   items.length > 0 ? { status: "ok", items } : { status: "empty", items: [] };
+
+export type BlogItem = { title: string; description: string; link: string | null };
+
+/**
+ * 네이버 블로그 검색 API(blog.json) 응답 → 제목·요약문·주소. 기업 조사(F-016)가 참고 자료 목록으로 쓴다.
+ * 공식 API가 주는 요약문까지만 쓴다 — 블로그 본문은 가져오지 않는다(자동 접근을 막은 곳이다). 글쓴이 이름은 싣지 않는다.
+ */
+export function parseNaverBlog(json: unknown): BlogItem[] {
+  const items = (json as { items?: unknown } | null)?.items;
+  if (!Array.isArray(items)) return [];
+  const out: BlogItem[] = [];
+  for (const raw of items) {
+    const r = (raw ?? {}) as Record<string, unknown>;
+    const title = text(r.title);
+    if (!title) continue;
+    out.push({ title, description: text(r.description) ?? "", link: safeUrl(r.link) });
+    if (out.length >= BUSINESS_MAX_ITEMS) break;
+  }
+  return out;
+}

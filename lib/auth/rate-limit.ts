@@ -8,6 +8,7 @@ import {
   weightToMicro,
 } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
+import { hashUserId } from "@/lib/api/log";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requestIpHash } from "./ip";
 
@@ -30,6 +31,9 @@ export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, window
 export const CASEFILE_RATE: RateRule = { bucket: "casefile", limit: 10, windowSeconds: 3600 };
 /** 법인·사업자 공개 정보 조회(F-015): 같은 네트워크 1시간 30회 (외부 공식 API 호출) */
 export const BUSINESS_RATE: RateRule = { bucket: "business", limit: 30, windowSeconds: 3600 };
+
+/** 사건 진행(F-016, DEC-053)의 AI 기능: 로그인 사용자 한 사람이 하루(24시간 창) 30회 — 임시값 */
+export const MATTER_AI_RATE: RateRule = { bucket: "matter_ai", limit: 30, windowSeconds: 86_400 };
 
 /**
  * 유료(Claude) 분석 전체 상한 (DEC-026·036). 주간 금액 하나만 둔다(기본 $80, DEC-031 임시 — 하루 상한 없음).
@@ -110,6 +114,20 @@ export async function tryGlobalQuota(rule: RateRule, weight = 1): Promise<boolea
   });
   if (error) throw new Error("hit_rate_limit_weighted 실패");
   return data === true;
+}
+
+/** 로그인 사용자별 횟수 제한. 키는 계정 번호를 바꾼 값(해시)이라 카운터에 계정 번호가 남지 않는다 */
+export async function assertUserRate(rule: RateRule, userId: string) {
+  const { data, error } = await createServiceClient().rpc("hit_rate_limit", {
+    p_bucket: rule.bucket,
+    p_key: `u:${hashUserId(userId)}`,
+    p_limit: rule.limit,
+    p_window: `${rule.windowSeconds} seconds`,
+  });
+  if (error) throw new Error("hit_rate_limit 실패");
+  if (data !== true) {
+    throw new ApiError("RATE_LIMITED", { reason: `${rule.bucket}_daily`, limit: rule.limit });
+  }
 }
 
 export async function assertRateLimit(rule: RateRule, headers: Headers) {

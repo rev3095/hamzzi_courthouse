@@ -241,6 +241,17 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 ### `seed_ledger` — 씨앗 장부 (DEC-047)
 `id, user_id, kind(post·comment·revoke·redeem·adjust), amount, ref_id(글·댓글), earned_day(한국 날짜), created_at`. 잔액은 합계다. 유니크 `(user_id, kind, ref_id)` — 같은 글에 두 번 주거나 두 번 회수하지 않는다. DB 함수 `award_seeds(사용자, 종류, 대상, 양, 하루 상한)`·`revoke_seeds(사용자, 대상)`·`seed_summary(사용자)`는 service_role만 실행한다. `redeem`(할인 사용)은 `billing` 게이트 승인 전까지 쓰지 않는다. 서버 전용(RLS 켬, 정책 없음). 마이그레이션 `20261119230000_community_seeds.sql`.
 
+### `matters` — 사건 진행 (DEC-053, F-016)
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK | 로그인 계정. 계정이 삭제되면 함께 삭제 |
+| title | text | `[PII-S]` 사용자가 붙인 사건 이름 (80자 이하) |
+| data | jsonb | `[PII-S]` 사건 자료: 서류에서 읽은 사실·당사자 이름·관계·요구·조항, 쟁점, 노트(조사·메모). 600KB 이하. **이름은 가리지 않는다**(본인 사건 정리, DEC-006의 예외). 연락처·등록번호·계좌·주소 꼴은 서버가 저장 전에 가리고, 서류 사진은 담지 않는다 |
+| created_at · updated_at | timestamptz | |
+
+인덱스 `(user_id, updated_at desc)`. 서버 전용(RLS 켬, 정책 없음) — 모든 질의에 `user_id`를 건다(lib/matters/store.ts). 보유: 사용자가 지울 때까지(계정이 삭제되면 함께 삭제). 마이그레이션 `20261124180000_matters.sql`.
+
 ### `deletion_requests` (9.2)
 `id, user_id, requested_at, completed_at, scope jsonb, status(enum: received/processing/completed)`
 
@@ -268,6 +279,7 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
 | inquiries, followup_questions, analysis_results | 본인 행 (비로그인은 같은 `anon_session_id`만, 서버 경유) | ✗ | 감사 기록 남기고 제한 열람 |
 | anon_sessions, anon_usage, rate_limit_hits | 서버 전용 | ✗ | 읽기 |
+| matters | 서버 전용 (API가 로그인 계정의 행만 읽고 쓴다) | ✗ | ✗ (운영자도 내용을 열람하지 않는다) |
 | community_posts, community_comments, seed_ledger | 서버 전용 (공개 글은 API가 계정 ID·해시를 빼고 내보낸다) | ✗ | 관리자 모드 삭제 |
 | consents, deletion_requests | 본인 행 | ✗ | 처리용 읽기 |
 | case_summaries, agent_turns | 본인 행 | ✗ | 제한 열람 |
@@ -288,6 +300,7 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | `rate_limit_hits` | 8일 (2026-11-18, 이전 1일 — 주간 유료 상한 `ai_weekly` 카운터가 창 끝까지 남게, DEC-026, 마이그레이션 `20261117160154_ai_weekly_quota_retention.sql`) | |
 | `audit_logs`·`gate_changes` | 파기하지 않음 (append-only) | 보유 기간은 OQ-DM-03에 남김 |
 | `consents`·`deletion_requests` | 로그인 사용자용 — Google 로그인(DEC-035) 사용자 민감정보 동의·삭제 요청. 삭제 요청 처리는 운영자 수동 | OQ-DM-03 |
+| `matters` (사건 진행, DEC-053) | 사용자가 지울 때까지 | 사건 삭제·계정 삭제 시 함께 삭제. 백업 파기·보유 기한은 OQ-012 |
 
 - DB 함수 `purge_expired_records()`가 위 순서로 지우고 건수를 돌려주며 `audit_logs`에 `retention_purge`를 남긴다. Supabase **pg_cron** 작업 `hz-retention-purge`가 매일 03:17 UTC(12:17 KST)에 실행한다(무료 플랜 사용 가능).
 - 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.

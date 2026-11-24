@@ -145,7 +145,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   // ── ② 기능 안내 (DEC-036·038·039·041·042) ─────────────────
   features: {
     label: "기능 안내",
-    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052",
+    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053",
     lines: [
       "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 질문 기록이 있어요.",
     ],
@@ -154,6 +154,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "features-tiers",
       "features-deep",
       "features-casefile",
+      "features-matters",
       "features-examples",
       "features-procedure",
       "features-history",
@@ -193,6 +194,18 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     ],
     links: [{ href: "/casefile", label: "서류 분석" }],
     next: ["features-deep", "rules"],
+  },
+  "features-matters": {
+    label: "사건 진행은 뭐예요?",
+    source: "DEC-053 · PRD F-016 · lib/matters/model.ts",
+    lines: [
+      "맡은 사건을 순서대로 정리하는 도구예요. 서류를 읽어 사실관계와 당사자를 나누고, 구조도와 쟁점, 찾은 내용을 노트로 계속 덧붙여요.",
+      "로그인한 뒤에만 쓸 수 있어요. 사건 자료는 계정에 저장되고 본인만 볼 수 있어요. 본인 사건을 정리하는 도구라 서류에 적힌 이름은 그대로 두고, 연락처와 등록번호는 가려서 저장해요. 서류 사진은 저장하지 않아요.",
+      "정리만 해요. 어느 쪽이 옳은지, 사건이 어떻게 될지는 판단하지 않아요. 쟁점에는 법제처에서 인용을 확인한 내용만 붙어요.",
+      "기업 조사는 회사가 무엇을 하고 무엇을 파는지를 공개 자료에서 찾아 출처와 함께 정리해요. 회사만 조사하고, 사람 이름으로 보이는 이름은 받지 않아요.",
+    ],
+    links: [{ href: "/matters", label: "사건 진행" }],
+    next: ["features-casefile", "rules"],
   },
   "features-examples": {
     label: "예시 답변은 어디서 봐요?",

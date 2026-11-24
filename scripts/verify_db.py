@@ -21,7 +21,7 @@ EXPECTED_TABLES = {
     "profiles", "anon_sessions", "inquiries", "followup_questions", "analysis_results",
     "result_citations", "result_feedback", "feature_gates", "gate_changes", "consents",
     "audit_logs", "deletion_requests", "anon_usage", "rate_limit_hits",
-    "community_posts", "community_comments", "seed_ledger",
+    "community_posts", "community_comments", "seed_ledger", "matters",
 }
 GATE_KEYS = {
     "lawyer_verification", "brief_posting", "proposals", "billing",
@@ -520,6 +520,29 @@ def ops(conn) -> None:
            "insert into public.procedure_labels (title, keywords, track) values ('검증 라벨', '{}', 'neighbor')")
 
 
+
+def matters(conn) -> None:
+    print("[9] 사건 진행 (DEC-053)")
+    check(scalar(conn, "select has_table_privilege('anon', 'public.matters', 'select')") is False
+          and scalar(conn, "select has_table_privilege('authenticated', 'public.matters', 'select')") is False,
+          "matters는 anon·로그인 사용자가 직접 읽을 수 없음")
+    check(scalar(conn, "select relrowsecurity from pg_class where oid = 'public.matters'::regclass") is True,
+          "matters RLS 켜짐")
+    owner = make_user(conn)
+    conn.execute("reset role")
+    mid = scalar(conn, "insert into public.matters (user_id, title) values (%s, '검증 사건') returning id", (owner,))
+    check(mid is not None, "서버(service_role)가 사건을 만든다")
+    as_user(conn, owner)
+    raises(conn, "로그인 사용자도 matters를 직접 읽지 못함 (서버 경유만)", "select count(*) from public.matters")
+    conn.execute("reset role")
+    raises(conn, "사건 이름이 비면 거부", "insert into public.matters (user_id, title) values (%s, '')", (owner,))
+    raises(conn, "너무 큰 사건 자료 거부",
+           "insert into public.matters (user_id, title, data) values (%s, '큰 사건', jsonb_build_object('x', repeat('가', 700000)))",
+           (owner,))
+    conn.execute("delete from auth.users where id = %s", (owner,))
+    check(scalar(conn, "select count(*) from public.matters where id = %s", (mid,)) == 0, "계정이 삭제되면 사건도 삭제")
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -530,7 +553,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters):
                         try:
                             with conn.transaction():
                                 step(conn)

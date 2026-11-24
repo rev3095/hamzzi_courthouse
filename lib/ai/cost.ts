@@ -43,6 +43,29 @@ export const DOC_DRAFT_TOKENS = { max: 900, min: 300 } as const;
 export const CASEFILE_READ_COST_CAP_USD = 0.005;
 export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
 
+/**
+ * 사건 진행(F-016, DEC-053)의 호출별 상한 — 모두 **임시값**.
+ * - 서류 읽기: Haiku 비전 1회. 서류 분석(F-015)보다 자세히 뽑아 출력이 길다 (입력 약 27,000토큰 $0.0027 + 출력 6,000토큰 $0.003).
+ * - 요약: Haiku 1회 (입력 약 8,000토큰 + 출력 700토큰).
+ * - 기업 조사: Sonnet + 웹 검색·웹 가져오기. 도구가 가져온 글은 호출 전에 셀 수 없어 도구 횟수(max_uses)와
+ *   가져올 글 길이로 묶는다. 웹 검색은 토큰과 별도로 건당 WEB_SEARCH_USD가 붙는다.
+ *   그래서 $0.2는 호출 전에 지켜지는 상한이 아니라 도구 한도로 맞추는 목표값이다 (실측은 lib/ai/company.ts COMPANY_TOOL_LIMITS 주석).
+ */
+export const MATTER_READ_COST_CAP_USD = 0.008;
+export const MATTER_READ_TOKENS = { max: 6_000, min: 1_500 } as const;
+export const MATTER_SUMMARY_COST_CAP_USD = 0.002;
+export const MATTER_SUMMARY_TOKENS = { max: 700, min: 200 } as const;
+/**
+ * 기업 조사에는 건당 상한을 두지 않는다 (사용자 결정 2026-11-24, DEC-053 — 이전 $0.2).
+ * 전체 금액은 기간·주간 예산만 막는다. 아래 값은 상한이 아니라 호출 전에 예산에서 잡아 두는 금액이고,
+ * 호출 뒤 실제 쓴 금액과의 차액을 돌려준다. 실제 금액은 도구 횟수(COMPANY_TOOL_LIMITS)로 정해진다.
+ */
+export const COMPANY_RESERVE_USD = 1.5;
+// Opus는 생각과 답변이 같은 출력 한도를 나눠 쓴다 — 3,000으로는 답변 전에 한도에 걸렸다 (실측 2026-11-24)
+export const COMPANY_TOKENS = { max: 16_000, min: 800 } as const;
+/** 웹 검색 도구 1회 요금 (1,000회 $10 — claude-api 스킬 2026-11-03 캐시 기준) */
+export const WEB_SEARCH_USD = 0.01;
+
 /** 재검색이 답변 몫을 먹지 않게 남겨 두는 금액 */
 export const ANSWER_RESERVE_USD = 0.005;
 /** 이 이상이면 비싼 장문 구간 단가가 붙으므로 요청하지 않는다 */

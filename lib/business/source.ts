@@ -7,8 +7,10 @@ import "server-only";
 import {
   BUSINESS_MAX_ITEMS,
   parseCorpOutline,
+  parseNaverBlog,
   parseNaverLocal,
   toResult,
+  type BlogItem,
   type CorpItem,
   type PlaceItem,
   type SourceResult,
@@ -60,6 +62,29 @@ export async function searchCorps(
   )}`;
   try {
     return toResult(parseCorpOutline(await getJson(url)));
+  } catch {
+    return { status: "failed", items: [] };
+  }
+}
+
+/** 네이버 블로그 검색 API — 제목·요약문·주소만 받는다 (본문은 가져오지 않는다). 기업 조사(F-016)의 참고 자료 */
+export async function searchBlogs(
+  name: string,
+  env: Env = process.env,
+): Promise<SourceResult<BlogItem>> {
+  const id = env.NAVER_CLIENT_ID;
+  const secret = env.NAVER_CLIENT_SECRET;
+  if (!id || !secret) return { status: "no_key", items: [] };
+  const url = `https://openapi.naver.com/v1/search/blog.json?${new URLSearchParams({
+    query: name,
+    display: String(BUSINESS_MAX_ITEMS),
+  })}`;
+  try {
+    return toResult(
+      parseNaverBlog(
+        await getJson(url, { "X-Naver-Client-Id": id, "X-Naver-Client-Secret": secret }),
+      ),
+    );
   } catch {
     return { status: "failed", items: [] };
   }

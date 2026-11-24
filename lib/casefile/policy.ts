@@ -191,7 +191,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  */
 const CASE_NO_WIDE = /(?:19|20)\d{2}\s*(?![년만억천원월일])[가-힣]{1,3}\s*\d{3,}/;
 const ARTICLE_WIDE = /(?:제\s*\d+\s*조|(?:법|령|규칙|조례|약관|조건)\s*\d+\s*조)/;
-const hasCitation = (s: string) => {
+export const hasCitation = (s: string) => {
   const t = s.normalize("NFKC");
   if (CASE_NO_WIDE.test(t) || ARTICLE_WIDE.test(t)) return true;
   const c = citationsIn(t);
@@ -204,7 +204,7 @@ const hasCitation = (s: string) => {
  */
 const JUDGING =
   /(?:유리|불리)(?:하|한|할|해)|가능성|확률|(?:승소|패소)(?!\s*판결|했|하였|한\s)|이길|이깁|(?<![가-힣])질\s*것|처벌(?:을|를)?\s*받(?:게|을)\s*(?:될|것|수)|책임이\s*(?:있습니다|없습니다)/;
-const isJudging = (s: string) => isAssertive(s) || JUDGING.test(s.normalize("NFKC"));
+export const isJudging = (s: string) => isAssertive(s) || JUDGING.test(s.normalize("NFKC"));
 
 /** 문장 단위로 나눈다 (마침표·물음표·느낌표·줄바꿈) */
 function sentences(text: string): string[] {
