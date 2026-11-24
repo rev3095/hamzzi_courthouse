@@ -6,7 +6,8 @@ import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
 
 /** 입력 최대 길이 — 임시 값. 확정은 OQ-API-01 */
-export const MAX_INPUT_CHARS = 2000;
+/** 질문 한 건 글자 수 (2026-11-25 사용자 요청: 2,000 → 10,000자). 긴 질문은 lib/ai/cost longInputAllowanceUsd로 상한을 늘려 준다 */
+export const MAX_INPUT_CHARS = 10_000;
 
 export type CreateRequest = {
   text: string;
@@ -211,7 +212,9 @@ export function isOwner(
   if (owner.kind === "user") {
     if (row.userId === owner.userId) return true;
     // 같은 브라우저에서 로그인 전에 한 질문(계정에 연결되지 않은 행)은 로그인 뒤에도 본인 것으로 본다
-    return row.userId === null && !!owner.anonSessionId && row.anonSessionId === owner.anonSessionId;
+    return (
+      row.userId === null && !!owner.anonSessionId && row.anonSessionId === owner.anonSessionId
+    );
   }
   return row.userId === null && row.anonSessionId === owner.anonSessionId;
 }

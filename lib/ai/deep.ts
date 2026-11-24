@@ -136,7 +136,13 @@ export async function runDeepAnalysis(
       lawSource: source,
       onStep: deps.onStep,
       tier: tier.id,
-      costCapUsd: Math.max(0, tier.capUsd - spentOnStruct),
+      // 긴 질문 몫(analyze가 deep 상한에 더한 값)은 일반 답변으로 내려가도 그대로 넘긴다
+      costCapUsd: Math.max(
+        0,
+        (deps.costCapUsd !== undefined ? deps.costCapUsd - tier.deep.capUsd : 0) +
+          tier.capUsd -
+          spentOnStruct,
+      ),
       caseHint: deps.caseHint,
       lawHints: deps.lawHints,
       deep: true,

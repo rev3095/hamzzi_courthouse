@@ -68,6 +68,17 @@ export const COMPANY_TOKENS = { max: 16_000, min: 800 } as const;
 /** 웹 검색 도구 1회 요금 (1,000회 $10 — claude-api 스킬 2026-11-03 캐시 기준) */
 export const WEB_SEARCH_USD = 0.01;
 
+/**
+ * 긴 질문(2,000자 넘게)의 입력 몫 (2026-11-25 질문 한도 10,000자). 넘는 글자를 1.5토큰으로 치고,
+ * 질문 해석(Haiku)과 답변 모델에 한 번씩 들어가는 값을 단계 상한에 더한다. 실제로 쓴 금액만 기간 예산에서 빠진다.
+ */
+export function longInputAllowanceUsd(answerModel: string, chars: number): number {
+  const extra = Math.max(0, chars - 2_000) * 1.5;
+  if (extra === 0) return 0;
+  const tokens = extra * 1.1; // 이전 대화 맥락·태그 여유
+  return (tokens * (priceOf(answerModel).input + priceOf("claude-haiku-5-5").input)) / 1_000_000;
+}
+
 /** 재검색이 답변 몫을 먹지 않게 남겨 두는 금액 */
 export const ANSWER_RESERVE_USD = 0.005;
 /** 이 이상이면 비싼 장문 구간 단가가 붙으므로 요청하지 않는다 */

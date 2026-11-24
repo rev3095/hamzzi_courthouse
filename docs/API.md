@@ -91,7 +91,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 ### POST `/inquiries`
 ```ts
 // req
-{ text: string;                        // 1~OQ-API-01자 (임시 2000자)
+{ text: string;                        // 1~10,000자 (2026-11-25 사용자 요청, 이전 임시 2000자). 2,000자를 넘는 몫은 답변 상한·예산 가중치에 입력 비용을 더한다 (lib/ai/cost longInputAllowanceUsd)
   sensitiveConsent?: boolean;          // 민감정보 별도 동의 (F-007 AC2)
   parentInquiryId?: string }           // 이어 묻기: 같은 소유자의 분석 완료 inquiry (F-002 AC3, DEC-011)
 // 201
@@ -291,7 +291,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - **한 건** `GET /matters/{id}` → `{ id, title, updatedAt, data }` · `PUT` `{ title?, data? }` → `{ id, updatedAt }` · `DELETE` → `{ deleted: true }`. 남의 사건·없는 사건·모양이 다른 번호는 똑같이 `404 NOT_FOUND`.
 - **`data`(MatterData)** `{ version: 1, summary, mySide, docs[], facts[], parties[], relations[], demands[], clauses[], issues[], notes[] }` — 모양은 lib/matters/model.ts. 서버가 모양·글자 수·개수·전체 크기(400KB)를 확인하고 모르는 키는 버린다. 이름은 그대로 저장하고 연락처·등록번호·계좌·주소 꼴은 저장 전에 가린다. 오류에는 필드 이름만 싣는다.
 - **서류 읽기** `POST /matters/read` `{ images, consent: { images: true, sensitive: true } }`(검증·동의는 `/casefiles/read`와 같다) → `{ reading: { doc, parties[], relations[], facts[], demands[], clauses[] } | null, ai, notice }`. 사진은 Haiku 비전 호출 한 번에만 가고 저장하지 않는다. 결과도 여기서 저장하지 않는다(화면이 사건 자료에 합쳐 `PUT`으로 저장).
-- **쟁점 정리** `POST /matters/issues` `{ text (2,000자 이하), personNames?, tier?, consent: true }` → `{ issues: { title, points: { text, label, url }[] }[], unknowns: string[], ai, notice }`. 글은 서버가 `scanInput` + 사건의 개인 이름 목록으로 가린 뒤에만 모델·법제처 검색으로 보낸다. `points`는 인용 검증을 통과하고 출처가 응답 목록에 있는 문단뿐이다. 동의가 없으면 `409 CONSENT_REQUIRED`.
+- **쟁점 정리** `POST /matters/issues` `{ text (10,000자 이하), personNames?, tier?, consent: true }` → `{ issues: { title, points: { text, label, url }[] }[], unknowns: string[], ai, notice }`. 글은 서버가 `scanInput` + 사건의 개인 이름 목록으로 가린 뒤에만 모델·법제처 검색으로 보낸다. `points`는 인용 검증을 통과하고 출처가 응답 목록에 있는 문단뿐이다. 동의가 없으면 `409 CONSENT_REQUIRED`.
 - **기업 조사** `POST /matters/company` `{ name (2~60자), urls? (공개 http(s) 주소 4개까지), pasted? (6,000자 이하), personNames?, consent? }` → `{ report: { overview, products[], business, items[], basics[], unknowns[] } | null, sources: { title, url }[], found: { title, url }[], unread: string[], official: { places, corps, blogs }, links, ai, notice, sourceNotice }`. Opus 5.5 + Claude 웹 검색(4회)·웹 가져오기(6회, 글 3,000토큰까지) 도구를 쓴다. `sources`는 도구가 실제로 읽은 페이지, `found`는 검색 결과에 나온 페이지, `unread`는 준 링크 가운데 읽지 못한 것(자동 접근을 막은 것으로 확인된 네이버 블로그는 도구에 넘기지 않고 바로 여기에 싣는다). 사람 이름 꼴의 이름은 `reason: "not_business"`, 개인 계정 사이트 링크는 `reason: "personal_site"`로 거절한다. 붙여 넣은 글에 민감정보가 보이면 `consent: true` 없이는 `409`. 붙여 넣은 글과 검색 요약문은 `personNames`와 함께 가린 뒤 보낸다. 붙여 넣은 글은 가린 뒤 보낸다. 사설·로컬 주소나 연락처가 섞인 이름은 `400`. 평가·전망 문장과 검증하지 않은 조문·사건번호가 든 문장은 결과에서 뺀다.
 - **요약** `POST /matters/summarize` `{ text (6,000자 이하), personNames?, consent? }` → `{ lines: string[], ai, notice }`. 민감정보로 보이는 글은 `consent: true` 없이는 `409`.
 - **AI 사용량**: 네 AI 경로는 사용자별 하루 30회(`429 RATE_LIMITED`, `reason: "matter_ai_daily"`, 관리자 모드 제외)와 전체 예산을 받는다. 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai: { used: false, reason }`으로 알린다. 호출별 상한(임시값): 서류 읽기 $0.008 · 요약 $0.002 · 쟁점 정리는 고른 단계의 DeepSearch 상한. 기업 조사는 건당 상한이 없고(예산에서 $1.5를 잡아 두고 실제 금액으로 정산) 전체 예산만 받는다.

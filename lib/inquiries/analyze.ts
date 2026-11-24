@@ -7,7 +7,8 @@ import { settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import { runDeepAnalysis } from "@/lib/ai/deep";
 import { buildDeepMap } from "@/lib/ai/deep-policy";
 import { runLiteAnalysis } from "@/lib/ai/lite";
-import { tierOf, type TierId } from "@/lib/ai/models";
+import { longInputAllowanceUsd } from "@/lib/ai/cost";
+import { BUDGET_UNIT_USD, tierOf, type TierId } from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
@@ -47,7 +48,11 @@ export async function analyzeInquiry(
     const tier = tierOf(opts.tier);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
     const deep = opts.deep === true;
-    const weight = deep ? tier.deep.weight : tier.weight;
+    // 긴 질문(2,000자 넘게)은 입력 몫만큼 상한과 예산 가중치를 늘린다 (2026-11-25 질문 한도 10,000자)
+    const allowance = longInputAllowanceUsd(tier.model, inquiry.masked_text.length);
+    const capUsd = (deep ? tier.deep.capUsd : tier.capUsd) + allowance;
+    const weight =
+      (deep ? tier.deep.weight : tier.weight) + Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9);
     const example = findExample(inquiry.masked_text) !== null;
     if (aiMode() === "free" || example || !(await tryAiQuota(weight))) {
       const free = await runFreeAnalysis(inquiry.masked_text, { onStep, caseHint, lawHints });
@@ -83,14 +88,14 @@ export async function analyzeInquiry(
     const deepRun = deep
       ? await runDeepAnalysis(
           { maskedText: inquiry.masked_text, context },
-          { onStep, caseHint, lawHints, tier: tier.id },
+          { onStep, caseHint, lawHints, tier: tier.id, costCapUsd: capUsd },
         )
       : null;
     const analysis =
       deepRun ??
       (await runLiteAnalysis(
         { maskedText: inquiry.masked_text, context },
-        { onStep, caseHint, lawHints, tier: tier.id },
+        { onStep, caseHint, lawHints, tier: tier.id, costCapUsd: capUsd },
       ));
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
     await settleAiQuota(weight, analysis.costUsd);

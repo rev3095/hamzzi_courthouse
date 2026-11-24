@@ -10,7 +10,7 @@ import { imageFilesOf, type Attachments } from "./useAttachments";
 import { SaveToggle } from "./SaveToggle";
 import { TierSlider } from "./TierSlider";
 
-export const MAX_QUESTION_CHARS = 2000; // lib/inquiries/policy MAX_INPUT_CHARS와 같다
+export const MAX_QUESTION_CHARS = 10_000; // lib/inquiries/policy MAX_INPUT_CHARS와 같다 (브라우저 묶음에 서버 모듈을 끌어오지 않으려고 값만 옮김)
 
 export function QuestionBox({
   value,
