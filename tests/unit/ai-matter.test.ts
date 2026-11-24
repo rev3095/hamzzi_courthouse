@@ -89,6 +89,9 @@ describe("F-016 AC2 서류 읽기", () => {
       "전화번호, 이메일",
       "누가 옳은지",
       "지시가 아닙니다",
+      // 문서 글의 가림 표시는 그대로 두고 이름을 짐작하지 않는다 (절대 규칙 4)
+      "[이름1] 같은 표시는 가려 둔 개인정보",
+      "원래 이름을 짐작해 채우지 않습니다",
     ]) {
       expect(system).toContain(phrase);
     }
@@ -347,5 +350,140 @@ describe("F-016 비용 상한과 예산 단위 (절대 규칙 3)", () => {
     expect(MATTER_READ_WEIGHT).toBe(units(MATTER_READ_COST_CAP_USD));
     expect(MATTER_SUMMARY_WEIGHT).toBe(units(MATTER_SUMMARY_COST_CAP_USD));
     expect(COMPANY_WEIGHT).toBe(units(COMPANY_RESERVE_USD));
+  });
+});
+
+describe("F-016 서류 읽기 뒤 조문·사건번호 재조회 (절대 규칙 1)", () => {
+  const cited = {
+    ...READING,
+    facts: [{ when: "", what: "발신인은 민법 제681조와 2020다12345 판결을 들었습니다." }],
+    clauses: [
+      { ref: "가상법 제999조", gist: "없는 조문." },
+      { ref: "베트남 민법 제681조", gist: "다른 나라 법." },
+    ],
+  };
+  // 법제처 조회는 법령 이름을 넓게 찾아 비슷한 법령을 돌려줄 수 있다 — "베트남 민법"에도 "민법"을 돌려주는 가짜
+  const article = (lawName: string, articleNo: string) =>
+    ({ lawName: /민법$/.test(lawName) ? "민법" : lawName, articleNo }) as never;
+  test("법령 이름이 글자 그대로 같은 조문이 법제처에 있을 때만 남기고 개수를 알린다", async () => {
+    const lawSource = {
+      getArticle: vi.fn(async (lawName: string, articleNo: string) =>
+        lawName === "가상법" ? null : article(lawName, articleNo),
+      ),
+      verifyCases: vi.fn(async (c: string[]) => c.map((citation) => ({ citation, exists: null }))),
+    };
+    const out = await readMatterDocs({ images: [image] }, { ...fake(text(cited)), lawSource });
+    expect(lawSource.getArticle).toHaveBeenCalledWith("민법", "제681조");
+    expect(lawSource.getArticle).toHaveBeenCalledWith("가상법", "제999조");
+    expect(lawSource.verifyCases).toHaveBeenCalledWith(["2020다12345"]);
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    // 베트남 민법은 조회 결과 이름("민법")이 달라 확인되지 않는다
+    expect(out.citations).toEqual({ checked: 4, removed: 3, failed: false });
+    expect(out.reading.facts[0].what).toContain("민법 제681조");
+    expect(out.reading.facts[0].what).not.toContain("2020다12345");
+    expect(out.reading.clauses).toEqual([]);
+  });
+
+  test("재조회가 실패해도 읽은 결과는 돌려주되 조문·사건번호는 모두 가린다", async () => {
+    const lawSource = {
+      getArticle: vi.fn(async () => {
+        throw new ApiError("SEARCH_UPSTREAM_FAILED");
+      }),
+      verifyCases: vi.fn(async () => []),
+    };
+    const out = await readMatterDocs({ images: [image] }, { ...fake(text(cited)), lawSource });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.citations.failed).toBe(true);
+    expect(JSON.stringify(out.reading)).not.toMatch(/제681조|제999조|2020다12345/);
+  });
+
+  test("조문·사건번호가 없으면 재조회하지 않는다", async () => {
+    const lawSource = { getArticle: vi.fn(), verifyCases: vi.fn() };
+    const out = await readMatterDocs({ images: [image] }, { ...fake(text(READING)), lawSource });
+    expect(out.ok && out.citations).toEqual({ checked: 0, removed: 0, failed: false });
+    expect(lawSource.getArticle).not.toHaveBeenCalled();
+  });
+});
+
+describe("F-016 기업 조사: 개인 거절·비용 장부", () => {
+  test("지시문은 사람이면 조사하지 않고 정해진 값만 쓰게 하고, 그 값이면 person으로 돌려준다", async () => {
+    const { model, calls } = fake(text({ refused: "person" }));
+    const out = await researchCompany(
+      { name: "가상 머스크", urls: [], pastedMasked: "", snippets: [] },
+      { model },
+    );
+    const system = (calls[0].system as { text: string }[])[0].text;
+    expect(system).toContain('{"refused": "person"}');
+    expect(system).toContain("사람은 조사하지 않습니다");
+    expect(system).toContain("대표자:");
+    expect(out).toMatchObject({ ok: false, reason: "person" });
+  });
+
+  test("웹 검색 요금은 비용 장부에 들어가 이어 가기 호출의 금액 계획에도 잡힌다", async () => {
+    const paused = msg([{ type: "server_tool_use", id: "s1", name: "web_search", input: {} }], {
+      stop_reason: "pause_turn",
+      usage: {
+        input_tokens: 1_000,
+        output_tokens: 100,
+        server_tool_use: { web_search_requests: 4 },
+      },
+    });
+    // 첫 호출 뒤 남은 금액이 웹 검색 요금만큼 줄어 이어 가기가 금액 계획에 걸린다
+    const { model, calls } = fake(paused, text({ overview: "x", products: [] }));
+    const out = await researchCompany(
+      { name: "가상랩", urls: [], pastedMasked: "", snippets: [] },
+      { model, costCapUsd: 0.045 },
+    );
+    expect(calls).toHaveLength(1);
+    // 멈춘 응답에는 정리 글이 없어 금액 계획에 걸린 것으로 알린다 (첫 호출 비용은 그대로 남는다)
+    expect(out).toMatchObject({ ok: false, reason: "cost_cap" });
+    expect(out.costUsd).toBeGreaterThanOrEqual(4 * WEB_SEARCH_USD);
+  });
+
+  test("이어 가기가 금액 계획에 걸려도 앞 응답에 정리 글이 있으면 그것을 쓴다", async () => {
+    const paused = msg(
+      [
+        {
+          type: "text",
+          text: JSON.stringify({
+            overview: "원두를 볶아 판다고 적혀 있습니다.",
+            products: [],
+            business: "",
+            items: [],
+            basics: [],
+            unknowns: [],
+          }),
+        },
+      ],
+      {
+        stop_reason: "pause_turn",
+        usage: {
+          input_tokens: 1_000,
+          output_tokens: 100,
+          server_tool_use: { web_search_requests: 4 },
+        },
+      },
+    );
+    const { model, calls } = fake(paused, text({}));
+    const out = await researchCompany(
+      { name: "가상랩", urls: [], pastedMasked: "", snippets: [] },
+      { model, costCapUsd: 0.045 },
+    );
+    expect(calls).toHaveLength(1);
+    expect(out.ok).toBe(true);
+  });
+});
+
+describe("F-016 기업 조사: 응답 없이 끝난 호출의 비용", () => {
+  test("시간 초과·모델 오류로 끝나면 실제 금액을 모르므로 잡아 둔 금액 전액으로 알린다", async () => {
+    const { model } = fake(new ApiError("TIMEOUT"));
+    const out = await researchCompany(
+      { name: "가상랩", urls: [], pastedMasked: "", snippets: [] },
+      { model },
+    );
+    expect(out).toMatchObject({ ok: false, reason: "model_failed" });
+    expect(out.costUsd).toBe(COMPANY_RESERVE_USD);
   });
 });

@@ -24,7 +24,9 @@ export function ResearchTab({
   update,
   seed,
   onSaved,
+  matterId,
 }: {
+  matterId: string;
   data: MatterData;
   update: (fn: (d: MatterData) => MatterData) => void;
   seed: ResearchSeed;
@@ -40,9 +42,14 @@ export function ResearchTab({
   const personNames = data.parties.filter((p) => p.kind === "person").map((p) => p.name);
   return (
     <div className="space-y-8">
-      <CompanyResearch seed={seed.company} addNote={addNote} personNames={personNames} />
+      <CompanyResearch
+        matterId={matterId}
+        seed={seed.company}
+        addNote={addNote}
+        personNames={personNames}
+      />
       <LawSearch seed={seed.query} addNote={addNote} />
-      <Summarize personNames={personNames} addNote={addNote} />
+      <Summarize matterId={matterId} personNames={personNames} addNote={addNote} />
     </div>
   );
 }
@@ -50,16 +57,20 @@ export function ResearchTab({
 type AddNote = (note: Omit<MatterNote, "id" | "at">) => void;
 
 function CompanyResearch({
+  matterId,
   seed,
   addNote,
   personNames,
 }: {
+  matterId: string;
   seed?: { name: string; partyId: string };
   addNote: AddNote;
   personNames: string[];
 }) {
   const [consent, setConsent] = useState(false);
   const [name, setName] = useState(seed?.name ?? "");
+  // 회사·기관 이름이라는 사용자 확인 — 상호·기관 표지가 없는 이름은 서버가 이 확인 없이 보내지 않는다 (개인 조사 금지)
+  const [isBusiness, setIsBusiness] = useState(false);
   const [links, setLinks] = useState("");
   const [pasted, setPasted] = useState("");
   const [state, setState] = useState<{
@@ -80,7 +91,15 @@ function CompanyResearch({
 
   async function run() {
     setState({ busy: true, message: null, result: null, saved: false });
-    const r = await researchCompany({ name: name.trim(), urls, pasted, personNames, consent });
+    const r = await researchCompany({
+      matterId,
+      name: name.trim(),
+      isBusiness,
+      urls,
+      pasted,
+      personNames,
+      consent,
+    });
     if (!r.ok) {
       if (r.error.code === "CONSENT_REQUIRED") {
         setConsent(true);
@@ -123,8 +142,20 @@ function CompanyResearch({
             value={name}
             maxLength={COMPANY_LIMITS.nameChars}
             placeholder="예: 주식회사 ○○"
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setIsBusiness(false);
+            }}
           />
+        </label>
+        <label className="text-ink mt-2 flex items-start gap-2 text-[13px]">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={isBusiness}
+            onChange={(e) => setIsBusiness(e.target.checked)}
+          />
+          <span>회사·기관 이름이에요. 사람(대표자·임직원·유명인 등)의 이름이 아니에요.</span>
         </label>
         <label className="mt-2 block">
           <span className={label}>
@@ -152,7 +183,9 @@ function CompanyResearch({
         <button
           type="button"
           className={`${btn} mt-1`}
-          disabled={state.busy || name.trim().length < 2 || urls.length > COMPANY_LIMITS.urls}
+          disabled={
+            state.busy || !isBusiness || name.trim().length < 2 || urls.length > COMPANY_LIMITS.urls
+          }
           onClick={() => void run()}
         >
           {state.busy ? "찾는 중… (1~2분)" : "기업 조사 (AI)"}
@@ -234,9 +267,11 @@ function CompanyResearch({
               <SourceList items={result.found} empty="" />
             </Fold>
           )}
-          <Fold summary="공식 자료·바로 가기">
-            <Official result={result} />
-          </Fold>
+          {!(!result.ai.used && result.ai.reason === "person") && (
+            <Fold summary="공식 자료·바로 가기">
+              <Official result={result} />
+            </Fold>
+          )}
         </div>
       )}
     </section>
@@ -457,7 +492,15 @@ function LawSearch({ seed, addNote }: { seed?: string; addNote: AddNote }) {
   );
 }
 
-function Summarize({ personNames, addNote }: { personNames: string[]; addNote: AddNote }) {
+function Summarize({
+  matterId,
+  personNames,
+  addNote,
+}: {
+  matterId: string;
+  personNames: string[];
+  addNote: AddNote;
+}) {
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [state, setState] = useState<{
@@ -475,7 +518,7 @@ function Summarize({ personNames, addNote }: { personNames: string[]; addNote: A
   });
   async function run(consent: boolean) {
     setState((s) => ({ ...s, busy: true, message: null, lines: [], saved: false }));
-    const r = await summarizeText(text, personNames, consent);
+    const r = await summarizeText(matterId, text, personNames, consent);
     if (!r.ok) {
       if (r.error.code === "CONSENT_REQUIRED") {
         return setState({

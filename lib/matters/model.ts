@@ -63,7 +63,14 @@ export type MatterParty = {
 export type MatterRelation = { id: string; from: string; to: string; label: string };
 export type MatterDemand = { id: string; what: string; due: string; docId: string | null };
 /** 서류가 든 계약·법령 조항. 서류에 적힌 그대로이며 원문과 대조하기 전이다 */
-export type MatterClause = { id: string; ref: string; gist: string; docId: string | null };
+export type MatterClause = {
+  id: string;
+  ref: string;
+  gist: string;
+  docId: string | null;
+  /** 법제처 재조회로 확인된 법령 조문이면 그 조문의 법제처 주소 */
+  url?: string;
+};
 export type MatterSource = { title: string; url: string };
 export type MatterIssue = {
   id: string;
@@ -141,7 +148,7 @@ export type MatterReading = {
   relations: { from: string; to: string; label: string }[];
   facts: { when: string; what: string }[];
   demands: { what: string; due: string }[];
-  clauses: { ref: string; gist: string }[];
+  clauses: { ref: string; gist: string; url?: string }[];
 };
 
 export const newId = () =>

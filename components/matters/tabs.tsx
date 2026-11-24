@@ -173,13 +173,26 @@ export function OverviewTab({
         <div className="mt-5">
           <Fold summary={`서류가 근거로 든 조항 ${data.clauses.length}`}>
             <p className="text-muted text-[12px] leading-relaxed">
-              AI가 서류에서 읽어 옮긴 이름이고 원문과 대조하기 전이에요({AI_NOTICE}). 법령 조문은
-              리서치 탭에서 법제처 원문으로 확인해 주세요.
+              AI가 서류에서 읽어 옮긴 조항이에요({AI_NOTICE}). 서류 읽기로 넣은 법령 조문은
+              법제처에서 있는 조문인지만 확인해 남겼고(링크가 붙은 것), 서류가 적은 내용이 조문과
+              맞는지는 대조하지 않았어요. 법령 이름이 없는 조항은 서류 속 계약·약관 조항이에요. 직접
+              고친 내용과 이 확인 전에 넣은 자료는 확인하지 않았어요.
             </p>
             <ul className="mt-1 space-y-1.5">
               {data.clauses.map((c) => (
                 <li key={c.id} className="text-ink text-[13px] leading-relaxed">
-                  <span className="font-semibold">{c.ref}</span>
+                  {c.url ? (
+                    <a
+                      href={c.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                    >
+                      {c.ref}
+                    </a>
+                  ) : (
+                    <span className="font-semibold">{c.ref}</span>
+                  )}
                   {c.gist && <span className="text-muted"> — {c.gist}</span>}
                 </li>
               ))}
@@ -230,14 +243,22 @@ export function DocsTab({ data, update, go }: TabProps & { go: (tab: TabKey) => 
       return setState({ busy: false, message: aiSkipText(reason), done: null });
     }
     const reading = r.data.reading;
+    const cited = r.data.citations;
     const pages = attach.items.length;
     update((d) => mergeReading(d, reading, pages));
     attach.clear();
     setAgree({ images: false, sensitive: false });
+    const check = !cited
+      ? ""
+      : cited.failed
+        ? " 법제처 확인을 다 마치지 못해, 확인하지 못한 법령 조문·사건번호는 가려 두었어요."
+        : cited.removed > 0
+          ? ` 법제처에서 확인되지 않은 법령 조문·사건번호 ${cited.removed}곳은 가리거나 뺐어요.`
+          : "";
     setState({
       busy: false,
       message: null,
-      done: `서류를 읽어 사실 ${reading.facts.length}개 · 당사자 ${reading.parties.length} · 요구 ${reading.demands.length}개를 더했어요.`,
+      done: `서류를 읽어 사실 ${reading.facts.length}개 · 당사자 ${reading.parties.length} · 요구 ${reading.demands.length}개를 더했어요.${check}`,
     });
   }
 
@@ -382,7 +403,7 @@ export function FactsTab({ data, update }: TabProps) {
     <section>
       <SectionTitle
         title="사실관계"
-        hint="날짜순이에요. 서류의 주장도 '누가 그렇게 적었는지'와 함께 담아요. 서류에 적힌 조문·사건번호는 원문과 대조하기 전이에요. 눌러서 바로 고칠 수 있어요."
+        hint="날짜순이에요. 서류의 주장도 '누가 그렇게 적었는지'와 함께 담아요. 서류 읽기로 넣은 법령 조문·사건번호는 법제처에서 확인된 것만 남기고 나머지는 가렸어요(직접 고친 내용은 확인하지 않아요). 눌러서 바로 고칠 수 있어요."
         right={fromDocs ? <AiTag notice={AI_NOTICE} /> : null}
       />
       {facts.length === 0 ? (
@@ -481,7 +502,7 @@ export function FactsTab({ data, update }: TabProps) {
 
 // --- 쟁점 ----------------------------------------------------------------------------------
 
-export function IssuesTab({ data, update }: TabProps) {
+export function IssuesTab({ matterId, data, update }: TabProps & { matterId: string }) {
   const [title, setTitle] = useState("");
   const [agree, setAgree] = useState(false);
   const [state, setState] = useState<{ busy: boolean; message: string | null }>({
@@ -492,7 +513,7 @@ export function IssuesTab({ data, update }: TabProps) {
 
   async function organize() {
     setState({ busy: true, message: null });
-    const r = await organizeIssues(composeIssueText(data), personNamesOf(data));
+    const r = await organizeIssues(matterId, composeIssueText(data), personNamesOf(data));
     if (!r.ok)
       return setState({
         busy: false,

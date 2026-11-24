@@ -90,7 +90,7 @@ const CASE_CODE = `(?:${CASE_CODES.join("|")})`;
 export const CASE_NO = new RegExp(`(?<!\\d)(?:19|20)?\\d{2}\\s*${CASE_CODE}\\s*\\d+(?!\\d)`, "g");
 
 /** 병합 사건의 뒤 번호 ("2020다12345, 12346"). 뒤에 한글이 오면 다음 사건번호(2021타경…)나 금액·기간이다 */
-const MERGED_SERIAL = /^\s*,\s*(\d{3,})(?!\d|\s*[가-힣%])/;
+export const MERGED_SERIAL = /^\s*,\s*(\d{3,})(?!\d|\s*[가-힣%])/;
 
 /** 조문: "제3조의2", "3조의2"(제 생략) */
 export const ARTICLE_NO = /(?:(제)\s*|(?<![\d가-힣]))(\d+)\s*조(?:\s*의\s*(\d+))?/g;

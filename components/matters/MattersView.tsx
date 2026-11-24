@@ -307,10 +307,13 @@ function Workspace() {
                   }}
                 />
               )}
-              {tab === "issues" && <IssuesTab data={matter.data} update={update} />}
+              {tab === "issues" && (
+                <IssuesTab matterId={matter.id} data={matter.data} update={update} />
+              )}
               {tab === "research" && (
                 <ResearchTab
                   key={`${seed.company?.partyId ?? ""}|${seed.query ?? ""}`}
+                  matterId={matter.id}
                   data={matter.data}
                   update={update}
                   seed={seed}

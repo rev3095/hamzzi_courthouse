@@ -75,10 +75,16 @@ export async function tryAiQuota(
   return data === true;
 }
 
+/** DB 함수 reserve_ai_budget의 한도 인자 최댓값(int). 이미 쓴 초과분을 상한 검사 없이 더할 때 쓴다 */
+const PG_INT_MAX = 2_147_483_647;
+
 /**
  * 기간 예산 정산 (DEC-040): tryAiQuota가 잡아 둔 상한 금액 중 실제로 쓰지 않은 몫을 돌려준다.
- * actualUsd는 그 호출들이 실제로 쓴 Claude 비용(withCostCap의 spentUsd). 주간 규칙일 때는 아무 일도 하지 않는다.
- * 정산이 실패해도 분석 결과를 막지 않는다 — 돌려주지 못한 몫만큼 예산이 덜 남을 뿐 상한을 넘기지는 않는다.
+ * actualUsd는 그 호출들이 실제로 쓴 Claude 비용(withCostCap의 spentUsd, 웹 검색 요금 포함).
+ * 실제 비용이 잡아 둔 금액보다 크면(도구가 가져온 글처럼 호출 전에 셀 수 없는 입력 — 기업 조사) 넘은 몫을 더 차감한다.
+ * 이미 쓴 돈이라 상한 검사 없이 더한다(reserve_ai_budget에 한도 최댓값) — 그 뒤 호출은 남은 예산이 줄어든 만큼 막힌다.
+ * 주간 규칙일 때는 넘은 몫을 단위로 바꿔 주간 카운터에 더한다(상한을 넘으면 더해지지 않을 수 있다 — 그때 주는 이미 다 쓴 것이다).
+ * 정산이 실패해도 분석 결과를 막지 않는다.
  */
 export async function settleAiQuota(
   weight: number,
@@ -87,9 +93,27 @@ export async function settleAiQuota(
   now: Date = new Date(),
 ): Promise<void> {
   const period = periodBudget(now, env);
-  if (!period || period.limitMicro === 0) return;
   const spent = Number.isFinite(actualUsd) && actualUsd > 0 ? usdToMicro(actualUsd) : 0;
   const refund = weightToMicro(weight) - spent;
+  if (!period) {
+    const over = Math.ceil(-refund / weightToMicro(1) - 1e-9);
+    if (over >= 1) await tryGlobalQuota(aiWeeklyRule(env), over).catch(() => false);
+    return;
+  }
+  if (period.limitMicro === 0) return;
+  if (refund < 0) {
+    try {
+      await createServiceClient().rpc("reserve_ai_budget", {
+        p_bucket: period.bucket,
+        p_start: period.startsAt,
+        p_limit: PG_INT_MAX,
+        p_amount: -refund,
+      });
+    } catch {
+      // 더하지 못해도 계속한다
+    }
+    return;
+  }
   if (refund < 1) return;
   try {
     await createServiceClient().rpc("settle_ai_budget", {

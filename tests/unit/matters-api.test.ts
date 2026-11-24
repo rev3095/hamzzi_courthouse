@@ -4,7 +4,13 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
 import { AI_NOTICE } from "@/lib/api/respond";
-import { COMPANY_WEIGHT, MATTER_READ_WEIGHT, MATTER_SUMMARY_WEIGHT, TIERS } from "@/lib/ai/models";
+import {
+  BUDGET_UNIT_USD,
+  COMPANY_WEIGHT,
+  MATTER_READ_WEIGHT,
+  MATTER_SUMMARY_WEIGHT,
+  TIERS,
+} from "@/lib/ai/models";
 import { emptyMatter } from "@/lib/matters/model";
 
 vi.mock("server-only", () => ({}));
@@ -194,14 +200,24 @@ describe("F-016 AC2 POST /matters/read", () => {
     expect(rate.tryAiQuota).toHaveBeenCalledWith(MATTER_READ_WEIGHT);
     expect(rate.settleAiQuota).toHaveBeenCalledWith(MATTER_READ_WEIGHT, 0.004);
     const { data } = await res.json();
-    expect(data).toEqual({ reading: READING, ai: { used: true }, notice: AI_NOTICE });
+    expect(data).toEqual({
+      reading: READING,
+      citations: null,
+      ai: { used: true },
+      notice: AI_NOTICE,
+    });
     expect(JSON.stringify(data)).not.toContain(JPEG);
   });
 
   test("무료 모드·예산 초과·하루 횟수 초과면 모델을 부르지 않는다. 관리자 모드는 횟수만 받지 않는다", async () => {
     mode.aiMode.mockReturnValue("free");
     let { data } = await (await read(req("matters/read", "POST", BODY), undefined)).json();
-    expect(data).toEqual({ reading: null, ai: { used: false, reason: "free_mode" }, notice: null });
+    expect(data).toEqual({
+      reading: null,
+      citations: null,
+      ai: { used: false, reason: "free_mode" },
+      notice: null,
+    });
     mode.aiMode.mockReturnValue("paid");
     rate.tryAiQuota.mockResolvedValueOnce(false);
     ({ data } = await (await read(req("matters/read", "POST", BODY), undefined)).json());
@@ -219,16 +235,31 @@ describe("F-016 AC2 POST /matters/read", () => {
     expect(rate.tryAiQuota).toHaveBeenLastCalledWith(MATTER_READ_WEIGHT);
   });
 
-  test("호출이 예상 밖 오류로 끝나도 잡아 둔 예산은 돌려준다", async () => {
+  test("호출이 예상 밖 오류로 끝나면 실제 금액을 모르므로 잡아 둔 금액을 모두 쓴 것으로 정산한다", async () => {
     ai.readMatterDocs.mockRejectedValue(new Error("boom"));
     expect((await read(req("matters/read", "POST", BODY), undefined)).status).toBe(500);
-    expect(rate.settleAiQuota).toHaveBeenCalledWith(MATTER_READ_WEIGHT, 0);
+    expect(rate.settleAiQuota).toHaveBeenCalledWith(
+      MATTER_READ_WEIGHT,
+      MATTER_READ_WEIGHT * BUDGET_UNIT_USD,
+    );
+  });
+
+  test("서류 속 조문·사건번호 재조회 결과(개수)를 함께 돌려준다", async () => {
+    ai.readMatterDocs.mockResolvedValue({
+      ok: true,
+      reading: READING,
+      citations: { checked: 2, removed: 1, failed: false },
+      costUsd: 0.004,
+    });
+    const { data } = await (await read(req("matters/read", "POST", BODY), undefined)).json();
+    expect(data.citations).toEqual({ checked: 2, removed: 1, failed: false });
   });
 });
 
 describe("F-016 AC3·AC5 가린 글만 모델로 (절대 규칙 4)", () => {
   test("쟁점 정리: 동의가 있어야 하고, 이름·연락처를 가린 글과 고른 단계로 부른다", async () => {
     const body = {
+      matterId: ID,
       text: "임대인 김가상(010-1234-5678)이 통지했습니다.",
       personNames: ["김가상"],
       tier: "pro",
@@ -253,9 +284,65 @@ describe("F-016 AC3·AC5 가린 글만 모델로 (절대 규칙 4)", () => {
     ).toBe(400);
   });
 
+  test("가릴 이름은 서버가 저장된 사건의 당사자에서 직접 모은다 (브라우저 목록이 비어도)", async () => {
+    store.getMatter.mockResolvedValue({
+      id: ID,
+      title: "가상 사건",
+      updatedAt: "t",
+      data: {
+        ...emptyMatter(),
+        parties: [
+          // 종류를 잘못 고른 사람 이름도 가린다
+          { id: "a", name: "박가상", kind: "group", side: "other", role: "", note: "" },
+          { id: "b", name: "Jane Doe", kind: "person", side: "other", role: "", note: "" },
+          {
+            id: "c",
+            name: "주식회사 가상솔루션",
+            kind: "business",
+            side: "other",
+            role: "",
+            note: "",
+          },
+        ],
+      },
+    });
+    const res = await issues(
+      req("matters/issues", "POST", {
+        matterId: ID,
+        text: "박가상 씨와 Jane Doe가 주식회사 가상솔루션에 통지했습니다.",
+        personNames: [],
+        consent: true,
+      }),
+      undefined,
+    );
+    expect(res.status).toBe(200);
+    expect(store.getMatter).toHaveBeenCalledWith("u-1", ID);
+    const [masked] = ai.organizeIssues.mock.calls[0];
+    expect(masked).not.toContain("박가상");
+    expect(masked).not.toContain("Jane Doe");
+    expect(masked).toContain("주식회사 가상솔루션");
+  });
+
+  test("사건 번호가 없거나 남의 사건이면 모델을 부르지 않는다", async () => {
+    const noId = await issues(
+      req("matters/issues", "POST", { text: "글", consent: true }),
+      undefined,
+    );
+    expect(noId.status).toBe(400);
+    store.getMatter.mockRejectedValue(new ApiError("NOT_FOUND"));
+    const other = await summarize(
+      req("matters/summarize", "POST", { matterId: ID, text: "글" }),
+      undefined,
+    );
+    expect(other.status).toBe(404);
+    expect(ai.organizeIssues).not.toHaveBeenCalled();
+    expect(ai.summarizeText).not.toHaveBeenCalled();
+  });
+
   test("요약: 가린 글만 보내고, 민감정보로 보이면 동의 없이는 보내지 않는다", async () => {
     const res = await summarize(
       req("matters/summarize", "POST", {
+        matterId: ID,
         text: "담당자 연락처 010-1234-5678, 내용은 다음과 같습니다.",
         personNames: [],
       }),
@@ -267,6 +354,7 @@ describe("F-016 AC3·AC5 가린 글만 모델로 (절대 규칙 4)", () => {
 
     ai.summarizeText.mockClear();
     const sensitive = {
+      matterId: ID,
       text: "상대방은 사기 전과가 있고 우울증 진단을 받았다고 적혀 있습니다.",
       personNames: [],
     };
@@ -295,7 +383,8 @@ describe("F-016 AC4 POST /matters/company", () => {
     });
     const res = await research(
       req("matters/company", "POST", {
-        name: " 가상랩 ",
+        matterId: ID,
+        name: " 가상랩 주식회사 ",
         urls: ["https://example.co.kr/"],
         pasted: "담당 김가상 씨 010-1234-5678",
       }),
@@ -304,7 +393,7 @@ describe("F-016 AC4 POST /matters/company", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("cache-control")).toBe("no-store");
     const input = company.researchCompany.mock.calls[0][0];
-    expect(input.name).toBe("가상랩");
+    expect(input.name).toBe("가상랩 주식회사");
     expect(input.urls).toEqual(["https://example.co.kr/"]);
     expect(input.pastedMasked).not.toContain("김가상");
     expect(input.pastedMasked).not.toContain("010-1234-5678");
@@ -326,6 +415,8 @@ describe("F-016 AC4 POST /matters/company", () => {
   test("자동으로 읽을 수 없는 링크(네이버 블로그)는 도구에 넘기지 않는다", async () => {
     await research(
       req("matters/company", "POST", {
+        matterId: ID,
+        isBusiness: true,
         name: "가상랩",
         urls: ["https://blog.naver.com/x/1", "https://example.co.kr/"],
       }),
@@ -338,8 +429,8 @@ describe("F-016 AC4 POST /matters/company", () => {
 
   test("링크가 공개 주소가 아니거나 이름에 연락처가 섞이면 외부로 보내지 않고 400", async () => {
     for (const body of [
-      { name: "가상랩", urls: ["http://localhost:3000/admin"] },
-      { name: "가상랩 010-1234-5678" },
+      { matterId: ID, isBusiness: true, name: "가상랩", urls: ["http://localhost:3000/admin"] },
+      { matterId: ID, isBusiness: true, name: "가상랩 010-1234-5678" },
     ]) {
       expect((await research(req("matters/company", "POST", body), undefined)).status).toBe(400);
     }
@@ -351,7 +442,12 @@ describe("F-016 AC4 POST /matters/company", () => {
     mode.aiMode.mockReturnValue("free");
     const { data } = await (
       await research(
-        req("matters/company", "POST", { name: "가상랩", urls: ["https://example.co.kr/"] }),
+        req("matters/company", "POST", {
+          matterId: ID,
+          isBusiness: true,
+          name: "가상랩",
+          urls: ["https://example.co.kr/"],
+        }),
         undefined,
       )
     ).json();
@@ -362,5 +458,99 @@ describe("F-016 AC4 POST /matters/company", () => {
       notice: null,
     });
     expect(company.researchCompany).not.toHaveBeenCalled();
+  });
+
+  test("개인 조사 금지: 표지 없는 이름은 사용자 확인이 있어야 하고, 모델이 사람이라고 거절하면 그대로 알린다", async () => {
+    const noConfirm = await research(
+      req("matters/company", "POST", { matterId: ID, name: "가상랩" }),
+      undefined,
+    );
+    expect(noConfirm.status).toBe(400);
+    expect((await noConfirm.json()).error.details).toMatchObject({ reason: "confirm_business" });
+    expect(source.searchPlaces).not.toHaveBeenCalled();
+
+    // 상호 표지가 있으면 확인 없이도 받는다
+    expect(
+      (
+        await research(
+          req("matters/company", "POST", { matterId: ID, name: "㈜가상랩" }),
+          undefined,
+        )
+      ).status,
+    ).toBe(200);
+
+    company.researchCompany.mockResolvedValue({
+      ok: false,
+      reason: "person",
+      unread: [],
+      costUsd: 0.03,
+    });
+    const { data } = await (
+      await research(
+        req("matters/company", "POST", { matterId: ID, isBusiness: true, name: "가상 머스크" }),
+        undefined,
+      )
+    ).json();
+    expect(data).toMatchObject({
+      report: null,
+      ai: { used: false, reason: "person" },
+      notice: null,
+    });
+    // 사람으로 거절했으면 같은 이름으로 찾은 공식 자료·바로 가기도 싣지 않는다
+    expect(data.links).toEqual([]);
+    expect(data.official.blogs.items).toEqual([]);
+    expect(data.official.places.items).toEqual([]);
+    expect(rate.settleAiQuota).toHaveBeenLastCalledWith(COMPANY_WEIGHT, 0.03);
+  });
+
+  test("사용자 하루 횟수는 외부 공식 API를 부르기 전에 본다 (한 번만 센다)", async () => {
+    await research(
+      req("matters/company", "POST", { matterId: ID, isBusiness: true, name: "가상랩" }),
+      undefined,
+    );
+    expect(rate.assertUserRate).toHaveBeenCalledTimes(1);
+    expect(rate.assertUserRate.mock.invocationCallOrder[0]).toBeLessThan(
+      source.searchPlaces.mock.invocationCallOrder[0],
+    );
+    rate.assertUserRate.mockRejectedValueOnce(
+      new ApiError("RATE_LIMITED", { reason: "matter_ai_daily" }),
+    );
+    source.searchPlaces.mockClear();
+    expect(
+      (
+        await research(
+          req("matters/company", "POST", { matterId: ID, isBusiness: true, name: "가상랩" }),
+          undefined,
+        )
+      ).status,
+    ).toBe(429);
+    expect(source.searchPlaces).not.toHaveBeenCalled();
+  });
+});
+
+describe("F-016 AC4 표지 없는 이름의 공식 API 조회 (개인 조사 금지)", () => {
+  test("표지 없이 확인란으로만 통과한 이름은 모델이 조사를 마치기 전에는 네이버·금융위로 보내지 않는다", async () => {
+    mode.aiMode.mockReturnValue("free");
+    const { data } = await (
+      await research(
+        req("matters/company", "POST", { matterId: ID, isBusiness: true, name: "가상랩" }),
+        undefined,
+      )
+    ).json();
+    expect(source.searchPlaces).not.toHaveBeenCalled();
+    expect(source.searchBlogs).not.toHaveBeenCalled();
+    expect(data.links).toEqual([]);
+
+    mode.aiMode.mockReturnValue("paid");
+    const ok = await (
+      await research(
+        req("matters/company", "POST", { matterId: ID, isBusiness: true, name: "가상랩" }),
+        undefined,
+      )
+    ).json();
+    // 모델이 회사로 보고 조사를 마쳤으면 그 뒤에 찾는다 (검색 요약문은 모델에 주지 않았다)
+    expect(source.searchPlaces).toHaveBeenCalledTimes(1);
+    expect(company.researchCompany.mock.calls[0][0].snippets).toEqual([]);
+    expect(ok.data.links.length).toBeGreaterThan(0);
   });
 });

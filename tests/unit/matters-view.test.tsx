@@ -155,7 +155,7 @@ describe("F-016 AC2 구조도", () => {
 
 describe("F-016 AC3·AC5 쟁점·노트 표시 (절대 규칙 2·6)", () => {
   test("AI가 정리한 쟁점에만 AI 고지를 붙이고, 근거는 출처 링크와 함께 보인다", () => {
-    render(<IssuesTab data={data} update={vi.fn()} />);
+    render(<IssuesTab matterId="m-1" data={data} update={vi.fn()} />);
     expect(screen.getAllByText(AI_NOTICE)).toHaveLength(1);
     expect(screen.getByRole("link", { name: "민법 제681조" }).getAttribute("href")).toBe(
       "https://www.law.go.kr/x",
