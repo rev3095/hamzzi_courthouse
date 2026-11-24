@@ -17,6 +17,7 @@ import {
   recallQuestion,
   type ClientError,
 } from "@/lib/client/api";
+import { ASSISTANTS, isAssistantId } from "@/lib/assistants/agents";
 import { moodForError } from "@/lib/mascot/moods";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { HamzziJudge } from "../HamzziJudge";
@@ -25,6 +26,8 @@ import { GOOGLE_LOGIN_ENABLED } from "@/lib/client/login";
 import { PrimaryButton, SecondaryButton } from "../Modal";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
+import { useAttachments } from "../ask/useAttachments";
+import { useMaterialsAsk } from "../ask/useMaterialsAsk";
 import { useQuota } from "../useQuota";
 import { Feedback } from "./Feedback";
 import { PartiesCard } from "./PartiesCard";
@@ -116,9 +119,22 @@ export function ResultView({ id }: { id: string }) {
   }, [id, analyze]);
 
   const retry = () => void analyze();
+  // 분야별 비서 대화에서 받은 답변이면 그 대화로 돌아가는 길을 둔다 (DEC-057)
+  const fromAssistant =
+    view.kind === "done" && isAssistantId(view.result.assistant)
+      ? ASSISTANTS[view.result.assistant]
+      : null;
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
+      {fromAssistant && (
+        <p className="text-muted mb-4 text-sm">
+          {fromAssistant.name} 비서와의 대화에서 받은 답변이에요 ·{" "}
+          <Link href={fromAssistant.href} className="text-link underline">
+            대화로 돌아가기 →
+          </Link>
+        </p>
+      )}
       {question.parentId && (
         <p className="text-muted mb-4 text-sm">
           이어 묻기 ·{" "}
@@ -439,6 +455,9 @@ function FollowUp({
   const quota = useQuota();
   const { busy, error, send, modals, showLimit } = useAsk({ parentInquiryId: parentId });
   const blocked = isQuotaBlocked(quota);
+  // 심층 질문에도 자료 사진을 붙일 수 있다 (F-017, DEC-058). 보낼 때 자료 첨부 창을 거친다
+  const attach = useAttachments();
+  const materials = useMaterialsAsk({ attach, send, busy, error, blocked, showLimit });
   return (
     <section aria-labelledby="follow-title" className="mt-8">
       <h2 id="follow-title" className="font-display text-ink text-[19px] font-bold">
@@ -451,15 +470,22 @@ function FollowUp({
         <QuestionBox
           value={text}
           onChange={setText}
-          onSubmit={() => (blocked ? showLimit() : void send(text))}
+          onSubmit={() => {
+            if (materials.start(text)) return;
+            if (blocked) showLimit();
+            else void send(text);
+          }}
           busy={busy}
           size="md"
           label="심층 질문하기"
           placeholder="이 사건에 대해 더 물어보세요"
           inputRef={inputRef}
           askTools
+          attach={attach}
+          attachNoun="자료"
         />
       </div>
+      {materials.flow}
       {error ? (
         <p role="alert" className="text-warn-text mt-2 text-sm">
           {error}

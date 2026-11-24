@@ -91,7 +91,7 @@ describe("POST /inquiries/{id}/analyze", () => {
       { kind: "anon", anonSessionId: "anon-1" },
       expect.any(Headers),
       undefined,
-      { category: null, tier: null, deep: false },
+      { category: null, tier: null, deep: false, assistant: null },
     );
   });
 
@@ -103,8 +103,27 @@ describe("POST /inquiries/{id}/analyze", () => {
       expect.anything(),
       expect.any(Headers),
       undefined,
-      { category: "family", tier: null, deep: false },
+      { category: "family", tier: null, deep: false, assistant: null },
     );
+  });
+
+  test("F-018 DEC-057 분야별 비서는 정해진 세 값만 분석에 넘기고, 그 밖은 400", async () => {
+    const res = await call(undefined, JSON.stringify({ assistant: "market" }));
+    expect(res.status).toBe(200);
+    expect(runner.analyzeInquiry).toHaveBeenCalledWith(
+      expect.objectContaining({ id: INQ_ID }),
+      expect.anything(),
+      expect.any(Headers),
+      undefined,
+      { category: null, tier: null, deep: false, assistant: "market" },
+    );
+    for (const body of [
+      JSON.stringify({ assistant: "lawyer" }),
+      JSON.stringify({ assistant: 1 }),
+    ]) {
+      const bad = await call(undefined, body);
+      expect(bad.status).toBe(400);
+    }
   });
 
   test("DEC-028 정해지지 않은 카테고리·깨진 본문은 분석 전에 400", async () => {
@@ -148,6 +167,24 @@ describe("POST /inquiries/{id}/analyze", () => {
     expect(store.getAnonQuestionsUsed).not.toHaveBeenCalled();
     expect(store.assertAnonIpAvailable).not.toHaveBeenCalled();
     expect(runner.analyzeInquiry).toHaveBeenCalled();
+  });
+
+  test("F-017 예시 질문 글이라도 자료를 붙였으면 하루 한도를 본다 (DEC-058, 절대 규칙 7)", async () => {
+    const { demoExamples } = await import("@/lib/demo/policy");
+    const materials = [{ kind: "문자", summary: "문자 화면입니다.", details: [], gaps: [] }];
+    store.resolveOwner.mockResolvedValue({ kind: "user", userId: "u-1" });
+    store.getOwnedInquiry.mockResolvedValue(
+      inquiry({
+        user_id: "u-1",
+        anon_session_id: null,
+        masked_text: demoExamples()[0].question,
+        materials,
+      }),
+    );
+    store.getUserQuestionsUsed.mockResolvedValue(USER_QUESTION_LIMIT);
+    const res = await call();
+    expect(res.status).toBe(429);
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
   });
 
   test("DEC-010 같은 IP 해시 24시간 상한도 모델을 부르기 전에 막는다 (429)", async () => {

@@ -1,0 +1,394 @@
+{
+  "id": "crime-report-01--complainant",
+  "category": "crime_report",
+  "question": "2026년 1월 말, 저는 ○○시에서 다른 지역으로 이사하면서 짐 정리가 끝날 때까지 전 직장 동료인 지인 A에게 노트북을 맡겼습니다. 작년에 약 250만 원에 산 제품이고 구매 영수증과 제품 일련번호가 남아 있습니다. 맡길 때 메신저로 \"3월 초까지만 보관해 줘, 이사 끝나면 바로 가지러 갈게\"라고 보냈고, A는 \"알겠어, 잘 둘게\"라고 답했습니다. 3월 초 돌려 달라고 하자 A는 \"요즘 바빠서 다음 주에\"라며 두 번 미뤘습니다. 그러던 중 중고거래 앱에서 제 노트북과 같은 모델에 제가 붙여 둔 스티커까지 보이는 판매글을 발견했고, 이미 2월 중순에 '거래완료'로 되어 있었습니다. 판매글은 지금 지워졌지만 캡처해 두었고, 판매자 닉네임은 A가 평소 쓰던 것과 같습니다. 이 사실을 따지자 A는 \"내가 너한테 받을 돈도 있잖아\"라는 메시지 한 통을 보낸 뒤 전화와 메시지를 모두 피하고 있습니다. 작년에 A에게 이사비 명목으로 80만 원 정도를 빌린 적은 있지만, 노트북으로 갚겠다고 한 적은 없고 그 돈은 따로 갚을 생각이었습니다. 노트북 안에는 업무 자료와 가족 사진도 들어 있었는데, 초기화됐는지 알 수 없습니다. 구매자가 누구인지, 얼마에 팔렸는지도 모릅니다. 제가 궁금한 것은, 이 경우 횡령죄가 되는지 아니면 다른 죄가 문제되는지, A가 주장하는 '받을 돈' 때문에 죄가 안 되는 것은 아닌지, 중고로 산 사람에게서 노트북을 직접 돌려받을 수 있는지(선의취득 문제)입니다. 무엇을 확인해야 하는지, 고소와 민사 청구를 어떤 순서로 해야 하는지, 지금 고소장에 사실관계와 증거(메신저, 판매글 캡처, 영수증, 일련번호)를 어떻게 정리해 써야 하는지 알려 주세요.",
+  "at": "2026-11-24T17:33:50.374Z",
+  "elapsedMs": 60365,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 13377,
+    "tokens_out": 6311,
+    "latency_ms": 59917
+  },
+  "costUsdUpperEstimate": 0.17973,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "형법",
+        "민법",
+        "형사소송법",
+        "문화유산의 보존 및 활용에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "고소",
+        "타인 보관 노트북 임의 매도 횡령죄 반환 거부",
+        "도품 유실물 아닌 동산 선의취득 중고 매매 반환 청구"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "형법 제355조 제1항은 맡은 물건을 횡령하거나 반환을 거부하면 처벌한다고 정합니다. 질문자님이 보관을 부탁하고 A가 '잘 둘게'라고 답한 메신저는 보관 관계를 보여 주는 자료입니다. 그 노트북을 A가 임의로 팔았다면 횡령죄가 중심 쟁점이 됩니다. 팔지 않았더라도 정당한 이유 없이 계속 돌려주지 않는다면 반환거부로 볼 여지가 있습니다.",
+          "source": "law:형법:제355조",
+          "quote": "타인의 재물을 보관하는 자가 그 재물을 횡령하거나 그 반환을 거부한 때에는",
+          "check": "verified"
+        },
+        {
+          "text": "판매자가 실제 A였다면 횡령죄가 문제되고, 다른 사람이 노트북을 가져가 팔았다면 그 사람에게 형법 제329조 절도죄 등이 문제될 수 있습니다. 닉네임이 같다는 것만으로 단정하기는 어려우니 고소할 때 앱 운영사의 가입자 정보와 대금 입금 계좌를 확인해 달라고 요청해 보시길 권합니다. 개인적인 부탁으로 맡긴 것이라 형법 제356조 업무상횡령보다는 단순 횡령으로 볼 가능성이 큽니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "형사소송법 제237조에 따라 고소는 서면이나 구술로 할 수 있습니다. 고소장에는 맡긴 경위(메신저), 반환 요구와 미룬 경위, 판매글 발견(캡처·스티커·닉네임), A의 '받을 돈' 메시지를 시간 순서로 적으세요. 영수증과 일련번호는 판매된 물건이 질문자님 노트북임을 특정하는 자료로 함께 첨부하시면 좋습니다.",
+          "source": "law:형사소송법:제237조",
+          "quote": "고소 또는 고발은 서면 또는 구술로써 사법경찰관에게 하여야 한다.",
+          "check": "verified"
+        },
+        {
+          "text": "형사적으로도 보관자가 받을 돈이 있다는 이유로 맡은 물건을 마음대로 팔아 그 돈에 충당하면, 위탁 취지에 반한 처분으로 보아 형법 제355조 횡령죄 성립이 부정되지 않는다고 보는 것이 일반적입니다. 다만 맡길 때 '돈을 못 갚으면 노트북으로 대신한다'는 합의가 있었다면 판단이 달라질 수 있습니다. 그런 합의가 없었다는 점을 메신저 전체 대화로 보여 주시는 쪽이 유리합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "민법 제249조에 따르면 구매자가 A를 정당한 주인으로 믿었고 그렇게 믿은 데 과실도 없었다면, 즉시 소유권을 얻어 돌려받기 어렵습니다. 반대로 구매자가 A의 물건이 아님을 알았거나, 시세보다 지나치게 싼 가격처럼 의심할 사정을 지나쳤다면 선의취득이 인정되지 않습니다. 이 경우에는 구매자에게 직접 반환을 청구할 수 있습니다.",
+          "source": "law:민법:제249조",
+          "quote": "양도인이 정당한 소유자가 아닌 때에도 즉시 그 동산의 소유권을 취득한다",
+          "check": "verified"
+        },
+        {
+          "text": "민법 제250조의 도품·유실물 특례는 도난당하거나 잃어버린 물건에 적용됩니다. 직접 맡긴 물건을 보관자가 판 경우에는 적용되기 어려울 가능성이 큽니다. 선의취득이 인정되면 A에게 민법 제750조 손해배상이나 민법 제741조 부당이득반환(판매대금)을 청구하는 쪽으로 가셔야 합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "순서는 고소를 먼저 하시길 권합니다. 수사로 판매자, 구매자, 대금을 확인한 뒤 결과에 따라 구매자에게 반환을 청구하거나 A에게 민사 청구를 하는 것이 효율적입니다. 형사재판에서는 소송촉진 등에 관한 특례법 제25조의 배상명령도 활용할 수 있습니다. 구매자가 확인되면 노트북 데이터를 지우지 말고 보존해 달라고 요청해 두세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:형법:제355조",
+        "lawName": "형법",
+        "articleNo": "제355조",
+        "title": "횡령, 배임",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C355%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제356조",
+        "lawName": "형법",
+        "articleNo": "제356조",
+        "title": "업무상의 횡령과 배임",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C356%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제496조",
+        "lawName": "민법",
+        "articleNo": "제496조",
+        "title": "불법행위채권을 수동채권으로 하는 상계의 금지",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C496%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제497조",
+        "lawName": "민법",
+        "articleNo": "제497조",
+        "title": "압류금지채권을 수동채권으로 하는 상계의 금지",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C497%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제245조",
+        "lawName": "민법",
+        "articleNo": "제245조",
+        "title": "점유로 인한 부동산소유권의 취득기간",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C245%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제246조",
+        "lawName": "민법",
+        "articleNo": "제246조",
+        "title": "점유로 인한 동산소유권의 취득기간",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C246%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형사소송법:제223조",
+        "lawName": "형사소송법",
+        "articleNo": "제223조",
+        "title": "고소권자",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C223%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형사소송법:제237조",
+        "lawName": "형사소송법",
+        "articleNo": "제237조",
+        "title": "고소, 고발의 방식",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C237%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제514조",
+        "lawName": "민법",
+        "articleNo": "제514조",
+        "title": "동전-선의취득",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C514%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제249조",
+        "lawName": "민법",
+        "articleNo": "제249조",
+        "title": "선의취득",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C249%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제176조",
+        "lawName": "형법",
+        "articleNo": "제176조",
+        "title": "타인의 권리대상이 된 자기의 물건",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C176%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제201조",
+        "lawName": "민법",
+        "articleNo": "제201조",
+        "title": "점유자와 과실",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C201%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제325조",
+        "lawName": "형법",
+        "articleNo": "제325조",
+        "title": "점유강취, 준점유강취",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C325%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제213조",
+        "lawName": "민법",
+        "articleNo": "제213조",
+        "title": "소유물반환청구권",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C213%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:문화유산의보존및활용에관한법률:제87조",
+        "lawName": "문화유산의 보존 및 활용에 관한 법률",
+        "articleNo": "제87조",
+        "title": "다른 법률과의 관계",
+        "effectiveFrom": "2026-06-24",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AC%B8%ED%99%94%EC%9C%A0%EC%82%B0%EC%9D%98%20%EB%B3%B4%EC%A1%B4%20%EB%B0%8F%20%ED%99%9C%EC%9A%A9%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C87%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "621901",
+        "caseNo": "2025도3012",
+        "caseName": "모욕[모욕죄의 구성요건 해당 여부가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=621901",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "226935",
+        "caseNo": "2021노14",
+        "caseName": "자본시장과금융투자업에관한법률위반·보조금관리에관한법률위반·업무상횡령·사기·허위작성공문서행사·금융실명거래및비밀보장에관한법률위반·범죄수익은닉의규제및처벌등에관한법률위반·업무방해·위계공무집행방해·위조사문서행사·증거은닉교사·증거인멸교사·증거위조교사·사문서위조·위조공문서행사(인정된죄명허위작성공문서행사)",
+        "court": "서울고등법원",
+        "decidedAt": "2021-08-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226935",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "625211",
+        "caseNo": "2024도5938",
+        "caseName": "개인정보보호법위반",
+        "court": "대법원",
+        "decidedAt": "2026-04-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625211",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "234541",
+        "caseNo": "2019고합738, 927, 1050(병합)",
+        "caseName": "사문서위조·위조사문서행사·허위작성공문서행사·위조공문서행사(인정된죄명허위작성공문서행사)·업무방해·위계공무집행방해·사기·보조금관리에관한법률위반·업무상횡령·자본시장과금융투자업에관한법률위반·범죄수익은닉의규제및처벌등에관한법률위반·금융실명거래및비밀보장에관한법률위반·증거인멸교사·증거위조교사·증거은닉교사",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2020-12-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=234541",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624065",
+        "caseNo": "2026노212",
+        "caseName": "특수공무집행방해, 허위공문서작성, 허위작성공문서행사, 대통령기록물관리에관한법률위반, 공용서류손상, 직권남용권리행사방해, 대통령등의경호에관한법률위반교사, 범인도피교사",
+        "court": "서울고등법원",
+        "decidedAt": "2026-04-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624065",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "221333",
+        "caseNo": "2010고합1152,2010고합1215(병합),2010고합1446-1(분리,병합),2010고합1657(병합),2010고합1669(병합),2010고합1670(병합)",
+        "caseName": "특정경제범죄가중처벌등에관한법률위반(배임)·사문서위조·위조사문서행사·특정경제범죄가중처벌등에관한법률위반(횡령)·특정범죄가중처벌등에관한법률위반(뇌물)·뇌물공여·특정경제범죄가중처벌등에관한법률위반(사기)(피고인3에대하여일부인정된죄명사기)",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2011-10-07",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=221333",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624541",
+        "caseNo": "2026노525",
+        "caseName": "변호사법위반",
+        "court": "서울고등법원",
+        "decidedAt": "2026-04-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624541",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 10
+      },
+      {
+        "keyword": "고소",
+        "total": 6
+      },
+      {
+        "keyword": "타인 보관 노트북 임의 매도 횡령죄 반환 거부",
+        "total": 3
+      },
+      {
+        "keyword": "도품 유실물 아닌 동산 선의취득 중고 매매 반환 청구",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "형법 제355조",
+          "exists": true
+        },
+        {
+          "citation": "형사소송법 제237조",
+          "exists": true
+        },
+        {
+          "citation": "민법 제249조",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "질문자",
+          "role": ""
+        },
+        {
+          "label": "구매자",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 1월 말",
+          "who": "질문자",
+          "what": "이사 중 짐 정리 기간 동안 노트북을 A에게 맡기고 3월 초 반환을 메신저로 약속받음"
+        },
+        {
+          "when": "3월 초",
+          "who": "",
+          "what": "돌려달라는 요청에 '바빠서 다음 주에'라며 두 번 반환을 미룸"
+        },
+        {
+          "when": "2월 중순",
+          "who": "",
+          "what": "같은 모델·스티커가 보이는 노트북 판매글이 '거래완료' 상태로 등록됨"
+        },
+        {
+          "when": "",
+          "who": "",
+          "what": "질문자가 따지자 '받을 돈이 있다'는 메시지를 보낸 뒤 연락을 피함"
+        }
+      ],
+      "issues": [
+        {
+          "title": "보관 중 노트북을 처분한 행위가 횡령죄인지",
+          "points": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "title": "상계 주장이 죄 성립을 막는지",
+          "points": [
+            3
+          ]
+        },
+        {
+          "title": "중고 구매자가 노트북을 선의취득했는지",
+          "points": [
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "unknowns": [
+        "노트북을 판매한 사람이 실제로 A인지 확인되는지?",
+        "구매자가 누구이며 노트북이 현재 어디 있는지?",
+        "매매 대금이 얼마였고 A가 받았는지?",
+        "노트북 데이터가 초기화되었는지?",
+        "맡길 때 보관 대가나 상계 합의가 있었는지?"
+      ]
+    }
+  }
+}

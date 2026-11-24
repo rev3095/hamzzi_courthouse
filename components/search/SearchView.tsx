@@ -18,7 +18,14 @@ import {
 import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
+import type { MaterialReading } from "@/lib/materials/limits";
+import { isQuotaBlocked } from "@/lib/client/api";
+import { LimitNotice } from "../LimitNotice";
+import { MaterialsFlow } from "../ask/MaterialsFlow";
 import { QuestionBox } from "../ask/QuestionBox";
+import { useAttachments } from "../ask/useAttachments";
+import { MaterialsView } from "../result/MaterialsView";
+import { useQuota } from "../useQuota";
 import { ArchiveSwitch } from "./ArchiveSwitch";
 import { KindTabs } from "./KindTabs";
 import {
@@ -225,6 +232,16 @@ export function SearchView() {
   const [state, setState] = useState<State>({ kind: "idle" });
   const [picked, setPicked] = useState<string[]>([]);
   const spec = KINDS.find((k) => k.kind === tab)!;
+  // 자료 사진으로 검색하기 (F-017, DEC-058): 사진을 읽어 자료 정리와 검색어 후보를 보이고, 고른 검색어로 법제처를 찾는다.
+  // 사진·정리는 이 화면 메모리에만 있다 (브라우저 저장소·주소에 넣지 않는다). 검색 자체는 지금처럼 AI 없이 법제처 결과만이다
+  const attach = useAttachments();
+  const quota = useQuota();
+  const [flowOpen, setFlowOpen] = useState(false);
+  const [limitOpen, setLimitOpen] = useState(false);
+  const [reading, setReading] = useState<{
+    materials: MaterialReading[];
+    notice: string;
+  } | null>(null);
 
   // 검색어는 주소(?q=)에 두지 않는다 — 브라우저 기록·접속 기록에 남지 않게 (F-007)
   const submit = async (kind: Kind = tab, input: string = text) => {
@@ -313,13 +330,48 @@ export function SearchView() {
           <QuestionBox
             value={text}
             onChange={setText}
-            onSubmit={() => void submit()}
+            onSubmit={() => {
+              // 사진이 붙어 있으면 자료 읽기 창을 거친다 (판독은 질문 횟수를 줄이지 않지만, 다 썼으면 막는다)
+              if (attach.items.length > 0) {
+                if (isQuotaBlocked(quota)) setLimitOpen(true);
+                else setFlowOpen(true);
+                return;
+              }
+              void submit();
+            }}
             busy={state.kind === "loading"}
             size="md"
             label={`${spec.label} 검색어`}
-            placeholder={spec.placeholder}
+            placeholder={
+              attach.items.length > 0 ? "사진과 함께 찾을 낱말 (비워도 돼요)" : spec.placeholder
+            }
+            attach={attach}
+            attachNoun="자료"
           />
         </div>
+        {flowOpen && (
+          <MaterialsFlow
+            images={attach.items}
+            question={text}
+            mode="search"
+            busy={state.kind === "loading"}
+            onClose={() => setFlowOpen(false)}
+            onLimit={() => {
+              setFlowOpen(false);
+              setLimitOpen(true);
+            }}
+            onPick={(q, materials, notice) => {
+              setFlowOpen(false);
+              attach.clear();
+              setReading({ materials, notice: notice ?? "" });
+              if (q) {
+                setText(q);
+                void submit(tab, q);
+              }
+            }}
+          />
+        )}
+        {limitOpen && <LimitNotice onClose={() => setLimitOpen(false)} />}
         <p className="text-muted mt-2 text-[12px]">
           출처 · 법제처 국가법령정보센터 · 검색은 질문 횟수와 따로 세요 · 이름·전화번호 같은
           개인정보는 검색어에 넣지 말아 주세요
@@ -341,6 +393,21 @@ export function SearchView() {
           </ul>
         </details>
       </section>
+
+      {reading?.notice && (
+        <MaterialsView
+          variant="search"
+          onClose={() => setReading(null)}
+          result={{
+            materials: {
+              items: reading.materials.map((m) => ({ ...m, points: [] })),
+            },
+            answer: { points: [] },
+            aiNotice: reading.notice,
+            mode: "search_only",
+          }}
+        />
+      )}
 
       {state.kind === "idle" && <RecentList />}
       {state.kind === "error" && (

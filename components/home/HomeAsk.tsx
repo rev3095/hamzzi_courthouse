@@ -4,16 +4,21 @@
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
-// 질문창에 서류 사진을 붙이면 "물어보기"가 서류 분석 창(F-015, DEC-052)을 연다 — 동의 → 읽기 → 확인 뒤 질문 1번으로 분석한다.
+// 가이드 아래에는 분야별 비서 묶음(F-018, DEC-057)을 둔다 — 누르면 비서 페이지로 간다.
+// 질문창에 사진을 붙이면 "물어보기"가 먼저 쓰임을 묻는다: 자료로 첨부해 질문하기(F-017, DEC-058) 또는 서류 분석(F-015, DEC-052).
+// 어느 쪽이든 동의 → 읽기 → 확인 뒤 질문 1번으로 분석한다. DeepSearch 창에서 보낼 때 사진이 붙어 있으면 자료 첨부로 간다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
 import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
+import { AssistantCards } from "../assistants/AssistantCards";
 import { DeepAsk } from "../ask/DeepAsk";
 import { limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
+import { useAttachments } from "../ask/useAttachments";
+import { AttachChoice, useMaterialsAsk } from "../ask/useMaterialsAsk";
 import { useCaseFileAsk } from "../casefile/useCaseFileAsk";
 import { useQuota } from "../useQuota";
 import { HomeGuide, type GuideExample } from "./HomeGuide";
@@ -45,10 +50,19 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
   const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim();
   const isExample = (q: string) => examples.some((e) => norm(e.question) === norm(q));
 
-  const caseFile = useCaseFileAsk({ send, busy, error, blocked, showLimit });
+  // 같은 사진 줄을 서류 분석과 자료 첨부가 함께 쓴다
+  const attach = useAttachments();
+  const caseFile = useCaseFileAsk({ send, busy, error, blocked, showLimit, attach });
+  const materials = useMaterialsAsk({ attach, send, busy, error, blocked, showLimit });
+  // 사진을 붙이고 보냈을 때 쓰임을 고르는 창 (적어 둔 글을 들고 있는다)
+  const [choosing, setChoosing] = useState<string | null>(null);
   const submit = (q: string) => {
-    // 서류 사진이 붙어 있으면 서류 분석 창으로 간다 (글은 비워도 된다)
-    if (caseFile.start(q)) return;
+    // 사진이 붙어 있으면 먼저 쓰임을 고른다 (글은 비워도 된다)
+    if (attach.items.length > 0) {
+      if (blocked) showLimit();
+      else setChoosing(q);
+      return;
+    }
     if (blocked && !isExample(q)) showLimit();
     else void send(q);
   };
@@ -114,27 +128,48 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
           onSubmit={() => submit(text)}
           busy={busy}
           placeholder={
-            caseFile.attach.items.length > 0
-              ? "서류에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
+            attach.items.length > 0
+              ? "사진에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
               : current?.placeholder
           }
           inputRef={inputRef}
           askTools
-          attach={caseFile.attach}
+          attach={attach}
+          attachNoun="자료·서류"
           onDeep={() => (blocked ? showLimit() : setDeepOpen(true))}
         />
         {deepOpen && (
           <DeepAsk
             initialText={text}
             busy={busy}
+            attach={attach}
             onClose={() => setDeepOpen(false)}
             onSubmit={(q) => {
               setDeepOpen(false);
+              // 사진이 붙어 있으면 자료 첨부 창을 거쳐 DeepSearch로 보낸다
+              if (materials.start(q, true)) return;
               void send(q, false, true);
             }}
           />
         )}
+        {choosing !== null && (
+          <AttachChoice
+            count={attach.items.length}
+            onClose={() => setChoosing(null)}
+            onMaterials={() => {
+              const q = choosing;
+              setChoosing(null);
+              materials.start(q);
+            }}
+            onCaseFile={() => {
+              const q = choosing;
+              setChoosing(null);
+              caseFile.start(q);
+            }}
+          />
+        )}
         {caseFile.flow}
+        {materials.flow}
         {error ? (
           <p role="alert" className="text-warn-text mt-3 text-center text-sm">
             {error}
@@ -162,6 +197,27 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
           }}
         />
       </div>
+      {/* 분야별 비서 묶음 (F-018, DEC-057): 가이드 토글 아래 */}
+      <section aria-labelledby="home-assistants" className="mt-8 w-full max-w-[820px] text-left">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 id="home-assistants" className="font-display text-ink text-[22px] font-bold">
+            전문 에이전트
+          </h2>
+          <Link
+            href="/assistants"
+            className="text-link text-[13px] underline-offset-2 hover:underline"
+          >
+            전문 에이전트 소개 →
+          </Link>
+        </div>
+        <p className="text-muted mt-1 text-[14px]">
+          자주 묻는 분야는 전문 에이전트에게 대화하듯 물어보세요. 분석이 끝난 질문마다 1회로
+          세요(예시 질문 제외).
+        </p>
+        <div className="mt-4">
+          <AssistantCards compact />
+        </div>
+      </section>
       {modals}
     </>
   );

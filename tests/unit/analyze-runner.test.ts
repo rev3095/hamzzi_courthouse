@@ -1,6 +1,7 @@
 // @vitest-environment node
 // 분석 실행 순서 (P5): 분석 → 검증 → 비로그인 횟수 차감 → 저장. 실패하면 failed 표시 (DEC-010, F-005).
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { LONG_DEEP, TIERS } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
 
 vi.mock("server-only", () => ({}));
@@ -13,6 +14,9 @@ const store = vi.hoisted(() => ({
 vi.mock("@/lib/inquiries/store", () => store);
 const lite = vi.hoisted(() => ({ runLiteAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/lite", () => lite);
+// 긴 질문(DEC-062)은 DeepSearch로 간다. DeepSearch 안쪽은 lib/ai/deep-policy.test.ts·실호출 테스트가 본다
+const deepMod = vi.hoisted(() => ({ runDeepAnalysis: vi.fn() }));
+vi.mock("@/lib/ai/deep", () => deepMod);
 // 절차 분류 보조(DEC-037)는 tests/unit/procedure-labels.test.ts에서 따로 본다
 const hint = vi.hoisted(() => ({ procedureHintFor: vi.fn(async () => undefined) }));
 vi.mock("@/lib/inquiries/procedure-hint", () => hint);
@@ -43,6 +47,18 @@ const ANON = { kind: "anon" as const, anonSessionId: "anon-1" };
 const RESULT = { outcome: "grounded" };
 
 beforeEach(() => {
+  deepMod.runDeepAnalysis.mockImplementation(async () => ({
+    draft: { answer: { points: [] } },
+    evidence: {},
+    dropped: [],
+    usage: { inputTokens: 1, outputTokens: 2, cacheReadTokens: 0 },
+    model: "claude-opus-5-5",
+    promptVersion: "deep",
+    costUsd: 0.5,
+    struct: null,
+    drafted: [],
+    plan: null,
+  }));
   // 유료 경로: 키가 있고 AI_MODE=free가 아니다 (DEC-036). 무료 모드는 아래 describe에서 따로 본다
   vi.stubEnv("AI_MODE", "");
   vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
@@ -68,6 +84,60 @@ beforeEach(() => {
   store.finishAnalysis.mockImplementation(async () => {
     calls.push("finish");
     return "r-1";
+  });
+});
+
+describe("DEC-062 긴 질문 = 자동 DeepSearch", () => {
+  test("가린 질문이 100자를 넘으면 DeepSearch 버튼 없이도 Opus xhigh DeepSearch, 상한·가중치는 LONG_DEEP", async () => {
+    await analyzeInquiry(
+      { ...INQ, masked_text: "가".repeat(101) },
+      ANON,
+      new Headers(),
+      undefined,
+      {
+        tier: "light",
+      },
+    );
+    expect(lite.runLiteAnalysis).not.toHaveBeenCalled();
+    expect(deepMod.runDeepAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ long: true, tier: "max", costCapUsd: LONG_DEEP.capUsd }),
+    );
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(LONG_DEEP.weight);
+  });
+
+  test("100자 이하는 일반 답변 그대로 (고른 단계)", async () => {
+    await analyzeInquiry(
+      { ...INQ, masked_text: "가".repeat(100) },
+      ANON,
+      new Headers(),
+      undefined,
+      {
+        tier: "light",
+      },
+    );
+    expect(deepMod.runDeepAnalysis).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.light.weight);
+  });
+
+  test("긴 비서 질문도 DeepSearch로, 비서 말투·프롬프트 꼬리표를 넘긴다", async () => {
+    await analyzeInquiry(
+      { ...INQ, masked_text: "가".repeat(120) },
+      ANON,
+      new Headers(),
+      undefined,
+      {
+        assistant: "home",
+      },
+    );
+    expect(deepMod.runDeepAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        long: true,
+        persona: expect.any(String),
+        promptTag: "assistant-home-v3",
+      }),
+    );
   });
 });
 
@@ -222,6 +292,49 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
     expect(store.finishAnalysis).toHaveBeenCalled();
   });
 
+  test("F-018 DEC-057 비서 질문은 고른 단계와 상관없이 Pro Max(Opus)로 답하고 대화 한마디 지시문을 넘긴다", async () => {
+    lite.runLiteAnalysis.mockResolvedValue({
+      ...LITE_OUT,
+      talk: { reply: "많이 놀라셨겠어요.", asks: [] },
+    });
+    cite.verifyDraft.mockResolvedValue({
+      result: { ...RESULT },
+      citations: [],
+      stats: { total: 1, removed: 0, quoteMismatch: 0 },
+    });
+    const out = await analyzeInquiry(INQ, ANON, new Headers(), undefined, {
+      tier: "light",
+      assistant: "market",
+    });
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight);
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      { maskedText: "마스킹본", context: expect.anything() },
+      expect.objectContaining({
+        tier: "max",
+        assistant: expect.objectContaining({
+          promptTag: "assistant-market-v3",
+          talkSystem: expect.stringContaining("중고천국"),
+        }),
+      }),
+    );
+    expect(out.result).toMatchObject({
+      assistant: "market",
+      assistantTalk: { reply: "많이 놀라셨겠어요.", asks: [] },
+    });
+  });
+
+  test("F-018 DEC-057 에이전트 질문은 deep을 보내도 DeepSearch가 아니라 일반 답변 경로(지시문·대화 한마디)로 간다", async () => {
+    lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { assistant: "home", deep: true });
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        assistant: expect.objectContaining({ promptTag: "assistant-home-v3" }),
+      }),
+    );
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight);
+  });
+
   test("DEC-037 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     cite.verifyDraft.mockResolvedValue({
@@ -291,5 +404,69 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
       await analyzeInquiry(INQ, ANON, new Headers(), undefined, { tier: "max" });
       expect(rate.settleAiQuota).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("F-017 첨부 자료 (DEC-058)", () => {
+  const MATERIAL = {
+    kind: "문자",
+    summary: "보증금을 다음 달에 돌려주겠다는 문자입니다.",
+    details: [],
+    gaps: [],
+  };
+
+  test("저장된 자료를 분석에 넘기고, 검증을 통과한 문단과 이은 자료 정리를 결과에 싣는다", async () => {
+    lite.runLiteAnalysis.mockResolvedValueOnce({
+      draft: { answer: { points: [] } },
+      evidence: {},
+      dropped: [],
+      usage: { inputTokens: 1, outputTokens: 2, cacheReadTokens: 0 },
+      model: "claude-opus-5-5",
+      promptVersion: "v",
+      materialRefs: [{ text: "남은 문단", materials: [1] }],
+    });
+    cite.verifyDraft.mockResolvedValueOnce({
+      result: { outcome: "grounded", answer: { points: [{ text: "남은 문단" }] } },
+      citations: [],
+      stats: { total: 1, removed: 0, quoteMismatch: 0 },
+    });
+    const out = await analyzeInquiry({ ...INQ, materials: [MATERIAL] }, ANON, new Headers());
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ materials: [MATERIAL] }),
+      expect.anything(),
+    );
+    expect((out.result as { materials?: unknown }).materials).toEqual({
+      items: [{ ...MATERIAL, points: [0] }],
+    });
+  });
+
+  test("자료 글자 수도 긴 질문 상한 계산에 넣는다 (상한·예산 가중치가 그만큼 늘어난다)", async () => {
+    const long = { ...MATERIAL, summary: "가".repeat(200), details: ["나".repeat(80)] };
+    const many = Array.from({ length: 30 }, () => long);
+    cite.verifyDraft.mockResolvedValueOnce({
+      result: { outcome: "grounded", answer: { points: [] } },
+      citations: [],
+      stats: { total: 0, removed: 0, quoteMismatch: 0 },
+    });
+    await analyzeInquiry(
+      { ...INQ, masked_text: "가".repeat(1_990), materials: many },
+      ANON,
+      new Headers(),
+    );
+    // 1,990자 질문은 긴 질문이라 DeepSearch(Opus xhigh)로 간다 (DEC-062) — 자료 몫만큼 그 상한·가중치 위로 늘어난다
+    const [, deps] = deepMod.runDeepAnalysis.mock.calls[0] as [unknown, { costCapUsd: number }];
+    expect(deps.costCapUsd).toBeGreaterThan(LONG_DEEP.capUsd);
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(expect.any(Number));
+    expect((rate.tryAiQuota.mock.calls[0] as unknown as [number])[0]).toBeGreaterThan(
+      LONG_DEEP.weight,
+    );
+  });
+
+  test("모양이 틀린 저장 값은 없는 것으로 본다", async () => {
+    await analyzeInquiry({ ...INQ, materials: [{ kind: "모름" }] }, ANON, new Headers());
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.not.objectContaining({ materials: expect.anything() }),
+      expect.anything(),
+    );
   });
 });

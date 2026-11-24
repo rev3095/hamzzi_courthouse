@@ -1,0 +1,452 @@
+{
+  "id": "insult-01--complainant",
+  "category": "insult",
+  "question": "2026년 3월 초 금요일 저녁, ○○시의 한 고깃집에서 있었던 일입니다. 저는 아내와 함께 30분 정도 대기하다가 종업원 안내로 창가 4인석에 앉으려 했습니다. 그런데 50대로 보이는 남성이 테이블에 가방을 올려놓고 일행이 오기로 해서 맡아둔 자리라고 했습니다. 종업원이 그런 식으로 자리를 맡을 수는 없다고 설명하자, 그 남성은 제게 큰 소리로 부모를 들먹이는 욕설과 외모를 비하하는 말을 몇 차례 했습니다. 가게 안에는 손님이 열 명 넘게 있었고 모두 이쪽을 쳐다봤습니다. 저는 휴대폰 녹음을 중간부터 켰는데, 마지막 욕설 한 마디와 \"그만하시라\"는 종업원 목소리가 30초 정도 녹음되어 있습니다. 옆 테이블 손님 한 분이 처음부터 다 봤다며 필요하면 증언해 주겠다고 해서 연락 방법을 받아두었습니다.\n\n문제는 몇 가지가 있습니다. 첫째, 저는 상대방 이름을 모릅니다. 사장님 말로는 가끔 오는 손님이라 카드 결제 기록은 있을 거라고 했지만, 경찰이 요청해야 알려줄 수 있다고 합니다. 가게 CCTV는 영상만 있고 음성은 없으며, 일정 기간이 지나면 지워진다고 들었습니다. 둘째, 상대가 제 쪽으로 다가올 때 저도 \"말 조심하라\"고 하면서 그 사람이 뻗은 팔을 손으로 뿌리친 적이 있어서, 상대가 제가 먼저 밀었다고 주장할까 걱정됩니다. 셋째, 그 일 이후 2주쯤 지나서부터 잠을 잘 못 자 정신건강의학과 진료를 두 번 받았고, 형사 고소와 별도로 위자료도 받고 싶습니다.\n\n모욕죄가 성립하려면 공연성이나 욕설 내용이 어느 정도여야 하는지, 모욕죄가 친고죄라면 고소 기간은 언제부터 따지는지, 이름을 모르는 상대를 피고소인 '성명불상'으로 고소할 수 있는지 궁금합니다. 중간부터 녹음한 파일과 목격자 진술이 증거로 어떻게 쓰이는지, CCTV가 지워지기 전에 무엇을 해야 하는지도 알고 싶습니다. 어떤 순서로 증거를 확보하고 고소를 진행해야 하는지, 민사 손해배상은 언제 어떻게 청구하는지, 그리고 지금 고소장에 사실관계와 욕설 내용, 증거목록을 어떻게 적어야 하는지 알려주세요.",
+  "at": "2026-11-24T17:39:15.357Z",
+  "elapsedMs": 78502,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 14866,
+    "tokens_out": 8958,
+    "latency_ms": 78076
+  },
+  "costUsdUpperEstimate": 0.23862,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "형법",
+        "형사소송법",
+        "민법",
+        "교육공무원 징계령",
+        "형의 집행 및 수용자의 처우에 관한 법률",
+        "성폭력범죄의 처벌 등에 관한 특례법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "모욕 공연성",
+        "모욕죄 공연성 욕설 식당 손님",
+        "정당방위 손 뿌리침 폭행 쌍방 다툼"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "부모를 들먹이는 욕설과 외모 비하는 사실을 말한 것이 아니라 경멸적 감정을 드러낸 표현이어서 형법 제311조의 '모욕'에 해당할 여지가 큽니다. 대법원 2016도9674 판결은 모욕을 사회적 평가를 떨어뜨릴 만한 추상적 판단이나 경멸적 감정의 표현으로 봅니다. 또 실제로 명예가 침해되는 결과까지 생길 필요는 없다고 했습니다.",
+          "source": "case:2016도9674",
+          "quote": "사실을 적시하지 아니하고 사람의 사회적 평가를 저하시킬 만한 추상적 판단이나 경멸적 감정을 표현하는 것",
+          "check": "verified"
+        },
+        {
+          "text": "모욕죄가 되려면 공연성, 즉 여러 사람이 들을 수 있는 상태여야 합니다. 큰 소리로 말했고 옆 손님들이 실제로 들었다면 공연성이 인정되기 쉽습니다. 반대로 아내분과 종업원만 들을 수 있었다면, 대법원 2022도14571 판결처럼 특정한 소수에게 한 말로 보고 전파가능성을 엄격히 따지게 됩니다. 그래서 목격자 진술이 중요합니다.",
+          "source": "case:2022도14571",
+          "quote": "특정한 소수에게만 발언하였다는 점은 공연성이 부정되는 유력한 사정이 될 수 있으므로",
+          "check": "verified"
+        },
+        {
+          "text": "모욕죄는 친고죄입니다. 형법 제312조 제1항은 제311조의 죄는 고소가 있어야 공소를 제기할 수 있다고 정하고 있습니다. 따라서 질문자님이 직접 고소해야 처벌 절차가 진행됩니다.",
+          "source": "law:형법:제312조",
+          "quote": "제308조와 제311조의 죄는 고소가 있어야 공소를 제기할 수 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "고소 기간은 형사소송법 제230조에 따라 '범인을 알게 된 날'부터 따지고, 기간이 지나면 고소할 수 없습니다. 이름을 몰라도 피고소인을 '성명불상'으로 적고 인상착의, 일시·장소, 가게에 결제 기록이 있다는 점을 밝혀 고소할 수 있습니다. 그러면 경찰이 신원을 특정합니다. 기산점 다툼을 피하려면 사건 당일부터 기간이 흐른다고 보고 서두르시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "위자료는 형사 고소와 별도로 민법 제750조, 제751조에 따라 민사소송으로 청구할 수 있습니다. 형사 절차에서 상대 신원과 유죄가 확인된 뒤 청구하면 입증이 수월한 편입니다. 진료비까지 받으려면 진료 기록에 사건 관련 내용이 적혀 있는 등 사건과의 인과관계 자료가 필요합니다. 그런 자료가 부족하다면 위자료 위주로 판단될 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "상대가 뻗은 팔이 질문자님을 붙잡거나 때리려는 동작이었다면, 이를 손으로 뿌리친 것은 현재의 부당한 침해에 대한 방어입니다. 그래서 형법 제21조 제1항의 정당방위가 검토될 수 있습니다. 반대로 위협 없는 단순한 손짓이었다면 정당방위로 보기 어려울 수 있습니다.",
+          "source": "law:형법:제21조",
+          "quote": "현재의 부당한 침해로부터 자기 또는 타인의 법익(法益)을 방위하기 위하여 한 행위는",
+          "check": "verified"
+        },
+        {
+          "text": "뿌리친 정도가 지나쳤다고 평가되더라도 형법 제21조 제2항에 따라 형이 감경되거나 면제될 수 있습니다. 불안한 상태에서 흥분하거나 당황해서 한 행동이었다면 제3항에 따라 벌하지 않을 수도 있습니다.",
+          "source": "law:형법:제21조",
+          "quote": "방위행위가 그 정도를 초과한 경우에는 정황(情況)에 따라 그 형을 감경하거나 면제할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "목격자분이 수사기관이나 법정에서 직접 진술하면 그 진술은 증거가 됩니다. 반면 질문자님이 '목격자가 이렇게 말했다'고 전하는 것은 형사소송법 제310조의2의 전문증거라서 원칙적으로 증거로 쓸 수 없습니다. 목격자분께 참고인 조사나 증인 출석을 부탁드리는 쪽이 좋습니다.",
+          "source": "law:형사소송법:제310조의2",
+          "quote": "공판준비 또는 공판기일 외에서의 타인의 진술을 내용으로 하는 진술은 이를 증거로 할 수 없다",
+          "check": "verified"
+        },
+        {
+          "text": "질문자님이 대화 당사자로서 녹음한 파일은 통신비밀보호법 제3조가 금지하는 '타인 간 대화' 녹음이 아니어서 증거로 쓸 수 있다고 봅니다. 욕설을 녹음한 파일은 그런 말이 있었다는 사실 자체를 증명하는 자료입니다. 다만 중간부터 녹음되었으니 앞부분 욕설은 목격자 진술로 보완해야 합니다. 원본 파일은 편집하지 말고 그대로 보관하세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "CCTV는 지워지기 전에 사장님께 보존을 요청하고, 곧바로 경찰에 신고하거나 고소장을 내서 수사기관이 영상과 결제 기록을 확보하게 하는 것이 우선입니다. 고소장에는 일시·장소와 경위, 들은 욕설을 그대로, 주변 손님 상황, 뿌리친 경위를 적으세요. 증거목록에는 녹음 파일, CCTV, 목격자 연락처, 진료 기록을 적으시면 됩니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:형법:제138조",
+        "lawName": "형법",
+        "articleNo": "제138조",
+        "title": "법정 또는 국회회의장모욕",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C138%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제311조",
+        "lawName": "형법",
+        "articleNo": "제311조",
+        "title": "모욕",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C311%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제262조",
+        "lawName": "형법",
+        "articleNo": "제262조",
+        "title": "폭행치사상",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C262%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제21조",
+        "lawName": "형법",
+        "articleNo": "제21조",
+        "title": "정당방위",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C21%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형사소송법:제310조의2",
+        "lawName": "형사소송법",
+        "articleNo": "제310조의2",
+        "title": "전문증거와 증거능력의 제한",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C310%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:형사소송법:제56조의2",
+        "lawName": "형사소송법",
+        "articleNo": "제56조의2",
+        "title": "공판정에서의 속기ㆍ녹음 및 영상녹화",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C56%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:형법:제312조",
+        "lawName": "형법",
+        "articleNo": "제312조",
+        "title": "고소와 피해자의 의사",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C312%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:10ㆍ29이태원참사피해자권리보장과진상규명및재발방지를위한특별법:제45조",
+        "lawName": "10ㆍ29이태원참사 피해자 권리보장과 진상규명 및 재발방지를 위한 특별법",
+        "articleNo": "제45조",
+        "title": "공개에 따른 책임면제",
+        "effectiveFrom": "2026-09-15",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/10%E3%86%8D29%EC%9D%B4%ED%83%9C%EC%9B%90%EC%B0%B8%EC%82%AC%20%ED%94%BC%ED%95%B4%EC%9E%90%20%EA%B6%8C%EB%A6%AC%EB%B3%B4%EC%9E%A5%EA%B3%BC%20%EC%A7%84%EC%83%81%EA%B7%9C%EB%AA%85%20%EB%B0%8F%20%EC%9E%AC%EB%B0%9C%EB%B0%A9%EC%A7%80%EB%A5%BC%20%EC%9C%84%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C45%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제752조",
+        "lawName": "민법",
+        "articleNo": "제752조",
+        "title": "생명침해로 인한 위자료",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C752%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:아동ㆍ청소년의성보호에관한법률:제26조의2",
+        "lawName": "아동ㆍ청소년의 성보호에 관한 법률",
+        "articleNo": "제26조의2",
+        "title": "영상녹화물의 증거능력 특례",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%95%84%EB%8F%99%E3%86%8D%EC%B2%AD%EC%86%8C%EB%85%84%EC%9D%98%20%EC%84%B1%EB%B3%B4%ED%98%B8%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C26%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:10ㆍ29이태원참사피해자권리보장과진상규명및재발방지를위한특별법:제33조",
+        "lawName": "10ㆍ29이태원참사 피해자 권리보장과 진상규명 및 재발방지를 위한 특별법",
+        "articleNo": "제33조",
+        "title": "청문회의 실시",
+        "effectiveFrom": "2026-09-15",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/10%E3%86%8D29%EC%9D%B4%ED%83%9C%EC%9B%90%EC%B0%B8%EC%82%AC%20%ED%94%BC%ED%95%B4%EC%9E%90%20%EA%B6%8C%EB%A6%AC%EB%B3%B4%EC%9E%A5%EA%B3%BC%20%EC%A7%84%EC%83%81%EA%B7%9C%EB%AA%85%20%EB%B0%8F%20%EC%9E%AC%EB%B0%9C%EB%B0%A9%EC%A7%80%EB%A5%BC%20%EC%9C%84%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C33%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:교육공무원징계령:제6조",
+        "lawName": "교육공무원 징계령",
+        "articleNo": "제6조",
+        "title": "징계등 의결의 요구",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%90%EC%9C%A1%EA%B3%B5%EB%AC%B4%EC%9B%90%20%EC%A7%95%EA%B3%84%EB%A0%B9/%EC%A0%9C6%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제751조",
+        "lawName": "민법",
+        "articleNo": "제751조",
+        "title": "재산 이외의 손해의 배상",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C751%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형의집행및수용자의처우에관한법률:제41조",
+        "lawName": "형의 집행 및 수용자의 처우에 관한 법률",
+        "articleNo": "제41조",
+        "title": "접견",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EC%9D%98%20%EC%A7%91%ED%96%89%20%EB%B0%8F%20%EC%88%98%EC%9A%A9%EC%9E%90%EC%9D%98%20%EC%B2%98%EC%9A%B0%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C41%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:성폭력범죄의처벌등에관한특례법:제30조의2",
+        "lawName": "성폭력범죄의 처벌 등에 관한 특례법",
+        "articleNo": "제30조의2",
+        "title": "영상녹화물의 증거능력 특례",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%B1%ED%8F%AD%EB%A0%A5%EB%B2%94%EC%A3%84%EC%9D%98%20%EC%B2%98%EB%B2%8C%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%A1%80%EB%B2%95/%EC%A0%9C30%EC%A1%B0%EC%9D%982",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624315",
+        "caseNo": "2022도5937",
+        "caseName": "상관모욕",
+        "court": "대법원",
+        "decidedAt": "2026-07-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624315",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "183661",
+        "caseNo": "2016도9674",
+        "caseName": "업무방해·폭행·모욕",
+        "court": "대법원",
+        "decidedAt": "2016-10-13",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=183661",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "239237",
+        "caseNo": "2022도14571",
+        "caseName": "모욕",
+        "court": "대법원",
+        "decidedAt": "2024-01-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=239237",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "242071",
+        "caseNo": "2023노528, 830(병합)",
+        "caseName": "명예훼손·모욕·협박·스토킹범죄의처벌등에관한법률위반",
+        "court": "서울남부지방법원",
+        "decidedAt": "2023-08-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=242071",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "238505",
+        "caseNo": "2021노4485",
+        "caseName": "모욕",
+        "court": "대구지방법원",
+        "decidedAt": "2022-10-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238505",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "227683",
+        "caseNo": "2020도8336",
+        "caseName": "명예훼손·모욕",
+        "court": "대법원",
+        "decidedAt": "2022-07-28",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=227683",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "226871",
+        "caseNo": "2020다270770",
+        "caseName": "해고무효확인등청구의소",
+        "court": "대법원",
+        "decidedAt": "2021-04-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226871",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 10
+      },
+      {
+        "keyword": "모욕 공연성",
+        "total": 6
+      },
+      {
+        "keyword": "모욕죄 공연성 욕설 식당 손님",
+        "total": 1
+      },
+      {
+        "keyword": "정당방위 손 뿌리침 폭행 쌍방 다툼",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "2016도9674",
+          "exists": true
+        },
+        {
+          "citation": "형법 제311조",
+          "exists": true
+        },
+        {
+          "citation": "2022도14571",
+          "exists": true
+        },
+        {
+          "citation": "형법 제312조",
+          "exists": true
+        },
+        {
+          "citation": "형법 제21조",
+          "exists": true
+        },
+        {
+          "citation": "형사소송법 제310조의2",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "질문자",
+          "role": ""
+        },
+        {
+          "label": "상대 남성",
+          "role": ""
+        },
+        {
+          "label": "아내",
+          "role": "사건 당시 질문자와 동행한 사람"
+        },
+        {
+          "label": "종업원",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 3월 초 금요일 저녁",
+          "who": "질문자",
+          "what": "30분 대기 후 종업원 안내로 창가 4인석에 앉으려 했다."
+        },
+        {
+          "when": "",
+          "who": "상대 남성",
+          "what": "테이블에 가방을 올려두고 일행이 오기로 했다며 자리를 맡아두었다고 말했다."
+        },
+        {
+          "when": "",
+          "who": "상대 남성",
+          "what": "종업원의 제지 후 질문자에게 부모를 욕하고 외모를 비하하는 말을 여러 차례 했다."
+        },
+        {
+          "when": "",
+          "who": "질문자",
+          "what": "상대가 다가올 때 손으로 상대의 팔을 뿌리쳤다."
+        },
+        {
+          "when": "",
+          "who": "질문자",
+          "what": "휴대폰 녹음을 중간부터 켰고 마지막 욕설과 종업원의 제지 목소리가 30초 녹음됐다."
+        },
+        {
+          "when": "사건 2주 후부터",
+          "who": "질문자",
+          "what": "수면 장애가 생겨 정신건강의학과 진료를 두 번 받았다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "욕설과 외모 비하가 모욕죄에 해당하는지",
+          "points": [
+            0,
+            1
+          ]
+        },
+        {
+          "title": "모욕죄 고소 기간과 친고죄 여부",
+          "points": [
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "title": "상대 팔 뿌리침이 정당방위나 폭행이 되는지",
+          "points": [
+            5,
+            6
+          ]
+        },
+        {
+          "title": "휴대폰 녹음 파일과 목격자 진술의 증거능력",
+          "points": [
+            7,
+            8,
+            9
+          ]
+        }
+      ],
+      "unknowns": [
+        "상대 팔을 뿌리친 행위가 먼저 폭행 등 부당한 침해에 대한 것이었는지 여러 사람이 본 시점은 언제였는지",
+        "녹음 전 욕설이 얼마나 있었고 옆 손님들이 실제로 들었는지",
+        "고소장을 접수한 적이 있거나 경찰에 신고했는지 여부",
+        "상대 남성이 가게에 다시 올 가능성이 있는지, 사장이 이름을 확인해 줄 수 있는지",
+        "정신건강의학과 진료 기록과 사건 사이의 인과관계를 입증할 자료가 더 있는지"
+      ]
+    }
+  }
+}

@@ -91,6 +91,29 @@ export function tierOf(id: TierId | null | undefined): TierProfile {
 }
 
 /**
+ * 긴 질문 = 자동 DeepSearch (DEC-062, 사용자 결정 2026-11-25). 가린 질문이 이 글자 수를 넘으면 DeepSearch 버튼을 누르지
+ * 않았어도 DeepSearch로 분석하고 7개 탭(개요·자료·사실관계·구조도·쟁점·리서치·노트)으로 보인다. 이하면 일반 답변 그대로.
+ */
+export const LONG_QUESTION_CHARS = 100;
+
+export const isLongQuestion = (maskedText: string): boolean =>
+  [...maskedText.trim()].length > LONG_QUESTION_CHARS;
+
+/**
+ * 긴 질문의 답변 설정 (DEC-062): 고른 단계와 상관없이 Opus 5.5 effort xhigh.
+ * xhigh는 생각이 길어 출력 한도를 24,000토큰으로 둔다 — 출력 24,000 × $20/M = $0.48 + 입력 약 4만 토큰 $0.16 + 구조화(Haiku)
+ * → 상한 $1.5. 분석 라우트 300초 안에 검증·저장까지 끝나게 답변 시간은 220초까지. 가중치 = 상한 ÷ 단위 올림.
+ */
+export const LONG_DEEP = {
+  tier: "max",
+  effort: "xhigh",
+  capUsd: 1.5,
+  answerTokens: { max: 24_000, min: 6_000 },
+  timeoutMs: 220_000,
+  weight: 1000,
+} as const;
+
+/**
  * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 결정): **주간 금액 하나만** (AI_WEEKLY_BUDGET_USD). 하루 상한은 두지 않는다.
  * 기본 $80 — 공모전(2026-11-20) 대비 임시값 (DEC-031). 서비스 운영 때 다시 정한다(이전 $21 = 월 $100 ÷ 약 4.3주).
  * 월 $100(Max 프로모션 크레딧, 결제 주기마다 들어오고 남으면 사라진다).
@@ -112,6 +135,8 @@ export const CASEFILE_WEIGHT = 10;
 export const MATTER_READ_WEIGHT = 10;
 export const MATTER_SUMMARY_WEIGHT = 2;
 export const COMPANY_WEIGHT = 1000;
+/** 자료 판독(F-017, DEC-058) 1건. Haiku 비전 상한 $0.015 ÷ 단위 $0.0015 올림 — 서류 판독과 같다 (단위 테스트가 확인) */
+export const MATERIALS_WEIGHT = 10;
 
 /** 주간 예산을 단위로 바꾼 값. 0이면 유료 분석 없음, 잘못된 값은 기본값 */
 export function weeklyBudgetUnits(env: Env = process.env): number {

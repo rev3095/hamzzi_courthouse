@@ -9,7 +9,7 @@ const { runLiteAnalysis, liteEvidenceKeys, LITE_MAX_ARTICLES, UNDERSTAND_MODEL }
 const { UNDERSTAND_TOKENS } = await import("@/lib/ai/cost");
 const { EvidenceSet } = await import("@/lib/search/evidence");
 const { ApiError } = await import("@/lib/api/errors");
-import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
+import type { CallOptions, CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
 import { TIER_IDS, TIERS } from "@/lib/ai/models";
 import type { LawSource } from "@/lib/search/law-source";
 import type { ArticleHit, CaseDetail } from "@/lib/search/types";
@@ -425,5 +425,57 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
     // 해석 계획 최대치(입력 1,500 + 출력 450 = $0.000375, DEC-042로 출력 한도 300 → 450) + 답변 $0.0007
     expect(out.costUsd).toBeCloseTo(0.001075, 6);
     expect(out.costUsd).toBeLessThanOrEqual(0.0015);
+  });
+});
+
+describe("F-017 첨부 자료 (DEC-058)", () => {
+  const MATERIALS = [
+    {
+      kind: "메신저 대화" as const,
+      summary: "임대인이 보증금을 다음 달에 돌려주겠다고 한 대화입니다.",
+      details: ["다음 달에 돌려주겠다"],
+      gaps: [],
+    },
+  ];
+
+  test("자료는 근거가 아닌 사용자 자료로 해석·답변에 넘기고, 문단별 자료 번호를 받는다", async () => {
+    const base = fakeModel();
+    const answered = JSON.parse(ANSWER) as { points: Record<string, unknown>[] };
+    const model = {
+      ...base,
+      create: vi.fn(async (p: CreateParams, o: CallOptions) => {
+        if (isUnderstand(p)) return base.create(p, o);
+        base.calls.push(p);
+        return msg(
+          JSON.stringify({ points: answered.points.map((x) => ({ ...x, materials: [1, 5] })) }),
+        );
+      }),
+    };
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요", materials: MATERIALS },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
+    const text = (p: CreateParams) => JSON.stringify(p.messages);
+    expect(text(base.understand[0])).toContain("<첨부_자료>");
+    expect(text(base.calls[0])).toContain("법령·판례 근거가 아니며");
+    const schema = base.calls[0].output_config?.format as unknown as {
+      schema: { properties: { points: { items: { required: string[] } } } };
+    };
+    expect(schema.schema.properties.points.items.required).toContain("materials");
+    // 출처는 여전히 근거 키 (자료는 출처가 될 수 없다)
+    expect(out.draft.answer.points[0].source).toBe("law:주택임대차보호법:제3조의3");
+    expect(out.materialRefs).toEqual([{ text: out.draft.answer.points[0].text, materials: [1] }]);
+    expect(out.promptVersion).toContain("materials-");
+  });
+
+  test("자료가 없으면 답변 형식·메시지가 그대로다", async () => {
+    const model = fakeModel();
+    const out = await runLiteAnalysis(
+      { maskedText: "보증금을 못 받았어요" },
+      { model, lawSource: fakeSource(), ...HAIKU },
+    );
+    expect(JSON.stringify(model.calls[0].messages)).not.toContain("<첨부_자료>");
+    expect(JSON.stringify(model.calls[0].output_config)).not.toContain("materials");
+    expect(out.materialRefs).toEqual([]);
   });
 });

@@ -82,7 +82,7 @@ describe("DEC-015 예시 질문 재생", () => {
   test("F-005 재생 결과의 인용 행: 검증 통과 문단만 verified, 구절 60자 이내 (DEC-007)", () => {
     const ex = findExample(demoExamples()[0].question)!;
     const rows = replayCitations({ ...ex.result, mode: "replay" });
-    expect(rows.length).toBe(ex.result.answer.points.length);
+    expect(rows.length).toBe(ex.result.answer.points.filter((p) => p.check !== "model").length);
     for (const r of rows) {
       expect(r.source).toBe("law_open_api_live");
       expect(r.sourceRef).toMatch(/^(law|case):/);

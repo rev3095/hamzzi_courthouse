@@ -6,6 +6,14 @@ import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import { freeSearch } from "@/lib/demo/free";
 import { DEEP_EVIDENCE } from "@/lib/inquiries/deep";
+import type { MaterialReading } from "@/lib/materials/limits";
+import {
+  MATERIALS_ANSWER_VERSION,
+  materialRefsOf,
+  materialsInstruction,
+  withMaterialRefs,
+  type MaterialRef,
+} from "@/lib/materials/policy";
 import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import {
@@ -16,9 +24,11 @@ import {
   textOf,
   withCostCap,
   type ModelClient,
+  type ModelMessage,
   type Usage,
 } from "./client";
 import { UNDERSTAND_TOKENS } from "./cost";
+import { TALK_SCHEMA, screenTalk, type AssistantTalk } from "@/lib/assistants/talk";
 import { examplesBlock } from "./label-bank";
 import { userMessage } from "./message";
 import { tierOf, type TierId } from "./models";
@@ -55,6 +65,8 @@ const LITE_CASE_CHARS = 800;
 export const LITE_MAX_ARTICLES = 6;
 const LITE_MAX_CASES = 3;
 const UNDERSTAND_TIMEOUT_MS = 8_000;
+/** 비서 대화 한마디 출력 한도 (짧은 정리 + 질문 셋) */
+const TALK_TOKENS = { max: 500, min: 200 } as const;
 /** 질문 해석은 답변 모델과 상관없이 가장 싼 모델로 (라벨과 검색어만 뽑는다) */
 export const UNDERSTAND_MODEL = "claude-haiku-5-5";
 
@@ -68,8 +80,12 @@ export type LiteAnalysisOutput = {
   costUsd: number;
   /** 예산·출력 한도 때문에 AI 문단 없이 근거만 냈다 */
   costCapped: boolean;
+  /** 분야별 비서의 대화 한마디 (DEC-057). 비서 요청에서만 있고, 거르기를 통과하지 못하면 null */
+  talk?: AssistantTalk | null;
   /** 질문 해석이 제안한 새 절차 섹션 (DEC-042). 저장만 하고 운영자 승인 전에는 화면에 쓰지 않는다 */
   newLabel?: { title: string; keywords: string[] } | null;
+  /** 첨부 자료(DEC-058)가 있을 때 문단별로 참고한 자료 번호. 검증 뒤 자료 지도에 잇는다 */
+  materialRefs?: MaterialRef[];
 };
 
 /** 답변 모델에 넘길 근거 키 순서: 조문 먼저, 그다음 요지가 있는 판례 */
@@ -100,7 +116,7 @@ export function liteDigest(evidence: EvidenceSet, keys: string[]): string {
 }
 
 export async function runLiteAnalysis(
-  input: { maskedText: string; context?: FollowupTurn[] },
+  input: { maskedText: string; context?: FollowupTurn[]; materials?: MaterialReading[] },
   deps: {
     model?: ModelClient;
     lawSource?: LawSource;
@@ -115,10 +131,23 @@ export async function runLiteAnalysis(
     lawHints?: { lawName: string; articleNos: string[] }[];
     /** DeepSearch (DEC-038): 근거를 조문 8·판례 4건까지 넘겨 본다. 비용 상한은 그대로라 넘으면 뒤에서부터 뺀다 */
     deep?: boolean;
+    /**
+     * 분야별 비서 (DEC-057): 답변 지시문 뒤에 붙는 비서 지시문과, 그 요청에서 법제처로 다시 가져올 사례 판례 일련번호.
+     * 판례는 근거 모음에 더해질 뿐 검증(verifyDraft)은 다른 근거와 같다. promptTag는 프롬프트 버전 뒤에 붙는다
+     */
+    assistant?: {
+      persona: string;
+      pinnedCaseIds: string[];
+      promptTag: string;
+      /** 대화 한마디 지시문 (Haiku, lib/assistants/talk). 근거 답변과 따로 거르고, 실패하면 한마디 없이 간다 */
+      talkSystem: string;
+    };
   } = {},
 ): Promise<LiteAnalysisOutput> {
   const tier = tierOf(deps.tier);
   const context = input.context ?? [];
+  // 첨부 자료(DEC-058): 질문 해석(검색어)과 답변에 사용자 자료로 함께 넘긴다. 근거 키가 아니라 인용할 수 없다
+  const materials = input.materials ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   // 질문 해석과 답변이 질문 1건 상한 하나를 함께 쓴다 (해석이 쓴 만큼 답변 몫이 줄어든다)
   const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.capUsd);
@@ -142,7 +171,10 @@ export async function runLiteAnalysis(
         messages: [
           {
             role: "user",
-            content: [examplesBlock(input.maskedText), userMessage(input.maskedText, context)]
+            content: [
+              examplesBlock(input.maskedText),
+              userMessage(input.maskedText, context, materials),
+            ]
               .filter(Boolean)
               .join("\n\n"),
           },
@@ -160,6 +192,8 @@ export async function runLiteAnalysis(
       throw e;
   }
 
+  // 비서 대화 한마디(Haiku)는 검색과 함께 돌린다 — 같은 질문 1건 상한 안이고 실패해도 답변은 그대로 간다
+  const talkRun = deps.assistant ? runTalk(model, deps.assistant.talkSystem, input) : null;
   const found = await freeSearch(input.maskedText, {
     lawSource: source,
     onStep: deps.onStep,
@@ -172,10 +206,20 @@ export async function runLiteAnalysis(
 
   const evidence = new EvidenceSet();
   for (const a of found.articles) evidence.addArticle(a);
+  // 비서 사례 판례(DEC-057)는 검색 결과보다 앞에 둔다 — 답변에 넘기는 판례 수가 정해져 있어 뒤에 두면 잘린다.
+  // 이 요청에서 법제처로 다시 가져온 것만 쓰고(DEC-009), 가져오지 못하면 빠진다
+  const pinned = await Promise.all(
+    (deps.assistant?.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
+  );
+  for (const c of pinned) if (c) evidence.addCase(c);
   for (const c of found.cases) evidence.addCase(c);
+  // 대화 한마디는 답변 호출 전에 끝낸다 — 두 호출이 같은 상한을 동시에 재지 않게
+  const talkOut = talkRun ? await talkRun : null;
+  if (talkOut?.res) usage = addUsage(usage, talkOut.res);
 
   let points: DraftPoint[] = [];
   let dropped: DropReason[] = [];
+  let materialRefs: MaterialRef[] = [];
   let costCapped = false;
   let spent = 0;
 
@@ -195,19 +239,28 @@ export async function runLiteAnalysis(
             max_tokens: tier.answerTokens.max,
             // Haiku는 disabled, Sonnet 5.5는 between_tools(effort low라 허용), Opus는 adaptive + effort medium
             thinking: tier.thinking,
-            system: [{ type: "text", text: LITE_ANSWER_SYSTEM }],
+            system: [
+              { type: "text", text: LITE_ANSWER_SYSTEM },
+              ...(deps.assistant ? [{ type: "text" as const, text: deps.assistant.persona }] : []),
+            ],
             output_config: {
               effort: tier.effort,
-              format: { type: "json_schema", schema: answerSchema(keys) },
+              format: {
+                type: "json_schema",
+                schema: withMaterialRefs(answerSchema(keys), materials.length),
+              },
             },
             messages: [
               {
                 role: "user",
                 content: [
-                  userMessage(input.maskedText, context),
+                  userMessage(input.maskedText, context, materials),
                   `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
-                ].join("\n\n"),
+                  materialsInstruction(materials.length),
+                ]
+                  .filter(Boolean)
+                  .join("\n\n"),
               },
             ],
           },
@@ -215,10 +268,12 @@ export async function runLiteAnalysis(
           { minOutputTokens: tier.answerTokens.min },
         );
         usage = addUsage(usage, res);
-        const parsed = AnswerZ.safeParse(JSON.parse(textOf(res)));
-        if (parsed.success)
+        const json: unknown = JSON.parse(textOf(res));
+        const parsed = AnswerZ.safeParse(json);
+        if (parsed.success) {
           ({ kept: points, dropped } = screenPoints(parsed.data.points, evidence));
-        else costCapped = true;
+          materialRefs = materialRefsOf(json, materials.length);
+        } else costCapped = true;
         break;
       } catch (e) {
         if (e instanceof CostCapReached && keys.length > 1) {
@@ -263,9 +318,52 @@ export async function runLiteAnalysis(
     dropped,
     usage,
     model: tier.model,
-    promptVersion: LITE_PROMPT_VERSION,
+    promptVersion: [
+      LITE_PROMPT_VERSION,
+      deps.assistant?.promptTag,
+      materials.length > 0 ? MATERIALS_ANSWER_VERSION : null,
+    ]
+      .filter(Boolean)
+      .join("+"),
     costUsd: spent,
     costCapped,
     newLabel: understood?.newLabel ?? null,
+    ...(talkOut && { talk: talkOut.talk }),
+    materialRefs,
   };
+}
+
+/** 분야별 비서의 대화 한마디 (DEC-057): Haiku 1회 → screenTalk. 상한·시간·형식 오류는 한마디 없이 null */
+async function runTalk(
+  model: ModelClient,
+  system: string,
+  input: { maskedText: string; context?: FollowupTurn[] },
+): Promise<{ talk: AssistantTalk | null; res: ModelMessage | null }> {
+  try {
+    const res = await callModel(
+      model,
+      "talk",
+      {
+        model: UNDERSTAND_MODEL,
+        max_tokens: TALK_TOKENS.max,
+        thinking: { type: "disabled" },
+        system: [{ type: "text", text: system }],
+        output_config: { format: { type: "json_schema", schema: TALK_SCHEMA } },
+        messages: [{ role: "user", content: userMessage(input.maskedText, input.context ?? []) }],
+      },
+      UNDERSTAND_TIMEOUT_MS,
+      { minOutputTokens: TALK_TOKENS.min },
+    );
+    let talk: AssistantTalk | null = null;
+    try {
+      talk = screenTalk(JSON.parse(textOf(res)));
+    } catch {
+      talk = null;
+    }
+    return { talk, res };
+  } catch (e) {
+    if (e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError)
+      return { talk: null, res: null };
+    throw e;
+  }
 }

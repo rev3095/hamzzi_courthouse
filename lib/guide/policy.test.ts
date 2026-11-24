@@ -38,8 +38,8 @@ const JUDGING =
   /승률|승소|패소|이길|이깁|질\s*거|성공\s*(확률|가능)|가능성|확률|유리|불리|합법|적법|불법|위법(이|은|하지)?\s*아니|위반(이|은|하지)?\s*아니|문제(가)?\s*없|걸리지\s*않|안\s*걸|괜찮(아|습)|보장(합|해)|무료\s*상담|최저가|변호사\s*필요\s*없/;
 
 describe("햄찌 안내 문안 (DEC-030)", () => {
-  test("메뉴는 7개이고 모두 문안이 있다 (DEC-055로 변호사 연결 메뉴 폐기)", () => {
-    expect(MENU_IDS).toHaveLength(7);
+  test("메뉴는 8개이고 모두 문안이 있다 (DEC-055로 변호사 연결 메뉴 폐기, DEC-057 전문 에이전트 추가)", () => {
+    expect(MENU_IDS).toHaveLength(8);
     for (const id of MENU_IDS) expect(guideTopic(id), id).toBeDefined();
   });
 
@@ -70,11 +70,11 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     for (const [id, s] of allTexts) expect(JUDGING.test(s), `${id}: ${s}`).toBe(false);
   });
 
-  test("변호사법 항목은 운영 사실(돈을 받지 않음, 협업 변호사, 배정·수수료 없음)만 말한다 (DEC-055)", () => {
+  test("변호사법 항목은 운영 사실(돈을 받지 않음, 배정·수수료 없음)만 말하고 자문 변호사 정보는 싣지 않는다 (DEC-055)", () => {
     const t = GUIDE_TOPICS["lawyer-act"];
     const list = t.list!.join(" ");
     expect(list).toContain("돈을 받지 않아요");
-    expect(list).toContain("협업 변호사");
+    expect(list).not.toMatch(/협업 변호사|자문을 받아/);
     expect(list).toContain("배정하지 않고");
     // 조항 이름은 docs/research/03 1-1절에 있는 것만
     const articles = GUIDE_TOPICS["lawyer-act-articles"].lines.join(" ");
@@ -107,6 +107,7 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       "features-procedure",
       "features-history",
       "features-casefile",
+      "features-materials",
       "features-matters",
     ]
       .map((id) => guideTopic(id)!.lines.join(" "))
@@ -191,6 +192,14 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     expect(guideEmail()).toMatch(/^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]+$/);
     expect(entries.filter(([, t]) => t.contact).map(([id]) => id)).toEqual(["contact"]);
     for (const [id, s] of allTexts) expect(s, id).not.toContain("@");
+  });
+
+  test("분야별 비서 항목은 AI 답변이고 횟수에 들어간다고 밝힌다 (DEC-057)", () => {
+    const t = GUIDE_TOPICS.assistants;
+    expect(t.assistants).toBe(true);
+    expect(t.lines.join(" ")).toContain("AI가");
+    expect(t.lines.join(" ")).toContain("질문 한 번으로");
+    expect(entries.filter(([, x]) => x.assistants).map(([id]) => id)).toEqual(["assistants"]);
   });
 
   test("절대 규칙 6: AI 생성물이 아니라는 고지를 단다", () => {

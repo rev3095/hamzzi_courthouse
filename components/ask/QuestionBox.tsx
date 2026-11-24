@@ -24,6 +24,7 @@ export function QuestionBox({
   askTools = false,
   onDeep,
   attach,
+  attachNoun,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -38,8 +39,10 @@ export function QuestionBox({
   askTools?: boolean;
   /** DeepSearch 창 열기. 있으면 답변 모드 옆에 버튼을 보인다 */
   onDeep?: () => void;
-  /** 서류 사진 붙이기 (F-015). 있으면 붙이기 버튼과 사진 줄을 보인다 */
+  /** 사진 붙이기 (F-015 서류 분석·F-017 자료 첨부). 있으면 붙이기 버튼과 사진 줄을 보인다 */
   attach?: Attachments;
+  /** 붙이기 버튼·사진 이름에 붙는 말 (기본 "서류") */
+  attachNoun?: string;
 }) {
   const id = useId();
   const [dragging, setDragging] = useState(false);
@@ -69,7 +72,7 @@ export function QuestionBox({
       }`}
     >
       <div className="rounded-button flex items-stretch overflow-hidden">
-        {attach && <AttachButton attach={attach} disabled={busy} />}
+        {attach && <AttachButton attach={attach} disabled={busy} noun={attachNoun} />}
         <label htmlFor={id} className="sr-only">
           {label}
         </label>
@@ -114,7 +117,7 @@ export function QuestionBox({
           <span className="sr-only lg:not-sr-only lg:text-[15px] lg:font-semibold">물어보기</span>
         </button>
       </div>
-      {attach && <AttachTray attach={attach} />}
+      {attach && <AttachTray attach={attach} noun={attachNoun} />}
       {askTools && <SaveToggle />}
       {askTools && (
         <div className="border-line mx-1 mt-1 flex flex-wrap items-center justify-between gap-x-3 border-t">

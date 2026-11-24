@@ -5,7 +5,14 @@
 // - 시각자료(사건 구조도 등)는 이 구조와 검증을 통과한 문단으로 코드가 그린다. 그림을 위해 모델을 더 부르지 않는다.
 import { z } from "zod";
 import { scanInput } from "@/lib/pii";
-import { MODEL_SOURCE, citationsIn, isAssertive, safeQuery, sourceEnum } from "./policy";
+import {
+  MODEL_SOURCE,
+  citationsIn,
+  isAssertive,
+  numberTokens,
+  safeQuery,
+  sourceEnum,
+} from "./policy";
 
 export const DEEP_LIMITS = {
   parties: 4,
@@ -82,7 +89,7 @@ export const DEEP_STRUCT_SCHEMA = {
         properties: {
           title: {
             type: "string",
-            description: "쟁점을 묻는 짧은 말 (예: 계약이 갱신된 것으로 보는지)",
+            description: "쟁점을 묻는 짧은 말, 30자 이내 (예: 계약이 갱신된 것으로 보는지)",
           },
           lawName: { type: "string", description: "이 쟁점을 다루는 법률의 정식 이름 하나" },
           lawKeywords: strings("그 법률 조문 제목·본문에 쓰이는 낱말 1~3개"),
@@ -119,8 +126,10 @@ const squash = (s: string) =>
 
 /** 문자열 안의 숫자가 모두 질문에 그대로 있는지 (질문에 없는 숫자를 만들어 넣지 못하게, 절대 규칙 3) */
 function numbersFromQuestion(s: string, question: string): boolean {
-  const q = question.normalize("NFKC");
-  return (s.match(/\d+(?:[.,]\d+)*/g) ?? []).every((n) => q.includes(n));
+  // 숫자는 낱말 단위로 비교한다 — "1,500,000원"의 500이 "500만 원"을 허용하지 않게. 가린 자리표시([이름1])의 숫자는 뺀다
+  const tokens = (t: string) => t.match(/\d+(?:[.,]\d+)*/g) ?? [];
+  const allowed = new Set(tokens(question.normalize("NFKC").replace(/\[[^\]]*\]/g, " ")));
+  return tokens(s.normalize("NFKC")).every((n) => allowed.has(n));
 }
 
 /** 화면에 나가는 구조 문구 한 줄. 통과하지 못하면 null */
@@ -129,10 +138,16 @@ function cleanText(raw: string, max: number, question: string): string | null {
   if (t.length < 2 || t.length > max) return null;
   if (scanInput(t).findings.length > 0) return null;
   if (isAssertive(t) || !numbersFromQuestion(t, question)) return null;
+  // 한글 수사 기간("두 달", "열흘")도 사용자가 적은 것만 (절대 규칙 3, DEC-062 legal-reviewer)
+  const asked = new Set(numberTokens(question).words);
+  if (numberTokens(t).words.some((w) => !asked.has(w))) return null;
   const cited = citationsIn(t);
   if (cited.articles.length > 0 || cited.cases.length > 0) return null;
   return t;
 }
+
+/** 쟁점 제목 글자 수 상한. 지시문은 30자 이내를 요구하고, 넘더라도 이 길이까지는 받는다 */
+export const ISSUE_TITLE_MAX = 60;
 
 const LAW_NAME = /^[가-힣ㆍ· ]{1,40}(?:법률|법|령|규칙)$/;
 
@@ -168,7 +183,9 @@ export function screenStruct(raw: DeepStructRaw, maskedText: string): DeepStruct
 
   const issues: DeepIssue[] = [];
   for (const i of raw.issues) {
-    const title = cleanText(i.title, 40, maskedText);
+    // 긴 사연에서는 모델이 40자를 넘는 쟁점 제목을 자주 써서 쟁점이 모두 버려졌다(2026-11-25 실호출 — 일반 답변으로 내려감).
+    // 화면에 두 줄까지는 괜찮으니 ISSUE_TITLE_MAX까지 받는다
+    const title = cleanText(i.title, ISSUE_TITLE_MAX, maskedText);
     if (!title || issues.some((x) => x.title === title)) continue;
     const lawName = squash(i.lawName);
     const lawKeywords = i.lawKeywords
@@ -208,16 +225,154 @@ export const DeepAnswerZ = z.object({
   points: z.array(
     z.object({ issue: z.number().int(), text: z.string(), source: z.string(), quote: z.string() }),
   ),
+  /** 사건 정리판 (DEC-062). 없으면 정리판 없이 그린다 — 예전 결과·일반 답변으로 내려간 경우 */
+  plan: z
+    .object({
+      kinds: z.array(z.string()),
+      sides: z.array(z.object({ party: Str, side: Str, actions: z.array(Str) })),
+      prep: z.array(z.object({ item: Str, why: Str })),
+    })
+    .optional(),
 });
 export type DeepDraftPoint = z.infer<typeof DeepAnswerZ>["points"][number];
+export type DeepPlanRaw = NonNullable<z.infer<typeof DeepAnswerZ>["plan"]>;
 
-/** 출처는 이번 요청의 근거 키 중 하나 또는 MODEL_SOURCE(DEC-055), 쟁점은 구조에서 뽑은 번호 중 하나만 고를 수 있다 */
-export function deepAnswerSchema(keys: string[], issueCount: number) {
+// ── 사건 정리판 (DEC-062): 사건 종류 · 당사자 자리와 대응 · 준비 자료 ─────────────
+// 100자를 넘는 질문의 7개 탭(개요·자료·사실관계·구조도·쟁점·리서치·노트) 그림 재료. 답변 모델이 함께 낸다.
+// 판정(승패·유불리·책임 비율)은 담지 않는다. 대응 문장은 상담 의견이라 허용하지만(DEC-055) 단정 표현·질문에 없는 숫자·
+// 조문/사건번호(근거 문단에만 있어야 검증된다)·개인정보 꼴은 그 줄째 버린다.
+
+/** 사건 종류. 화면 이름은 고정 문안 */
+export const CASE_KINDS = {
+  civil: "민사",
+  criminal: "형사",
+  administrative: "행정",
+  family: "가사",
+  labor: "노동",
+  other: "기타",
+} as const;
+export type CaseKind = keyof typeof CASE_KINDS;
+
+/** 당사자가 절차에서 서는 자리. 판정이 아니라 사연에서의 위치다 */
+export const CASE_SIDES = {
+  claimant: "청구하는 쪽 (원고·신청인)",
+  respondent: "청구받는 쪽 (피고·피신청인)",
+  complainant: "고소·신고하는 쪽",
+  accused: "고소·신고당한 쪽",
+  agency: "행정기관·공공기관",
+  third: "그 밖의 관계인",
+} as const;
+export type CaseSide = keyof typeof CASE_SIDES;
+
+export const PLAN_LIMITS = { kinds: 3, sides: 4, actions: 3, prep: 8 } as const;
+
+/** 정리판은 판정을 담지 않는다 (DEC-062): 유불리·승패·가능성·책임 크기 표현이 든 줄은 버린다 */
+const PLAN_JUDGMENT = /유리|불리|승산|승소|패소|이길|질 수|가능성|확률|책임이s*(?:크|작|더|많|적)/;
+const planText = (raw: string, max: number, question: string): string | null => {
+  const t = cleanText(raw, max, question);
+  return t && !PLAN_JUDGMENT.test(t) ? t : null;
+};
+
+export type DeepPlan = {
+  kinds: CaseKind[];
+  sides: { party: string; side: CaseSide; actions: string[] }[];
+  prep: { item: string; why: string }[];
+};
+
+/** 답변 모델이 낸 정리판을 거른다. 당사자는 구조에서 뽑은 이름만, 숫자는 사용자가 적은 글에 있는 것만 */
+export function screenPlan(
+  raw: DeepPlanRaw | undefined,
+  partyLabels: string[],
+  question: string,
+): DeepPlan | null {
+  if (!raw) return null;
+  const kinds = [
+    ...new Set(raw.kinds.filter((k): k is CaseKind => Object.hasOwn(CASE_KINDS, k))),
+  ].slice(0, PLAN_LIMITS.kinds);
+  const labels = new Set(partyLabels);
+  const sides: DeepPlan["sides"] = [];
+  for (const s of raw.sides) {
+    const party = squash(s.party);
+    if (!labels.has(party) || !Object.hasOwn(CASE_SIDES, s.side)) continue;
+    if (sides.some((x) => x.party === party)) continue;
+    const actions = s.actions
+      .map((a) => planText(a, 90, question))
+      .filter((a): a is string => !!a)
+      .slice(0, PLAN_LIMITS.actions);
+    sides.push({ party, side: s.side as CaseSide, actions });
+    if (sides.length >= PLAN_LIMITS.sides) break;
+  }
+  const prep: DeepPlan["prep"] = [];
+  for (const p of raw.prep) {
+    const item = planText(p.item, 40, question);
+    if (!item || prep.some((x) => x.item === item)) continue;
+    prep.push({ item, why: planText(p.why, 80, question) ?? "" });
+    if (prep.length >= PLAN_LIMITS.prep) break;
+  }
+  if (kinds.length === 0 && sides.length === 0 && prep.length === 0) return null;
+  return { kinds, sides, prep };
+}
+
+export function planSchema(partyLabels: string[]) {
   return {
     type: "object",
     additionalProperties: false,
-    required: ["points"],
+    required: ["kinds", "sides", "prep"],
+    description: "사건 정리판. 판정(승패·유불리·책임 비율)은 쓰지 않는다",
     properties: {
+      kinds: {
+        type: "array",
+        items: { type: "string", enum: Object.keys(CASE_KINDS) },
+        description: "이 사건이 걸리는 절차 종류 1~3개 (민사·형사가 함께 걸리면 둘 다)",
+      },
+      sides: {
+        type: "array",
+        description: "당사자마다 절차에서 서는 자리와 할 수 있는 대응",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["party", "side", "actions"],
+          properties: {
+            party:
+              partyLabels.length > 0
+                ? { type: "string", enum: partyLabels, description: "사건 구조의 당사자" }
+                : { type: "string", description: "사건 구조의 당사자" },
+            side: { type: "string", enum: Object.keys(CASE_SIDES) },
+            actions: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "그 당사자가 할 수 있는 대응 1~3개, 각 90자 이내. 조문·사건번호·숫자는 쓰지 않는다",
+            },
+          },
+        },
+      },
+      prep: {
+        type: "array",
+        description: "질문자가 준비하면 좋은 자료 3~8개",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["item", "why"],
+          properties: {
+            item: { type: "string", description: "자료 이름, 40자 이내 (예: 임대차계약서 사본)" },
+            why: { type: "string", description: "어디에 쓰이는지, 80자 이내" },
+          },
+        },
+      },
+    },
+  };
+}
+
+/** 출처는 이번 요청의 근거 키 중 하나 또는 MODEL_SOURCE(DEC-055), 쟁점은 구조에서 뽑은 번호 중 하나만 고를 수 있다.
+ * partyLabels를 주면 사건 정리판(DEC-062) 칸도 받는다 */
+export function deepAnswerSchema(keys: string[], issueCount: number, partyLabels?: string[]) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: partyLabels ? ["points", "plan"] : ["points"],
+    properties: {
+      ...(partyLabels && { plan: planSchema(partyLabels) }),
       points: {
         type: "array",
         items: {
@@ -255,6 +410,8 @@ export type DeepMap = {
   events: { when: string; who: string; what: string }[];
   issues: { title: string; points: number[] }[];
   unknowns: string[];
+  /** 사건 정리판 (DEC-062). 100자를 넘는 질문의 답변에만 있다 */
+  plan?: DeepPlan;
 };
 
 /**
@@ -265,6 +422,7 @@ export function buildDeepMap(
   struct: DeepStruct,
   drafted: { issue: number; text: string }[],
   finalPoints: { text: string }[],
+  plan?: DeepPlan | null,
 ): DeepMap {
   const issueOf = new Map(drafted.map((d) => [d.text.trim(), d.issue]));
   const issues = struct.issues.map((i) => ({ title: i.title, points: [] as number[] }));
@@ -272,8 +430,26 @@ export function buildDeepMap(
     const n = issueOf.get(p.text.trim());
     if (n && issues[n - 1]) issues[n - 1].points.push(index);
   });
-  return { parties: struct.parties, events: struct.events, issues, unknowns: struct.unknowns };
+  return {
+    parties: struct.parties,
+    events: struct.events,
+    issues,
+    unknowns: struct.unknowns,
+    ...(plan && { plan }),
+  };
 }
+
+const PlanZ = z.object({
+  kinds: z.array(z.enum(Object.keys(CASE_KINDS) as [CaseKind, ...CaseKind[]])),
+  sides: z.array(
+    z.object({
+      party: Str,
+      side: z.enum(Object.keys(CASE_SIDES) as [CaseSide, ...CaseSide[]]),
+      actions: z.array(Str),
+    }),
+  ),
+  prep: z.array(z.object({ item: Str, why: Str })),
+});
 
 /** 저장된 결과를 다시 읽을 때 형식 확인 (모양이 다르면 그림을 그리지 않는다) */
 export function parseDeepMap(v: unknown): DeepMap | null {
@@ -283,6 +459,7 @@ export function parseDeepMap(v: unknown): DeepMap | null {
       events: z.array(z.object({ when: Str, who: Str, what: Str })),
       issues: z.array(z.object({ title: Str, points: z.array(z.number().int().min(0)) })),
       unknowns: z.array(Str),
+      plan: PlanZ.optional().catch(undefined),
     })
     .safeParse(v);
   return ok.success && ok.data.issues.length > 0 ? ok.data : null;

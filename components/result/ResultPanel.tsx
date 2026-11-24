@@ -23,7 +23,10 @@ import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
-import { DeepMapView } from "./DeepMapView";
+import { parseDeepMap } from "@/lib/ai/deep-policy";
+import { CaseBoard } from "./CaseBoard";
+import { QuickSheet } from "./QuickSheet";
+import { MaterialsView, materialsOfPoint } from "./MaterialsView";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 import { ProcedureTimeline } from "./ProcedureTimeline";
 import {
@@ -71,6 +74,7 @@ export function ResultPanel({
   const usedArticles = result.articles.filter((a) => a.used).length;
   const usedCases = result.cases.filter((c) => c.used).length;
   const plan = procedurePlan(result, question, category);
+  const board = parseDeepMap(result.deep) !== null;
 
   return (
     <article className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
@@ -108,7 +112,15 @@ export function ResultPanel({
 
       {parties}
 
-      {result.deep && <DeepMapView result={result} />}
+      {/* 100자를 넘는 질문(자동 DeepSearch)은 7개 탭 사건 정리, 그 밖은 한 장 요약 그림 (DEC-062). 첨부 자료는 정리의 자료 탭에 있다 */}
+      {board ? (
+        <CaseBoard result={result} inquiryId={inquiryId} />
+      ) : (
+        <>
+          {result.materials && <MaterialsView result={result} />}
+          <QuickSheet result={result} />
+        </>
+      )}
 
       {hasTimeline(plan) ? (
         <>
@@ -466,8 +478,21 @@ function AnswerTab({ result }: { result: DemoAnalysisResult }) {
         }
         const ref = sourceRef(p.source, result);
         const ok = p.check === "verified";
+        // 첨부 자료(DEC-058)를 사실관계로 참고한 문단이면 그 자료 번호를 함께 보인다 (근거는 언제나 아래 출처)
+        const attached = materialsOfPoint(result, i);
         return (
-          <li key={i} className="rounded-card border-line border p-5">
+          <li
+            key={i}
+            id={`point-${i + 1}`}
+            className="rounded-card border-line scroll-mt-24 border p-5"
+          >
+            {attached.length > 0 && (
+              <p className="text-muted mb-2 text-[12px]">
+                <span className="bg-soft text-ink rounded-[6px] px-2 py-0.5 font-semibold">
+                  참고한 내 자료 {attached.join(" · ")}
+                </span>
+              </p>
+            )}
             <p className="text-ink text-base leading-[1.75]">{p.text}</p>
             <div className="border-gold-line mt-3 border-l-2 pl-3">
               <p className="text-muted text-[13px]">출처 · {ref.label}</p>

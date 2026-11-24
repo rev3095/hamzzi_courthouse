@@ -1,6 +1,7 @@
 // 질문(inquiry) 입력·확인 규칙 (F-001 AC2, F-007). 순수 함수 — DB·인증과 분리해 테스트한다.
 import { isTierId, type TierId } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
+import { isAssistantId, type AssistantId } from "@/lib/assistants/agents";
 import { scanInput } from "@/lib/pii";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
@@ -15,6 +16,8 @@ export type CreateRequest = {
   parentInquiryId: string | null;
   /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
   save: boolean;
+  /** 첨부 자료 판독 정리 (F-017, DEC-058). 형식 검사·다시 거르기는 라우트가 lib/materials/policy parseStoredMaterials로 한다 */
+  materials: unknown;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -49,6 +52,7 @@ export function parseCreateRequest(body: unknown): CreateRequest {
     sensitiveConsent: b.sensitiveConsent === true,
     parentInquiryId: typeof b.parentInquiryId === "string" ? b.parentInquiryId : null,
     save: b.save === true,
+    materials: b.materials ?? null,
   };
 }
 
@@ -332,8 +336,9 @@ export function parseAnalyzeRequest(raw: string): {
   category: CategoryKey | null;
   tier: TierId | null;
   deep: boolean;
+  assistant: AssistantId | null;
 } {
-  if (!raw.trim()) return { category: null, tier: null, deep: false };
+  if (!raw.trim()) return { category: null, tier: null, deep: false, assistant: null };
   let body: unknown;
   try {
     body = JSON.parse(raw);
@@ -351,5 +356,9 @@ export function parseAnalyzeRequest(raw: string): {
   // DeepSearch(DEC-038): 같은 비용 상한 안에서 근거를 더 넓게 넘겨 본다
   if (b.deep !== undefined && typeof b.deep !== "boolean")
     throw new ApiError("VALIDATION_ERROR", { fields: ["deep"] });
-  return { category, tier, deep: b.deep === true };
+  // 분야별 비서(DEC-057): 정해진 세 값만. DB에 저장하지 않고 그 분석의 지시문·고정 근거에만 쓴다
+  const assistant = b.assistant ?? null;
+  if (assistant !== null && !isAssistantId(assistant))
+    throw new ApiError("VALIDATION_ERROR", { fields: ["assistant"] });
+  return { category, tier, deep: b.deep === true, assistant };
 }

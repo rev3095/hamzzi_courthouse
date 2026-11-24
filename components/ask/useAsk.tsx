@@ -3,6 +3,7 @@
 // → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 하루 횟수를 다 쓰면 데모 한도 안내(S-06 자리).
 // 원문은 입력란에만 있고 브라우저에 저장하지 않는다. 저장하는 것은 서버가 돌려준 마스킹본뿐 (DEC-006).
 import { useRouter } from "next/navigation";
+import { isLongQuestion } from "@/lib/ai/models";
 import { useState } from "react";
 import {
   confirmPii,
@@ -14,6 +15,7 @@ import {
   type ClientError,
 } from "@/lib/client/api";
 import { readSave } from "@/lib/client/save";
+import type { MaterialReading } from "@/lib/materials/limits";
 import type { PiiFinding } from "@/lib/pii";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
@@ -27,6 +29,7 @@ type Pending =
       deep: boolean;
       categories: string[];
       onCreated?: (id: string) => void;
+      materials?: MaterialReading[];
     }
   | { kind: "pii"; id: string; findings: PiiFinding[]; maskedText: string }
   | { kind: "login" };
@@ -54,23 +57,38 @@ export function askErrorText(err: ClientError): string {
   return `${err.message}${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
 }
 
-export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey | null } = {}) {
+export function useAsk(
+  opts: {
+    parentInquiryId?: string;
+    category?: CategoryKey | null;
+    /**
+     * 질문이 준비되면(저장·가린 문장 확인 뒤) 결과 화면으로 가는 대신 부른다 — 분야별 비서 대화(DEC-057)가
+     * 같은 화면에서 이어서 분석할 때 쓴다. maskedText는 서버가 돌려준 마스킹본
+     */
+    onReady?: (id: string, maskedText: string) => void;
+  } = {},
+) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending>({ kind: "none" });
 
-  const go = (id: string) => {
+  const go = (id: string, maskedText: string) => {
     notifyQuotaChanged();
-    router.push(`/inquiries/${id}`);
+    if (opts.onReady) opts.onReady(id, maskedText);
+    else router.push(`/inquiries/${id}`);
   };
 
-  /** onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015) */
+  /**
+   * onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015).
+   * materials: 질문과 함께 보낼 첨부 자료 판독 정리 (F-017, DEC-058). 서버가 다시 거른 뒤 질문 행에 저장한다.
+   */
   async function send(
     text: string,
     sensitiveConsent = false,
     deep = false,
     onCreated?: (id: string) => void,
+    materials?: MaterialReading[],
   ) {
     setError(null);
     if (!text.trim()) {
@@ -84,6 +102,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       ...(opts.parentInquiryId && { parentInquiryId: opts.parentInquiryId }),
       // 로그인 사용자가 "내 기록에 남기기"를 켜 두었을 때만 (DEC-039). 서버가 비로그인 요청에서는 무시한다
       ...(readSave() && { save: true }),
+      ...(materials && materials.length > 0 && { materials }),
     });
     setBusy(false);
     if (!r.ok) {
@@ -95,6 +114,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
           deep,
           categories: Array.isArray(cats) ? cats : [],
           onCreated,
+          materials,
         });
       } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
@@ -105,7 +125,8 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       return;
     }
     rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
-    if (deep) rememberDeep(r.data.id);
+    // 100자를 넘는 질문은 서버가 DeepSearch로 분석한다(DEC-062) — 화면도 DeepSearch 진행 표시를 쓰게 같이 남긴다
+    if (deep || isLongQuestion(r.data.maskedText)) rememberDeep(r.data.id);
     onCreated?.(r.data.id);
     if (r.data.piiConfirmationRequired) {
       setPending({
@@ -116,10 +137,10 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       });
       return;
     }
-    go(r.data.id);
+    go(r.data.id, r.data.maskedText);
   }
 
-  async function acceptMasked(id: string) {
+  async function acceptMasked(id: string, maskedText: string) {
     setBusy(true);
     const r = await confirmPii(id);
     setBusy(false);
@@ -128,7 +149,8 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       setError(askErrorText(r.error));
       return;
     }
-    go(id);
+    setPending({ kind: "none" });
+    go(id, maskedText);
   }
 
   const close = () => setPending({ kind: "none" });
@@ -141,9 +163,9 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
         categories={pending.categories}
         busy={busy}
         onAccept={() => {
-          const { text, deep, onCreated } = pending;
+          const { text, deep, onCreated, materials } = pending;
           close();
-          void send(text, true, deep, onCreated);
+          void send(text, true, deep, onCreated, materials);
         }}
         onClose={close}
       />
@@ -167,7 +189,10 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
           {pending.maskedText}
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          <PrimaryButton disabled={busy} onClick={() => void acceptMasked(pending.id)}>
+          <PrimaryButton
+            disabled={busy}
+            onClick={() => void acceptMasked(pending.id, pending.maskedText)}
+          >
             이대로 분석하기
           </PrimaryButton>
           <SecondaryButton onClick={close}>내용 고치기</SecondaryButton>

@@ -6,7 +6,9 @@ import type { CitationRow, DemoAnalysisResult } from "@/lib/citations/policy";
 import { scanInput } from "@/lib/pii";
 import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
+import { readStoredMaterials } from "@/lib/materials/map";
 import data from "./examples.json";
+import { findArchiveItem } from "@/lib/assistants/archive-data";
 
 export const FREE_PROMPT_VERSION = "free-2026-10-22";
 
@@ -22,14 +24,41 @@ export const SEARCH_ONLY_NOTE =
 export const EXAMPLE_PAGE_NOTE =
   "직접 작성한 가상 사연에 대해 미리 분석해 둔 예시 답변이에요. 새로 분석하지 않고 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
 
+/** 쪽별 예시(DEC-059) 머리 안내 — 요약 질문·자세한 상황은 AI(Opus)가 지어낸 가상 사연이다 */
+export const EXAMPLE_SIDES_NOTE =
+  "AI가 지어낸 가상 사연으로 미리 분석해 둔 예시 답변이에요. 질문은 짧게 보이지만 답변은 접어 둔 '자세한 상황'으로 만들었어요. 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
+
 export const REPLAY_NOTE =
   "미리 분석해 둔 예시 질문의 답변입니다. 국가법령정보센터(법제처)에서 찾은 현행 법령 조문과 판례만 근거로 썼고, 인용은 법제처 재조회로 확인했습니다.";
+
+/** 예시의 문서 작성 절차·초안 (DEC-059). Opus가 쓰고, 검증된 근거 밖 조문·사건번호, 상황·인용에 없는 숫자,
+ *  단정 표현이 든 문장은 저장 전에 코드가 뺐다 (scripts/gen-complex-docs.mjs → merge_complex_examples.py) */
+export type ExampleGuide = {
+  procedure: { title: string; detail: string; owner: "self" | "expert" }[];
+  document: { name: string; basis: string; sections: { heading: string; paragraphs: string[] }[] };
+  checklist: string[];
+};
+
+/** 같은 사건의 한쪽(원고·피고, 고소인·피의자, 신청인). 화면에는 짧은 요약 질문을 보이고, 답변은 복잡한 상황(context)으로 만들었다 */
+export type ExampleSide = {
+  key: "plaintiff" | "defendant" | "complainant" | "suspect" | "applicant";
+  label: string;
+  question: string;
+  context: string;
+  result: DemoAnalysisResult;
+  guide: ExampleGuide | null;
+};
 
 export type DemoExample = {
   id: string;
   tags: string[];
+  /** 화면에 보이는 질문. sides가 있으면 첫 쪽의 요약 질문 */
   question: string;
+  /** 첫 쪽(또는 단일) 답변 */
   result: DemoAnalysisResult;
+  /** 바꾸기 전의 짧은 질문 — 원래 질문한 쪽(첫 쪽)의 답변이 남아 있을 때만 둔다 (DEC-059, 비서 질문 예가 이 글자를 쓴다) */
+  aliases?: string[];
+  sides?: ExampleSide[];
 };
 
 const EXAMPLES = (data as { examples: DemoExample[] }).examples;
@@ -89,7 +118,25 @@ const normalize = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim()
 /** 질문이 예시 질문과 같으면(공백·전각 차이 무시) 그 예시. 아니면 null */
 export function findExample(maskedText: string): DemoExample | null {
   const q = normalize(maskedText);
-  return EXAMPLES.find((e) => normalize(e.question) === q) ?? null;
+  for (const e of EXAMPLES) {
+    if (normalize(e.question) === q || e.aliases?.some((a) => normalize(a) === q)) return e;
+    // 다른 쪽의 요약 질문이면 그 쪽 답변을 재생한다 (DEC-059)
+    const side = e.sides?.find((s) => normalize(s.question) === q);
+    if (side) return { ...e, question: side.question, result: side.result };
+  }
+  // 전문 에이전트 아카이브(DEC-057)의 질문도 저장된 검증 결과를 재생한다 — "체험하기"는 비용·횟수 없이 같은 답을 본다
+  const item = findArchiveItem(maskedText);
+  return item
+    ? { id: `archive-${item.id}`, tags: [], question: item.question, result: item.result }
+    : null;
+}
+
+/**
+ * 질문 행 기준 예시 판단 (F-017, DEC-058): 자료를 붙인 질문은 글이 예시와 같아도 예시 재생이 아니다.
+ * POST /inquiries · analyze 라우트 · analyzeInquiry가 모두 이 함수로 판단한다 (횟수 검사를 건너뛰는 기준이 어긋나지 않게).
+ */
+export function findExampleFor(maskedText: string, materials: unknown): DemoExample | null {
+  return readStoredMaterials(materials).length > 0 ? null : findExample(maskedText);
 }
 
 /** 재생 결과 — 저장된 분석에 무료 모드 표시와 안내만 바꿔 붙인다 */
@@ -97,23 +144,26 @@ export function replayResult(example: DemoExample): DemoAnalysisResult {
   return { ...example.result, mode: "replay", aiNotice: AI_NOTICE, searchScopeNote: REPLAY_NOTE };
 }
 
-/** 재생 결과의 인용 행 (result_citations). 판례 본문은 없고 60자 이내 구절만 (DEC-007) */
+/** 재생 결과의 인용 행 (result_citations). 법제처 근거 문단만. 판례 본문은 없고 60자 이내 구절만 (DEC-007) */
 export function replayCitations(result: DemoAnalysisResult): CitationRow[] {
-  return result.answer.points.map((p) => {
-    const isCase = p.source.startsWith("case:");
-    const claimedRef = isCase
-      ? p.source.slice("case:".length)
-      : p.source.replace(/^law:/, "").replace(/:/g, " ");
-    const verified = p.check === "verified";
-    return {
-      kind: isCase ? "case" : "statute",
-      claimedRef,
-      status: verified ? "verified" : "unverified",
-      source: "law_open_api_live",
-      sourceRef: p.source,
-      quote: verified && p.quote.length <= 60 ? p.quote : null,
-    };
-  });
+  // 출처 model 문단(DEC-055·062)은 실시간 분석과 같이 인용 행을 남기지 않는다 (lib/citations/policy)
+  return result.answer.points
+    .filter((p) => p.check !== "model")
+    .map((p) => {
+      const isCase = p.source.startsWith("case:");
+      const claimedRef = isCase
+        ? p.source.slice("case:".length)
+        : p.source.replace(/^law:/, "").replace(/:/g, " ");
+      const verified = p.check === "verified";
+      return {
+        kind: isCase ? "case" : "statute",
+        claimedRef,
+        status: verified ? "verified" : "unverified",
+        source: "law_open_api_live",
+        sourceRef: p.source,
+        quote: verified && p.quote.length <= 60 ? p.quote : null,
+      };
+    });
 }
 
 /**
