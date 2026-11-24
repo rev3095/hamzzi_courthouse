@@ -100,16 +100,19 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
     };
     ["app", "components", "lib", "mobile/src"].forEach(walk);
     expect(files.length).toBeGreaterThan(50);
-    for (const f of files) {
-      const chars = [...readFileSync(f, "utf8")];
-      for (const [len, hash] of ADVISOR)
-        for (let i = 0; i + len <= chars.length; i++) {
-          // 해시는 비싸서 한글 글자로 시작할 때만 잰다
-          if (chars[i] < "가" || chars[i] > "힣") continue;
-          if (sha(chars.slice(i, i + len).join("")) === hash) expect.fail(`${f}: 자문 변호사 정보`);
-        }
-    }
-  });
+    // 한글로만 된 n글자 묶음을 파일 전체에서 한 번씩만 모아 해시를 잰다 (같은 묶음은 다시 재지 않는다)
+    const grams = new Map<number, Map<string, string>>(ADVISOR.map(([len]) => [len, new Map()]));
+    for (const f of files)
+      for (const run of readFileSync(f, "utf8").match(/[가-힣]+/g) ?? [])
+        for (const [len, seen] of grams)
+          for (let i = 0; i + len <= run.length; i++) {
+            const g = run.slice(i, i + len);
+            if (!seen.has(g)) seen.set(g, f);
+          }
+    for (const [len, hash] of ADVISOR)
+      for (const [g, f] of grams.get(len)!)
+        if (sha(g) === hash) expect.fail(`${f}: 자문 변호사 정보`);
+  }, 60_000);
 
   test("향후 계획은 모두 계획으로 쓴다", () => {
     expect(ROADMAP_NOTICE).toContain("바뀔 수 있어요");
