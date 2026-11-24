@@ -16,6 +16,8 @@ import {
 } from "@/lib/inquiries/deep";
 import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
 import { PrimaryButton, SecondaryButton } from "../Modal";
+import { AttachButton, AttachTray } from "./AttachTray";
+import type { Attachments } from "./useAttachments";
 
 type Mode = "form" | "free";
 
@@ -24,12 +26,15 @@ export function DeepAsk({
   busy,
   onSubmit,
   onClose,
+  attach,
 }: {
   /** 질문창에 이미 적어 둔 글 — "있었던 일" 칸과 직접 입력란에 옮겨 둔다 */
   initialText: string;
   busy: boolean;
   onSubmit: (text: string) => void;
   onClose: () => void;
+  /** 자료 사진 붙이기 (F-017, DEC-058). 있으면 보내기 전에 자료 첨부 창을 거친다 (질문창과 같은 사진 줄) */
+  attach?: Attachments;
 }) {
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -213,6 +218,18 @@ export function DeepAsk({
             이름·전화번호·주민등록번호·계좌번호는 적지 마세요. 적더라도 가린 문장만 저장하고
             분석해요.
           </p>
+          {attach && (
+            <div className="rounded-card border-line mt-3 border" data-testid="deep-attach">
+              <div className="flex items-stretch overflow-hidden rounded-[inherit]">
+                <AttachButton attach={attach} disabled={busy} noun="자료" />
+                <p className="text-muted flex items-center py-2 pr-3 text-[13px] leading-relaxed">
+                  대화 캡처·영수증·현장 사진 같은 자료를 붙이면, 보내기 전에 자료 내용을 읽어 함께
+                  분석해요.
+                </p>
+              </div>
+              <AttachTray attach={attach} noun="자료" />
+            </div>
+          )}
         </div>
 
         <footer className="border-line border-t px-5 py-4 sm:px-7">

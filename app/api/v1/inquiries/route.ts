@@ -5,7 +5,7 @@
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute } from "@/lib/api/route";
 import { EXAMPLE_RATE, assertRateLimit } from "@/lib/auth/rate-limit";
-import { findExample } from "@/lib/demo/policy";
+import { findExampleFor } from "@/lib/demo/policy";
 import {
   assertAnonQuota,
   countsAnonQuota,
@@ -22,20 +22,30 @@ import {
   resolveOwner,
   getUserQuestionsUsed,
 } from "@/lib/inquiries/store";
+import { mergeFindings, parseStoredMaterials } from "@/lib/materials/policy";
 import { scanInput } from "@/lib/pii";
 
 export const POST = withRoute(async (req, _ctx, scope) => {
-  const { text, sensitiveConsent, parentInquiryId, save } = parseCreateRequest(await readJson(req));
+  const { text, sensitiveConsent, parentInquiryId, save, materials } = parseCreateRequest(
+    await readJson(req),
+  );
   const scan = scanInput(text);
-  assertSensitiveConsent(scan.sensitive, sensitiveConsent);
+  // 첨부 자료(F-017, DEC-058)는 판독 때 가린 것이지만 화면에서 고칠 수 있어 서버가 같은 규칙으로 다시 거른다
+  const attached = parseStoredMaterials(materials);
+  assertSensitiveConsent(
+    [...new Set([...scan.sensitive, ...attached.sensitive])],
+    sensitiveConsent,
+  );
 
   const owner = await resolveOwner(scope, { create: true });
   if (!owner) throw new Error("owner 없음");
+  // 자료가 붙은 질문은 예시 재생으로 보지 않는다 (분석도 같은 기준, lib/inquiries/analyze)
+  const example = findExampleFor(scan.maskedText, attached.materials) !== null;
   if (countsAnonQuota(owner)) {
     // 예시 질문은 하루 횟수 대신 같은 네트워크 1시간 30회만 본다 (DEC-027)
-    if (findExample(scan.maskedText) !== null) await assertRateLimit(EXAMPLE_RATE, req.headers);
+    if (example) await assertRateLimit(EXAMPLE_RATE, req.headers);
     else assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
-  } else if (countsUserQuota(owner) && findExample(scan.maskedText) === null) {
+  } else if (countsUserQuota(owner) && !example) {
     // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035). 예시 질문은 세지 않는다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
@@ -45,15 +55,27 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     assertParentAnalyzed(await getOwnedInquiry(parentInquiryId, owner));
   }
 
-  const { id, status } = await createInquiry(owner, scan, sensitiveConsent, parentInquiryId, save);
+  // 화면에서 고친 자료 글에 새로 적힌 개인정보도 가린 것으로 알리고 확인 단계를 거친다 (F-007)
+  const findings = mergeFindings(scan.findings, attached.findings);
+  const { id, status } = await createInquiry(
+    owner,
+    { ...scan, findings },
+    sensitiveConsent,
+    parentInquiryId,
+    save,
+    {
+      materials: attached.materials,
+      sensitive: attached.sensitive,
+    },
+  );
 
   return ok(
     {
       id,
       status,
-      piiFindings: scan.findings,
+      piiFindings: findings,
       maskedText: scan.maskedText,
-      piiConfirmationRequired: scan.findings.length > 0,
+      piiConfirmationRequired: findings.length > 0,
     },
     scope.requestId,
     { status: 201 },

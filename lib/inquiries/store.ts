@@ -5,10 +5,12 @@ import type { RequestScope } from "@/lib/api/route";
 import { ensureAnonSession, getAnonSessionId } from "@/lib/auth/anon";
 import { isAdminRequest } from "@/lib/auth/admin-session";
 import { getActor } from "@/lib/auth/server";
-import type { InputScan } from "@/lib/pii";
+import type { MaterialReading } from "@/lib/materials/limits";
+import { materialsContextLine } from "@/lib/materials/policy";
+import type { InputScan, SensitiveCategory } from "@/lib/pii";
 import { requestIpHash } from "@/lib/auth/ip";
 import { createServiceClient } from "@/lib/supabase/server";
-import { findExample } from "@/lib/demo/policy";
+import { findExampleFor } from "@/lib/demo/policy";
 import {
   ANON_IP_DAILY_LIMIT,
   ANON_IP_WINDOW,
@@ -65,6 +67,8 @@ export type InquiryRow = {
   sensitive_consent_at: string | null;
   masked_text: string;
   parent_inquiry_id: string | null;
+  /** 첨부 자료 판독 정리 (F-017, DEC-058). 읽는 쪽이 lib/materials readStoredMaterials로 형식을 확인한다 */
+  materials?: unknown;
 };
 
 const SENSITIVE_PURPOSE = "법률 정보 분석을 위한 민감정보 처리";
@@ -137,10 +141,16 @@ export async function createInquiry(
   sensitiveConsent: boolean,
   parentInquiryId: string | null = null,
   save = false,
+  attached: { materials: MaterialReading[]; sensitive: SensitiveCategory[] } = {
+    materials: [],
+    sensitive: [],
+  },
 ) {
   const db = createServiceClient();
   const now = new Date();
-  const consentAt = scan.sensitive.length && sensitiveConsent ? now.toISOString() : null;
+  // 첨부 자료(DEC-058)에서 찾은 민감정보 범주도 함께 동의 기록에 남긴다
+  const sensitive = [...new Set([...scan.sensitive, ...attached.sensitive])];
+  const consentAt = sensitive.length && sensitiveConsent ? now.toISOString() : null;
   const { data, error } = await db
     .from("inquiries")
     .insert({
@@ -150,9 +160,15 @@ export async function createInquiry(
       pii_findings: initialPiiFindings(scan.findings, now),
       sensitive_consent_at: consentAt,
       parent_inquiry_id: parentInquiryId,
+      // 가린 자료 정리만 (사진·판독 원문은 저장하지 않는다, DEC-058)
+      ...(attached.materials.length > 0 && { materials: attached.materials }),
       status: "draft",
       // 내 질문 기록(DEC-039): 로그인 사용자만. 비로그인·관리자 모드·예시 질문은 남기지 않는다
-      ...(savesToHistory(save, owner, findExample(scan.maskedText) !== null) && { saved: true }),
+      ...(savesToHistory(
+        save,
+        owner,
+        findExampleFor(scan.maskedText, attached.materials) !== null,
+      ) && { saved: true }),
     })
     .select("id")
     .single<{ id: string }>();
@@ -165,7 +181,7 @@ export async function createInquiry(
       kind: "sensitive_info",
       subject_id: data.id,
       purpose: SENSITIVE_PURPOSE,
-      items: scan.sensitive,
+      items: sensitive,
       granted_at: consentAt,
     });
     if (consentError) {
@@ -182,7 +198,7 @@ export async function getOwnedInquiry(id: string, owner: Owner | null): Promise<
   const { data, error } = await createServiceClient()
     .from("inquiries")
     .select(
-      "id, user_id, anon_session_id, status, pii_findings, sensitive_consent_at, masked_text, parent_inquiry_id",
+      "id, user_id, anon_session_id, status, pii_findings, sensitive_consent_at, masked_text, parent_inquiry_id, materials",
     )
     .eq("id", id)
     .maybeSingle<InquiryRow>();
@@ -221,7 +237,7 @@ export async function loadFollowupContext(
   while (next && turns.length < maxTurns) {
     const { data, error } = await db
       .from("inquiries")
-      .select("id, user_id, anon_session_id, masked_text, parent_inquiry_id")
+      .select("id, user_id, anon_session_id, masked_text, parent_inquiry_id, materials")
       .eq("id", next)
       .maybeSingle<{
         id: string;
@@ -229,6 +245,7 @@ export async function loadFollowupContext(
         anon_session_id: string | null;
         masked_text: string;
         parent_inquiry_id: string | null;
+        materials: unknown;
       }>();
     if (error) throw new Error("inquiries 조회 실패");
     if (!data || !isOwner({ userId: data.user_id, anonSessionId: data.anon_session_id }, owner)) {
@@ -242,7 +259,15 @@ export async function loadFollowupContext(
       .limit(1)
       .maybeSingle<{ response: unknown }>();
     if (resultError) throw new Error("analysis_results 조회 실패");
-    turns.unshift({ question: data.masked_text, answer: answerSummary(result?.response) });
+    // 앞선 질문에 붙인 자료(DEC-058)는 한 줄 요약으로 함께 넘긴다
+    const attachedLine = materialsContextLine(data.materials);
+    turns.unshift({
+      question: attachedLine
+        ? `${data.masked_text}
+${attachedLine}`
+        : data.masked_text,
+      answer: answerSummary(result?.response),
+    });
     next = data.parent_inquiry_id;
   }
   return turns;

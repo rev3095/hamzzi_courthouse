@@ -337,3 +337,64 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
     });
   });
 });
+
+describe("F-017 첨부 자료 (DEC-058)", () => {
+  const MATERIAL = {
+    kind: "문자",
+    summary: "보증금을 다음 달에 돌려주겠다는 문자입니다.",
+    details: [],
+    gaps: [],
+  };
+
+  test("저장된 자료를 분석에 넘기고, 검증을 통과한 문단과 이은 자료 정리를 결과에 싣는다", async () => {
+    lite.runLiteAnalysis.mockResolvedValueOnce({
+      draft: { answer: { points: [] } },
+      evidence: {},
+      dropped: [],
+      usage: { inputTokens: 1, outputTokens: 2, cacheReadTokens: 0 },
+      model: "claude-opus-5-5",
+      promptVersion: "v",
+      materialRefs: [{ text: "남은 문단", materials: [1] }],
+    });
+    cite.verifyDraft.mockResolvedValueOnce({
+      result: { outcome: "grounded", answer: { points: [{ text: "남은 문단" }] } },
+      citations: [],
+      stats: { total: 1, removed: 0, quoteMismatch: 0 },
+    });
+    const out = await analyzeInquiry({ ...INQ, materials: [MATERIAL] }, ANON, new Headers());
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.objectContaining({ materials: [MATERIAL] }),
+      expect.anything(),
+    );
+    expect((out.result as { materials?: unknown }).materials).toEqual({
+      items: [{ ...MATERIAL, points: [0] }],
+    });
+  });
+
+  test("자료 글자 수도 긴 질문 상한 계산에 넣는다 (상한·예산 가중치가 그만큼 늘어난다)", async () => {
+    const long = { ...MATERIAL, summary: "가".repeat(200), details: ["나".repeat(80)] };
+    const many = Array.from({ length: 30 }, () => long);
+    cite.verifyDraft.mockResolvedValueOnce({
+      result: { outcome: "grounded", answer: { points: [] } },
+      citations: [],
+      stats: { total: 0, removed: 0, quoteMismatch: 0 },
+    });
+    await analyzeInquiry(
+      { ...INQ, masked_text: "가".repeat(1_990), materials: many },
+      ANON,
+      new Headers(),
+    );
+    const [, deps] = lite.runLiteAnalysis.mock.calls[0] as [unknown, { costCapUsd: number }];
+    expect(deps.costCapUsd).toBeGreaterThan(0.25);
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(expect.any(Number));
+    expect((rate.tryAiQuota.mock.calls[0] as unknown as [number])[0]).toBeGreaterThan(167);
+  });
+
+  test("모양이 틀린 저장 값은 없는 것으로 본다", async () => {
+    await analyzeInquiry({ ...INQ, materials: [{ kind: "모름" }] }, ANON, new Headers());
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.not.objectContaining({ materials: expect.anything() }),
+      expect.anything(),
+    );
+  });
+});

@@ -6,6 +6,14 @@ import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import { freeSearch } from "@/lib/demo/free";
 import { DEEP_EVIDENCE } from "@/lib/inquiries/deep";
+import type { MaterialReading } from "@/lib/materials/limits";
+import {
+  MATERIALS_ANSWER_VERSION,
+  materialRefsOf,
+  materialsInstruction,
+  withMaterialRefs,
+  type MaterialRef,
+} from "@/lib/materials/policy";
 import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import {
@@ -76,6 +84,8 @@ export type LiteAnalysisOutput = {
   talk?: AssistantTalk | null;
   /** 질문 해석이 제안한 새 절차 섹션 (DEC-042). 저장만 하고 운영자 승인 전에는 화면에 쓰지 않는다 */
   newLabel?: { title: string; keywords: string[] } | null;
+  /** 첨부 자료(DEC-058)가 있을 때 문단별로 참고한 자료 번호. 검증 뒤 자료 지도에 잇는다 */
+  materialRefs?: MaterialRef[];
 };
 
 /** 답변 모델에 넘길 근거 키 순서: 조문 먼저, 그다음 요지가 있는 판례 */
@@ -106,7 +116,7 @@ export function liteDigest(evidence: EvidenceSet, keys: string[]): string {
 }
 
 export async function runLiteAnalysis(
-  input: { maskedText: string; context?: FollowupTurn[] },
+  input: { maskedText: string; context?: FollowupTurn[]; materials?: MaterialReading[] },
   deps: {
     model?: ModelClient;
     lawSource?: LawSource;
@@ -136,6 +146,8 @@ export async function runLiteAnalysis(
 ): Promise<LiteAnalysisOutput> {
   const tier = tierOf(deps.tier);
   const context = input.context ?? [];
+  // 첨부 자료(DEC-058): 질문 해석(검색어)과 답변에 사용자 자료로 함께 넘긴다. 근거 키가 아니라 인용할 수 없다
+  const materials = input.materials ?? [];
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   // 질문 해석과 답변이 질문 1건 상한 하나를 함께 쓴다 (해석이 쓴 만큼 답변 몫이 줄어든다)
   const model = withCostCap(deps.model ?? createModelClient(), deps.costCapUsd ?? tier.capUsd);
@@ -159,7 +171,10 @@ export async function runLiteAnalysis(
         messages: [
           {
             role: "user",
-            content: [examplesBlock(input.maskedText), userMessage(input.maskedText, context)]
+            content: [
+              examplesBlock(input.maskedText),
+              userMessage(input.maskedText, context, materials),
+            ]
               .filter(Boolean)
               .join("\n\n"),
           },
@@ -204,6 +219,7 @@ export async function runLiteAnalysis(
 
   let points: DraftPoint[] = [];
   let dropped: DropReason[] = [];
+  let materialRefs: MaterialRef[] = [];
   let costCapped = false;
   let spent = 0;
 
@@ -229,16 +245,22 @@ export async function runLiteAnalysis(
             ],
             output_config: {
               effort: tier.effort,
-              format: { type: "json_schema", schema: answerSchema(keys) },
+              format: {
+                type: "json_schema",
+                schema: withMaterialRefs(answerSchema(keys), materials.length),
+              },
             },
             messages: [
               {
                 role: "user",
                 content: [
-                  userMessage(input.maskedText, context),
+                  userMessage(input.maskedText, context, materials),
                   `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
-                ].join("\n\n"),
+                  materialsInstruction(materials.length),
+                ]
+                  .filter(Boolean)
+                  .join("\n\n"),
               },
             ],
           },
@@ -246,10 +268,12 @@ export async function runLiteAnalysis(
           { minOutputTokens: tier.answerTokens.min },
         );
         usage = addUsage(usage, res);
-        const parsed = AnswerZ.safeParse(JSON.parse(textOf(res)));
-        if (parsed.success)
+        const json: unknown = JSON.parse(textOf(res));
+        const parsed = AnswerZ.safeParse(json);
+        if (parsed.success) {
           ({ kept: points, dropped } = screenPoints(parsed.data.points, evidence));
-        else costCapped = true;
+          materialRefs = materialRefsOf(json, materials.length);
+        } else costCapped = true;
         break;
       } catch (e) {
         if (e instanceof CostCapReached && keys.length > 1) {
@@ -294,13 +318,18 @@ export async function runLiteAnalysis(
     dropped,
     usage,
     model: tier.model,
-    promptVersion: deps.assistant
-      ? `${LITE_PROMPT_VERSION}+${deps.assistant.promptTag}`
-      : LITE_PROMPT_VERSION,
+    promptVersion: [
+      LITE_PROMPT_VERSION,
+      deps.assistant?.promptTag,
+      materials.length > 0 ? MATERIALS_ANSWER_VERSION : null,
+    ]
+      .filter(Boolean)
+      .join("+"),
     costUsd: spent,
     costCapped,
     newLabel: understood?.newLabel ?? null,
     ...(talkOut && { talk: talkOut.talk }),
+    materialRefs,
   };
 }
 

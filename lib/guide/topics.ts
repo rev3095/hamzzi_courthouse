@@ -163,7 +163,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   },
   features: {
     label: "기능 안내",
-    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053",
+    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053 · DEC-058",
     lines: [
       "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 세션이 있어요.",
     ],
@@ -172,6 +172,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "features-tiers",
       "features-deep",
       "features-casefile",
+      "features-materials",
       "features-matters",
       "features-examples",
       "features-procedure",
@@ -211,7 +212,19 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "서류 분석도 질문 한 번으로 세요. AI 답변이 꺼져 있거나 비용 상한에 닿은 동안에는 사진을 읽지 못해서, 서류 내용을 글로 적어 물어봐 주세요.",
     ],
     links: [{ href: "/casefile", label: "서류 분석" }],
-    next: ["features-deep", "rules"],
+    next: ["features-materials", "features-deep", "rules"],
+  },
+  "features-materials": {
+    label: "대화 캡처나 현장 사진도 붙일 수 있어요?",
+    source: "DEC-058 · PRD F-017 · lib/materials/limits.ts",
+    lines: [
+      `질문창·DeepSearch·심층 질문·판례 검색에서 대화 캡처·영수증·현장 사진 같은 자료 사진·문서를 ${L.casefileImages}개까지 붙일 수 있어요. 홈 질문창에서는 보낼 때 자료 첨부와 서류 분석 중에서 골라요.`,
+      "사진·파일은 동의를 받은 뒤에만 AI에게 보내 읽고, 서버에 저장하지 않아요. 사진과 PDF는 가리지 않은 채 그대로 가고, 한글·워드 같은 문서는 글만 꺼내 개인정보를 가린 뒤 보내요. 읽은 내용은 개인정보를 가려 보여 드리고, 직접 고친 뒤에 질문과 함께 보내요.",
+      "자료 내용은 내 자료로만 답변에 쓰여요. 답변의 근거는 언제나 법제처에서 가져온 법령·판례이고, 자료가 증거로서 어떤 의미가 있는지는 판단하지 않아요.",
+      "자료를 붙인 질문도 한 번으로 세요. 판례 검색에서는 읽은 내용으로 검색어를 골라 법제처 자료만 찾아요.",
+    ],
+    links: [{ href: "/", label: "질문하러 가기" }],
+    next: ["features-casefile", "rules"],
   },
   "features-matters": {
     label: "사건 진행은 뭐예요?",

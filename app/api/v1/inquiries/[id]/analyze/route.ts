@@ -6,7 +6,7 @@ import { ok } from "@/lib/api/respond";
 import { withRoute } from "@/lib/api/route";
 import { sseResponse } from "@/lib/api/sse";
 import { ERROR_STATUS } from "@/lib/api/errors";
-import { findExample } from "@/lib/demo/policy";
+import { findExampleFor } from "@/lib/demo/policy";
 import { analyzeInquiry } from "@/lib/inquiries/analyze";
 import {
   assertAnalyzable,
@@ -48,10 +48,12 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   // IP 해시 24시간 상한도 먼저 본다 — 쿠키를 바꿔 가며 분석 비용을 쓰는 것을 막는다. 최종 판정은 저장 트랜잭션에서
   // 관리자 모드(DEC-024)는 횟수·IP 상한을 받지 않는다 (질문 1건·주간 전체 비용 상한은 그대로)
   // 예시 질문은 저장된 분석 재생(토큰 0)이라 횟수·IP 상한을 보지 않고 차감도 없다 (DEC-027)
-  if (countsAnonQuota(owner) && findExample(inquiry.masked_text) === null) {
+  // 자료를 붙인 질문은 예시가 아니다 (DEC-058) — analyzeInquiry와 같은 기준
+  const example = findExampleFor(inquiry.masked_text, inquiry.materials) !== null;
+  if (countsAnonQuota(owner) && !example) {
     assertAnonQuota(await getAnonQuestionsUsed(owner.anonSessionId));
     await assertAnonIpAvailable(req.headers);
-  } else if (countsUserQuota(owner) && findExample(inquiry.masked_text) === null) {
+  } else if (countsUserQuota(owner) && !example) {
     // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035) — 모델 호출 전에 오늘 분석 수를 본다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }

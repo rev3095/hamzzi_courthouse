@@ -16,6 +16,8 @@ export type CreateRequest = {
   parentInquiryId: string | null;
   /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
   save: boolean;
+  /** 첨부 자료 판독 정리 (F-017, DEC-058). 형식 검사·다시 거르기는 라우트가 lib/materials/policy parseStoredMaterials로 한다 */
+  materials: unknown;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -50,6 +52,7 @@ export function parseCreateRequest(body: unknown): CreateRequest {
     sensitiveConsent: b.sensitiveConsent === true,
     parentInquiryId: typeof b.parentInquiryId === "string" ? b.parentInquiryId : null,
     save: b.save === true,
+    materials: b.materials ?? null,
   };
 }
 

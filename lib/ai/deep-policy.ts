@@ -119,8 +119,10 @@ const squash = (s: string) =>
 
 /** 문자열 안의 숫자가 모두 질문에 그대로 있는지 (질문에 없는 숫자를 만들어 넣지 못하게, 절대 규칙 3) */
 function numbersFromQuestion(s: string, question: string): boolean {
-  const q = question.normalize("NFKC");
-  return (s.match(/\d+(?:[.,]\d+)*/g) ?? []).every((n) => q.includes(n));
+  // 숫자는 낱말 단위로 비교한다 — "1,500,000원"의 500이 "500만 원"을 허용하지 않게. 가린 자리표시([이름1])의 숫자는 뺀다
+  const tokens = (t: string) => t.match(/\d+(?:[.,]\d+)*/g) ?? [];
+  const allowed = new Set(tokens(question.normalize("NFKC").replace(/\[[^\]]*\]/g, " ")));
+  return tokens(s.normalize("NFKC")).every((n) => allowed.has(n));
 }
 
 /** 화면에 나가는 구조 문구 한 줄. 통과하지 못하면 null */
