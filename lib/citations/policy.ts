@@ -2,6 +2,7 @@
 // ① 출처가 그 요청의 근거인지 ② 인용 구절이 원문에 글자 그대로 있는지 ③ 출처·본문의 조문·사건번호가 실존하는지.
 // ①·③ 실패(실존 미확인 포함)는 문단을 빼고, ②만 실패하면 "확인 필요"(quote_mismatch)로 표시한다.
 import type { DeepMap } from "@/lib/ai/deep-policy";
+import type { VirtualDocument } from "@/lib/documents/virtual";
 import type { AssistantId } from "@/lib/assistants/agents";
 import type { AssistantTalk } from "@/lib/assistants/talk";
 import type { MaterialsMap } from "@/lib/materials/map";
@@ -127,6 +128,8 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   assistantTalk?: AssistantTalk;
   /** 첨부 자료 정리 (F-017, DEC-058): 자료마다 종류·가린 내용·적힌 내용·읽지 못한 곳과, 그 자료를 참고한 남은 문단 순번 */
   materials?: MaterialsMap;
+  /** 가상 문서 (DEC-062): 예시 질문(가상 사연) 결과에만 붙는 문서 초안. 서비스 요청 경로에서는 만들지 않는다 */
+  document?: VirtualDocument;
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";

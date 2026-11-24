@@ -3,6 +3,7 @@
 // → pii-confirmation → 결과 화면 /inquiries/[id]에서 분석. 하루 횟수를 다 쓰면 데모 한도 안내(S-06 자리).
 // 원문은 입력란에만 있고 브라우저에 저장하지 않는다. 저장하는 것은 서버가 돌려준 마스킹본뿐 (DEC-006).
 import { useRouter } from "next/navigation";
+import { isLongQuestion } from "@/lib/ai/models";
 import { useState } from "react";
 import {
   confirmPii,
@@ -124,7 +125,8 @@ export function useAsk(
       return;
     }
     rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
-    if (deep) rememberDeep(r.data.id);
+    // 100자를 넘는 질문은 서버가 DeepSearch로 분석한다(DEC-062) — 화면도 DeepSearch 진행 표시를 쓰게 같이 남긴다
+    if (deep || isLongQuestion(r.data.maskedText)) rememberDeep(r.data.id);
     onCreated?.(r.data.id);
     if (r.data.piiConfirmationRequired) {
       setPending({

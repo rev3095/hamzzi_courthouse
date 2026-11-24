@@ -369,7 +369,7 @@ const WORD_NUMBER =
 const compact = (s: string) => s.replace(/\s+/g, "");
 
 /** 숫자 토큰(단위 포함)과 한글 수사 표현. 식별자 속 숫자는 뺀다 */
-function numberTokens(text: string): { digits: string[]; words: string[] } {
+export function numberTokens(text: string): { digits: string[]; words: string[] } {
   let t = stripCitations(norm(text).replace(/(\d),(?=\d{3})/g, "$1"));
   for (const re of IDENTIFIERS) t = t.replace(re, " ");
   const digits = [...t.matchAll(NUMBER_TOKEN)].map((m) => compact(`${m[1]}${m[2] ?? ""}`));

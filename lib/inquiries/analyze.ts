@@ -10,7 +10,7 @@ import { runDeepAnalysis } from "@/lib/ai/deep";
 import { buildDeepMap } from "@/lib/ai/deep-policy";
 import { runLiteAnalysis } from "@/lib/ai/lite";
 import { longInputAllowanceUsd } from "@/lib/ai/cost";
-import { BUDGET_UNIT_USD, tierOf, type TierId } from "@/lib/ai/models";
+import { BUDGET_UNIT_USD, LONG_DEEP, isLongQuestion, tierOf, type TierId } from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
@@ -59,10 +59,13 @@ export async function analyzeInquiry(
     // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
     // 주간 예산은 단계 가중치만큼 차감한다 (DEC-036: Light 2 · Pro 20 · Pro Max 100단위)
     // 분야별 비서는 고른 단계와 상관없이 법률 답변을 Pro Max(지금 Opus 5.5 effort high)로 쓴다 (DEC-057, 사용자 결정 2026-11-25)
-    const tier = tierOf(assistant ? ASSISTANT_ANSWER_TIER : opts.tier);
+    // 긴 질문(100자 초과, DEC-062)은 DeepSearch 버튼과 상관없이 DeepSearch로, 고른 단계와 상관없이 Opus 5.5 xhigh로 답한다.
+    // 분야별 비서 질문도 길면 DeepSearch로 간다(비서 말투·고정 근거는 그대로 넘긴다, 사용자 결정 2026-11-25)
+    const long = isLongQuestion(inquiry.masked_text);
+    const tier = tierOf(long ? LONG_DEEP.tier : assistant ? ASSISTANT_ANSWER_TIER : opts.tier);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
-    // 전문 에이전트 질문은 DeepSearch를 쓰지 않는다 — 지시문·대화 한마디가 일반 답변 경로에만 있다 (DEC-057)
-    const deep = opts.deep === true && !assistant;
+    // 짧은 비서 질문은 지금처럼 일반 답변 경로(지시문·대화 한마디)로 간다 (DEC-057)
+    const deep = long || (opts.deep === true && !assistant);
     // 긴 질문(2,000자 넘게)은 입력 몫만큼 상한과 예산 가중치를 늘린다 (2026-11-25 질문 한도 10,000자)
     // 첨부 자료(F-017, DEC-058): 질문 행에 둔 가린 판독 정리. 모델 입력이 그만큼 길어지므로 긴 질문 상한 계산에도 넣는다
     const materials = readStoredMaterials(inquiry.materials);
@@ -70,9 +73,10 @@ export async function analyzeInquiry(
       tier.model,
       inquiry.masked_text.length + materialsChars(materials),
     );
-    const capUsd = (deep ? tier.deep.capUsd : tier.capUsd) + allowance;
+    const capUsd = (long ? LONG_DEEP.capUsd : deep ? tier.deep.capUsd : tier.capUsd) + allowance;
     const weight =
-      (deep ? tier.deep.weight : tier.weight) + Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9);
+      (long ? LONG_DEEP.weight : deep ? tier.deep.weight : tier.weight) +
+      Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9);
     // 자료가 붙은 질문은 예시 재생으로 보지 않는다
     const example = findExampleFor(inquiry.masked_text, materials) !== null;
     if (aiMode() === "free" || example || !(await tryAiQuota(weight))) {
@@ -121,7 +125,20 @@ export async function analyzeInquiry(
     const deepRun = deep
       ? await runDeepAnalysis(
           { maskedText: inquiry.masked_text, context, ...(materials.length > 0 && { materials }) },
-          { onStep, caseHint, lawHints, tier: tier.id, costCapUsd: capUsd },
+          {
+            onStep,
+            caseHint,
+            lawHints,
+            tier: tier.id,
+            costCapUsd: capUsd,
+            long,
+            ...(assistant && {
+              persona: assistant.persona,
+              ...(({ pinnedCaseIds, promptTag }) => ({ pinnedCaseIds, promptTag }))(
+                assistantLiteOptions(assistant.id, inquiry.masked_text).assistant,
+              ),
+            }),
+          },
         )
       : null;
     const analysis =
@@ -152,6 +169,7 @@ export async function analyzeInquiry(
         deepRun.struct,
         deepRun.drafted,
         verified.result.answer.points,
+        deepRun.plan,
       );
     }
     // 자료 지도: 자료마다 검증을 통과해 남은 문단 중 그 자료를 참고한 것만 잇는다 (빠진 문단은 연결에서도 빠진다)
