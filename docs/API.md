@@ -117,7 +117,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 `acceptMasked: false`는 `400 VALIDATION_ERROR`(`details.reason: "resubmit_with_edits"`) — 내용을 고쳐 새로 제출한다. 분석 전 확인이 없으면 analyze가 `422 PII_CONFIRMATION_REQUIRED`. 민감정보 동의는 POST `/inquiries`에서 받는다.
 
 ### GET `/me/inquiries` (DEC-039)
-로그인 사용자가 `save: true`로 보낸 질문만, 최근 것부터 50건. 비로그인은 `401 UNAUTHENTICATED`.
+로그인 사용자가 `save: true`로 보낸 질문만, 최근 것부터 200건(`SAVED_LIST_LIMIT`, 이전 50 — 화면이 한 페이지 10개씩 나눠 보인다, DEC-056 ③). 비로그인은 `401 UNAUTHENTICATED`.
 ```ts
 // 200
 { id: string; maskedText: string; status: "draft"|"need_info"|"analyzed"|"failed"; createdAt: string; followup: boolean }[]
