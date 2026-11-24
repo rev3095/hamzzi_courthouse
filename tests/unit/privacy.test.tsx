@@ -25,3 +25,15 @@ test("유료 모드(키 있음): 가린 문장과 근거 일부를 Anthropic에 
   expect(p.textContent).toContain("원문은 보내지 않아요");
   expect(screen.queryByText("지금은 AI 모델 제공자에게 질문을 보내지 않아요.")).toBeNull();
 });
+
+test("DEC-051 문의 메일 발송 키가 있을 때만 발송 업체(Resend)를 고지한다", () => {
+  vi.stubEnv("AI_MODE", "free");
+  vi.stubEnv("RESEND_API_KEY", "");
+  const { unmount } = render(<PrivacyPage />);
+  expect(screen.queryByText(/Resend/)).toBeNull();
+  expect(screen.getByText(/메일 앱으로 가린 문의 문장/)).toBeDefined();
+  unmount();
+  vi.stubEnv("RESEND_API_KEY", "re_test");
+  render(<PrivacyPage />);
+  expect(screen.getByText(/메일 발송 서비스\(Resend\)/).textContent).toContain("가린 문의 문장");
+});

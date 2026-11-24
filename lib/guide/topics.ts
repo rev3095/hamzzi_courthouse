@@ -6,6 +6,7 @@
 // 검사: lib/guide/policy.test.ts (단정·승률 표현, 숫자, 실제 페이지 링크, 하위 질문 참조)
 
 import { AI_NOTICE, SEARCH_NOTICE } from "@/lib/api/respond";
+import { developerEmail } from "@/lib/contact/policy";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 
 /** 정해진 안내라 AI 생성물이 아니다. SEARCH_NOTICE·DOCUMENT_NOTICE와 같은 방식 */
@@ -40,9 +41,8 @@ export const GUIDE_LIMITS = {
 
 const L = GUIDE_LIMITS;
 
-/** 개발자 이메일 (사용자 요청 2026-11-18). 페이지 HTML을 긁는 봇이 바로 못 읽게 조각으로 두고 누를 때 합친다 */
-const EMAIL_PARTS = ["mimmzy28", "gmail.com"] as const;
-export const guideEmail = () => EMAIL_PARTS.join("@");
+/** 개발자 이메일 (사용자 요청 2026-11-18). 페이지 HTML을 긁는 봇이 바로 못 읽게 조각으로 두고 누를 때 합친다 (lib/contact/policy, DEC-051) */
+export const guideEmail = developerEmail;
 
 export const MENU_IDS = [
   "rules",
@@ -76,6 +76,7 @@ export type GuideTopic = {
 const TERMS: GuideLink = { href: "/terms", label: "이용약관" };
 const PRIVACY: GuideLink = { href: "/privacy", label: "개인정보처리방침" };
 const SOURCES: GuideLink = { href: "/sources", label: "출처 표기" };
+const CONTACT_FORM: GuideLink = { href: "/about/developer#contact", label: "문의 남기기" };
 const LAWYER_ACT: GuideLink = {
   href: `/laws/${encodeURIComponent("변호사법")}`,
   label: "변호사법 조문 보기 (법제처)",
@@ -148,6 +149,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     lines: [
       "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 질문 기록이 있어요.",
     ],
+    links: [{ href: "/about/features", label: "기능 가이드 전체 보기" }],
     next: [
       "features-tiers",
       "features-deep",
@@ -404,6 +406,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "상담 연결: 사건 요약서 확인·동의 → 알아볼 수 없게 줄인 사건 게시 → 변호사 제안, 절차 단계 안내(지금은 결과 화면에 데모판으로 제공)",
       "고도화: 시각 타임라인, 자료 관리, 고급 검색, 상담 기록 (운영 데이터로 확인한 뒤)",
     ],
+    links: [{ href: "/about/roadmap", label: "향후 계획 보기" }],
     next: ["roadmap-documents", "roadmap-login", "roadmap-quality"],
   },
   "roadmap-documents": {
@@ -435,13 +438,14 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
 
   // ── ⑧ 개발자 연락처 ──────────────────────────────────────
   contact: {
-    label: "개발자 연락처",
-    source: "사용자 요청 2026-11-18 · app/privacy 5절",
+    label: "문의 · 개발자 연락처",
+    source: "사용자 요청 2026-11-18 · DEC-051 · app/privacy 5절",
     lines: [
-      "햄찌법원 개발자에게 이메일로 연락할 수 있어요. 메일에는 개인정보나 사건 내용을 적지 말아 주세요.",
+      "햄찌법원 개발자에게 이메일로 연락하거나, 사이트에서 바로 문의를 남길 수 있어요. 개인정보나 사건 내용은 적지 말아 주세요. 사이트에서 남긴 문의는 이름·연락처처럼 보이는 부분을 가려서 보내요.",
       "개인정보 보호 책임자 연락처는 정식 출시 전에 개인정보처리방침에 적을 예정이에요.",
     ],
     contact: true,
+    links: [CONTACT_FORM, { href: "/about", label: "햄찌법원 소개" }],
   },
 };
 

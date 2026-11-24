@@ -284,6 +284,13 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - comment는 `scanInput`으로 마스킹한 뒤 마스킹본만 저장한다. 민감정보(건강·범죄경력)로 보이면 동의 절차가 없으므로 comment는 저장하지 않고 helpful만 저장한다(F-007 AC2).
 - 레이트 리밋: IP 해시 1시간 30회(`details.reason: "write_hourly"`).
 
+### POST `/contact` (DEC-051)
+`req { topic?: "service"|"bug"|"idea"|"partner"|"other"; body: string (10~2000자); replyTo?: string (이메일) }` → `200 { status: "sent", maskedCount }` 또는 `200 { status: "not_configured"|"send_failed", maskedCount, fallback: { subject, body } }`. 누구나(anon 포함). AI를 부르지 않는다.
+- body는 `scanInput`으로 가린 마스킹본만 개발자 메일로 보낸다(Resend HTTP API, `RESEND_API_KEY`). **DB에 저장하지 않고** 로그에 본문·주소를 남기지 않는다. 민감정보(건강·범죄경력)로 보이면 동의 절차가 없으므로 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "sensitive"`).
+- 키가 없거나 발송이 실패하면(재시도 없음) `fallback`에 가린 제목·본문을 돌려주고, 화면은 그것으로 메일 앱 열기(mailto)를 보여 준다.
+- 빈 본문 `EMPTY_INPUT`, 길이·종류·답장 주소 형식 오류 `VALIDATION_ERROR`(`details.fields`·`details.reason`). 자동 입력 칸(`website`)이 채워지면 보내지 않고 `sent`로 답한다.
+- 레이트 리밋: IP 해시 1시간 5회(`details.reason: "contact_hourly"`).
+
 ### DELETE `/me/data`
 - 비로그인(같은 익명 세션): 질문·결과·인용·피드백을 **바로** 지우고 `200 { status: "completed", deletedInquiries: number }`. DB 함수 `delete_anon_data`가 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. 질문 횟수(`anon_sessions.questions_used`·`anon_usage`)는 남겨 **되살아나지 않는다**(DEC-018 제안). 쿠키가 없으면 지울 것이 없어 `deletedInquiries: 0`(새 세션을 만들지 않음).
 - 로그인 사용자: `202 { status: "received", deletionRequestId, deletedInquiries }` — 같은 브라우저 익명 세션의 로그인 전 질문은 바로 지우고(`deletedInquiries`), 계정 기록은 `deletion_requests` 접수(운영자 처리), 처리 기한은 OQ-DM-03 (DEC-035).

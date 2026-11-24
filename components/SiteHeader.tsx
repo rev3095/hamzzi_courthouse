@@ -3,11 +3,13 @@
 // 커뮤니티(DEC-047, Figma에 없는 메뉴): 게시판으로 가는 말풍선 버튼.
 // 서류 분석(F-015·DEC-052, Figma에 없는 메뉴): 서류 사진을 올려 분석하는 화면으로 가는 버튼.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
+// 메뉴 아이콘(DEC-051, Figma에 없는 메뉴): 소개·기능 가이드·향후 계획·개발자·문의 (components/about/AboutMenu).
 // 맨 오른쪽 프로필 아이콘 → 마이페이지(/me): Google 로그인·화면 설정 (DEC-032·033). 로그인하면 아이콘에 점 표시.
 // 범위 밖 메뉴(변호사 찾기·혼자 소송하기)와 다크 모드는 데모에서 숨긴다 (docs/07 결정 2).
 import Link from "next/link";
 import { Suspense } from "react";
 import { isSignedIn } from "@/lib/client/api";
+import { AboutMenu } from "./about/AboutMenu";
 import { HamzziFace } from "./HamzziJudge";
 import { ProfileIcon } from "./me/MyPage";
 import { QuotaRouteSync, useQuota } from "./useQuota";
@@ -82,6 +84,7 @@ export function SiteHeader() {
             </svg>
             <span className="max-sm:sr-only">커뮤니티</span>
           </Link>
+          <AboutMenu />
           {quota?.admin && (
             <span
               className="text-ink text-[13px] font-semibold whitespace-nowrap"
