@@ -1,7 +1,7 @@
 // 마이페이지 데스크톱형 배치 (DEC-056 ③): 사이드바(새 질문·세션 찾기·메뉴·날짜별 최근 세션·더보기·프로필) + 본문(종류 탭·한 페이지 10개·페이지 번호).
 // 질문 문장·사건 이름은 가상이다. 서버 호출은 가짜 fetch.
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: () => "/me" }));
@@ -47,6 +47,7 @@ vi.stubGlobal(
 
 const { MyPage } = await import("@/components/me/MyPage");
 
+afterAll(() => vi.unstubAllGlobals());
 afterEach(() => {
   cleanup();
   push.mockClear();

@@ -105,6 +105,7 @@ export function MyWorkspace({
                 setPane("sessions");
               }}
               placeholder="세션 찾기"
+              autoComplete="off"
               maxLength={60}
               className="text-ink placeholder:text-muted/70 min-w-0 flex-1 bg-transparent text-[14px] outline-none"
             />
