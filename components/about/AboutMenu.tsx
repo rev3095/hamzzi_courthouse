@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { ABOUT_PAGES } from "@/lib/about/content";
 
-const ITEMS = [
+const ITEMS: { href: string; label: string; mobileOnly?: true }[] = [
+  // 좁은 화면에서는 헤더의 커뮤니티 버튼을 숨기고 여기서 연다 (가로 넘침 방지)
+  { href: "/community", label: "커뮤니티", mobileOnly: true },
   ...ABOUT_PAGES.map((p) => ({ href: p.href as string, label: p.label })),
   { href: "/about/developer#contact", label: "문의 남기기" },
 ];
@@ -66,7 +68,7 @@ export function AboutMenu() {
         >
           <ul className="flex flex-col">
             {ITEMS.map((item) => (
-              <li key={item.href}>
+              <li key={item.href} className={item.mobileOnly ? "sm:hidden" : undefined}>
                 <Link
                   href={item.href}
                   onClick={() => setOpen(false)}

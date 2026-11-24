@@ -30,6 +30,7 @@ describe("헤더 메뉴 (DEC-051)", () => {
     expect(button.getAttribute("aria-expanded")).toBe("true");
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
+      "/community",
       "/about",
       "/about/features",
       "/about/roadmap",
