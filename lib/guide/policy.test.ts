@@ -70,11 +70,11 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
     for (const [id, s] of allTexts) expect(JUDGING.test(s), `${id}: ${s}`).toBe(false);
   });
 
-  test("변호사법 항목은 운영 사실(돈을 받지 않음, 협업 변호사, 배정·수수료 없음)만 말한다 (DEC-055)", () => {
+  test("변호사법 항목은 운영 사실(돈을 받지 않음, 배정·수수료 없음)만 말하고 자문 변호사 정보는 싣지 않는다 (DEC-055)", () => {
     const t = GUIDE_TOPICS["lawyer-act"];
     const list = t.list!.join(" ");
     expect(list).toContain("돈을 받지 않아요");
-    expect(list).toContain("협업 변호사");
+    expect(list).not.toMatch(/협업 변호사|자문을 받아/);
     expect(list).toContain("배정하지 않고");
     // 조항 이름은 docs/research/03 1-1절에 있는 것만
     const articles = GUIDE_TOPICS["lawyer-act-articles"].lines.join(" ");
