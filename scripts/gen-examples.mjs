@@ -13,7 +13,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const base = (process.argv[2] ?? "http://localhost:3100").replace(/\/$/, "");
 const budgetUsd = Number.parseFloat(process.argv[3] ?? "6");
-const passcode = process.env.GEN_ADMIN_PASSCODE;
+const passcode =
+  process.env.GEN_ADMIN_PASSCODE ?? process.env.ADMIN_PASSCODE ?? process.env.ADMIN_PASSWORD;
 if (!passcode) {
   console.error("GEN_ADMIN_PASSCODE가 없습니다.");
   process.exit(2);
@@ -32,8 +33,10 @@ const questions = JSON.parse(readFileSync(`${DIR}/questions.json`, "utf8")).ques
 const OPUS = { input: 4, output: 20 };
 const costOf = (m) => (m ? (m.tokens_in * OPUS.input + m.tokens_out * OPUS.output) / 1e6 : 0.3);
 
-let cookie = "";
-async function call(path, body) {
+// 쿠키는 실행 줄(worker)마다 따로 둔다. 같이 쓰면 동시에 받은 익명 세션 쿠키가 서로 덮어써 질문 주인과 분석 요청자가 달라진다(403)
+const shared = { cookie: "" };
+async function call(path, body, state = shared) {
+  const { cookie } = state;
   const res = await fetch(`${base}/api/v1${path}`, {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json", cookie },
@@ -44,7 +47,7 @@ async function call(path, body) {
     const [k, v] = c.split(";")[0].split(/=(.*)/s);
     jar.set(k, v);
   }
-  cookie = [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
+  state.cookie = [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
   const json = await res.json().catch(() => null);
   if (!res.ok) {
     const e = new Error(`${path} → ${res.status} ${json?.error?.code ?? ""}`);
@@ -63,40 +66,44 @@ const db = url && key ? createClient(url, key, { auth: { persistSession: false }
 let spent = 0;
 let failures = 0;
 const rows = [];
-for (const q of questions) {
+async function runOne(q, state) {
   const file = `${OUT}/${q.id}.json`;
   if (existsSync(file)) {
     rows.push({ id: q.id, skipped: true });
-    continue;
+    return;
   }
   if (spent >= budgetUsd) {
     console.error(`누적 추정 비용 $${spent.toFixed(3)}가 한도 $${budgetUsd}에 닿아 멈춥니다.`);
-    break;
+    return;
   }
   if (failures >= 3) {
     console.error("연속 3건 실패 — 멈춥니다.");
-    break;
+    return;
   }
   const started = Date.now();
   try {
     let created;
     try {
-      created = await call("/inquiries", { text: q.text });
+      created = await call("/inquiries", { text: q.text }, state);
     } catch (e) {
       // 건강 같은 민감정보 낱말이 든 가상 사연: 직접 쓴 글이라 동의하고 다시 보낸다 (모델 호출 전 단계)
       if (e.code !== "CONSENT_REQUIRED") throw e;
-      created = await call("/inquiries", { text: q.text, sensitiveConsent: true });
+      created = await call("/inquiries", { text: q.text, sensitiveConsent: true }, state);
     }
     if (created.piiConfirmationRequired)
-      await call(`/inquiries/${created.id}/pii-confirmation`, { acceptMasked: true });
+      await call(`/inquiries/${created.id}/pii-confirmation`, { acceptMasked: true }, state);
     // 모델 호출은 여기 한 번뿐이다
-    const analyzed = await call(`/inquiries/${created.id}/analyze`, {
-      // 기본은 Pro Max. 질문에 tier가 있으면 그 단계로 (비교 측정용)
-      tier: q.tier ?? "max",
-      category: q.category,
-      // DeepSearch(DEC-041) 예시는 구조화 + 쟁점별 답변으로 분석한다 (상한 2배)
-      ...(q.deep && { deep: true }),
-    });
+    const analyzed = await call(
+      `/inquiries/${created.id}/analyze`,
+      {
+        // 기본은 Pro Max. 질문에 tier가 있으면 그 단계로 (비교 측정용)
+        tier: q.tier ?? "max",
+        category: q.category,
+        // DeepSearch(DEC-041) 예시는 구조화 + 쟁점별 답변으로 분석한다 (상한 2배)
+        ...(q.deep && { deep: true }),
+      },
+      state,
+    );
     let meta = null;
     if (db) {
       const { data } = await db
@@ -146,6 +153,15 @@ for (const q of questions) {
   }
   console.log(JSON.stringify(rows.at(-1)));
 }
+// GEN_CONCURRENCY로 동시에 돌릴 수를 정한다 (기본 1). 같은 질문은 한 번만 부른다
+const queue = [...questions];
+const workers = Number.parseInt(process.env.GEN_CONCURRENCY ?? "1", 10);
+await Promise.all(
+  Array.from({ length: workers }, async () => {
+    const state = { cookie: shared.cookie };
+    for (let q = queue.shift(); q; q = queue.shift()) await runOne(q, state);
+  }),
+);
 console.log(
   JSON.stringify({ done: rows.length, spentUpperEstimateUsd: Math.round(spent * 1e4) / 1e4 }),
 );

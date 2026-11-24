@@ -4,9 +4,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExampleSides } from "@/components/result/ExampleSides";
 import { ResultPanel } from "@/components/result/ResultPanel";
 import {
   EXAMPLE_PAGE_NOTE,
+  EXAMPLE_SIDES_NOTE,
   demoExamples,
   exampleBySlug,
   exampleCategory,
@@ -44,15 +46,28 @@ export default async function ExamplePage({ params }: PageProps<"/examples/[id]"
           <p className="text-ink text-[15px] font-semibold">
             예시 답변 · 질문 횟수에 포함되지 않아요
           </p>
-          <p className="text-muted mt-1 text-sm leading-relaxed">{EXAMPLE_PAGE_NOTE}</p>
+          <p className="text-muted mt-1 text-sm leading-relaxed">
+            {example.sides?.length ? EXAMPLE_SIDES_NOTE : EXAMPLE_PAGE_NOTE}
+          </p>
         </section>
-        <ResultPanel
-          result={result}
-          question={example.question}
-          category={category}
-          askHref={askHref}
-          followUp={null}
-        />
+        {example.sides?.length ? (
+          <ExampleSides
+            sides={example.sides.map((s) => ({
+              ...s,
+              result: replayResult({ ...example, result: s.result }),
+            }))}
+            category={category}
+            askHref={askHref}
+          />
+        ) : (
+          <ResultPanel
+            result={result}
+            question={example.question}
+            category={category}
+            askHref={askHref}
+            followUp={null}
+          />
+        )}
       </div>
     </main>
   );

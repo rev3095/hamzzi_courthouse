@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const { runDemoAnalysis } = await import("@/lib/ai/orchestrator");
 const { AI_NOTICE } = await import("@/lib/api/respond");
+const { MODEL_SOURCE } = await import("@/lib/ai/policy");
 
 const QUESTIONS = [
   "전세 계약이 끝났는데 집주인이 새 세입자가 들어와야 보증금을 준다고 하면서 돌려주지 않아요. 어떻게 해야 하나요?",
@@ -42,7 +43,8 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY || !process.env.ANTHROPIC_API_KEY)
         expect(draft.outcome).toBe("grounded");
         expect(draft.answer.points.length).toBeGreaterThan(0);
         for (const p of draft.answer.points) {
-          expect(out.evidence.has(p.source)).toBe(true);
+          // DEC-055: 법제처 근거가 모자라면 모델이 아는 판례·조문 문단(출처 MODEL_SOURCE)도 낸다
+          expect(p.source === MODEL_SOURCE || out.evidence.has(p.source), p.source).toBe(true);
           expect(p.text).not.toMatch(/반드시|무조건|100\s*%/);
         }
         expect(new Set(stages)).toEqual(new Set(["intent", "search", "agent", "answer"]));

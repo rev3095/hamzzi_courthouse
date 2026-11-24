@@ -78,7 +78,7 @@ const data: MatterData = {
 };
 
 describe("F-016 AC1 로그인 전용", () => {
-  test("비로그인은 로그인 안내만 보고 사건 목록을 부르지 않는다", () => {
+  test("비로그인은 가상 사건 프리셋을 보고(DEC-061) 내 사건 목록은 부르지 않는다", () => {
     quota.value = {
       anonymous: true,
       used: 0,
@@ -88,7 +88,8 @@ describe("F-016 AC1 로그인 전용", () => {
       admin: false,
     };
     render(<MattersView />);
-    expect(screen.getByText("로그인하고 쓰는 기능이에요")).toBeTruthy();
+    expect(screen.getByText("가상 사건으로 둘러보기")).toBeTruthy();
+    expect(screen.getByTestId("preset-list")).toBeTruthy();
     expect(api.listMatters).not.toHaveBeenCalled();
     expect(screen.getByText(/판단은 하지 않아요/)).toBeTruthy();
   });

@@ -1,0 +1,419 @@
+{
+  "id": "insult-01--suspect",
+  "category": "insult",
+  "question": "2026년 3월 초 금요일 저녁, ○○시의 한 고깃집에서 일행 두 명을 기다리며 먼저 들어가 창가 4인석에 가방을 올려두고 앉아 있었습니다. 그 가게는 평소 먼저 온 사람이 자리를 잡아두면 종업원도 별말 없던 곳이라 그렇게 했습니다. 그런데 30대로 보이는 남성이 부부로 보이는 일행과 와서 제 가방을 옆 의자로 옮기고 앉으려 했습니다. 제가 맡아둔 자리라고 하자 그 남성이 \"나이 먹고 뭐 하는 짓이냐\"고 반말을 했고, 저도 화가 나서 욕설을 몇 마디 했습니다. 욕을 한 것 자체는 인정합니다. 다만 다른 손님들에게 들으라고 한 것은 아니고 홧김에 나온 말이었습니다. 제가 손짓하며 다가가자 그 남성이 제 손목을 세게 내리쳐서 다음 날 멍이 들었고, 그 사진을 찍어두었습니다. 뒤늦게 도착한 제 일행 두 명은 그 남성이 언성을 높이는 장면을 봤습니다.\n\n그로부터 한 달쯤 지난 4월 중순, 관할 경찰서 수사관에게서 모욕 혐의로 고소가 들어왔으니 출석해 달라는 전화와 문자를 받았습니다. 어떻게 제 신원을 알았는지 물으니 가게 결제 기록과 CCTV를 확인했다고 했습니다. 상대방이 녹음 파일과 목격자 진술을 냈다는 말도 들었지만, 구체적으로 어떤 내용인지는 모릅니다. 저는 상대가 먼저 반말로 도발했고 제 손목을 쳤으니, 저만 처벌받는 것은 억울하다는 생각입니다.\n\n궁금한 것은 이렇습니다. 상대의 도발이 먼저 있었고 말다툼 중에 나온 욕설이라는 사정이 모욕죄 성립이나 처분에 어떻게 반영되는지, 공연성은 어떤 기준으로 판단하는지 알고 싶습니다. 손목을 맞은 일로 상대를 폭행으로 고소할 수 있는지, 그렇게 맞고소를 하는 것이 합의 시도와 어떤 관계가 있는지도 궁금합니다. 상대가 낸 녹음과 진술 내용을 조사 전에 확인할 방법이 있는지, 조사에서 욕설을 어디까지 인정하고 어떤 부분을 다퉈야 하는지도 알고 싶습니다. 합의나 사과를 하려면 언제 어떤 방식으로 하는 것이 좋은지, 조사 출석 전후로 어떤 순서로 준비해야 하는지, 그리고 지금 피의자 의견서에 경위와 인정하는 부분, 참작할 사정, 증거를 어떻게 정리해 써야 하는지 알려주세요.",
+  "at": "2026-11-24T17:39:20.768Z",
+  "elapsedMs": 74703,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 14343,
+    "tokens_out": 8505,
+    "latency_ms": 74255
+  },
+  "costUsdUpperEstimate": 0.22747,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "형법",
+        "게임산업진흥에 관한 법률"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "모욕 공연성",
+        "모욕죄 공연성 불특정 다수 전파가능성 욕설",
+        "폭행죄 손목 유형력 행사 반의사불벌 고소"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "모욕죄는 욕설을 했다는 것만으로 성립하지 않고, '공연히' 모욕한 경우에 성립합니다. 법정형은 1년 이하의 징역이나 금고 또는 200만원 이하의 벌금입니다. 욕설 자체를 인정하시더라도, 불특정 또는 다수인이 인식할 수 있는 상태였는지(공연성)는 따로 다툴 수 있는 핵심 요건입니다.",
+          "source": "law:형법:제311조",
+          "quote": "공연히 사람을 모욕한 자는 1년 이하의 징역이나 금고 또는 200만원 이하의 벌금에 처한다.",
+          "check": "verified"
+        },
+        {
+          "text": "대법원 2022도14571 판결은 특정한 소수에게만 한 발언은 공연성이 부정되는 유력한 사정이고, 이때 전파가능성은 검사가 엄격히 증명해야 한다고 봅니다. 욕설이 주변 손님들에게 들릴 만한 크기였다면 공연성이 인정되기 쉽습니다. 반대로 상대 일행 등 그 자리의 몇 사람만 들을 정도였다면 공연성을 다툴 여지가 있습니다.",
+          "source": "case:2022도14571",
+          "quote": "특정한 소수에게만 발언하였다는 점은 공연성이 부정되는 유력한 사정이 될 수 있으므로",
+          "check": "verified"
+        },
+        {
+          "text": "이 판결은 불편한 감정을 거칠게 드러낸 정도의 표현은 그대로 옮겨 전파되리라 예상하기 어려우므로, 전파가능성을 인정할 때 유의해야 한다고 봅니다. 조사에서는 욕설 사실은 인정하시되, 목소리 크기, 서 있던 위치, 주변 손님이 있었는지를 기억나는 범위에서 구체적으로 진술하시길 권합니다. 상대 녹음 내용을 모르시니 추측해서 단정하지 않는 편이 좋습니다.",
+          "source": "case:2022도14571",
+          "quote": "불편한 감정을 거칠게 나타낸 정도의 표현에 그치는 것으로서",
+          "check": "verified"
+        },
+        {
+          "text": "상대의 반말 도발과 말다툼 중 홧김에 나온 욕설이라는 사정만으로 죄의 성립 자체가 없어지기는 어렵습니다. 다만 형법 제53조의 정상참작 사유로 처분이나 형을 정할 때 고려될 수 있습니다. 앞의 공연성이 인정된다면 이 사정이 실제 쟁점이 됩니다. 의견서에는 경위, 인정하는 욕설, 상대의 선행 반말과 손목 가격, 멍 사진과 일행의 목격 내용을 순서대로 정리하시면 좋습니다.",
+          "source": "law:형법:제53조",
+          "quote": "범죄의 정상(情狀)에 참작할 만한 사유가 있는 경우에는 그 형을 감경할 수 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "모욕죄는 형법 제312조에 따라 고소가 있어야 공소를 제기할 수 있는 친고죄입니다. 고소인이 합의 후 고소를 취소하면 재판으로 가지 않게 되므로, 사과와 합의가 가장 실질적인 해결책이 될 수 있습니다. 고소인 측의 처벌 의사를 모르시니, 직접 찾아가기보다 수사관을 통해 사과·합의 의사를 전달해 달라고 요청하는 방식부터 권합니다.",
+          "source": "law:형법:제312조",
+          "quote": "제308조와 제311조의 죄는 고소가 있어야 공소를 제기할 수 있다.",
+          "check": "verified"
+        },
+        {
+          "text": "형사소송법 제232조에 따라 고소는 첫 심급 판결 선고 전까지 취소할 수 있고, 취소한 뒤에는 같은 사건으로 다시 고소할 수 없습니다. 고소가 취소되면 수사 단계에서는 공소권 없음으로 정리되는 것이 일반적입니다. 조사 전에 사과 의사를 전하고, 조사에서 경위를 진술한 뒤 합의서나 처벌불원서를 제출하는 순서가 무난합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "상대가 손목을 세게 내리친 것은 형법 제260조 제1항의 폭행에 해당할 수 있어 고소가 가능합니다. 진단서를 받았다면 형법 제257조의 상해로 볼 여지도 있고, 진단서나 치료 기록이 없다면 폭행으로 다뤄질 가능성이 큽니다. 폭행죄는 형법 제260조 제3항에 따라 피해자의 명시한 의사에 반해 공소를 제기할 수 없습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "질문자께서 손짓하며 다가간 것이 상대에게 공격으로 보일 만했다면, 상대가 형법 제21조의 정당방위를 주장할 수 있습니다. 단순한 손짓에 불과했다면 그 주장이 받아들여지기 어렵습니다. 멍 사진, 일행의 진술, 가게 CCTV를 서둘러 확보해 두시고, 아직 진료를 받지 않으셨다면 진료 기록을 남겨 두시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "맞고소는 모욕 사건과 폭행 사건을 함께 정리할 계기가 되어, 서로 고소 취소와 처벌불원으로 합의하는 데 도움이 될 수 있습니다. 다만 보복성으로 비치면 감정이 나빠질 수 있습니다. 먼저 사과 의사를 전하고, 합의가 어려울 때 고소하는 방식도 고려해 보세요. 앞서 본 공연성이 부정될 가능성이 크다면 협상을 서두를 필요는 줄어듭니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:형법:제138조",
+        "lawName": "형법",
+        "articleNo": "제138조",
+        "title": "법정 또는 국회회의장모욕",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C138%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제311조",
+        "lawName": "형법",
+        "articleNo": "제311조",
+        "title": "모욕",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C311%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제53조",
+        "lawName": "형법",
+        "articleNo": "제53조",
+        "title": "정상참작감경",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C53%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제54조",
+        "lawName": "형법",
+        "articleNo": "제54조",
+        "title": "선택형과 정상참작감경",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C54%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제107조",
+        "lawName": "형법",
+        "articleNo": "제107조",
+        "title": "외국원수에 대한 폭행 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C107%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제108조",
+        "lawName": "형법",
+        "articleNo": "제108조",
+        "title": "외국사절에 대한 폭행 등",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C108%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제312조",
+        "lawName": "형법",
+        "articleNo": "제312조",
+        "title": "고소와 피해자의 의사",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C312%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:형법:제105조",
+        "lawName": "형법",
+        "articleNo": "제105조",
+        "title": "국기, 국장의 모독",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C105%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제109조",
+        "lawName": "형법",
+        "articleNo": "제109조",
+        "title": "외국의 국기, 국장의 모독",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C109%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:자치경찰사무와시ㆍ도자치경찰위원회의조직및운영등에관한규정:제3조",
+        "lawName": "자치경찰사무와 시ㆍ도자치경찰위원회의 조직 및 운영 등에 관한 규정",
+        "articleNo": "제3조",
+        "title": "수사 관련 자치경찰사무의 범위 등",
+        "effectiveFrom": "2026-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%90%EC%B9%98%EA%B2%BD%EC%B0%B0%EC%82%AC%EB%AC%B4%EC%99%80%20%EC%8B%9C%E3%86%8D%EB%8F%84%EC%9E%90%EC%B9%98%EA%B2%BD%EC%B0%B0%EC%9C%84%EC%9B%90%ED%9A%8C%EC%9D%98%20%EC%A1%B0%EC%A7%81%20%EB%B0%8F%20%EC%9A%B4%EC%98%81%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%A0%95/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제245조",
+        "lawName": "형법",
+        "articleNo": "제245조",
+        "title": "공연음란",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C245%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제307조",
+        "lawName": "형법",
+        "articleNo": "제307조",
+        "title": "명예훼손",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C307%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:형법:제337조",
+        "lawName": "형법",
+        "articleNo": "제337조",
+        "title": "강도상해, 치상",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%98%95%EB%B2%95/%EC%A0%9C337%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:게임산업진흥에관한법률:제32조",
+        "lawName": "게임산업진흥에 관한 법률",
+        "articleNo": "제32조",
+        "title": "불법게임물 등의 유통금지 등",
+        "effectiveFrom": "2025-10-23",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B2%8C%EC%9E%84%EC%82%B0%EC%97%85%EC%A7%84%ED%9D%A5%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C32%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624315",
+        "caseNo": "2022도5937",
+        "caseName": "상관모욕",
+        "court": "대법원",
+        "decidedAt": "2026-07-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624315",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "239237",
+        "caseNo": "2022도14571",
+        "caseName": "모욕",
+        "court": "대법원",
+        "decidedAt": "2024-01-04",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=239237",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "174794",
+        "caseNo": "2013노941",
+        "caseName": "공무집행방해·모욕",
+        "court": "청주지법",
+        "decidedAt": "2014-05-23",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=174794",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "242071",
+        "caseNo": "2023노528, 830(병합)",
+        "caseName": "명예훼손·모욕·협박·스토킹범죄의처벌등에관한법률위반",
+        "court": "서울남부지방법원",
+        "decidedAt": "2023-08-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=242071",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "238505",
+        "caseNo": "2021노4485",
+        "caseName": "모욕",
+        "court": "대구지방법원",
+        "decidedAt": "2022-10-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=238505",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "227683",
+        "caseNo": "2020도8336",
+        "caseName": "명예훼손·모욕",
+        "court": "대법원",
+        "decidedAt": "2022-07-28",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=227683",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "226871",
+        "caseNo": "2020다270770",
+        "caseName": "해고무효확인등청구의소",
+        "court": "대법원",
+        "decidedAt": "2021-04-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=226871",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 9
+      },
+      {
+        "keyword": "모욕 공연성",
+        "total": 6
+      },
+      {
+        "keyword": "모욕죄 공연성 불특정 다수 전파가능성 욕설",
+        "total": 2
+      },
+      {
+        "keyword": "폭행죄 손목 유형력 행사 반의사불벌 고소",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "형법 제311조",
+          "exists": true
+        },
+        {
+          "citation": "2022도14571",
+          "exists": true
+        },
+        {
+          "citation": "형법 제53조",
+          "exists": true
+        },
+        {
+          "citation": "형법 제312조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "질문자",
+          "role": ""
+        },
+        {
+          "label": "30대 남성",
+          "role": ""
+        },
+        {
+          "label": "부부로 보이는 일행",
+          "role": ""
+        },
+        {
+          "label": "질문자의 일행 두 명",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 3월 초 금요일 저녁",
+          "who": "질문자",
+          "what": "고깃집에서 일행을 기다리며 창가 4인석에 가방을 올려두고 먼저 앉아 있었다."
+        },
+        {
+          "when": "",
+          "who": "30대 남성",
+          "what": "부부로 보이는 일행과 와서 질문자의 가방을 옮기고 앉으려 했다."
+        },
+        {
+          "when": "",
+          "who": "30대 남성",
+          "what": "질문자에게 반말로 나이를 거론하며 항의했고, 질문자는 욕설을 했다."
+        },
+        {
+          "when": "",
+          "who": "30대 남성",
+          "what": "질문자가 다가가자 질문자의 손목을 세게 내리쳤다."
+        },
+        {
+          "when": "다음 날",
+          "who": "질문자",
+          "what": "손목에 멍이 들어 사진을 찍어 두었다."
+        },
+        {
+          "when": "4월 중순",
+          "who": "",
+          "what": "모욕 혐의 고소 사실을 알리며 출석을 요구했다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "욕설이 모욕죄의 공연성 요건을 충족하는지",
+          "points": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "title": "상대의 도발과 말다툼이 처벌에 미치는 영향",
+          "points": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "title": "손목을 맞은 일로 상대를 폭행죄로 고소할 수 있는지",
+          "points": [
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "unknowns": [
+        "상대방이 녹음 파일과 목격자 진술을 어떤 내용으로 제출했는지",
+        "욕설이 다른 손님들에게 들릴 정도의 크기였는지",
+        "손목 멍 외에 진단서나 치료 기록이 있는지",
+        "고소인 측이 질문자와의 합의나 처벌 의사를 어떻게 밝혔는지",
+        "사건 전에 질문자가 상대에게 먼저 손짓이나 접근을 했는지"
+      ]
+    }
+  }
+}
