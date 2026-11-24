@@ -1,0 +1,427 @@
+{
+  "id": "welfare-appeal-01--applicant",
+  "category": "welfare_appeal",
+  "question": "저는 ○○시에 있는 제조업체 회사 A에서 약 3년간 생산관리직으로 일했습니다. 2025년 9월분 월급부터 지급일에 들어오지 않았고, 대표는 \"거래처 대금이 들어오면 한꺼번에 주겠다\"는 말만 반복했습니다. 10월분은 절반만 들어왔고, 11월분과 12월분은 아예 받지 못했습니다. 결국 2026년 1월 초에 팀장에게 \"월급이 계속 밀려서 더는 버틸 수 없어 그만두겠다\"고 말하고 사직서를 냈습니다. 사직서 양식에 사유를 적는 칸이 있었는데, 팀장이 \"그냥 개인 사정으로 쓰면 처리가 빠르다\"고 해서 그대로 '개인 사정'이라고 적은 것이 마음에 걸립니다.\n\n퇴사 후 2026년 1월 중순에 고용센터에 실업급여를 신청했는데, 회사가 낸 피보험자격 상실신고와 이직확인서에는 이직 사유가 '자진퇴사(개인 사정)'로 되어 있었습니다. 저는 상담 때 임금이 밀렸다고 말했지만, 2주쯤 뒤 '정당한 이직 사유가 확인되지 않는 자진퇴사로 수급자격이 인정되지 않는다'는 수급자격 불인정 통지를 받았습니다.\n\n제가 가진 자료는 월급 통장 거래내역(9월~12월 입금 내역), 대표와 팀장에게 월급을 언제 주느냐고 물은 메신저 대화, 동료들과 나눈 단체 대화방 기록, 그리고 근로계약서입니다. 퇴사 직후인 1월 말에 지방고용노동청에 임금체불 진정을 넣었고, 근로감독관 조사 일정이 잡혀 있지만 아직 체불임금 등 확인서는 받지 못했습니다. 회사는 노동청에 \"10월분은 일부 줬고, 나머지도 곧 줄 계획이었으니 체불이라고 보기 어렵다\"고 주장하고 있다고 들었습니다.\n\n궁금한 점은 이렇습니다. 첫째, 임금체불로 그만둔 경우 정당한 이직 사유로 인정되려면 체불 기간이나 횟수, 금액에 대해 어떤 기준이 있는지, 10월분처럼 일부만 받은 달은 어떻게 계산되는지 관련 법령과 판례를 알고 싶습니다. 둘째, 사직서에 '개인 사정'이라고 쓴 것과 회사가 이직확인서에 자진퇴사로 적은 것을 뒤집으려면 어떤 증거가 필요한지, 회사에 상실 사유 정정을 요구하거나 근로복지공단·고용센터에 피보험자격 확인청구를 따로 해야 하는지 궁금합니다. 셋째, 노동청 체불 확인서가 아직 없는데 이의를 먼저 제기해도 되는지, 나중에 추가로 낼 수 있는지 알고 싶습니다. 넷째, 고용보험 심사청구, 재심사청구, 행정소송이 어떤 순서로 이어지는지, 기한은 법령상 어떻게 정해져 있는지 확인해야 할 것 같습니다. 마지막으로 지금 당장 써야 할 심사청구서에 청구 취지와 이유를 어떻게 적어야 하는지, 어떤 증거를 어떤 순서로 붙여야 하는지 구체적으로 알려 주세요.",
+  "at": "2026-11-24T17:50:17.509Z",
+  "elapsedMs": 95325,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 18057,
+    "tokens_out": 10622,
+    "latency_ms": 94849
+  },
+  "costUsdUpperEstimate": 0.28467,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "임금채권보장법",
+        "고용보험법 시행규칙",
+        "고용보험법",
+        "국민기초생활 보장법",
+        "고용보험법 시행령",
+        "선원법",
+        "근로기준법",
+        "임금채권보장법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "실업급여 부정수급 반환명령",
+        "고용보험 정당한 이직 사유 임금 체불 자진퇴사",
+        "임금 일부 지급 체불임금 산정 자진퇴사 실업급여"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "고용보험법 제58조는 자기 사정으로 이직했더라도 고용노동부령이 정한 정당한 사유가 있으면 수급자격을 제한하지 않는 구조입니다. 그래서 '자진퇴사'였는지보다, 그만둔 이유가 고용노동부령의 정당한 사유에 해당하는지가 핵심입니다.",
+          "source": "law:고용보험법:제58조",
+          "quote": "그 밖에 고용노동부령으로 정하는 정당한 사유에 해당하지 아니하는 사유로 이직한 경우",
+          "check": "verified"
+        },
+        {
+          "text": "근로기준법 제43조는 임금을 전액, 매월 일정한 날짜에 지급하도록 정합니다. 그래서 절반만 들어온 달은 못 받은 나머지가 그 지급일에 체불된 것으로 보는 것이 일반적입니다. 회사가 '곧 줄 계획이었다'고 해도 지급일이 지난 이상 체불 성립을 막기는 어렵다고 보입니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "지급일은 근로계약서에 적혀 있다면 그 날을, 적혀 있지 않다면 취업규칙이나 실제 관행상 지급일을 기준으로 봅니다. 처음 밀린 달 임금이 나중에라도 다 들어왔다면 지연 지급된 달로, 아직 남아 있다면 체불된 달로 정리됩니다. 통장 내역으로 달마다 지급일·입금액·미지급액 표를 만들어 고용보험법 시행규칙 제101조 별표 요건에 맞는지 확인해 보시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "고용보험법 제43조에 따른 수급자격 판단은 사업주가 적은 이직확인서에 묶이지 않고 실제 이직 사유를 기준으로 합니다. 월급을 언제 주느냐고 물은 메신저, 통장 내역, 동료 단체 대화방, 진정 자료가 체불 때문에 그만뒀다는 실질을 보여 줍니다. 퇴사 전 시정 요구 기록이 있다면 더 좋고, 없다면 팀장이 '개인 사정'으로 쓰라고 한 경위를 진술서로 남기시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "고용보험법 제87조에 따라 수급자격 불인정 처분이 있음을 안 날부터 90일 이내에 심사관에게 심사청구를, 심사 결정이 있음을 안 날부터 90일 이내에 심사위원회에 재심사청구를 해야 합니다. 통지를 받은 날을 기준으로 기한을 넉넉히 잡아 서두르시는 편이 안전합니다.",
+          "source": "law:고용보험법:제87조",
+          "quote": "심사의 청구는 같은 항의 확인 또는 처분이 있음을 안 날부터 90일 이내에",
+          "check": "verified"
+        },
+        {
+          "text": "청구 취지는 '○○고용센터가 청구인에게 한 구직급여 수급자격 불인정 처분을 취소한다'처럼 적으면 됩니다. 이유에는 먼저 지급일마다 임금이 밀리거나 일부만 지급된 경위, 다음 체불 때문에 퇴사 의사를 밝힌 경위, 이어 팀장 권유로 '개인 사정'이라 적은 경위, 끝으로 고용보험법 시행규칙 제101조의 정당한 사유에 해당한다는 주장을 쓰시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "증거는 근로계약서, 통장 거래내역, 대표·팀장 메신저, 단체 대화방, 임금체불 진정 접수 내역 순으로 붙이면 흐름이 자연스럽습니다. 체불임금 등 확인서는 기다리지 말고 기한 안에 먼저 청구한 뒤 나오는 대로 보충 제출해 보시길 권합니다. 재심사 결정에도 불복하면 고용보험법 제104조와 행정소송법 제20조에 따라 행정소송을 낼 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:임금채권보장법:제7조",
+        "lawName": "임금채권보장법",
+        "articleNo": "제7조",
+        "title": "퇴직한 근로자에 대한 대지급금의 지급",
+        "effectiveFrom": "2026-08-20",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%84%EA%B8%88%EC%B1%84%EA%B6%8C%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C7%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:고용보험법시행규칙:제82조의2",
+        "lawName": "고용보험법 시행규칙",
+        "articleNo": "제82조의2",
+        "title": "이직확인서의 발급 등",
+        "effectiveFrom": "2026-09-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C82%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:고용보험법:제88조",
+        "lawName": "고용보험법",
+        "articleNo": "제88조",
+        "title": "대리인의 선임",
+        "effectiveFrom": "2028-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C88%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:고용보험법:제101조",
+        "lawName": "고용보험법",
+        "articleNo": "제101조",
+        "title": "심리",
+        "effectiveFrom": "2028-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C101%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:고용보험법:제87조",
+        "lawName": "고용보험법",
+        "articleNo": "제87조",
+        "title": "심사와 재심사",
+        "effectiveFrom": "2028-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C87%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:국민기초생활보장법:제38조",
+        "lawName": "국민기초생활 보장법",
+        "articleNo": "제38조",
+        "title": "시ㆍ도지사에 대한 이의신청",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C38%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:국민기초생활보장법:제40조",
+        "lawName": "국민기초생활 보장법",
+        "articleNo": "제40조",
+        "title": "보건복지부장관 등에 대한 이의신청",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B5%AD%EB%AF%BC%EA%B8%B0%EC%B4%88%EC%83%9D%ED%99%9C%20%EB%B3%B4%EC%9E%A5%EB%B2%95/%EC%A0%9C40%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:고용보험법:제58조",
+        "lawName": "고용보험법",
+        "articleNo": "제58조",
+        "title": "이직 사유에 따른 수급자격의 제한",
+        "effectiveFrom": "2026-09-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95/%EC%A0%9C58%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:고용보험법시행령:제24조",
+        "lawName": "고용보험법 시행령",
+        "articleNo": "제24조",
+        "title": "지역고용촉진 지원금",
+        "effectiveFrom": "2026-09-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C24%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:선원법:제56조",
+        "lawName": "선원법",
+        "articleNo": "제56조",
+        "title": "임금채권보장보험 등의 가입",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%84%A0%EC%9B%90%EB%B2%95/%EC%A0%9C56%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제24조",
+        "lawName": "근로기준법",
+        "articleNo": "제24조",
+        "title": "경영상 이유에 의한 해고의 제한",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C24%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:임금채권보장법시행령:제8조",
+        "lawName": "임금채권보장법 시행령",
+        "articleNo": "제8조",
+        "title": "사업주의 기준",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9E%84%EA%B8%88%EC%B1%84%EA%B6%8C%EB%B3%B4%EC%9E%A5%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C8%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제26조",
+        "lawName": "근로기준법",
+        "articleNo": "제26조",
+        "title": "해고의 예고",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C26%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:10ㆍ29이태원참사피해자권리보장과진상규명및재발방지를위한특별법:제60조",
+        "lawName": "10ㆍ29이태원참사 피해자 권리보장과 진상규명 및 재발방지를 위한 특별법",
+        "articleNo": "제60조",
+        "title": "근로자의 치유휴직",
+        "effectiveFrom": "2026-09-15",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/10%E3%86%8D29%EC%9D%B4%ED%83%9C%EC%9B%90%EC%B0%B8%EC%82%AC%20%ED%94%BC%ED%95%B4%EC%9E%90%20%EA%B6%8C%EB%A6%AC%EB%B3%B4%EC%9E%A5%EA%B3%BC%20%EC%A7%84%EC%83%81%EA%B7%9C%EB%AA%85%20%EB%B0%8F%20%EC%9E%AC%EB%B0%9C%EB%B0%A9%EC%A7%80%EB%A5%BC%20%EC%9C%84%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95/%EC%A0%9C60%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:근로기준법:제27조",
+        "lawName": "근로기준법",
+        "articleNo": "제27조",
+        "title": "해고사유 등의 서면통지",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EA%B7%BC%EB%A1%9C%EA%B8%B0%EC%A4%80%EB%B2%95/%EC%A0%9C27%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "213631",
+        "caseNo": "2020두31323",
+        "caseName": "실업급여지급제한및반환명령처분취소",
+        "court": "대법원",
+        "decidedAt": "2020-05-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=213631",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "187502",
+        "caseNo": "2013다36347",
+        "caseName": "체불임금",
+        "court": "대법원",
+        "decidedAt": "2014-10-27",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=187502",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "207130",
+        "caseNo": "2018구합23680",
+        "caseName": "실업급여지급제한·반환명령결정처분취소청구",
+        "court": "대구지법",
+        "decidedAt": "2019-04-17",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=207130",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "176551",
+        "caseNo": "2012나13697",
+        "caseName": "체불임금",
+        "court": "대구지방법원",
+        "decidedAt": "2013-04-18",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=176551",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "158784",
+        "caseNo": "2011나6848",
+        "caseName": "손해배상",
+        "court": "의정부지법",
+        "decidedAt": "2011-10-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=158784",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "176562",
+        "caseNo": "2011가단11180",
+        "caseName": "체불임금",
+        "court": "대구지방법원 김천지원",
+        "decidedAt": "2012-06-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=176562",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "210313",
+        "caseNo": "2003구합8144",
+        "caseName": "고용유지지원금지급거부등처분취소",
+        "court": "대구지법",
+        "decidedAt": "2004-11-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=210313",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 11
+      },
+      {
+        "keyword": "실업급여 부정수급 반환명령",
+        "total": 4
+      },
+      {
+        "keyword": "고용보험 정당한 이직 사유 임금 체불 자진퇴사",
+        "total": 0
+      },
+      {
+        "keyword": "임금 일부 지급 체불임금 산정 자진퇴사 실업급여",
+        "total": 5
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": false,
+      "items": [
+        {
+          "citation": "고용보험법 제58조",
+          "exists": true
+        },
+        {
+          "citation": "고용보험법 제87조",
+          "exists": true
+        }
+      ],
+      "removed": 2
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "근로자(질문자)",
+          "role": ""
+        },
+        {
+          "label": "회사 A(대표)",
+          "role": ""
+        },
+        {
+          "label": "팀장",
+          "role": ""
+        },
+        {
+          "label": "고용센터",
+          "role": "실업급여 수급자격을 불인정한 행정기관"
+        }
+      ],
+      "events": [
+        {
+          "when": "2025년 9월분 월급",
+          "who": "회사 A(대표)",
+          "what": "9월분 월급이 지급일에 지급되지 않았다."
+        },
+        {
+          "when": "2025년 10월분 월급",
+          "who": "회사 A(대표)",
+          "what": "10월분 월급은 절반만 입금되었다."
+        },
+        {
+          "when": "2025년 11~12월분 월급",
+          "who": "회사 A(대표)",
+          "what": "11월분과 12월분 월급은 받지 못했다."
+        },
+        {
+          "when": "2026년 1월 초",
+          "who": "근로자(질문자)",
+          "what": "팀장에게 월급 체불을 이유로 그만둔다고 말하고 사직서를 냈다."
+        },
+        {
+          "when": "사직서 작성 시",
+          "who": "팀장",
+          "what": "사직서 사유를 개인 사정으로 적도록 안내했다."
+        },
+        {
+          "when": "2026년 1월 중순",
+          "who": "근로자(질문자)",
+          "what": "고용센터에 실업급여를 신청했다."
+        },
+        {
+          "when": "2026년 1월 중순 이후",
+          "who": "회사 A(대표)",
+          "what": "피보험자격 상실신고와 이직확인서에 자진퇴사(개인 사정)로 적었다."
+        },
+        {
+          "when": "신청 약 2주 후",
+          "who": "고용센터",
+          "what": "정당한 이직 사유가 확인되지 않는다며 수급자격 불인정 통지를 했다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "임금 체불이 정당한 이직 사유에 해당하는지",
+          "points": [
+            0
+          ]
+        },
+        {
+          "title": "일부만 지급된 달의 체불 여부와 산정 방식",
+          "points": [
+            1,
+            2
+          ]
+        },
+        {
+          "title": "회사 기재와 다른 이직 사유를 다툴 수 있는지",
+          "points": [
+            3
+          ]
+        },
+        {
+          "title": "이의제기 절차와 기한",
+          "points": [
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "unknowns": [
+        "체불임금 확인서를 노동청에서 언제 받을 수 있는지",
+        "회사가 체불 사실을 다투는 근거 자료가 있는지",
+        "10월분 나머지와 11월·12월분의 지급 기일 약정이 근로계약서에 어떻게 적혀 있는지",
+        "퇴사 전 체불 기간 동안 회사에 시정을 요구한 기록이 있는지",
+        "고용센터 상담 때 체불 사실을 서면이나 증거와 함께 제출했는지"
+      ]
+    }
+  }
+}

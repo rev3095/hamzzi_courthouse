@@ -1,0 +1,430 @@
+{
+  "id": "registration-01--applicant",
+  "category": "registration",
+  "question": "저는 ○○시에 사는 30대 직장인이고, 2026년 2월 말 부모님이 공동명의(각 2분의 1)로 가진 아파트 한 채를 저에게 증여하겠다고 하셨습니다. 부모님은 이미 다른 집으로 이사하셨고, 이 아파트는 지금 비어 있습니다. 비용을 줄이려고 법무사 없이 제가 직접 등기를 하려고 하는데, 알아볼수록 걸리는 게 많습니다.\n\n첫째, 등기부를 떼어 보니 은행 근저당권이 설정되어 있고 대출 잔액이 약 1억 2천만 원 남아 있습니다. 부모님은 이 대출을 제가 넘겨받는 조건으로 주겠다고 하셨는데, 이렇게 하면 '부담부증여'가 된다고 들었습니다. 그러면 증여계약서에 채무 인수 내용을 어떻게 적어야 하는지, 은행의 채무인수 승낙을 등기 전에 받아야 하는지, 부모님 쪽에 양도소득세 문제가 생기는지 모르겠습니다.\n\n둘째, 아버지는 3월 중순부터 해외 근무로 몇 달간 출국하십니다. 증여계약서 작성, 인감증명서 발급, 등기신청서 날인을 출국 전에 다 끝내야 하는지, 아니면 위임장이나 재외공관 서류로 대신할 수 있는지 궁금합니다.\n\n셋째, 저는 이미 제 명의로 작은 오피스텔을 한 채 가지고 있습니다. 이 오피스텔이 주택 수에 들어가는지에 따라 증여 취득세가 달라진다고 들었는데, 시청에 취득세를 신고·납부하고 영수증을 받아야 등기 접수가 된다고 하니 순서를 정확히 알고 싶습니다. 증여세는 세무서에 따로 신고해야 한다는데, 등기와 어느 쪽을 먼저 하는지도 헷갈립니다.\n\n넷째, 증여계약서는 시청에서 검인을 받아야 한다는 말과 받지 않아도 된다는 말을 둘 다 들었고, 국민주택채권 매입, 등기필정보 수령, 전자신청(인터넷등기소)과 방문신청 중 무엇이 나은지도 모릅니다.\n\n지금 제 손에는 등기사항전부증명서, 부모님 신분증 사본, 대출 잔액 확인서만 있습니다. 아직 증여계약서는 쓰지 않았고 은행에도 문의하지 않았습니다.\n\n제가 확인해야 할 사실과 관련 법령(부동산등기법, 지방세법, 상속세 및 증여세법 등)이 무엇인지, 증여계약서 작성부터 검인·취득세 신고·채권 매입·등기 접수·증여세 신고까지 어떤 순서로 어느 기관에서 진행해야 하는지, 그리고 지금 써야 할 소유권이전등기 신청서와 첨부할 증여계약서를 어떤 항목으로, 어떻게 작성해야 하는지 알려주세요.",
+  "at": "2026-11-24T17:46:13.221Z",
+  "elapsedMs": 100873,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 17666,
+    "tokens_out": 11065,
+    "latency_ms": 100413
+  },
+  "costUsdUpperEstimate": 0.29196,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "상속세 및 증여세법",
+        "지방세법",
+        "부동산등기법",
+        "부동산등기규칙",
+        "등기정보자료의 제공에 관한 규칙",
+        "한국부동산원법 시행령",
+        "부동산등기특별조치법에따른대법원규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "소유권이전등기",
+        "증여 취득세 주택 수 오피스텔 중과세율 적용",
+        "부동산 등기 위임장 대리 재외국민 인감증명 등기신청"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "부모님 대출을 넘겨받는 조건이면 부담부증여가 됩니다. 상속세 및 증여세법 제47조 제1항은 증여재산가액에서 그 재산에 담보된 채무 중 수증자가 인수한 금액을 빼고 과세가액을 정합니다. 그래서 증여계약서에 '수증자는 ○○은행 근저당권의 피담보채무 잔액을 인수한다'는 조항을 넣고, 은행명·대출 계좌·인수 기준일의 잔액을 구체적으로 적어 두시길 권합니다.",
+          "source": "law:상속세및증여세법:제47조",
+          "quote": "수증자가 인수한 금액을 뺀 금액으로 한다.",
+          "check": "verified"
+        },
+        {
+          "text": "상속세 및 증여세법 제47조 제3항은 부모·자녀 사이의 부담부증여에서는 채무를 인수했어도 인수하지 않은 것으로 추정하고, 객관적으로 인정되는 채무만 예외로 둡니다. 은행이 채무인수를 승낙해 대출 명의가 질문자님으로 바뀌고 이후 직접 갚으신다면 인수가 인정되기 쉽습니다. 승낙 없이 부모님 명의 대출로 남는다면 채무 공제가 부인될 위험이 큽니다. 계약서를 쓰기 전에 은행부터 문의해 보시길 권합니다.",
+          "source": "law:상속세및증여세법:제47조",
+          "quote": "수증자가 증여자의 채무를 인수한 경우에도 그 채무액은 수증자에게 인수되지 아니한 것으로 추정한다",
+          "check": "verified"
+        },
+        {
+          "text": "소득세법 제88조 제1호는 부담부증여에서 수증자가 인수하는 채무액에 해당하는 부분을 증여자가 양도한 것으로 봅니다. 그래서 채무인수가 인정되면 그 부분은 공동명의자인 부모님 각자에게 양도소득세 문제가 생길 수 있습니다. 부모님이 비과세 요건에 해당하는지에 따라 세액이 크게 달라지니 세무서나 세무사에게 미리 확인해 보시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "앞의 채무인수가 인정되는지는 취득세에도 이어집니다. 실무상 채무인수 부분은 유상취득으로, 나머지는 무상취득으로 나누어 보는 것이 일반적이기 때문입니다. 지방세법 제13조의2는 유상거래로 취득한 주택이 1세대 2주택이면서 조정대상지역에 있거나, 1세대 3주택이면서 조정대상지역 밖에 있는 경우 등에 중과세율을 정합니다. 그래서 오피스텔이 주택 수에 들어가는지가 중요합니다.",
+          "source": "law:지방세법:제13조의2",
+          "quote": "1세대 2주택(대통령령으로 정하는 일시적 2주택은 제외한다)에 해당하는 주택으로서",
+          "check": "verified"
+        },
+        {
+          "text": "지방세법 제13조의3 제4호는 주택분 재산세가 부과되는 오피스텔을 주택 수에 넣습니다. 오피스텔이 주거용으로 쓰여 주택분 재산세가 나오고 있다면 주택 수가 늘어 중과 대상이 될 수 있습니다. 업무용으로 건축물분 재산세가 나오고 있다면 주택 수에서 빠집니다. 무상취득 부분에 지방세법 제13조의2 제2항의 증여 중과가 적용되는지도 아파트 소재지 기준으로 함께 확인하세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "증여 등기는 부동산등기법 제23조에 따라 부모님(등기의무자)과 질문자님(등기권리자)이 함께 신청하는 것이 원칙입니다. 다만 부동산등기규칙 제46조는 대리인이 신청할 때 그 권한을 증명하는 정보를 내도록 하고 있습니다. 따라서 아버지가 위임장을 써 주시면 질문자님이 대리인으로 신청할 수 있습니다.",
+          "source": "law:부동산등기규칙:제46조",
+          "quote": "대리인에 의하여 등기를 신청하는 경우에는 그 권한을 증명하는 정보",
+          "check": "verified"
+        },
+        {
+          "text": "부모님의 등기필정보(예전 권리증)가 있으면 그것을 제공하면 됩니다. 없다면 부동산등기법 제51조에 따라 부모님이 등기소에 직접 나가 확인을 받아야 합니다. 법무사 없이 진행하시면 대리인이 확인하는 방식은 쓸 수 없습니다. 그러니 아버지 출국 전에 위임장 중 아버지가 작성한 부분에 공증을 받아 두는 방법을 고려해 보세요.",
+          "source": "law:부동산등기법:제51조",
+          "quote": "등기의무자등의 작성부분에 관하여 공증(公證)을 받은 경우에는 그러하지 아니하다",
+          "check": "verified"
+        },
+        {
+          "text": "아버지가 출국 전에 증여계약서·위임장에 인감을 날인하고 인감증명서까지 발급받아 두실 수 있다면 국내에서 그대로 진행하시면 됩니다. 그렇지 못하다면 해외에서 재외공관 공증법에 따라 재외공관의 공증·확인을 받은 위임장과 재외국민용 인감 관련 서류를 갖추어야 합니다. 이 경우 시간이 걸리니 출국 전에 모두 마치시는 편이 유리할 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:상속세및증여세법:제31조",
+        "lawName": "상속세 및 증여세법",
+        "articleNo": "제31조",
+        "title": "증여재산가액 계산의 일반원칙",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EC%86%8D%EC%84%B8%20%EB%B0%8F%20%EC%A6%9D%EC%97%AC%EC%84%B8%EB%B2%95/%EC%A0%9C31%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:상속세및증여세법:제47조",
+        "lawName": "상속세 및 증여세법",
+        "articleNo": "제47조",
+        "title": "증여세 과세가액",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EC%86%8D%EC%84%B8%20%EB%B0%8F%20%EC%A6%9D%EC%97%AC%EC%84%B8%EB%B2%95/%EC%A0%9C47%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:지방세법:제13조의3",
+        "lawName": "지방세법",
+        "articleNo": "제13조의3",
+        "title": "주택 수의 판단 범위",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95/%EC%A0%9C13%EC%A1%B0%EC%9D%983",
+        "used": false
+      },
+      {
+        "id": "law:지방세법:제13조의2",
+        "lawName": "지방세법",
+        "articleNo": "제13조의2",
+        "title": "법인의 주택 취득 등 중과",
+        "effectiveFrom": "2026-01-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A7%80%EB%B0%A9%EC%84%B8%EB%B2%95/%EC%A0%9C13%EC%A1%B0%EC%9D%982",
+        "used": true
+      },
+      {
+        "id": "law:부동산등기법:제24조",
+        "lawName": "부동산등기법",
+        "articleNo": "제24조",
+        "title": "등기신청의 방법",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C24%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기법:제51조",
+        "lawName": "부동산등기법",
+        "articleNo": "제51조",
+        "title": "등기필정보가 없는 경우",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C51%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:부동산등기법:제23조",
+        "lawName": "부동산등기법",
+        "articleNo": "제23조",
+        "title": "등기신청인",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C23%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기법:제29조",
+        "lawName": "부동산등기법",
+        "articleNo": "제29조",
+        "title": "신청의 각하",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C29%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기규칙:제46조",
+        "lawName": "부동산등기규칙",
+        "articleNo": "제46조",
+        "title": "첨부정보",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EA%B7%9C%EC%B9%99/%EC%A0%9C46%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:동산ㆍ채권등의담보에관한법률:제43조",
+        "lawName": "동산ㆍ채권 등의 담보에 관한 법률",
+        "articleNo": "제43조",
+        "title": "등기신청에 필요한 서면 또는 전자문서 및 신청서의 기재사항 및 방식",
+        "effectiveFrom": "2022-04-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%20%EB%93%B1%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C43%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기규칙:제50조",
+        "lawName": "부동산등기규칙",
+        "articleNo": "제50조",
+        "title": "대위에 의한 등기신청",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EA%B7%9C%EC%B9%99/%EC%A0%9C50%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:등기정보자료의제공에관한규칙:제14조",
+        "lawName": "등기정보자료의 제공에 관한 규칙",
+        "articleNo": "제14조",
+        "title": "대리인에 의한 신청",
+        "effectiveFrom": "2021-12-09",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%93%B1%EA%B8%B0%EC%A0%95%EB%B3%B4%EC%9E%90%EB%A3%8C%EC%9D%98%20%EC%A0%9C%EA%B3%B5%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C14%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:한국부동산원법시행령:제9조",
+        "lawName": "한국부동산원법 시행령",
+        "articleNo": "제9조",
+        "title": "대리인 선임등기",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%95%9C%EA%B5%AD%EB%B6%80%EB%8F%99%EC%82%B0%EC%9B%90%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C9%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기규칙:제53조",
+        "lawName": "부동산등기규칙",
+        "articleNo": "제53조",
+        "title": "등기완료통지",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EA%B7%9C%EC%B9%99/%EC%A0%9C53%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기특별조치법에따른대법원규칙:제1조",
+        "lawName": "부동산등기특별조치법에따른대법원규칙",
+        "articleNo": "제1조",
+        "title": "계약서등의 검인",
+        "effectiveFrom": "2020-06-26",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%ED%8A%B9%EB%B3%84%EC%A1%B0%EC%B9%98%EB%B2%95%EC%97%90%EB%94%B0%EB%A5%B8%EB%8C%80%EB%B2%95%EC%9B%90%EA%B7%9C%EC%B9%99/%EC%A0%9C1%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기규칙:제58조",
+        "lawName": "부동산등기규칙",
+        "articleNo": "제58조",
+        "title": "등기소에 출석하여 등기신청서를 제출할 수 있는 자격자대리인의 사무원",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EA%B7%9C%EC%B9%99/%EC%A0%9C58%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "624551",
+        "caseNo": "2026다203274",
+        "caseName": "소유권이전등기",
+        "court": "대법원",
+        "decidedAt": "2026-08-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624551",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "622671",
+        "caseNo": "2024구단52888",
+        "caseName": "취득세등부과처분취소",
+        "court": "서울행정법원",
+        "decidedAt": "2025-01-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622671",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "182331",
+        "caseNo": "2013다18349,18356",
+        "caseName": "손해배상(기)·손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2015-11-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=182331",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "620419",
+        "caseNo": "2025다220458",
+        "caseName": "소유권이전등기절차이행등의소",
+        "court": "대법원",
+        "decidedAt": "2026-04-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=620419",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "612677",
+        "caseNo": "2024누52795",
+        "caseName": "취득세 등 부과 처분 취소",
+        "court": "서울고등법원",
+        "decidedAt": "2024-11-29",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=612677",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "173552",
+        "caseNo": "2012나106296",
+        "caseName": "손해배상",
+        "court": "서울고등법원",
+        "decidedAt": "2013-08-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=173552",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624937",
+        "caseNo": "2025나11061",
+        "caseName": "소유권이전등기",
+        "court": "울산지방법원",
+        "decidedAt": "2026-04-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624937",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 11
+      },
+      {
+        "keyword": "소유권이전등기",
+        "total": 6
+      },
+      {
+        "keyword": "증여 취득세 주택 수 오피스텔 중과세율 적용",
+        "total": 5
+      },
+      {
+        "keyword": "부동산 등기 위임장 대리 재외국민 인감증명 등기신청",
+        "total": 3
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "상속세 및 증여세법 제47조",
+          "exists": true
+        },
+        {
+          "citation": "지방세법 제13조의2",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기규칙 제46조",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기법 제23조",
+          "exists": true
+        },
+        {
+          "citation": "부동산등기법 제51조",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "부모(증여자)",
+          "role": ""
+        },
+        {
+          "label": "질문자(수증자)",
+          "role": ""
+        },
+        {
+          "label": "은행",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 2월 말",
+          "who": "부모(증여자)",
+          "what": "공동명의 아파트 한 채를 질문자에게 증여하겠다고 제안함"
+        },
+        {
+          "when": "",
+          "who": "부모(증여자)",
+          "what": "이미 다른 집으로 이사했고 해당 아파트는 현재 비어 있음"
+        },
+        {
+          "when": "",
+          "who": "은행",
+          "what": "아파트에 근저당권이 설정되어 있고 대출 잔액이 약 1억 2천만 원 남아 있음"
+        },
+        {
+          "when": "",
+          "who": "부모(증여자)",
+          "what": "대출을 질문자가 넘겨받는 조건으로 증여하겠다고 함"
+        },
+        {
+          "when": "3월 중순",
+          "who": "부모(증여자)",
+          "what": "아버지가 해외 근무로 몇 달간 출국 예정임"
+        }
+      ],
+      "issues": [
+        {
+          "title": "대출 승계 조건의 부담부증여 처리 방법은 어떠한지",
+          "points": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "title": "오피스텔이 주택 수에 포함되어 취득세율이 달라지는지",
+          "points": [
+            3,
+            4
+          ]
+        },
+        {
+          "title": "해외 출국 중인 아버지의 서류를 위임장 등으로 대체할 수 있는지",
+          "points": [
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "unknowns": [
+        "부모님이 증여계약을 체결하기 전에 대출 채무를 질문자가 인수하기로 합의했는지",
+        "은행이 채무인수에 동의할지, 그 승낙을 등기 전에 받을 수 있는지",
+        "질문자가 보유한 오피스텔의 용도와 주거용 여부는 어떠한지",
+        "아버지가 출국 전에 인감증명서 발급과 날인을 마칠 수 있는지",
+        "증여계약서에 검인을 받을 예정이며 관할 시청에 이미 확인했는지"
+      ]
+    }
+  }
+}

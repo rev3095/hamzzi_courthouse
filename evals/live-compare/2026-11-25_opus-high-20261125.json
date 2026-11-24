@@ -1,0 +1,202 @@
+{
+  "label": "opus-high-20261125",
+  "at": "2026-11-24T17:40:36.496Z",
+  "site": "https://hamzzi-courthouse.vercel.app",
+  "question": "전세 계약 기간이 끝났는데 집주인이 다음 세입자를 구해야 보증금을 돌려줄 수 있다고 해요. 저는 다음 달에 이사해야 하는데 어떻게 해야 하나요?",
+  "inquiryId": "776db301-3319-4522-9741-76ac92231bdd",
+  "resultId": "7e0bb1c1-7b76-435e-a991-0b38e30aa9ed",
+  "elapsedMs": 33939,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "lite-2026-11-25-free-consult",
+    "tokens_in": 7313,
+    "tokens_out": 2828,
+    "latency_ms": 32323,
+    "citations_total": 4,
+    "citations_removed": 0
+  },
+  "costUsdEstimate": 0.08581,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "전세사기피해자 지원 및 주거안정에 관한 특별법 시행규칙",
+        "주택임대차보호법",
+        "주택임대차보호법 시행령"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "임대차 종료 보증금 반환 동시이행",
+        "주택임대차 보증금 반환 지연 임차인 이사",
+        "전세피해지원센터의 운영 등"
+      ]
+    },
+    "section": "lease_deposit",
+    "channel": "offline",
+    "answer": {
+      "points": [
+        {
+          "text": "새 세입자를 구하는 것은 집주인의 사정일 뿐입니다. 계약이 끝나면 집주인은 보증금을 돌려줄 의무가 있습니다. 보증금 반환과 집을 비워주는 일은 동시이행 관계입니다(민법 제536조). 또 주택임대차보호법 제4조 제2항에 따라 보증금을 돌려받을 때까지는 임대차관계가 계속되는 것으로 봅니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "먼저 계약이 정말 끝났는지 확인해 보세요. 집주인이 기간 만료 6개월 전부터 2개월 전까지 갱신거절을 통지하지 않았고, 세입자도 만료 2개월 전까지 통지하지 않았다면 같은 조건으로 갱신된 것으로 봅니다. 이 경우에는 해지 통지를 따로 해야 할 수 있으니 문자 등 통지 기록을 챙겨 두세요.",
+          "source": "law:주택임대차보호법:제6조",
+          "quote": "임차인이 임대차기간이 끝나기 2개월 전까지 통지하지 아니한 경우에도 또한 같다.",
+          "check": "verified"
+        },
+        {
+          "text": "보증금을 못 받은 채 이사하면 위험합니다. 대법원 2024다326398 판결은 대항요건을 계속 유지해야 하며, 점유를 잃은 뒤 마친 임차권등기로는 대항력이 소급해 회복되지 않는다고 봤습니다. 이사 전에 임차권등기명령을 신청하고, 등기부에 등기가 올라간 것을 확인한 뒤 짐을 빼는 쪽이 안전합니다.",
+          "source": "case:2024다326398",
+          "quote": "대항요건은 대항력 취득 시에만 갖추면 충분한 것이 아니라",
+          "check": "verified"
+        },
+        {
+          "text": "지금은 집주인에게 계약 종료와 보증금 반환을 요구하는 내용증명부터 보내 두시길 권합니다. 그래도 돌려주지 않으면 임차권등기명령(주택임대차보호법 제3조의3)을 거쳐 지급명령(민사소송법 제462조)이나 보증금반환 소송을 검토할 수 있습니다. 가까운 전세피해지원센터에서 상담을 받아 보시는 것도 도움이 됩니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:전세사기피해자지원및주거안정에관한특별법시행규칙:제2조",
+        "lawName": "전세사기피해자 지원 및 주거안정에 관한 특별법 시행규칙",
+        "articleNo": "제2조",
+        "title": "전세피해지원센터의 운영 등",
+        "effectiveFrom": "2025-09-19",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A0%84%EC%84%B8%EC%82%AC%EA%B8%B0%ED%94%BC%ED%95%B4%EC%9E%90%20%EC%A7%80%EC%9B%90%20%EB%B0%8F%20%EC%A3%BC%EA%B1%B0%EC%95%88%EC%A0%95%EC%97%90%20%EA%B4%80%ED%95%9C%20%ED%8A%B9%EB%B3%84%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C2%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주택임대차보호법:제6조",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제6조",
+        "title": "계약의 갱신",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C6%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:주택임대차보호법:제6조의3",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제6조의3",
+        "title": "계약갱신 요구 등",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C6%EC%A1%B0%EC%9D%983",
+        "used": false
+      },
+      {
+        "id": "law:주택임대차보호법:제11조",
+        "lawName": "주택임대차보호법",
+        "articleNo": "제11조",
+        "title": "일시사용을 위한 임대차",
+        "effectiveFrom": "2026-01-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C11%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주택임대차보호법시행령:제1조",
+        "lawName": "주택임대차보호법 시행령",
+        "articleNo": "제1조",
+        "title": "목적",
+        "effectiveFrom": "2026-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C1%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "622971",
+        "caseNo": "2026다201978",
+        "caseName": "보증금반환",
+        "court": "대법원",
+        "decidedAt": "2026-06-24",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622971",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "605771",
+        "caseNo": "2024다326398",
+        "caseName": "임대차보증금반환[주택 임차인의 점유 상실 후 마쳐진 임차권등기의 대항력이 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2025-04-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=605771",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "179916",
+        "caseNo": "2014노2820",
+        "caseName": "공직선거법위반·국가정보원법위반",
+        "court": "서울고등법원",
+        "decidedAt": "2015-02-09",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=179916",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "622357",
+        "caseNo": "2025나52246",
+        "caseName": "임대차보증금",
+        "court": "서울남부지방법원",
+        "decidedAt": "2025-11-28",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622357",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "616569",
+        "caseNo": "2022가단5118602",
+        "caseName": "보증금",
+        "court": "서울중앙지방법원",
+        "decidedAt": "2023-09-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616569",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 5
+      },
+      {
+        "keyword": "임대차 종료 보증금 반환 동시이행",
+        "total": 6
+      },
+      {
+        "keyword": "주택임대차 보증금 반환 지연 임차인 이사",
+        "total": 6
+      },
+      {
+        "keyword": "전세피해지원센터의 운영 등",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "주택임대차보호법 제6조",
+          "exists": true
+        },
+        {
+          "citation": "2024다326398",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    }
+  }
+}

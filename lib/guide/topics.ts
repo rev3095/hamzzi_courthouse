@@ -231,6 +231,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     lines: [
       "홈 질문창 아래 '가이드'를 열고 '예시 답변'을 고른 뒤 분야 묶음을 누르면 그 묶음의 예시 질문과 답변을 볼 수 있어요.",
       "예시는 미리 분석해 두고 인용을 확인한 답변을 다시 보여 드리는 거라 질문 횟수에 들어가지 않아요.",
+      "여러 예시는 화면에서 원고·피고, 고소인·피의자 쪽을 골라 볼 수 있고, 쪽마다 자세한 상황과 답변이 있고, 문서 작성 절차와 초안이 있는 쪽도 있어요.",
     ],
     links: [{ href: "/#examples", label: "예시 질문 보기" }],
     next: ["rules-examples", "features-procedure"],
