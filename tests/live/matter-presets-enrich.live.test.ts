@@ -1,7 +1,7 @@
 // @vitest-environment node
 // 가상 사건 프리셋 보강 (사용자 요청 2026-11-25, DEC-061). **유료** — ALLOW_PAID_API=1 PRESET_ENRICH=1일 때만 돈다.
-// ① 근거가 비어 있는 쟁점마다 쟁점 정리 경로(DeepSearch, Opus 5.5 effort xhigh + 인용 검증) 1회 → 검증 통과 문단만 붙인다
-// ② 사건마다 Opus 5.5 effort xhigh 1회로 서류 원본(지어낸 가상 서류 본문)과 '한눈에 보는 요약본' 노트를 만든다
+// ① 근거가 비어 있는 쟁점마다 쟁점 정리 경로(DeepSearch, Opus 5.5 effort PRESET_EFFORT(기본 medium) + 인용 검증) 1회 → 검증 통과 문단만 붙인다
+// ② 사건마다 Opus 5.5 effort PRESET_EFFORT(기본 medium) 1회로 서류 원본(지어낸 가상 서류 본문)과 '한눈에 보는 요약본' 노트를 만든다
 // 결과는 lib/matters/presets.json에 사건 하나씩 바로 쓴다. PRESET_BUDGET_USD(기본 35)를 넘기 전에 멈춘다.
 // 모델이 쓴 서류 본문·요약은 저장 전에 거른다: 사건번호·법령 조문 인용, 결과 단정 표현, 연락처·등록번호 꼴이 든 줄은 뺀다.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -16,6 +16,7 @@ const { isAssertive } = await import("@/lib/ai/policy");
 const { caseNumbersIn } = await import("@/lib/citations/patterns");
 const { scanInput } = await import("@/lib/pii");
 const { newId } = await import("@/lib/matters/model");
+const { LEANING, dropLeaning } = await import("@/lib/matters/preset-screen");
 type MatterData = import("@/lib/matters/model").MatterData;
 type Preset = { id: string; title: string; data: MatterData };
 
@@ -35,6 +36,8 @@ const MAX_ISSUES = Number(process.env.PRESET_MAX_ISSUES ?? "999");
 const OPUS = { in: 5 / 1e6, out: 25 / 1e6 };
 /** 쟁점 하나를 채우는 DeepSearch 상한 + 여유 — 시작 전 남은 예산을 본다 */
 const ISSUE_MAX_USD = 2.2;
+/** Opus 생각 단계 — 기본 medium (2026-11-25 사용자 요청으로 xhigh에서 바꿈) */
+const EFFORT = (process.env.PRESET_EFFORT ?? "medium") as "medium" | "high" | "xhigh";
 const DOCS_MAX_USD = 1.5;
 
 const DOC_SYSTEM = `당신은 한국 법률 사건 정리 도구 "사건 분석"의 예시 사건에 들어갈 가상 서류를 쓰는 작가다. 사건은 모두 지어낸 가상 사건이다.
@@ -75,7 +78,7 @@ function screenText(text: string, max: number): string {
       const t = line.trim();
       if (!t) return true;
       if (caseNumbersIn(t).length > 0 || STATUTE.test(t)) return false;
-      if (isAssertive(t)) return false;
+      if (isAssertive(t) || LEANING.test(t)) return false;
       if (scanInput(t).findings.length > 0) return false;
       return true;
     })
@@ -83,6 +86,38 @@ function screenText(text: string, max: number): string {
     .replace(/\n{3,}/g, "\n\n")
     .trim()
     .slice(0, max);
+}
+
+const META_ISSUE = /확인이 필요한 사실/;
+/** 쟁점 제목과 가장 많이 겹치는 하위 쟁점 고르기 (글자 두 개 묶음, 흔한 어미 묶음 제외) — 제목 묶음의 30% 이상 겹치고 2위와 두 묶음 이상 차이가 나야 고른다 */
+const COMMON = new Set([
+  "는지",
+  "인지",
+  "한지",
+  "되는",
+  "하는",
+  "에서",
+  "으로",
+  "있는",
+  "어떻",
+  "떻게",
+]);
+function bigrams(t: string): Set<string> {
+  const c = t.replace(/[^가-힣A-Za-z0-9]/g, "");
+  const all = Array.from({ length: Math.max(0, c.length - 1) }, (_, i) => c.slice(i, i + 2));
+  return new Set(all.filter((x) => !COMMON.has(x)));
+}
+function closest<T extends { title: string }>(title: string, list: T[]): T | undefined {
+  const g = bigrams(title);
+  let best: T | undefined;
+  let score = 0;
+  let second = 0;
+  for (const it of list) {
+    const n = [...bigrams(it.title)].filter((x) => g.has(x)).length;
+    if (n > score) [best, score, second] = [it, n, score];
+    else if (n > second) second = n;
+  }
+  return g.size > 0 && score / g.size >= 0.3 && score - second >= 2 ? best : undefined;
 }
 
 const load = (): Preset[] => JSON.parse(readFileSync(FILE, "utf8")) as Preset[];
@@ -104,6 +139,8 @@ describe.skipIf(!RUN)("가상 사건 프리셋 보강 (DEC-061)", () => {
 
         // ① 빈 쟁점 채우기
         for (const issue of d.issues) {
+          // '확인이 필요한 사실' 모음 쟁점은 법령 근거를 붙일 대상이 아니다
+          if (META_ISSUE.test(issue.title)) continue;
           if (SKIP_ISSUES || issue.points.length > 0 || issuesRun >= MAX_ISSUES) continue;
           issuesRun++;
           if (spent + ISSUE_MAX_USD > BUDGET) {
@@ -115,17 +152,22 @@ describe.skipIf(!RUN)("가상 사건 프리셋 보강 (DEC-061)", () => {
           ).maskedText;
           const org = await organizeIssues(text, {
             tier: "max",
-            // xhigh는 생각이 길어 출력 한도·질문 1건 상한을 넓힌다 (서비스 경로는 단계 값 그대로)
+            // 생각 단계는 PRESET_EFFORT(기본 medium, 사용자 요청 2026-11-25). xhigh는 생각이 길어 출력 한도·상한을 넓힌다
             run: (input, o) =>
               runDeepAnalysis(input, {
                 ...o,
-                effort: "xhigh",
-                answerMaxTokens: 40_000,
+                effort: EFFORT,
+                answerMaxTokens: EFFORT === "xhigh" ? 40_000 : 16_000,
                 costCapUsd: 2,
               }),
           });
           spent += org.costUsd;
-          const points = org.issues.flatMap((i) => i.points).slice(0, 6);
+          // 사건 진행 화면은 유불리를 말하지 않는다(DEC-053) — 유리·가능성 판단 문장은 빼고, 빈 문단은 버린다
+          const pick = closest(issue.title, org.issues);
+          const points = (pick?.points ?? [])
+            .map((p) => ({ ...p, text: dropLeaning(p.text) }))
+            .filter((p) => p.text.length > 0)
+            .slice(0, 6);
           if (points.length === 0)
             log.push({
               preset: preset.id,
@@ -166,7 +208,7 @@ describe.skipIf(!RUN)("가상 사건 프리셋 보강 (DEC-061)", () => {
               max_tokens: 32_000,
               thinking: { type: "adaptive" },
               output_config: {
-                effort: "xhigh",
+                effort: EFFORT,
                 format: { type: "json_schema", schema: DOC_SCHEMA },
               },
               system: DOC_SYSTEM,

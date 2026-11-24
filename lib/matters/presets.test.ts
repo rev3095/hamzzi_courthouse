@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { parseMatterData } from "./policy";
 import { MATTER_PRESETS, PRESET_NOTICE } from "./presets";
+import { LEANING } from "./preset-screen";
 
 const SECTIONS = [
   "docs",
@@ -56,14 +57,28 @@ describe.each(MATTER_PRESETS.map((p) => [p.title, p] as const))("프리셋 %s", 
   });
 
   // 보강은 사건 단위로 채운다 — 원본을 받은 사건은 서류마다 원본과 요약본을 모두 갖춘다
-  test.skipIf(!p.data.docs.some((d) => d.body))("서류 원본을 받은 사건은 자료마다 원본(지어낸 가상 서류 본문)과 요약본이 있다 (DEC-061 보강)", () => {
-    for (const d of p.data.docs) {
-      expect((d.body ?? "").length, d.title).toBeGreaterThanOrEqual(300);
-      expect(d.body, d.title).not.toMatch(/주소\s*:\s*[가-힣]+(시|도)\s/);
-    }
-    expect(p.data.notes.some((n) => n.kind === "summary" && n.title === "한눈에 보는 요약본")).toBe(
-      true,
-    );
+  test.skipIf(!p.data.docs.some((d) => d.body))(
+    "서류 원본을 받은 사건은 자료마다 원본(지어낸 가상 서류 본문)과 요약본이 있다 (DEC-061 보강)",
+    () => {
+      for (const d of p.data.docs) {
+        expect((d.body ?? "").length, d.title).toBeGreaterThanOrEqual(300);
+        expect(d.body, d.title).not.toMatch(/주소\s*:\s*[가-힣]+(시|도)\s/);
+      }
+      expect(
+        p.data.notes.some((n) => n.kind === "summary" && n.title === "한눈에 보는 요약본"),
+      ).toBe(true);
+    },
+  );
+
+  test("DEC-053 유불리·가능성 판단 문장과 다른 쟁점을 가리키는 말이 근거 문단·노트에 없다", () => {
+    const texts = [
+      ...p.data.issues.flatMap((i) => i.points.map((x) => x.text)),
+      ...p.data.notes.map((n) => n.body),
+    ];
+    for (const t of texts) expect(t, t).not.toMatch(LEANING);
+    // 문장을 지운 뒤 조문 이름만 남은 빈 문단이 없다
+    for (const i of p.data.issues)
+      for (const x of i.points) expect(x.text.trim().length, x.label).toBeGreaterThan(20);
   });
 
   test("N1 단정 표현이 없다 · F-007 연락처·주민번호·계좌·이메일 꼴이 없다", () => {
