@@ -543,6 +543,25 @@ def matters(conn) -> None:
     check(scalar(conn, "select count(*) from public.matters where id = %s", (mid,)) == 0, "계정이 삭제되면 사건도 삭제")
 
 
+def inquiry_materials(conn) -> None:
+    print("[10] 질문 첨부 자료 (DEC-058)")
+    owner = make_user(conn)
+    iid = scalar(conn, "insert into public.inquiries (user_id, masked_text) values (%s, '[검증] 마스킹본') returning id", (owner,))
+    check(scalar(conn, "select materials = '[]'::jsonb from public.inquiries where id = %s", (iid,)) is True,
+          "첨부 자료 기본값은 빈 배열")
+    conn.execute(
+        "update public.inquiries set materials = '[{\"kind\":\"문자\",\"summary\":\"검증\",\"details\":[],\"gaps\":[]}]'::jsonb where id = %s",
+        (iid,),
+    )
+    raises(conn, "첨부 자료가 배열이 아니면 거부",
+           "update public.inquiries set materials = '{}'::jsonb where id = %s", (iid,))
+    raises(conn, "첨부 자료가 서른 개를 넘으면 거부",
+           "update public.inquiries set materials = (select jsonb_agg(g) from generate_series(1, 31) g) where id = %s", (iid,))
+    raises(conn, "너무 큰 첨부 자료 거부",
+           "update public.inquiries set materials = jsonb_build_array(repeat('가', 15000)) where id = %s", (iid,))
+    conn.execute("delete from auth.users where id = %s", (owner,))
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -553,7 +572,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials):
                         try:
                             with conn.transaction():
                                 step(conn)

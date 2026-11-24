@@ -38,9 +38,12 @@ export async function runFreeAnalysis(
     onStep?: (e: StepEvent) => void;
     caseHint?: string | null;
     lawHints?: { lawName: string; articleNos: string[] }[];
+    /** 예시 재생을 하지 않는다 (첨부 자료가 있는 질문) */
+    noReplay?: boolean;
   } = {},
 ): Promise<FreeAnalysis> {
-  const example = findExample(maskedText);
+  // 자료가 붙은 질문(DEC-058)은 글이 예시와 같아도 재생하지 않는다
+  const example = deps.noReplay ? null : findExample(maskedText);
   if (example) {
     deps.onStep?.({ stage: "answer", message: FREE_STEP_MESSAGES.replay });
     const result = replayResult(example);

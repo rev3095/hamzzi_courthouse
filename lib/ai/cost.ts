@@ -46,6 +46,14 @@ export const CASEFILE_READ_COST_CAP_USD = 0.015;
 export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
 
 /**
+ * 자료 판독(F-017, DEC-058) 1건 상한 — Haiku 비전 1회. 입력은 서류 판독과 같다(사진 30장·PDF·문서 글, 2026-11-24) — 상한도 같은 $0.015(**임시값**).
+ * 출력은 파일마다 요약·적힌 내용·확인하지 못한 곳이라 서류 판독보다 길다: 30개 × 약 130토큰 = 4,000토큰.
+ * 실제로 쓴 금액만 기간 예산에서 빠진다(DEC-040).
+ */
+export const MATERIALS_READ_COST_CAP_USD = 0.015;
+export const MATERIALS_READ_TOKENS = { max: 4_000, min: 600 } as const;
+
+/**
  * 사건 진행(F-016, DEC-053)의 호출별 상한 — 모두 **임시값**.
  * - 서류 읽기: Haiku 비전 1회. 서류 분석(F-015)보다 자세히 뽑아 출력이 길다 (입력 약 27,000토큰 $0.0027 + 출력 6,000토큰 $0.003).
  * - 요약: Haiku 1회 (입력 약 8,000토큰 + 출력 700토큰).

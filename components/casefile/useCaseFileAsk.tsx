@@ -5,7 +5,7 @@
 import { useState } from "react";
 import type { CaseParty } from "@/lib/casefile/limits";
 import { rememberParties } from "@/lib/client/casefile";
-import { useAttachments } from "../ask/useAttachments";
+import { useAttachments, type Attachments } from "../ask/useAttachments";
 import { CaseFileFlow } from "./CaseFileFlow";
 
 type Send = (
@@ -23,8 +23,11 @@ export function useCaseFileAsk(ask: {
   /** 오늘 질문을 더 할 수 없는지 */
   blocked: boolean;
   showLimit: () => void;
+  /** 다른 흐름(자료 첨부 F-017)과 같은 사진을 쓸 때 넘긴다. 없으면 이 훅이 따로 갖는다 */
+  attach?: Attachments;
 }) {
-  const attach = useAttachments();
+  const own = useAttachments();
+  const attach = ask.attach ?? own;
   const [question, setQuestion] = useState<string | null>(null);
 
   /** 사진이 붙어 있으면 서류 분석 창을 연다. 열었으면 true */

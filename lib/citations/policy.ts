@@ -4,6 +4,7 @@
 import type { DeepMap } from "@/lib/ai/deep-policy";
 import type { AssistantId } from "@/lib/assistants/agents";
 import type { AssistantTalk } from "@/lib/assistants/talk";
+import type { MaterialsMap } from "@/lib/materials/map";
 import type { ProcedureHint } from "@/lib/procedure/labels";
 import { MODEL_SOURCE, citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
 import type { EvidenceSet } from "@/lib/search/evidence";
@@ -124,6 +125,8 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   assistant?: AssistantId;
   /** 분야별 비서의 대화 한마디 (DEC-057, Haiku). 근거 없는 말이라 법령·숫자·판정이 없게 거른 것만 */
   assistantTalk?: AssistantTalk;
+  /** 첨부 자료 정리 (F-017, DEC-058): 자료마다 종류·가린 내용·적힌 내용·읽지 못한 곳과, 그 자료를 참고한 남은 문단 순번 */
+  materials?: MaterialsMap;
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";

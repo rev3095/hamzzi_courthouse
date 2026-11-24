@@ -6,6 +6,7 @@ import type { CitationRow, DemoAnalysisResult } from "@/lib/citations/policy";
 import { scanInput } from "@/lib/pii";
 import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
+import { readStoredMaterials } from "@/lib/materials/map";
 import data from "./examples.json";
 import { findArchiveItem } from "@/lib/assistants/archive-data";
 
@@ -97,6 +98,14 @@ export function findExample(maskedText: string): DemoExample | null {
   return item
     ? { id: `archive-${item.id}`, tags: [], question: item.question, result: item.result }
     : null;
+}
+
+/**
+ * 질문 행 기준 예시 판단 (F-017, DEC-058): 자료를 붙인 질문은 글이 예시와 같아도 예시 재생이 아니다.
+ * POST /inquiries · analyze 라우트 · analyzeInquiry가 모두 이 함수로 판단한다 (횟수 검사를 건너뛰는 기준이 어긋나지 않게).
+ */
+export function findExampleFor(maskedText: string, materials: unknown): DemoExample | null {
+  return readStoredMaterials(materials).length > 0 ? null : findExample(maskedText);
 }
 
 /** 재생 결과 — 저장된 분석에 무료 모드 표시와 안내만 바꿔 붙인다 */

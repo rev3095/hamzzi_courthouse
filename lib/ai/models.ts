@@ -110,6 +110,8 @@ export const CASEFILE_WEIGHT = 10;
 export const MATTER_READ_WEIGHT = 10;
 export const MATTER_SUMMARY_WEIGHT = 2;
 export const COMPANY_WEIGHT = 1000;
+/** 자료 판독(F-017, DEC-058) 1건. Haiku 비전 상한 $0.015 ÷ 단위 $0.0015 올림 — 서류 판독과 같다 (단위 테스트가 확인) */
+export const MATERIALS_WEIGHT = 10;
 
 /** 주간 예산을 단위로 바꾼 값. 0이면 유료 분석 없음, 잘못된 값은 기본값 */
 export function weeklyBudgetUnits(env: Env = process.env): number {
