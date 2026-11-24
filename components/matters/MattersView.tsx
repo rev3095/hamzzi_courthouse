@@ -14,6 +14,7 @@ import {
   saveMatter,
   type LoadedMatter,
 } from "@/lib/client/matters";
+import { openParam } from "@/lib/client/sessions";
 import type { MatterData, MatterParty, MatterSummary } from "@/lib/matters/model";
 import { GoogleLoginButton } from "../LimitNotice";
 import { useQuota } from "../useQuota";
@@ -143,6 +144,19 @@ function Workspace() {
     setSeed({});
     setNoteSeed(null);
   }
+
+  // 마이페이지 '내 세션'에서 고른 사건을 바로 연다 (/matters?open=<id>, DEC-056).
+  // useSearchParams 대신 주소를 한 번만 읽는다(cacheComponents의 Suspense 규칙을 피한다). 남의 사건 번호면 서버가 404로 막는다
+  const openedFromUrl = useRef(false);
+  useEffect(() => {
+    if (openedFromUrl.current) return;
+    openedFromUrl.current = true;
+    const id = openParam(window.location.search);
+    // 처음 한 번만 연다 (open은 렌더마다 새로 만들어지는 함수다)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (id) void open(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function create() {
     setError(null);

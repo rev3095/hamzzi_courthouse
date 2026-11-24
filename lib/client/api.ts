@@ -76,7 +76,7 @@ export const createInquiry = (input: {
   text: string;
   sensitiveConsent?: boolean;
   parentInquiryId?: string;
-  /** 내 질문 기록에 남기기 (DEC-039). 로그인 사용자에게만 적용된다 */
+  /** 내 세션에 남기기 (DEC-039·056). 로그인 사용자에게만 적용된다 */
   save?: boolean;
 }) => call<CreatedInquiry>("/api/v1/inquiries", { method: "POST", body: JSON.stringify(input) });
 
@@ -88,8 +88,12 @@ export type SavedInquiry = {
   followup: boolean;
 };
 
-/** 내 질문 기록 (DEC-039, 로그인 필요) */
+/** 내 세션의 질문 (DEC-039·056, 로그인 필요) */
 export const getMyInquiries = () => call<SavedInquiry[]>("/api/v1/me/inquiries");
+
+/** 마이페이지 프로필: Google 이름·사진 주소 (DEC-056, 로그인 필요). 이 화면 메모리에만 둔다 */
+export const getMyProfile = () =>
+  call<{ name: string | null; avatarUrl: string | null }>("/api/v1/me/profile");
 
 export const confirmPii = (id: string) =>
   call<{ id: string; status: string }>(`/api/v1/inquiries/${id}/pii-confirmation`, {
