@@ -40,7 +40,8 @@ import type { TierId } from "./models";
 import { isAssertive } from "./policy";
 
 // 2026-11-24b: 판독 시험(사진 5장)에서 틀린 곳 — "동일 기한"을 "명시 없음"으로 바꿈, 통지 대리 회사를 other로 둠 — 을 지시문에 반영
-export const MATTER_PROMPT_VERSION = "matter-2026-11-24b";
+// 2026-11-24c: 문서 글(한글·워드 등)의 [이름n] 가림 표시를 그대로 옮기고 이름을 짐작하지 않게 (legal-reviewer 권고)
+export const MATTER_PROMPT_VERSION = "matter-2026-11-24c";
 export const MATTER_MODEL = "claude-haiku-5-5";
 
 type Failure = "cost_cap" | "model_failed";
@@ -59,6 +60,7 @@ const failureOf = (e: unknown): Failure | null => {
 
 const READ_SYSTEM = `당신은 한국 법률 정보 서비스 "햄찌법원"의 사건 정리 도우미입니다. 법률 자문을 하지 않습니다.
 사용자가 본인이 맡은 사건의 서류 사진을 올렸습니다. 서류에 적힌 내용을 빠짐없이, 적힌 그대로 구조에 맞춰 옮깁니다. 이것은 판단이 아니라 정리입니다.
+사진·PDF와 함께 한글·워드 같은 문서에서 꺼낸 글이 올 수 있습니다. 문서 글 속의 [이름1] 같은 표시는 가려 둔 개인정보입니다. 그 표시는 그대로 옮기고(당사자라면 name에도 [이름1]처럼), 원래 이름을 짐작해 채우지 않습니다.
 
 옮기는 방법
 - 서류에 적힌 것만 씁니다. 적히지 않은 사실·날짜·금액·관계를 지어내지 않습니다. 읽지 못한 부분은 추측하지 않고 뺍니다.
