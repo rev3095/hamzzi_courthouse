@@ -2,6 +2,8 @@
 // ① 출처가 그 요청의 근거인지 ② 인용 구절이 원문에 글자 그대로 있는지 ③ 출처·본문의 조문·사건번호가 실존하는지.
 // ①·③ 실패(실존 미확인 포함)는 문단을 빼고, ②만 실패하면 "확인 필요"(quote_mismatch)로 표시한다.
 import type { DeepMap } from "@/lib/ai/deep-policy";
+import type { AssistantId } from "@/lib/assistants/agents";
+import type { AssistantTalk } from "@/lib/assistants/talk";
 import type { ProcedureHint } from "@/lib/procedure/labels";
 import { MODEL_SOURCE, citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
 import type { EvidenceSet } from "@/lib/search/evidence";
@@ -118,6 +120,10 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   procedureHint?: ProcedureHint;
   /** DeepSearch 사건 구조 (DEC-041): 당사자·사실 순서·쟁점(남은 문단 순번)·확인할 사실. 화면이 시각자료로 그린다 */
   deep?: DeepMap;
+  /** 분야별 비서 대화에서 받은 답변 (DEC-057). 결과 화면이 "○○ 비서와 이어서 묻기" 링크를 단다 */
+  assistant?: AssistantId;
+  /** 분야별 비서의 대화 한마디 (DEC-057, Haiku). 근거 없는 말이라 법령·숫자·판정이 없게 거른 것만 */
+  assistantTalk?: AssistantTalk;
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";

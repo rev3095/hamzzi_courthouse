@@ -1,0 +1,512 @@
+/*
+ * 분야별 비서 스킨 (F-018, DEC-057). Figma에 없는 화면이라 사용자가 정한 색으로 만든다 (브랜드 토큰 밖 예외, PRD DEC-057).
+ * - 내집마련: 하늘색 · 둥근 카드 · 부드러운 그림자
+ * - 고소미: 리그오브레전드 계열 색 조합(짙은 남색 · 금색 · 청록)만 따른다. 로고·글꼴·캐릭터·용어는 쓰지 않는다
+ * - 중고천국: 연두색 · 두꺼운 테두리 · 스티커처럼 어긋난 그림자 · 영수증 점선
+ * 클래스는 hza- 접두어의 전역 CSS다 (CSS Modules는 이 저장소에서 쓰지 않는다 — CLAUDE.md 코드 구조).
+ * 본문 글자 대비는 각 바탕에서 4.5:1 이상으로 골랐다.
+ */
+
+[data-hza="home"] {
+  --hza-bg: #eaf6fd;
+  --hza-bg2: #d9effc;
+  --hza-surface: #ffffff;
+  --hza-ink: #0e3a5c;
+  --hza-muted: #3c5d77;
+  --hza-accent: #2b8acb;
+  --hza-strong: #0f5e96;
+  --hza-on-strong: #ffffff;
+  --hza-soft: #dcf0fc;
+  --hza-line: #bfe0f5;
+  --hza-me: #0f5e96;
+  --hza-on-me: #ffffff;
+  --hza-radius: 20px;
+  --hza-radius-s: 14px;
+  --hza-shadow: 0 18px 44px -26px rgba(15, 94, 150, 0.55);
+}
+
+[data-hza="report"] {
+  --hza-bg: #0a1428;
+  --hza-bg2: #091428;
+  --hza-surface: #0f1e33;
+  --hza-ink: #f0e6d2;
+  --hza-muted: #b4ad9c;
+  --hza-accent: #c8aa6e;
+  --hza-strong: #c8aa6e;
+  --hza-on-strong: #0a1428;
+  --hza-soft: #132a44;
+  --hza-line: #785a28;
+  --hza-teal: #0ac8b9;
+  --hza-me: #1e2d45;
+  --hza-on-me: #f0e6d2;
+  --hza-radius: 2px;
+  --hza-radius-s: 2px;
+  --hza-shadow: 0 0 0 1px #463714, 0 20px 50px -30px rgba(0, 0, 0, 0.9);
+}
+
+[data-hza="market"] {
+  --hza-bg: #f0fadf;
+  --hza-bg2: #e3f5c6;
+  --hza-surface: #ffffff;
+  --hza-ink: #1f3a0a;
+  --hza-muted: #46602c;
+  --hza-accent: #7cc522;
+  --hza-strong: #3f7a0e;
+  --hza-on-strong: #ffffff;
+  --hza-soft: #e5f6cb;
+  --hza-line: #1f3a0a;
+  --hza-me: #3f7a0e;
+  --hza-on-me: #ffffff;
+  --hza-radius: 14px;
+  --hza-radius-s: 10px;
+  --hza-shadow: 4px 4px 0 #1f3a0a;
+}
+
+.hza-root {
+  background: var(--hza-bg);
+  color: var(--hza-ink);
+}
+
+[data-hza="home"].hza-root {
+  background:
+    radial-gradient(1200px 420px at 50% -120px, #ffffff 0%, transparent 70%),
+    linear-gradient(180deg, var(--hza-bg) 0%, var(--hza-bg2) 100%);
+}
+
+[data-hza="report"].hza-root {
+  background:
+    radial-gradient(900px 400px at 80% -80px, rgba(10, 200, 185, 0.12), transparent 70%),
+    radial-gradient(700px 360px at 0% 0%, rgba(200, 170, 110, 0.1), transparent 70%), var(--hza-bg);
+}
+
+[data-hza="market"].hza-root {
+  background-color: var(--hza-bg);
+  background-image: radial-gradient(rgba(63, 122, 14, 0.12) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+/* 카드·패널 */
+.hza-card {
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  border-radius: var(--hza-radius);
+  box-shadow: var(--hza-shadow);
+}
+
+[data-hza="report"] .hza-card {
+  border-color: var(--hza-line);
+  position: relative;
+  /* 모서리를 깎은 틀 */
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 14px
+  );
+}
+
+[data-hza="market"] .hza-card {
+  border-width: 2px;
+}
+
+.hza-muted {
+  color: var(--hza-muted);
+}
+
+.hza-accent-text {
+  color: var(--hza-strong);
+}
+
+[data-hza="report"] .hza-accent-text {
+  color: var(--hza-accent);
+}
+
+.hza-title {
+  color: var(--hza-ink);
+}
+
+[data-hza="report"] .hza-title {
+  font-family: var(--font-serif-kr), serif;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #f0e6d2 0%, #c8aa6e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-hza="market"] .hza-title {
+  font-weight: 900;
+}
+
+.hza-emblem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hza-strong);
+  background: var(--hza-soft);
+  border: 1px solid var(--hza-line);
+  border-radius: 999px;
+}
+
+[data-hza="report"] .hza-emblem {
+  color: var(--hza-accent);
+  background: #0a1428;
+  border: 2px solid var(--hza-accent);
+  border-radius: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+[data-hza="market"] .hza-emblem {
+  color: var(--hza-ink);
+  background: var(--hza-accent);
+  border: 2px solid var(--hza-ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--hza-ink);
+  transform: rotate(-4deg);
+}
+
+/* 버튼 */
+.hza-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  font-weight: 700;
+  background: var(--hza-strong);
+  color: var(--hza-on-strong);
+  border-radius: var(--hza-radius-s);
+}
+
+.hza-btn:disabled {
+  opacity: 0.5;
+}
+
+[data-hza="report"] .hza-btn {
+  background: linear-gradient(180deg, #c8aa6e 0%, #a5864a 100%);
+  border: 1px solid #f0e6d2;
+  letter-spacing: 0.04em;
+}
+
+[data-hza="market"] .hza-btn {
+  border: 2px solid var(--hza-ink);
+  box-shadow: 3px 3px 0 var(--hza-ink);
+}
+
+[data-hza="market"] .hza-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--hza-ink);
+}
+
+.hza-chip {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--hza-ink);
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  border-radius: 999px;
+}
+
+.hza-chip:hover {
+  border-color: var(--hza-strong);
+}
+
+[data-hza="report"] .hza-chip {
+  background: transparent;
+  border-color: var(--hza-line);
+  border-radius: 0;
+}
+
+[data-hza="report"] .hza-chip:hover {
+  border-color: var(--hza-teal);
+  color: #ffffff;
+}
+
+[data-hza="market"] .hza-chip {
+  border-width: 2px;
+  border-radius: 10px;
+}
+
+/* 탭 (단계·묶음) */
+.hza-tab {
+  min-height: 44px;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--hza-muted);
+  border-radius: 999px;
+}
+
+.hza-tab[aria-selected="true"],
+.hza-tab[aria-checked="true"] {
+  color: var(--hza-on-strong);
+  background: var(--hza-strong);
+}
+
+[data-hza="report"] .hza-tab {
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+}
+
+[data-hza="report"] .hza-tab[aria-selected="true"],
+[data-hza="report"] .hza-tab[aria-checked="true"] {
+  color: var(--hza-accent);
+  background: transparent;
+  border-bottom-color: var(--hza-accent);
+}
+
+/* 대화 */
+.hza-log {
+  background: var(--hza-surface);
+}
+
+[data-hza="home"] .hza-log {
+  background: linear-gradient(180deg, #ffffff 0%, #f5fbff 100%);
+}
+
+[data-hza="report"] .hza-log {
+  background: linear-gradient(180deg, #0f1e33 0%, #0b172a 100%);
+}
+
+[data-hza="market"] .hza-log {
+  background: #fbfef6;
+}
+
+.hza-me {
+  margin-left: auto;
+  width: fit-content;
+  max-width: 82%;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--hza-on-me);
+  background: var(--hza-me);
+  border-radius: 18px 18px 4px 18px;
+}
+
+[data-hza="report"] .hza-me {
+  border: 1px solid var(--hza-line);
+  border-radius: 0;
+  border-right: 3px solid var(--hza-teal);
+}
+
+[data-hza="market"] .hza-me {
+  border: 2px solid var(--hza-ink);
+  border-radius: 14px 14px 2px 14px;
+}
+
+.hza-bot {
+  min-width: 0;
+  max-width: 92%;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--hza-ink);
+  background: var(--hza-soft);
+  border: 1px solid var(--hza-line);
+  border-radius: 4px 18px 18px 18px;
+}
+
+[data-hza="home"] .hza-bot {
+  background: #ffffff;
+  box-shadow: 0 8px 24px -18px rgba(15, 94, 150, 0.6);
+}
+
+[data-hza="report"] .hza-bot {
+  background: #0a1428;
+  border-radius: 0;
+  border-left: 3px solid var(--hza-accent);
+}
+
+[data-hza="market"] .hza-bot {
+  background: #ffffff;
+  border: 2px dashed var(--hza-ink);
+  border-radius: 2px 14px 14px 14px;
+}
+
+.hza-point + .hza-point {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hza-line);
+}
+
+[data-hza="market"] .hza-point + .hza-point {
+  border-top-style: dashed;
+}
+
+.hza-source {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--hza-muted);
+}
+
+.hza-badge {
+  border-radius: 6px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  color: var(--hza-strong);
+}
+
+[data-hza="report"] .hza-badge {
+  border-radius: 0;
+  color: var(--hza-teal);
+  border-color: rgba(10, 200, 185, 0.5);
+  background: transparent;
+}
+
+.hza-link {
+  color: var(--hza-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+[data-hza="report"] .hza-link {
+  color: var(--hza-teal);
+}
+
+.hza-notice {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hza-on-strong);
+  background: var(--hza-strong);
+  border-radius: 6px;
+}
+
+[data-hza="report"] .hza-notice {
+  border-radius: 0;
+}
+
+.hza-input {
+  width: 100%;
+  min-height: 52px;
+  max-height: 180px;
+  resize: none;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--hza-ink);
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  border-radius: var(--hza-radius-s);
+  outline: none;
+}
+
+.hza-input::placeholder {
+  color: var(--hza-muted);
+}
+
+.hza-input:focus {
+  border-color: var(--hza-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hza-accent) 30%, transparent);
+}
+
+[data-hza="report"] .hza-input {
+  background: #0a1428;
+  border-color: var(--hza-line);
+}
+
+[data-hza="report"] .hza-input:focus {
+  border-color: var(--hza-accent);
+}
+
+[data-hza="market"] .hza-input {
+  border-width: 2px;
+  border-color: var(--hza-ink);
+}
+
+/* 사례 카드 */
+.hza-case-kind {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  color: var(--hza-strong);
+  background: var(--hza-soft);
+  border: 1px solid var(--hza-line);
+}
+
+.hza-case-kind[data-kind="fictional"] {
+  color: var(--hza-muted);
+  background: transparent;
+  border-style: dashed;
+}
+
+[data-hza="report"] .hza-case-kind {
+  border-radius: 0;
+  color: var(--hza-accent);
+  background: transparent;
+}
+
+[data-hza="report"] .hza-case-kind[data-kind="fictional"] {
+  color: var(--hza-muted);
+}
+
+[data-hza="market"] .hza-ticket {
+  border-top: 2px dashed var(--hza-ink);
+}
+
+.hza-dots span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: var(--hza-accent);
+  animation: hza-bounce 1s infinite ease-in-out;
+}
+
+.hza-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.hza-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+[data-hza="report"] .hza-dots span {
+  border-radius: 0;
+  transform: rotate(45deg);
+  background: var(--hza-teal);
+}
+
+@keyframes hza-bounce {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hza-dots span {
+    animation: none;
+  }
+
+  [data-hza="market"] .hza-emblem {
+    transform: none;
+  }
+}

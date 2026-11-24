@@ -4,12 +4,14 @@
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
+// 가이드 아래에는 분야별 비서 묶음(F-018, DEC-057)을 둔다 — 누르면 비서 페이지로 간다.
 // 질문창에 서류 사진을 붙이면 "물어보기"가 서류 분석 창(F-015, DEC-052)을 연다 — 동의 → 읽기 → 확인 뒤 질문 1번으로 분석한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
 import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
+import { AssistantCards } from "../assistants/AssistantCards";
 import { DeepAsk } from "../ask/DeepAsk";
 import { limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
@@ -162,6 +164,27 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
           }}
         />
       </div>
+      {/* 분야별 비서 묶음 (F-018, DEC-057): 가이드 토글 아래 */}
+      <section aria-labelledby="home-assistants" className="mt-8 w-full max-w-[820px] text-left">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 id="home-assistants" className="font-display text-ink text-[22px] font-bold">
+            전문 에이전트
+          </h2>
+          <Link
+            href="/assistants"
+            className="text-link text-[13px] underline-offset-2 hover:underline"
+          >
+            전문 에이전트 소개 →
+          </Link>
+        </div>
+        <p className="text-muted mt-1 text-[14px]">
+          자주 묻는 분야는 전문 에이전트에게 대화하듯 물어보세요. 분석이 끝난 질문마다 1회로 세요(예시 질문
+          제외).
+        </p>
+        <div className="mt-4">
+          <AssistantCards compact />
+        </div>
+      </section>
       {modals}
     </>
   );
