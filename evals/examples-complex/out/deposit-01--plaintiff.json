@@ -1,0 +1,414 @@
+{
+  "id": "deposit-01--plaintiff",
+  "category": "deposit",
+  "question": "2026년 2월 말, 공인중개사 사무소에서 ○○시 아파트를 9억 원에 사는 매매계약을 맺었습니다. 계약서에는 계약금 9,000만 원, 중도금 3억 원(4월 말), 잔금 5억 1,000만 원(6월 말)으로 적었습니다. 계약 당일에는 3,000만 원만 매도인 계좌로 보냈고, 나머지 계약금 6,000만 원은 3월 둘째 주에 보내기로 계약서 특약에 적었습니다. 특약에는 '매도인은 계약금의 배액을, 매수인은 계약금을 포기하고 중도금 지급 전까지 해제할 수 있다'는 문구도 있습니다.\n\n3월 초, 매도인이 전화로 '주변 시세가 1억 넘게 올라서 이 값에는 못 판다. 받은 3,000만 원의 두 배인 6,000만 원을 돌려주겠다'고 했습니다. 저는 계약을 유지하고 싶다고 답했고, 다음 날 아침 나머지 계약금 6,000만 원과 중도금 중 5,000만 원을 매도인 계좌로 보냈습니다. 매도인은 '중도금 날짜도 안 됐는데 일방적으로 넣은 돈은 인정 못 한다'며 1억 1,000만 원을 제 계좌로 돌려보냈고, 이어 6,000만 원을 저를 피공탁자로 공탁했다는 공탁통지서가 왔습니다. 저는 그 공탁금을 찾지 않았습니다.\n\n저는 매도인이 해제하려면 실제로 받은 3,000만 원이 아니라 약정한 계약금 9,000만 원을 기준으로 배액을 내야 한다고 생각합니다. 또 제가 중도금 일부를 이미 보냈으니 이행에 착수한 것이라 이제는 해약금으로 해제할 수 없다고 봅니다. 그런데 특약의 '중도금 지급 전까지' 문구가 중도금 지급 '기일'을 말하는지, 실제 '지급'을 말하는지 애매합니다. 그 사이 중개사로부터 매도인이 다른 매수인과 더 높은 값으로 이야기 중이라는 말을 들었습니다. 증거로는 계약서, 송금 내역, 통화 녹음, 문자, 공탁통지서가 있습니다. 아직 등기부에 다른 권리가 생겼는지는 확인하지 못했습니다.\n\n해약금 기준이 약정 계약금인지 실제 지급액인지, 기일 전 중도금 일부 지급이 이행 착수로 인정되는지, 매도인의 공탁이 적법한 해제가 되는지, 공탁금을 찾으면 해제를 받아들인 것으로 보이는지, 관련 판례는 무엇인지 알고 싶습니다. 처분금지가처분과 소유권이전등기 청구 소송을 어떤 순서로 해야 하는지, 지금 소장에 청구취지(주위적으로 소유권이전등기, 예비적으로 손해배상 등)와 청구원인을 어떻게 써야 하는지 알려 주세요.",
+  "at": "2026-11-24T17:35:59.713Z",
+  "elapsedMs": 82055,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 13779,
+    "tokens_out": 9088,
+    "latency_ms": 81555
+  },
+  "costUsdUpperEstimate": 0.23688,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "민법",
+        "부동산등기규칙",
+        "부동산등기법",
+        "주택공급에 관한 규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "계약금",
+        "해약금 배액상환 약정 계약금 기준 이행의 착수",
+        "해약금"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "민법 제565조는 계약금을 교부한 경우 이행에 착수할 때까지 교부자는 포기하고, 수령자는 그 배액을 상환하여 매매계약을 해제할 수 있다고 정합니다. 다만 조문은 '계약당시에' 계약금을 교부한 때를 전제로 합니다. 그래서 계약금 일부만 낸 상태라면 무엇을 기준으로 배액을 계산할지는 판례 해석이 필요합니다.",
+          "source": "law:민법:제565조",
+          "quote": "교부자는 이를 포기하고 수령자는 그 배액을 상환하여 매매계약을 해제할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "대법원 2014다231378 판결은 계약금 일부만 지급된 경우, 수령자가 실제 받은 금액의 배액만 상환하고 해제할 수는 없으며 해약금의 기준은 약정 계약금이라고 보았습니다. 대법원 2007다73611 판결도 계약금 전부가 지급되기 전에는 임의로 해제할 수 없다는 취지입니다. 질문자님 생각처럼 약정 계약금을 기준으로 다툴 여지가 큽니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "대법원 2005다39594 판결은 민법 제565조 제1항의 '이행을 착수할 때까지'의 의미를 다뤘습니다. 이 판결은 중도금 일부에 갈음한 채권양도 약정만으로도 매수인이 이행에 착수했다고 보아 매도인의 해제권 행사를 막았습니다. 중도금 일부를 실제로 송금하셨다면 이행 착수로 볼 여지가 있습니다.",
+          "source": "case:2005다39594",
+          "quote": "매수인은 매매계약과 함께 채무의 일부 이행에 착수하였으므로",
+          "check": "verified"
+        },
+        {
+          "text": "대법원 2004다11599 판결은 이행기 전에는 착수하지 않기로 하는 특약 같은 특별한 사정이 없으면 이행기 전에도 이행에 착수할 수 있다고 보았습니다. 매도인이 가격 문제로 해제 의사를 밝힌 뒤 매수인이 기일 전에 중도금을 보낸 사안에서 이행 착수를 인정한 사례로 알려져 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "민법 제565조는 '당사자간에 다른 약정이 없는 한' 이행 착수 때까지 해제할 수 있다고 정합니다. 따라서 특약으로 해제할 수 있는 시점을 달리 정했다면 그 특약이 우선합니다. 그래서 '중도금 지급 전까지'의 뜻이 쟁점 2의 결론을 좌우합니다.",
+          "source": "law:민법:제565조",
+          "quote": "당사자간에 다른 약정이 없는 한 당사자의 일방이 이행에 착수할 때까지",
+          "check": "verified"
+        },
+        {
+          "text": "계약 해석은 문언, 계약 동기와 목적, 당사자의 진짜 의사를 종합해 판단합니다. '중도금 지급기일까지'로 합의했다면 기일 전에 송금했더라도 매도인이 해제할 여지가 생깁니다. 반대로 '실제 지급 시까지'로 본다면 일부 송금으로 해제권이 사라졌다고 주장할 수 있습니다. 계약 당시의 문자나 녹음을 꼭 챙겨 두세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "대법원 2007다4196 판결은 쌍무계약에서 상대방이 미리 자기 채무를 이행하지 않겠다는 의사를 표명한 경우의 판단 기준과 그에 따른 해제 요건을 다룹니다. 매도인의 이행 거절이 명백하다면, 이를 근거로 예비적 손해배상 청구를 구성할 수 있습니다.",
+          "source": "case:2007다4196",
+          "quote": "쌍무계약에서 당사자 일방이 미리 자기 채무를 이행하지 아니할 의사를 표명한 경우의 판단 기준",
+          "check": "verified"
+        },
+        {
+          "text": "먼저 등기부를 확인하시고, 다른 매수인 명의로 등기되기 전에 민사집행법 제300조의 처분금지가처분을 신청한 뒤 본안 소송을 내는 순서를 권합니다. 청구취지는 주위적으로 잔금 지급과 상환한 소유권이전등기, 예비적으로 이행불능 시 손해배상으로 둡니다. 청구원인에는 계약 체결, 송금에 따른 이행 착수, 매도인 해제의 부적법을 적으시면 됩니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:민법:제565조",
+        "lawName": "민법",
+        "articleNo": "제565조",
+        "title": "해약금",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C565%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제214조",
+        "lawName": "민법",
+        "articleNo": "제214조",
+        "title": "소유물방해제거, 방해예방청구권",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C214%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제107조",
+        "lawName": "민법",
+        "articleNo": "제107조",
+        "title": "진의 아닌 의사표시",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C107%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제108조",
+        "lawName": "민법",
+        "articleNo": "제108조",
+        "title": "통정한 허위의 의사표시",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C108%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제400조",
+        "lawName": "민법",
+        "articleNo": "제400조",
+        "title": "채권자지체",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C400%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제401조",
+        "lawName": "민법",
+        "articleNo": "제401조",
+        "title": "채권자지체와 채무자의 책임",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C401%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제398조",
+        "lawName": "민법",
+        "articleNo": "제398조",
+        "title": "배상액의 예정",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C398%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제579조",
+        "lawName": "민법",
+        "articleNo": "제579조",
+        "title": "채권매매와 매도인의 담보책임",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C579%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기규칙:제114조",
+        "lawName": "부동산등기규칙",
+        "articleNo": "제114조",
+        "title": "환매특약등기 등의 말소",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EA%B7%9C%EC%B9%99/%EC%A0%9C114%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:동산ㆍ채권등의담보에관한법률:제35조",
+        "lawName": "동산ㆍ채권 등의 담보에 관한 법률",
+        "articleNo": "제35조",
+        "title": "담보등기의 효력",
+        "effectiveFrom": "2022-04-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%20%EB%93%B1%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C35%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:동산ㆍ채권의담보등기등에관한규칙:제29조",
+        "lawName": "동산ㆍ채권의 담보등기 등에 관한 규칙",
+        "articleNo": "제29조",
+        "title": "등기신청에 필요한 서면등",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EB%93%B1%EA%B8%B0%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C29%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:부동산등기법:제64조",
+        "lawName": "부동산등기법",
+        "articleNo": "제64조",
+        "title": "소유권보존등기의 등기사항",
+        "effectiveFrom": "2025-01-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B6%80%EB%8F%99%EC%82%B0%EB%93%B1%EA%B8%B0%EB%B2%95/%EC%A0%9C64%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:동산ㆍ채권의담보등기등에관한규칙:제10조",
+        "lawName": "동산ㆍ채권의 담보등기 등에 관한 규칙",
+        "articleNo": "제10조",
+        "title": "등기고유번호 등",
+        "effectiveFrom": "2025-08-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%8F%99%EC%82%B0%E3%86%8D%EC%B1%84%EA%B6%8C%EC%9D%98%20%EB%8B%B4%EB%B3%B4%EB%93%B1%EA%B8%B0%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C10%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주택공급에관한규칙:제59조",
+        "lawName": "주택공급에 관한 규칙",
+        "articleNo": "제59조",
+        "title": "주택의 공급계약",
+        "effectiveFrom": "2026-06-15",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%ED%83%9D%EA%B3%B5%EA%B8%89%EC%97%90%20%EA%B4%80%ED%95%9C%20%EA%B7%9C%EC%B9%99/%EC%A0%9C59%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "622919",
+        "caseNo": "2026다201948, 201949",
+        "caseName": "계약금반환등·손해배상(기)",
+        "court": "대법원",
+        "decidedAt": "2026-06-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=622919",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "68328",
+        "caseNo": "2005다39594",
+        "caseName": "소유권이전등기",
+        "court": "대법원",
+        "decidedAt": "2006-11-24",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=68328",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "68744",
+        "caseNo": "2007다4196",
+        "caseName": "해약금",
+        "court": "대법원",
+        "decidedAt": "2007-06-15",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=68744",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "618165",
+        "caseNo": "2023다280945",
+        "caseName": "위약금등청구[수분양자가 시행사 및 분양자의 지위를 승계한 신탁회사를 상대로 공급계약의 해제를 주장하며 계약금 반환 등을 구하는 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-02-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618165",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "120975",
+        "caseNo": "99가합4427",
+        "caseName": "영업양도대금반환",
+        "court": "서울지법 동부지원",
+        "decidedAt": "1999-10-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=120975",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "94138",
+        "caseNo": "78다2084",
+        "caseName": "해약금",
+        "court": "대법원",
+        "decidedAt": "1978-12-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=94138",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "623933",
+        "caseNo": "2024나94285(본소), 2024나94292(반소)",
+        "caseName": "계약금반환 등·손해배상(기)",
+        "court": "수원지방법원",
+        "decidedAt": "2026-02-05",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623933",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 9
+      },
+      {
+        "keyword": "계약금",
+        "total": 6
+      },
+      {
+        "keyword": "해약금 배액상환 약정 계약금 기준 이행의 착수",
+        "total": 2
+      },
+      {
+        "keyword": "해약금",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "민법 제565조",
+          "exists": true
+        },
+        {
+          "citation": "2005다39594",
+          "exists": true
+        },
+        {
+          "citation": "2007다4196",
+          "exists": true
+        }
+      ],
+      "removed": 2
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "매수인",
+          "role": "질문자, 아파트 매수인"
+        },
+        {
+          "label": "매도인",
+          "role": "아파트 소유자, 매도인"
+        },
+        {
+          "label": "공인중개사",
+          "role": "계약 중개인"
+        },
+        {
+          "label": "다른 매수인 후보",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 2월 말",
+          "who": "매수인",
+          "what": "공인중개사 사무소에서 9억 원 매매계약을 체결하고 계약금 3,000만 원을 송금한다."
+        },
+        {
+          "when": "3월 초",
+          "who": "매도인",
+          "what": "전화로 시세 상승을 이유로 받은 3,000만 원의 두 배를 돌려주며 해제 의사를 밝힌다."
+        },
+        {
+          "when": "3월 초",
+          "who": "매수인",
+          "what": "계약 유지 의사를 밝히고 다음 날 나머지 계약금 6,000만 원과 중도금 5,000만 원을 송금한다."
+        },
+        {
+          "when": "",
+          "who": "매도인",
+          "what": "중도금 기일 전 송금을 인정하지 않고 1억 1,000만 원을 반환한다."
+        },
+        {
+          "when": "",
+          "who": "매도인",
+          "what": "6,000만 원을 매수인을 피공탁자로 하여 공탁하고 공탁통지서를 보낸다."
+        },
+        {
+          "when": "",
+          "who": "매수인",
+          "what": "공탁금은 찾지 않았고 등기부 권리관계는 아직 확인하지 못했다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "해약금 배액 기준이 약정 계약금인지",
+          "points": [
+            0,
+            1
+          ]
+        },
+        {
+          "title": "기일 전 중도금 일부 지급이 이행 착수인지",
+          "points": [
+            2,
+            3
+          ]
+        },
+        {
+          "title": "특약 중도금 지급 전 해제 문구의 의미",
+          "points": [
+            4,
+            5
+          ]
+        },
+        {
+          "title": "매도인의 공탁이 적법한 해제인지",
+          "points": [
+            6,
+            7
+          ]
+        }
+      ],
+      "unknowns": [
+        "매도인이 중도금 지급기일 전에 계약 해제를 명확히 서면이나 녹음으로 밝혔는지?",
+        "매수인이 공탁금을 수령하였는지 여부는 어떠한지?",
+        "매도인이 다른 매수인과 체결한 계약이나 가등기·처분금지가처분 등 등기상 권리 변동이 있는지?",
+        "계약서 특약의 '중도금 지급 전까지' 문구를 당사자가 어떤 의미로 합의했는지?"
+      ]
+    }
+  }
+}

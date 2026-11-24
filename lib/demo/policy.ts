@@ -22,14 +22,39 @@ export const SEARCH_ONLY_NOTE =
 export const EXAMPLE_PAGE_NOTE =
   "직접 작성한 가상 사연에 대해 미리 분석해 둔 예시 답변이에요. 새로 분석하지 않고 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
 
+/** 쪽별 예시(DEC-059) 머리 안내 — 요약 질문·자세한 상황은 AI(Opus)가 지어낸 가상 사연이다 */
+export const EXAMPLE_SIDES_NOTE =
+  "AI가 지어낸 가상 사연으로 미리 분석해 둔 예시 답변이에요. 질문은 짧게 보이지만 답변은 접어 둔 '자세한 상황'으로 만들었어요. 저장된 답변을 바로 보여 드려서 질문 횟수에 포함되지 않아요.";
+
 export const REPLAY_NOTE =
   "미리 분석해 둔 예시 질문의 답변입니다. 국가법령정보센터(법제처)에서 찾은 현행 법령 조문과 판례만 근거로 썼고, 인용은 법제처 재조회로 확인했습니다.";
+
+/** 예시의 문서 작성 절차·초안 (DEC-059). Opus가 쓰고, 검증된 근거 밖 조문·사건번호, 상황·인용에 없는 숫자,
+ *  단정 표현이 든 문장은 저장 전에 코드가 뺐다 (scripts/gen-complex-docs.mjs → merge_complex_examples.py) */
+export type ExampleGuide = {
+  procedure: { title: string; detail: string; owner: "self" | "expert" }[];
+  document: { name: string; basis: string; sections: { heading: string; paragraphs: string[] }[] };
+  checklist: string[];
+};
+
+/** 같은 사건의 한쪽(원고·피고, 고소인·피의자, 신청인). 화면에는 짧은 요약 질문을 보이고, 답변은 복잡한 상황(context)으로 만들었다 */
+export type ExampleSide = {
+  key: "plaintiff" | "defendant" | "complainant" | "suspect" | "applicant";
+  label: string;
+  question: string;
+  context: string;
+  result: DemoAnalysisResult;
+  guide: ExampleGuide | null;
+};
 
 export type DemoExample = {
   id: string;
   tags: string[];
+  /** 화면에 보이는 질문. sides가 있으면 첫 쪽의 요약 질문 */
   question: string;
+  /** 첫 쪽(또는 단일) 답변 */
   result: DemoAnalysisResult;
+  sides?: ExampleSide[];
 };
 
 const EXAMPLES = (data as { examples: DemoExample[] }).examples;
@@ -89,7 +114,13 @@ const normalize = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim()
 /** 질문이 예시 질문과 같으면(공백·전각 차이 무시) 그 예시. 아니면 null */
 export function findExample(maskedText: string): DemoExample | null {
   const q = normalize(maskedText);
-  return EXAMPLES.find((e) => normalize(e.question) === q) ?? null;
+  for (const e of EXAMPLES) {
+    if (normalize(e.question) === q) return e;
+    // 다른 쪽의 요약 질문이면 그 쪽 답변을 재생한다
+    const side = e.sides?.find((s) => normalize(s.question) === q);
+    if (side) return { ...e, question: side.question, result: side.result };
+  }
+  return null;
 }
 
 /** 재생 결과 — 저장된 분석에 무료 모드 표시와 안내만 바꿔 붙인다 */

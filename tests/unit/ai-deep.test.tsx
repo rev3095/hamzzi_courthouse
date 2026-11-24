@@ -3,7 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { CreateParams, ModelClient, ModelMessage } from "@/lib/ai/client";
-import { buildDeepMap, parseDeepMap, screenStruct } from "@/lib/ai/deep-policy";
+import { ISSUE_TITLE_MAX, buildDeepMap, parseDeepMap, screenStruct } from "@/lib/ai/deep-policy";
 import { TIERS, TIER_IDS, BUDGET_UNIT_USD } from "@/lib/ai/models";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import type { LawSource } from "@/lib/search/law-source";
@@ -141,6 +141,20 @@ describe("DEC-041 사건 구조 거르기 (절대 규칙 1·2·3·4)", () => {
       "보증금을 받기 전에 집을 비워야 하는지",
     ]);
     expect(s.unknowns).toEqual(["계약이 끝나기 전에 갱신하지 않겠다고 알렸는지"]);
+  });
+
+  test("F-003 긴 사연의 40자 넘는 쟁점 제목도 상한(60자)까지는 남긴다", () => {
+    const long =
+      "이사 후 비밀번호 문자 고지만으로 목적물 인도가 되어 임대인이 동시이행 항변을 할 수 없는지";
+    expect(long.length).toBeGreaterThan(40);
+    expect(long.length).toBeLessThanOrEqual(ISSUE_TITLE_MAX);
+    const t = screenStruct({ ...STRUCT, issues: [{ ...STRUCT.issues[0], title: long }] }, Q);
+    expect(t.issues.map((i) => i.title)).toEqual([long]);
+    const tooLong = screenStruct(
+      { ...STRUCT, issues: [{ ...STRUCT.issues[0], title: "가".repeat(ISSUE_TITLE_MAX + 1) }] },
+      Q,
+    );
+    expect(tooLong.issues).toEqual([]);
   });
 
   test("질문에 적힌 숫자(2년·4개월)는 그대로 둔다", () => {

@@ -82,7 +82,7 @@ export const DEEP_STRUCT_SCHEMA = {
         properties: {
           title: {
             type: "string",
-            description: "쟁점을 묻는 짧은 말 (예: 계약이 갱신된 것으로 보는지)",
+            description: "쟁점을 묻는 짧은 말, 30자 이내 (예: 계약이 갱신된 것으로 보는지)",
           },
           lawName: { type: "string", description: "이 쟁점을 다루는 법률의 정식 이름 하나" },
           lawKeywords: strings("그 법률 조문 제목·본문에 쓰이는 낱말 1~3개"),
@@ -134,6 +134,9 @@ function cleanText(raw: string, max: number, question: string): string | null {
   return t;
 }
 
+/** 쟁점 제목 글자 수 상한. 지시문은 30자 이내를 요구하고, 넘더라도 이 길이까지는 받는다 */
+export const ISSUE_TITLE_MAX = 60;
+
 const LAW_NAME = /^[가-힣ㆍ· ]{1,40}(?:법률|법|령|규칙)$/;
 
 /**
@@ -168,7 +171,9 @@ export function screenStruct(raw: DeepStructRaw, maskedText: string): DeepStruct
 
   const issues: DeepIssue[] = [];
   for (const i of raw.issues) {
-    const title = cleanText(i.title, 40, maskedText);
+    // 긴 사연에서는 모델이 40자를 넘는 쟁점 제목을 자주 써서 쟁점이 모두 버려졌다(2026-11-25 실호출 — 일반 답변으로 내려감).
+    // 화면에 두 줄까지는 괜찮으니 ISSUE_TITLE_MAX까지 받는다
+    const title = cleanText(i.title, ISSUE_TITLE_MAX, maskedText);
     if (!title || issues.some((x) => x.title === title)) continue;
     const lawName = squash(i.lawName);
     const lawKeywords = i.lawKeywords
