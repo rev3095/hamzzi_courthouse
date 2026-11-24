@@ -6,8 +6,8 @@ import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
 
 /** 입력 최대 길이 — 임시 값. 확정은 OQ-API-01 */
-/** 질문 한 건 글자 수 (2026-11-25 사용자 요청: 2,000 → 10,000자). 긴 질문은 lib/ai/cost longInputAllowanceUsd로 상한을 늘려 준다 */
-export const MAX_INPUT_CHARS = 10_000;
+/** 질문 한 건 글자 수 (2026-11-25 사용자 요청: 2,000 → 10,000 → 50,000자, 사실상 한도 없음). 긴 질문은 lib/ai/cost longInputAllowanceUsd로 상한을 늘려 준다 */
+export const MAX_INPUT_CHARS = 50_000;
 
 export type CreateRequest = {
   text: string;

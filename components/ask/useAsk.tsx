@@ -48,7 +48,7 @@ const SENSITIVE_LABEL: Record<string, string> = {
 /** 사용자에게 보여 줄 오류 문장. 서버 고정 문구만 쓰고, 입력 내용은 넣지 않는다 */
 export function askErrorText(err: ClientError): string {
   if (err.code === "EMPTY_INPUT") return "내용을 적어 주세요.";
-  if (err.code === "VALIDATION_ERROR") return "질문은 10,000자까지 적을 수 있어요.";
+  if (err.code === "VALIDATION_ERROR") return "질문은 50,000자까지 적을 수 있어요.";
   if (err.code === "RATE_LIMITED")
     return "이 네트워크에서 질문을 많이 했어요. 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.";
   return `${err.message}${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;

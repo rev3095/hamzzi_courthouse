@@ -28,7 +28,8 @@ import {
 } from "@/lib/inquiries/store";
 
 /** 데모 응답 기준 p95 ≤ 90초 (DEC-014). 분석 예산은 lib/inquiries/analyze의 ANALYSIS_BUDGET_MS. Vercel Hobby 한도 300초 */
-export const maxDuration = 120;
+// 2026-11-25 Opus high(생각이 길다)로 120 → 300초 (Vercel 한도)
+export const maxDuration = 300;
 
 type Ctx = { params: Promise<{ id: string }> };
 

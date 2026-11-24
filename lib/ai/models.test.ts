@@ -32,21 +32,25 @@ describe("DEC-036 단계 고르기", () => {
     }
   });
 
-  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 adaptive + effort medium", () => {
+  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 adaptive + effort high", () => {
     expect(TIERS.light.thinking).toEqual({ type: "disabled" });
     expect(TIERS.pro.thinking).toEqual({ type: "between_tools" });
     expect(TIERS.max.thinking).toEqual({ type: "adaptive" });
-    expect([TIERS.light.effort, TIERS.pro.effort, TIERS.max.effort]).toEqual(["low", "low", "medium"]);
+    expect([TIERS.light.effort, TIERS.pro.effort, TIERS.max.effort]).toEqual([
+      "low",
+      "low",
+      "high",
+    ]);
   });
 });
 
 describe("DEC-036 질문 1건 상한", () => {
-  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.25를 넘지 않는다 (DEC-050)", () => {
+  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.5를 넘지 않는다 (DEC-050, 2026-11-25 Opus high)", () => {
     for (const id of TIER_IDS) {
       expect(PRICES[TIERS[id].model]).toBeDefined();
-      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.25);
+      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.5);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.25]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.5]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -64,10 +68,11 @@ describe("DEC-036 질문 1건 상한", () => {
     }
   });
 
-  test("상한을 넘을 입력은 계획 단계에서 막힌다 (Sonnet 20,000토큰 · Opus 70,000토큰)", () => {
-    for (const [id, inputTokens] of [
-      ["pro", 20_000],
-      ["max", 70_000],
+  test("상한을 넘을 입력은 계획 단계에서 막힌다 (Sonnet 20,000토큰 · Opus 120,000토큰)", () => {
+    // Opus high(상한 $0.5)는 장문 구간(100,000토큰) 전에는 금액으로 막히지 않아 장문 구간에서 막힌다
+    for (const [id, inputTokens, reason] of [
+      ["pro", 20_000, "budget"],
+      ["max", 120_000, "long_prompt"],
     ] as const) {
       const t = TIERS[id];
       expect(
@@ -79,7 +84,7 @@ describe("DEC-036 질문 1건 상한", () => {
           minOutputTokens: t.answerTokens.min,
           capUsd: t.capUsd,
         }),
-      ).toEqual({ ok: false, reason: "budget" });
+      ).toEqual({ ok: false, reason });
     }
   });
 });

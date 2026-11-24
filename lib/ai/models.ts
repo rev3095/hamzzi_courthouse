@@ -54,12 +54,19 @@ export const TIERS = {
     label: "Pro Max",
     model: "claude-opus-5-5",
     thinking: { type: "adaptive" },
-    effort: "medium",
-    capUsd: 0.25,
-    answerTokens: { max: 5_000, min: 2_000 },
-    timeoutMs: 60_000,
-    weight: 167,
-    deep: { capUsd: 0.5, answerTokens: { max: 7_000, min: 3_000 }, timeoutMs: 75_000, weight: 334 },
+    // 2026-11-25 사용자 결정: effort medium → high. 생각이 길어져 출력 한도·시간·상한을 함께 늘린다
+    // (출력 12,000토큰 $0.24 + 입력 약 3만 토큰 $0.12 → 상한 $0.5, DeepSearch는 2배 $1.0)
+    effort: "high",
+    capUsd: 0.5,
+    answerTokens: { max: 12_000, min: 3_000 },
+    timeoutMs: 170_000,
+    weight: 334,
+    deep: {
+      capUsd: 1.0,
+      answerTokens: { max: 16_000, min: 4_000 },
+      timeoutMs: 200_000,
+      weight: 667,
+    },
   },
 } as const;
 
