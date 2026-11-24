@@ -1,5 +1,5 @@
 "use client";
-// 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 검색(F-003, Figma에 없는 메뉴), 오늘 남은 질문 n/한도(DEC-024·031·033) 또는 관리자 · 무제한.
+// 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 아카이브(F-003, DEC-052 — 누르면 검색·리서치 선택, Figma에 없는 메뉴), 오늘 남은 질문 n/한도(DEC-024·031·033) 또는 관리자 · 무제한.
 // 커뮤니티(DEC-047, Figma에 없는 메뉴): 게시판으로 가는 말풍선 버튼. 좁은 화면에서는 버튼 대신 메뉴 아이콘 안에 둔다(DEC-051, 가로 넘침 방지).
 // 서류 분석(F-015·DEC-052, Figma에 없는 메뉴): 서류 사진을 올려 분석하는 화면으로 가는 버튼.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { isSignedIn } from "@/lib/client/api";
 import { AboutMenu } from "./about/AboutMenu";
+import { ArchiveMenu } from "./search/ArchiveMenu";
 import { HamzziFace } from "./HamzziJudge";
 import { ProfileIcon } from "./me/MyPage";
 import { QuotaRouteSync, useQuota } from "./useQuota";
@@ -35,21 +36,7 @@ export function SiteHeader() {
           </span>
         </Link>
         <nav aria-label="주요 메뉴" className="flex items-center gap-1.5 sm:gap-2">
-          <Link
-            href="/search"
-            className="text-ink border-honey-line bg-honey hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3 text-sm font-bold shadow-[0_1px_0_rgba(26,34,51,0.04)]"
-          >
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-              <circle cx="9.5" cy="9.5" r="6.5" stroke="currentColor" strokeWidth="2" />
-              <path
-                d="M14.5 14.5L19 19"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="max-sm:sr-only">판례 검색</span>
-          </Link>
+          <ArchiveMenu />
           <Link
             href="/casefile"
             className="text-ink border-line hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-bold"

@@ -2,7 +2,8 @@
 // 판례 리서치 /research (DEC-029 제안). 기존 /search와 같은 API를 쓰는 업무용 화면: 검색 → 목록 → 옆 미리보기 → 보관함.
 // 목록에서 고른 자료의 요지를 화면을 떠나지 않고 읽고, 법원·기간·정렬로 걸러 보고, 담아 둔 자료의 인용 표기를 복사한다.
 // 법제처가 준 값만 보여 주고 거르기·정렬만 한다 — 관련도 점수·유불리 판단을 만들지 않는다 (PRD 8.3, 절대 규칙 2).
-// 검색어는 주소에 두지 않는다. 결과 화면에서 넘어올 때도 이 기기(sessionStorage)로만 건넨다 (F-007).
+// 검색어는 주소에 두지 않는다. 결과 화면·검색 화면에서 넘어올 때도 이 기기(sessionStorage)로만 건넨다 (F-007).
+// 판례 아카이브(DEC-052): 위쪽 전환으로 검색(/search)과 오가고, 보관함은 검색 화면과 같다.
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,9 +17,8 @@ import {
   searchOrdinances,
   type ApiResult,
   type ClientError,
-  type DecisionDomain,
 } from "@/lib/client/api";
-import { DECISION_TABS, directTarget } from "@/lib/search/explore";
+import { directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import {
@@ -30,51 +30,24 @@ import {
   rememberSearch,
   searchErrorText,
 } from "./parts";
+import { ArchiveSwitch } from "./ArchiveSwitch";
 import { KindTabs } from "./KindTabs";
-import { addPin, clearPins, removePin, usePins, useRecent } from "./recent";
+import { clearPins, usePins, useRecent } from "./recent";
+import {
+  DATE_WORD,
+  KIND_LIST,
+  LABEL,
+  canPin,
+  isKind,
+  isPinned,
+  togglePin,
+  type Kind,
+  type Row,
+} from "./rows";
 
-type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
+export { citationLine, type Row } from "./rows";
 
-const KINDS: { kind: Kind; label: string }[] = [
-  { kind: "cases", label: "판례" },
-  ...DECISION_TABS.map((d) => ({ kind: d.domain as Kind, label: d.label })),
-  { kind: "ordinances", label: "자치법규" },
-  { kind: "admin_rules", label: "행정규칙" },
-];
-const LABEL = Object.fromEntries(KINDS.map((k) => [k.kind, k.label])) as Record<Kind, string>;
-
-export type Row = {
-  kind: Kind;
-  id: string;
-  /** 상세 화면 주소. 행정규칙은 상세 화면이 없다 */
-  href: string | null;
-  title: string;
-  /** 법원·기관·지자체 */
-  org: string | null;
-  date: string | null;
-  refNo: string | null;
-  sourceUrl: string | null;
-};
-
-const DATE_WORD = {
-  cases: "선고",
-  ordinances: "시행",
-  admin_rules: "시행",
-  ...Object.fromEntries(DECISION_TABS.map((d) => [d.domain, d.dateLabel])),
-} as Record<Kind, string>;
-
-/** 인용 표기: 법제처가 준 기관·날짜·번호를 이어 붙이기만 한다 (예: 대법원 2021. 3. 11. 선고 2020다12345) */
-export function citationLine(r: Pick<Row, "kind" | "title" | "org" | "date" | "refNo">): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date ?? "");
-  const date = m ? `${m[1]}. ${Number(m[2])}. ${Number(m[3])}. ${DATE_WORD[r.kind]}` : null;
-  // 자치법규·행정규칙은 사건번호가 없다 — 이름과 기관·시행일만 적는다
-  if (r.kind === "ordinances" || r.kind === "admin_rules") {
-    const tail = [r.org, date].filter(Boolean).join(" ");
-    return tail ? `${r.title} (${tail})` : r.title;
-  }
-  const head = [r.org, date, r.refNo].filter(Boolean).join(" ");
-  return head ? `${head} (${r.title})` : r.title;
-}
+const KINDS = KIND_LIST;
 
 type Sort = "source" | "newest" | "oldest";
 
@@ -237,8 +210,7 @@ function Preview({ row, terms }: { row: Row; terms: string[] }) {
   }, [key]);
   const r = state?.id === key ? state.r : null;
   const pins = usePins();
-  const pinHref = row.href ?? row.sourceUrl ?? "";
-  const pinned = pins.some((p) => p.href === pinKey(row));
+  const pinned = isPinned(pins, row);
 
   return (
     <article aria-label="미리보기" className="flex flex-col gap-4">
@@ -258,20 +230,11 @@ function Preview({ row, terms }: { row: Row; terms: string[] }) {
             전체 보기
           </Link>
         )}
-        {pinHref && (
+        {canPin(row) && (
           <button
             type="button"
             aria-pressed={pinned}
-            onClick={() =>
-              pinned
-                ? removePin(pinKey(row))
-                : addPin({
-                    href: pinKey(row),
-                    title: row.title,
-                    sub: citationLine(row),
-                    kind: LABEL[row.kind],
-                  })
-            }
+            onClick={() => togglePin(pins, row)}
             className={`rounded-button flex min-h-11 items-center border px-4 text-sm font-semibold ${
               pinned ? "border-gold bg-honey text-ink" : "border-line text-ink bg-white"
             }`}
@@ -338,10 +301,6 @@ function Preview({ row, terms }: { row: Row; terms: string[] }) {
     </article>
   );
 }
-
-/** 보관함 키: 상세 화면 주소(검색 표시 제외). 상세 화면이 없으면 리서치 화면으로 돌아온다 */
-const pinKey = (r: Row) =>
-  r.href ? r.href.replace(/\?from=search$/, "") : `/research#${r.kind}-${r.id}`;
 
 function Shelf() {
   const pins = usePins();
@@ -470,19 +429,25 @@ export function ResearchView() {
     setSelected(r.data.rows[0] ? `${r.data.rows[0].kind}:${r.data.rows[0].id}` : null);
   };
 
-  // 결과 화면의 '판례 더 찾아보기'에서 오면(?from=result) 이 기기에 건네 둔 검색어로 바로 찾는다
-  const fromResult = params.get("from") === "result";
+  // 결과 화면의 '판례 더 찾아보기'(?from=result)나 검색 화면의 전환(?from=search, DEC-052)에서 오면
+  // 이 기기에 건네 둔 검색어로 바로 찾는다. 주소에는 자료 종류만 있고 검색어는 없다 (F-007)
+  const handoff = params.get("from");
+  const handoffKind = params.get("kind");
   useEffect(() => {
-    if (!fromResult) return;
+    if (handoff !== "result" && handoff !== "search") return;
     const q = recallSearch();
     if (!q) return;
+    const kind: Kind = isKind(handoffKind) ? handoffKind : "cases";
+    // 새로고침 때 다시 찾지 않게 전환 표시를 주소에서 지운다
+    window.history.replaceState(window.history.state, "", "/research");
     queueMicrotask(() => {
       setText(q);
-      void submit("cases", q);
+      setTab(kind);
+      void submit(kind, q);
     });
     // 처음 한 번만
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fromResult]);
+  }, [handoff]);
 
   const rows = useMemo(() => (state.kind === "done" ? state.data.rows : []), [state]);
   const terms = state.kind === "done" ? highlightTerms(state.q) : [];
@@ -507,8 +472,13 @@ export function ResearchView() {
     <div className="bg-soft flex-1">
       <div className="bg-ink text-white">
         <div className="mx-auto w-full max-w-[1320px] px-4 py-6 lg:py-8">
-          <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
-          <h1 className="font-display mt-1 text-[26px] font-bold">판례 리서치</h1>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
+              <h1 className="font-display mt-1 text-[26px] font-bold">판례 리서치</h1>
+            </div>
+            <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} dark />
+          </div>
           <p className="mt-1 text-sm text-white/75">
             법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문
             횟수와 따로 세요.
