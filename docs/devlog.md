@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-24 동안 세션 14개가 남긴 작업 기록 493건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-24 동안 세션 14개가 남긴 작업 기록 495건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -10,7 +10,7 @@
 
 ## 세션 계층
 
-- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-24 · 기록 158건  
+- **메인 개발 (Legal tech 플랫폼 개발 계획)** — Claude Desktop · 2026-10-18 ~ 2026-11-24 · 기록 160건  
   기획·설계부터 데모 개발·병합·배포까지 맡은 최상위 세션. 일을 나눠 다른 세션들을 시작하고 결과를 합쳤다.
   - **햄찌법원 개발 재개 (Phase 3 준비)** — Claude Desktop · 2026-10-19 ~ 2026-11-19 · 기록 49건  
     메인 개발 세션이 시작한 세션. 법제처 수집기와 DB 테이블에서 시작해 korean-law-mcp 어댑터, AI 분석·인용 검증·analyze API, 무료/Pro 모드 전환, 화면·정책 초안·배포, 검색·피드백·삭제·파기·헬스체크까지 데모의 대부분을 구현했다.
@@ -54,6 +54,8 @@
 - `17:02` **[결정] 빠진 개인정보 커밋 PR 열고 병합 허락** — 사용자가 main에 빠져 있던 개인정보 가리기 4~7차 보완 커밋을 PR로 열어 병합하라고 했다.
 - `17:03` **[수정] PR 17 병합과 배포 확인 — 384e630** — 62fb669(11-21, legal-reviewer 4~7차 지적 반영: 낱말 + 조사 나누기를 줄기 기준으로, 과잉 가림 줄이기)를 PR 17로 열었다. main과 합친 상태로 로컬에서 '이사랑 대표님'·'이미랑 씨'·'친구 이하은 집에' 등 이름 7문장은 가려지고 '지금은 사장님이'·'손님이 사장님한테'·'전처가 양육비' 등 일반 6문장은 그대로인 것을 임시 확인 테스트로 본 뒤 지웠다. typecheck·단위 테스트 1228건·eslint(lib/pii)·docs:check, CI·Vercel 미리보기 빌드 통과 뒤 병합했고, 배포 사이트가 384e630과 홈·검색·커뮤니티 200을 보고했다. ([`62fb669`](https://github.com/rev3095/hamzzi_courthouse/commit/62fb669), [`384e630`](https://github.com/rev3095/hamzzi_courthouse/commit/384e630), F-007)
 - `17:25` **[세션 메시지] PR 18에 rebase 필요 알림** — 서류 분석이 헤더·안내 챗봇·개인정보처리방침·PRD·API 문서를 고쳐 PR 18(소개 메뉴)과 겹친다. 메뉴 세션에 origin/main 위로 rebase하고 헤더 메뉴 두 항목을 모두 살리며 결정 번호를 DEC-051(소개)·052(서류 분석)·053(사건 진행 예정)으로 맞추라고 알렸다.
+- `17:30` **[결정] PR 18·19 병합 허락** — 사용자가 소개 메뉴·문의(PR 18)와 판례 아카이브(PR 19)를 둘 다 병합하라고 했다.
+- `17:36` **[구현] PR 18 → PR 19 병합과 배포 확인 — 9bfed8c** — PR 18의 CI·Vercel 미리보기 통과를 확인하고 병합했다(519c8e3). PR 19는 PR 18 브랜치 위에 쌓여 있어 base를 main으로 바꾸고 CI·미리보기 통과를 본 뒤 병합했다(9bfed8c). 배포 사이트가 9bfed8c를 보고했고 홈·검색·리서치·소개 네 화면·서류 분석·커뮤니티가 모두 200으로 응답했으며, 헤더에 '판례 아카이브'·'서류 분석'·'소개'가 보인다. main CI 통과. ([`519c8e3`](https://github.com/rev3095/hamzzi_courthouse/commit/519c8e3), [`9bfed8c`](https://github.com/rev3095/hamzzi_courthouse/commit/9bfed8c), DEC-051, DEC-054)
 
 ##### ↳ 햄찌법원 화면 리디자인 (IA·흐름·화면설계)
 
@@ -879,7 +881,9 @@
 | DEC-048 | 앱을 Capacitor로 바꾸고 인터넷 없이 쓰는 규칙 판독기를 넣는다 (2026-11-20 사용자 요청) |
 | DEC-049 | 앱 화면 전면 개편 — 아테네풍 디자인과 온라인 기능 (2026-11-20 사용자 요청, DEC-048 변경) |
 | DEC-050 | 심사 공개 대비 — Opus 기본, 질문 1건 상한 완화, 기간 예산 $95 유지 (2026-11-20 사용자 결정, DEC-031·036·040 일부 변경) |
+| DEC-051 | 햄찌법원 소개 메뉴·문의 남기기 (2026-11-24 사용자 결정) |
 | DEC-052 | 서류 분석 — 서류 사진 판독, 당사자 구도, 법인·사업자 공개 정보 조회 (2026-11-24 사용자 요청·결정, F-015) |
+| DEC-054 | 판례 아카이브 — 검색·리서치를 한 메뉴로 (2026-11-24 사용자 요청, DEC-029 화면 변경) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -1000,7 +1004,6 @@
 
 **사이트 메뉴: 소개·기능 가이드·개발자 연락·향후 계획**
 
-- PR 18(소개 메뉴·문의, DEC-051)과 PR 19(판례 아카이브, DEC-054, PR 18 위에 쌓음)는 병합 전이다.
 - 메일 바로 보내기를 켜려면 사용자가 메일 발송 서비스(Resend) API 키를 발급해 Vercel 환경변수 RESEND_API_KEY로 등록해야 한다. 키가 없으면 메일 앱 열기로 동작한다.
 - 새 메뉴·소개·판례 아카이브 화면은 Figma 반영을 나중에 한다. 앱(mobile/)은 범위 밖이다.
 
@@ -1031,10 +1034,17 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 188개 (병합 제외)</summary>
+<details><summary>main 커밋 195개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`7d9fb0c`](https://github.com/rev3095/hamzzi_courthouse/commit/7d9fb0c) | 2026-11-24 17:33 | docs: devlog에 판례 아카이브 PR 19(DEC-054)·PR 18 재정렬 반영 (기록 493건) |
+| [`2170be7`](https://github.com/rev3095/hamzzi_courthouse/commit/2170be7) | 2026-11-24 17:32 | docs: 판례 아카이브 결정 번호를 DEC-054로 (DEC-053은 사건 진행 몫) |
+| [`6a3a268`](https://github.com/rev3095/hamzzi_courthouse/commit/6a3a268) | 2026-11-24 17:24 | docs: 판례 아카이브 결정 번호를 DEC-053으로 (DEC-052는 서류 분석이 먼저 씀) |
+| [`a9bdb4d`](https://github.com/rev3095/hamzzi_courthouse/commit/a9bdb4d) | 2026-11-24 17:23 | feat: F-003 판례 아카이브 — 헤더에서 검색·리서치 선택, 두 화면 전환·보관함 공유, 검색창 간결화 (DEC-052) |
+| [`219e28b`](https://github.com/rev3095/hamzzi_courthouse/commit/219e28b) | 2026-11-24 17:28 | fix: 좁은 화면 헤더 가로 넘침 — 커뮤니티 버튼을 메뉴 아이콘 안으로 (DEC-051) |
+| [`5269918`](https://github.com/rev3095/hamzzi_courthouse/commit/5269918) | 2026-11-24 17:26 | docs: 기능 가이드에 서류 사진 판독(DEC-052) 소개 추가 (DEC-051) |
+| [`1ab53ce`](https://github.com/rev3095/hamzzi_courthouse/commit/1ab53ce) | 2026-11-24 17:14 | feat: 햄찌법원 소개 메뉴·문의 남기기 (DEC-051, F-007) |
 | [`ff1e57d`](https://github.com/rev3095/hamzzi_courthouse/commit/ff1e57d) | 2026-11-24 17:23 | docs: devlog에 서류 분석 main 반영(8e539a0, F-015·DEC-052)·사건 진행 진행 상황 반영 (기록 491건) |
 | [`8e539a0`](https://github.com/rev3095/hamzzi_courthouse/commit/8e539a0) | 2026-11-24 17:22 | feat: 서류 분석 — 서류 사진 판독·당사자 구도·법인 공개 정보 조회 (F-015, DEC-052) |
 | [`a2c344c`](https://github.com/rev3095/hamzzi_courthouse/commit/a2c344c) | 2026-11-24 17:21 | docs: devlog에 소개 메뉴·문의 남기기 PR 18(DEC-051)과 판례 아카이브 결정 반영 (기록 488건) |
@@ -1291,7 +1301,7 @@
 - [lib/demo — 무료 모드 (DEC-015)](../lib/demo/README.md) — `lib/demo/README.md` · 수정 2026-11-20
 - [lib/documents — 단계별 공식 서식 설문·편집·내보내기 [게이트] (DEC-022·023·025)](../lib/documents/README.md) — `lib/documents/README.md` · 수정 2026-11-18
 - [lib/gate — 기능 게이트 (F-013)](../lib/gate/README.md) — `lib/gate/README.md` · 수정 2026-10-19
-- [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-19
+- [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-24
 - [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-19
 - [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-21
 - [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-19
