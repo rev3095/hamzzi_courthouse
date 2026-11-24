@@ -196,12 +196,16 @@ type DemoAnalysisResult = {
            events: { when: string; who: string; what: string }[]; // 사연에 적힌 순서
            issues: { title: string; points: number[] }[];        // 쟁점과 그 쟁점에 답한 answer.points 순번(검증을 통과해 남은 것만)
            unknowns: string[] };                                  // 답이 달라질 수 있는데 사연에 없는 사실
+  assistant?: "home" | "report" | "market";        // DEC-057: 전문 에이전트 대화에서 받은 답변이면 그 에이전트
+  assistantTalk?: { reply: string; asks: string[] }; // DEC-057: 에이전트 대화 한마디(Haiku). 숫자·법령·판례·판정 표현이 없게 거른 것만
   procedureHint?:                                   // DEC-037: 규칙이 절차를 정하지 못했을 때 저장해 둔 AI 분류 라벨(승인된 것만). 없으면 생략
     | { kind: "track"; track: string }               // 검증해 둔 기존 타임라인 키
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };
 }
 ```
 - **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro Max(DEC-050, 이전 Pro). 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
+- **아카이브 재생(DEC-057)**: 질문이 전문 에이전트 아카이브 질문과 같으면 예시 질문처럼 저장된 분석을 재생한다(횟수·예산 차감 없음, `mode: "replay"`).
+- **요청 본문(선택, DEC-057)**: `{ assistant?: "home" | "report" | "market" | null }` — 분야별 비서 대화(F-018)로 보낸 질문. 라이트 답변에 그 비서의 지시문을 붙이고, 카테고리가 없으면 비서의 고정 판례 검색어·조문을 쓰며, 질문 낱말에 맞는 사례 판례(둘까지)를 법제처에서 다시 가져와 근거에 더한다. 답변 단계는 본문 `tier`와 상관없이 Pro Max(지금 Opus 5.5 effort high, DEC-050)로 고정하고(상한·예산 가중치도 그 단계), 같은 상한 안에서 Haiku 대화 한마디(`assistantTalk`)를 더한다. 횟수·인용 검증은 같다. 저장하지 않고 결과에 `assistant`·`assistantTalk`만 남긴다. 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["assistant"]`).
 - **요청 본문(선택, DEC-038)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
 - **요청 본문(선택, DEC-028)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation"|"insult"|"assault"|"stalking"|"sex_crime"|"voice_phishing"|"crime_report"|"workplace_harassment"|"industrial_accident"|"domestic_violence"|"school_violence"|"medical"|"privacy"|"commercial_lease"|"respond_civil"|"respond_criminal"|"admin_appeal"|"debt_relief" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
 - **예시 답변 화면(DEC-028)**: 홈의 예시 카드는 이 API를 쓰지 않는다. `/examples/[id]`가 저장된 예시 분석(`mode: "replay"`와 같은 형식)을 빌드 때 정적으로 렌더링한다 — 질문 생성·분석·저장·횟수 차감 없음.
@@ -431,3 +435,20 @@ req { consentId: string; items: string[] }   // 동의한 항목만
 | OQ-API-08 | 비로그인 "가벼운 답변"의 범위: 판례 몇 건까지, 법령 상세·원문 링크 포함 여부, 결과 저장 여부. 데모는 로그인 사용자와 같은 결과를 저장까지 함(DEC-010·011), 데모 뒤 재검토 | analyze 응답 | DEC-005 |
 | OQ-API-09 | Google 외에 지원할 소셜 로그인(카카오·네이버 등) | 인증 | DEC-005 |
 | OQ-API-07 | 관리자 작업(게이트 변경)에 2단계 승인을 둘지 | admin | F-013 |
+
+### GET `/assistants/{id}/archive` (DEC-057)
+전문 에이전트 아카이브(미리 만든 질답 세트). `id`는 `home`·`report`·`market`, 그 밖은 `404 NOT_FOUND`. 인증 없음, 모델·DB 호출 없음 — 저장소의 `lib/assistants/archive-data/{id}.json`을 돌려준다.
+```ts
+{ items: {
+    id: string; assistant: "home"|"report"|"market"; side: "plaintiff"|"defendant";
+    stage: "organize"|"notice_send"|"notice_receive"|"complaint_write"|"complaint_receive";
+    title: string; question: string;            // 가상 사연
+    result: DemoAnalysisResult;                 // DeepSearch 결과(검증된 문단·deep 시각자료). 체험하기는 이 결과를 재생한다
+    situation: string; steps: { now: string; next: string[] };
+    civil: { points: CheckedPoint[]; note: string | null };     // 인용 검증을 통과한 문단만
+    criminal: { points: CheckedPoint[]; note: string | null };
+    evidence: { item: string; why: string; status: "있음"|"확인 필요" }[];
+    document: { title: string; steps: string[] };
+    meta: { model: string; effort: string; promptVersion: string; costUsd: number; generatedAt: string };
+  }[] }
+```

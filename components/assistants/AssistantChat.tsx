@@ -1,0 +1,473 @@
+"use client";
+// 분야별 비서 대화 (F-018, DEC-057). 비서 페이지와 햄찌 안내 챗봇의 '비서와 대화' 모드가 함께 쓴다.
+// 한 번 보내기 = 질문 1건이다. 일반 질문과 같은 길을 간다:
+//   POST /inquiries (scanInput 마스킹·민감정보 동의, 절대 규칙 4) → 둘째 질문부터 parentInquiryId로 이어 묻기
+//   → POST /analyze { assistant } (하루 횟수·비용 상한·인용 검증은 서버가 그대로, 절대 규칙 1·7)
+// 말풍선에는 검증을 통과한 문단(과 DEC-055의 모델 근거 문단)만 보이고, 문단마다 출처와 AI 고지(AI_NOTICE)을 단다 (절대 규칙 6).
+// 이 기기(sessionStorage)에는 질문 번호와 서버가 돌려준 마스킹본만 둔다 — 원문은 입력란에만 있다 (DEC-006).
+// usePathname 같은 라우트 훅은 쓰지 않는다 (cacheComponents, 레이아웃의 안내 챗봇에서도 쓰인다).
+import Link from "next/link";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import {
+  ASSISTANTS,
+  ASSISTANT_ANSWER_TIER,
+  inScope,
+  type AssistantId,
+} from "@/lib/assistants/agents";
+import type { DemoAnalysisResult } from "@/lib/citations/policy";
+import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
+import {
+  analyzeStream,
+  getResult,
+  isUserDailyLimit,
+  notifyQuotaChanged,
+  rememberAssistant,
+} from "@/lib/client/api";
+import { sourceRef } from "@/components/result/labels";
+import { askErrorText, useAsk } from "@/components/ask/useAsk";
+import { TIER_TEXT } from "@/components/ask/TierSlider";
+import { useQuota } from "@/components/useQuota";
+import { AssistantEmblem } from "./AssistantIcon";
+import "./assistants.css";
+
+type Turn = {
+  id: string;
+  question: string;
+  status: "analyzing" | "done" | "error";
+  step?: string;
+  result?: DemoAnalysisResult;
+  error?: string;
+};
+
+const THREAD_KEY = (a: AssistantId) => `hz:as:${a}`;
+/** 이 기기에 남겨 두는 대화 수 (오래된 것부터 뺀다) */
+const KEEP_TURNS = 12;
+
+function loadThread(a: AssistantId): { id: string; question: string }[] {
+  try {
+    const raw = sessionStorage.getItem(THREAD_KEY(a));
+    const list = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(list)
+      ? list.filter(
+          (t): t is { id: string; question: string } =>
+            typeof t?.id === "string" && typeof t?.question === "string",
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveThread(a: AssistantId, turns: Turn[]) {
+  try {
+    const keep = turns
+      .filter((t) => t.status !== "error")
+      .slice(-KEEP_TURNS)
+      .map(({ id, question }) => ({ id, question }));
+    sessionStorage.setItem(THREAD_KEY(a), JSON.stringify(keep));
+  } catch {
+    // 저장소를 못 쓰면 새로 고칠 때 대화가 비워질 뿐이다
+  }
+}
+
+export function AssistantChat({
+  assistant: id,
+  variant = "page",
+  draft,
+  onDraft,
+  autoSend,
+}: {
+  assistant: AssistantId;
+  /** page = 비서 페이지, compact = 안내 챗봇 창 안 */
+  variant?: "page" | "compact";
+  /** 옆 도움 판이 질문창에 문장을 넣을 때 (없으면 안에서 관리) */
+  draft?: string;
+  onDraft?: (v: string) => void;
+  /** 아카이브 체험하기: key가 바뀔 때마다 text를 한 번 보낸다 */
+  autoSend?: { text: string; key: number } | null;
+}) {
+  const a = ASSISTANTS[id];
+  const [ownDraft, setOwnDraft] = useState("");
+  const text = draft ?? ownDraft;
+  const setText = onDraft ?? setOwnDraft;
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const alive = useRef(true);
+  const log = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const quota = useQuota();
+
+  const update = useCallback((turnId: string, patch: Partial<Turn>) => {
+    setTurns((ts) => ts.map((t) => (t.id === turnId ? { ...t, ...patch } : t)));
+  }, []);
+
+  // 새로 고침 뒤에도 이 탭의 대화를 다시 보여 준다 (저장된 결과를 읽기만 한다 — 다시 분석하지 않는다)
+  useEffect(() => {
+    alive.current = true;
+    const saved = loadThread(id);
+    if (saved.length > 0) {
+      void Promise.all(
+        saved.map(async (t): Promise<Turn | null> => {
+          const r = await getResult(t.id);
+          return r.ok ? { ...t, status: "done", result: r.data.result } : null;
+        }),
+      ).then((loaded) => {
+        // 그사이 새 질문을 보냈으면 앞에 붙인다
+        if (alive.current)
+          setTurns((now) => [...loaded.filter((t): t is Turn => t !== null), ...now]);
+      });
+    }
+    return () => {
+      alive.current = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (turns.length > 0) saveThread(id, turns);
+    // 대화 칸 안에서만 맨 아래로 (페이지 전체는 움직이지 않는다)
+    const el = log.current;
+    if (el && turns.length > 0) el.scrollTop = el.scrollHeight;
+  }, [turns, id]);
+
+  const busy = turns.some((t) => t.status === "analyzing");
+  const lastDone = [...turns].reverse().find((t) => t.status === "done");
+
+  const ask = useAsk({
+    parentInquiryId: lastDone?.id,
+    onReady: (inquiryId, masked) => {
+      setText("");
+      void analyze(inquiryId, masked);
+    },
+  });
+
+  /** 질문이 준비되면(마스킹·동의 뒤) 이 화면에서 바로 분석한다. 비서 이름은 결과 화면에서 다시 분석할 때도 쓰이게 남긴다 */
+  async function analyze(inquiryId: string, maskedText: string) {
+    rememberAssistant(inquiryId, id);
+    setTurns((ts) => [
+      ...ts,
+      { id: inquiryId, question: maskedText, status: "analyzing", step: "질문을 읽는 중" },
+    ]);
+    const r = await analyzeStream(inquiryId, (e) => update(inquiryId, { step: e.message }), null, {
+      assistant: id,
+    });
+    if (!alive.current) return;
+    notifyQuotaChanged();
+    if (r.ok) return update(inquiryId, { status: "done", result: r.data.result });
+    if (r.error.code === "INVALID_STATE") {
+      const saved = await getResult(inquiryId);
+      if (saved.ok) return update(inquiryId, { status: "done", result: saved.data.result });
+    }
+    if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
+      update(inquiryId, { status: "error", error: "오늘 질문할 수 있는 횟수를 모두 썼어요." });
+      ask.showLimit();
+      return;
+    }
+    update(inquiryId, { status: "error", error: askErrorText(r.error) });
+  }
+
+  // 아카이브 체험하기: 같은 질문을 보낸다 — 서버가 저장된 답을 재생한다(비용·횟수 0)
+  const lastAuto = useRef<number | null>(null);
+  useEffect(() => {
+    if (!autoSend || lastAuto.current === autoSend.key) return;
+    lastAuto.current = autoSend.key;
+    void ask.send(autoSend.text);
+    // ask는 렌더마다 새 객체라 deps에서 뺀다 — key가 바뀔 때만 보낸다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSend]);
+
+  const submit = (e?: FormEvent) => {
+    e?.preventDefault();
+    if (busy || ask.busy) return;
+    void ask.send(text);
+  };
+
+  const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      submit();
+    }
+  };
+
+  const reset = () => {
+    setTurns([]);
+    try {
+      sessionStorage.removeItem(THREAD_KEY(id));
+    } catch {
+      // 저장소를 못 쓰면 화면만 비운다
+    }
+  };
+
+  const compact = variant === "compact";
+
+  return (
+    <div className={`flex min-h-0 flex-col ${compact ? "h-full" : ""}`}>
+      <div
+        ref={log}
+        role="log"
+        aria-live="polite"
+        aria-busy={busy}
+        className={`hza-log flex-1 space-y-4 overflow-y-auto ${
+          compact ? "px-3 py-4" : "hza-card h-[min(640px,72dvh)] px-4 py-5 sm:px-6"
+        }`}
+      >
+        <BotRow id={id} compact={compact}>
+          <div className="hza-bot">
+            <p>{a.greeting}</p>
+            {a.disclaimer && <p className="hza-muted mt-2 text-[13px]">{a.disclaimer}</p>}
+          </div>
+        </BotRow>
+
+        {turns.length === 0 && (
+          <div className="flex flex-wrap gap-2 pl-11" role="group" aria-label="질문 예">
+            {a.starters.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className="hza-chip"
+                onClick={() => {
+                  setText(s);
+                  input.current?.focus();
+                }}
+              >
+                {s.trim()}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {turns.map((t) => (
+          <div key={t.id} className="space-y-3">
+            <p className="hza-me">{t.question}</p>
+            <BotRow id={id} compact={compact}>
+              {t.status === "analyzing" ? (
+                <div className="hza-bot" role="status">
+                  <span className="hza-dots mr-2 align-middle" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                  <span className="hza-muted text-sm">{t.step ?? "찾아보는 중"}</span>
+                </div>
+              ) : t.status === "error" ? (
+                <div className="hza-bot">
+                  <p>{t.error}</p>
+                </div>
+              ) : t.result ? (
+                <AnswerBubble assistant={id} inquiryId={t.id} result={t.result} />
+              ) : null}
+            </BotRow>
+          </div>
+        ))}
+      </div>
+
+      <form
+        onSubmit={submit}
+        className={compact ? "border-t border-[var(--hza-line)] px-3 pt-2.5 pb-3" : "mt-4"}
+      >
+        {!compact && quota?.ai !== false && <TierFixed />}
+        <div className="flex items-end gap-2">
+          <label htmlFor={`hza-input-${id}-${variant}`} className="sr-only">
+            {a.name}에게 질문하기
+          </label>
+          <textarea
+            id={`hza-input-${id}-${variant}`}
+            ref={input}
+            rows={compact ? 2 : 3}
+            value={text}
+            maxLength={MAX_INPUT_CHARS}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={onKey}
+            placeholder={
+              lastDone
+                ? "이어서 묻고 싶은 것을 적어 주세요"
+                : "있었던 일을 적어 주세요 (이름·연락처·계좌번호는 빼고)"
+            }
+            className="hza-input"
+          />
+          <button
+            type="submit"
+            className="hza-btn shrink-0"
+            disabled={busy || ask.busy || !text.trim()}
+          >
+            보내기
+          </button>
+        </div>
+        {ask.error && (
+          <p role="alert" className="mt-2 text-sm font-semibold text-[var(--hza-strong)]">
+            {ask.error}
+          </p>
+        )}
+        <div className="hza-muted mt-2 flex flex-wrap items-center justify-between gap-2 text-[12px]">
+          <span>
+            분석이 끝난 질문마다 1회로 세요(예시 질문 제외)
+            {quota &&
+              !quota.admin &&
+              quota.remaining !== null &&
+              ` · 오늘 남은 질문 ${quota.remaining}회`}
+          </span>
+          {turns.length > 0 && !busy && (
+            <button type="button" onClick={reset} className="hza-link min-h-8">
+              새 대화
+            </button>
+          )}
+        </div>
+      </form>
+      {ask.modals}
+    </div>
+  );
+}
+
+function BotRow({
+  id,
+  compact,
+  children,
+}: {
+  id: AssistantId;
+  compact: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <AssistantEmblem id={id} size={compact ? 30 : 36} />
+      {children}
+    </div>
+  );
+}
+
+function AnswerBubble({
+  assistant,
+  inquiryId,
+  result,
+}: {
+  assistant: AssistantId;
+  inquiryId: string;
+  result: DemoAnalysisResult;
+}) {
+  const points = result.answer.points;
+  const outside = !inScope(assistant, result.section);
+  return (
+    <div className="hza-bot">
+      {result.mode === "replay" && (
+        <p className="hza-muted mb-3 text-[13px]">
+          미리 만들어 둔 예시 답변이에요. 질문 횟수에 들어가지 않아요.
+        </p>
+      )}
+      {result.assistantTalk && (
+        <div className="mb-3 border-b border-[var(--hza-line)] pb-3">
+          {/* 대화 한마디는 근거가 없는 말이라 아래 근거 답변과 구분해 표시한다 */}
+          <p className="hza-muted mb-1 text-[12px] font-semibold">대화 정리 · 근거 아님</p>
+          <p>{result.assistantTalk.reply}</p>
+          {result.assistantTalk.asks.length > 0 && (
+            <>
+              <p className="hza-muted mt-2 text-[13px] font-semibold">
+                이런 점을 알려 주시면 더 맞는 근거를 찾아볼게요
+              </p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[14px]">
+                {result.assistantTalk.asks.map((q) => (
+                  <li key={q}>{q}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+      {outside && (
+        <p className="hza-muted mb-3 text-[13px]">
+          이 질문은 {ASSISTANTS[assistant].name}이 주로 다루는 분야 밖으로 보여요. 홈의 일반
+          질문으로 물어보면 그 분야에 맞춰 정리해요.{" "}
+          <Link href="/" className="hza-link">
+            일반 질문하기
+          </Link>
+        </p>
+      )}
+      {points.length > 0 ? (
+        <ol>
+          {points.map((p, i) => {
+            // 법제처 근거 없이 모델이 쓴 문단(DEC-055)은 결과 화면처럼 출처 상자 없이 문단만 보인다
+            if (p.check === "model")
+              return (
+                <li key={i} className="hza-point">
+                  <p>{p.text}</p>
+                </li>
+              );
+            const ref = sourceRef(p.source, result);
+            return (
+              <li key={i} className="hza-point">
+                <p>{p.text}</p>
+                <p className="hza-source">
+                  <span>출처 · {ref.label}</span>
+                  <span className="hza-badge">
+                    {p.check === "verified" ? "검증됨" : "확인 필요"}
+                  </span>
+                  {ref.url && (
+                    <a href={ref.url} target="_blank" rel="noreferrer" className="hza-link">
+                      원문
+                    </a>
+                  )}
+                </p>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <SearchOnly result={result} />
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="hza-notice">{result.aiNotice}</span>
+        <Link href={`/inquiries/${inquiryId}`} className="hza-link text-[13px]">
+          근거·절차 자세히 보기
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SearchOnly({ result }: { result: DemoAnalysisResult }) {
+  const articles = result.articles.slice(0, 3);
+  const cases = result.cases.slice(0, 2);
+  if (articles.length === 0 && cases.length === 0)
+    return <p>이번에는 법제처에서 맞는 법령·판례를 찾지 못했어요. 조금 다르게 적어 볼까요?</p>;
+  return (
+    <>
+      <p>
+        {result.mode === "search_only"
+          ? "지금은 AI 답변 없이 법제처에서 찾은 법령·판례만 보여 드려요."
+          : "이번 질문은 근거를 확인한 AI 답변을 만들지 못해 찾은 법령·판례만 보여 드려요."}
+      </p>
+      <ul className="mt-2 space-y-1 text-[14px]">
+        {articles.map((x) => (
+          <li key={x.id}>
+            <a href={x.sourceUrl} target="_blank" rel="noreferrer" className="hza-link">
+              {x.lawName} {x.articleNo}
+              {x.title ? ` (${x.title})` : ""}
+            </a>
+          </li>
+        ))}
+        {cases.map((c) => (
+          <li key={c.id}>
+            <Link href={`/cases/${c.id}`} className="hza-link">
+              {c.court} {c.caseNo}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+/** 비서 답변 모드는 고정이다 (DEC-057 ⑧): 근거 답변 Pro Max, 대화 한마디는 가벼운 모델. 화면에는 모델 이름을 싣지 않는다 */
+function TierFixed() {
+  return (
+    <p className="hza-muted mb-2 text-[13px]">
+      <span className="font-semibold">답변 모드 {TIER_TEXT[ASSISTANT_ANSWER_TIER].name}</span> ·
+      비서 대화는 이 모드로 고정이에요
+    </p>
+  );
+}

@@ -7,6 +7,7 @@ import { scanInput } from "@/lib/pii";
 import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import data from "./examples.json";
+import { findArchiveItem } from "@/lib/assistants/archive-data";
 
 export const FREE_PROMPT_VERSION = "free-2026-10-22";
 
@@ -89,7 +90,13 @@ const normalize = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim()
 /** 질문이 예시 질문과 같으면(공백·전각 차이 무시) 그 예시. 아니면 null */
 export function findExample(maskedText: string): DemoExample | null {
   const q = normalize(maskedText);
-  return EXAMPLES.find((e) => normalize(e.question) === q) ?? null;
+  const found = EXAMPLES.find((e) => normalize(e.question) === q);
+  if (found) return found;
+  // 전문 에이전트 아카이브(DEC-057)의 질문도 저장된 검증 결과를 재생한다 — "체험하기"는 비용·횟수 없이 같은 답을 본다
+  const item = findArchiveItem(maskedText);
+  return item
+    ? { id: `archive-${item.id}`, tags: [], question: item.question, result: item.result }
+    : null;
 }
 
 /** 재생 결과 — 저장된 분석에 무료 모드 표시와 안내만 바꿔 붙인다 */

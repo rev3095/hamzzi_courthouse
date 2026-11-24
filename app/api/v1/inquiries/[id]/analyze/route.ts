@@ -35,8 +35,8 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
-  // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-036)·DeepSearch(DEC-038). 검증 실패는 소유자 확인 전에 400
-  const { category, tier, deep } = parseAnalyzeRequest(await req.text());
+  // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-036)·DeepSearch(DEC-038)·분야별 비서(DEC-057). 검증 실패는 소유자 확인 전에 400
+  const { category, tier, deep, assistant } = parseAnalyzeRequest(await req.text());
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
@@ -61,6 +61,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
       category,
       tier,
       deep,
+      assistant,
     });
     return ok({ status: "analyzed", ...out }, scope.requestId);
   }
@@ -73,6 +74,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
         category,
         tier,
         deep,
+        assistant,
       });
       send("result", { status: "analyzed", ...out });
     },

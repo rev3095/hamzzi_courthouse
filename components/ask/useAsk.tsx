@@ -54,15 +54,26 @@ export function askErrorText(err: ClientError): string {
   return `${err.message}${err.requestId ? ` (오류 번호 ${err.requestId})` : ""}`;
 }
 
-export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey | null } = {}) {
+export function useAsk(
+  opts: {
+    parentInquiryId?: string;
+    category?: CategoryKey | null;
+    /**
+     * 질문이 준비되면(저장·가린 문장 확인 뒤) 결과 화면으로 가는 대신 부른다 — 분야별 비서 대화(DEC-057)가
+     * 같은 화면에서 이어서 분석할 때 쓴다. maskedText는 서버가 돌려준 마스킹본
+     */
+    onReady?: (id: string, maskedText: string) => void;
+  } = {},
+) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending>({ kind: "none" });
 
-  const go = (id: string) => {
+  const go = (id: string, maskedText: string) => {
     notifyQuotaChanged();
-    router.push(`/inquiries/${id}`);
+    if (opts.onReady) opts.onReady(id, maskedText);
+    else router.push(`/inquiries/${id}`);
   };
 
   /** onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015) */
@@ -116,10 +127,10 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       });
       return;
     }
-    go(r.data.id);
+    go(r.data.id, r.data.maskedText);
   }
 
-  async function acceptMasked(id: string) {
+  async function acceptMasked(id: string, maskedText: string) {
     setBusy(true);
     const r = await confirmPii(id);
     setBusy(false);
@@ -128,7 +139,8 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
       setError(askErrorText(r.error));
       return;
     }
-    go(id);
+    setPending({ kind: "none" });
+    go(id, maskedText);
   }
 
   const close = () => setPending({ kind: "none" });
@@ -167,7 +179,10 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
           {pending.maskedText}
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          <PrimaryButton disabled={busy} onClick={() => void acceptMasked(pending.id)}>
+          <PrimaryButton
+            disabled={busy}
+            onClick={() => void acceptMasked(pending.id, pending.maskedText)}
+          >
             이대로 분석하기
           </PrimaryButton>
           <SecondaryButton onClick={close}>내용 고치기</SecondaryButton>

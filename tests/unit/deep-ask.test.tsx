@@ -79,11 +79,17 @@ describe("DEC-038 보내기 전 점검 (규칙, 비용 0)", () => {
 
 describe("DEC-038 분석 요청", () => {
   test("deep은 참·거짓만 받는다. 없으면 false", () => {
-    expect(parseAnalyzeRequest("")).toEqual({ category: null, tier: null, deep: false });
+    expect(parseAnalyzeRequest("")).toEqual({
+      category: null,
+      tier: null,
+      deep: false,
+      assistant: null,
+    });
     expect(parseAnalyzeRequest(JSON.stringify({ deep: true, tier: "max" }))).toEqual({
       category: null,
       tier: "max",
       deep: true,
+      assistant: null,
     });
     expect(() => parseAnalyzeRequest(JSON.stringify({ deep: "yes" }))).toThrow();
     expect(() => parseAnalyzeRequest(JSON.stringify({ tier: "opus" }))).toThrow();

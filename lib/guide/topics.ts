@@ -48,6 +48,7 @@ const L = GUIDE_LIMITS;
 export const guideEmail = developerEmail;
 
 export const MENU_IDS = [
+  "assistants",
   "rules",
   "features",
   "terms",
@@ -71,6 +72,8 @@ export type GuideTopic = {
   next?: string[];
   /** 개발자 연락처 — 누르면 이메일 표시 */
   contact?: true;
+  /** 분야별 비서 고르기 버튼 (DEC-057) — 누르면 이 창이 그 비서와의 대화로 바뀐다 */
+  assistants?: true;
   /** 근거 문서·절. 문안을 바꿀 때 이 문서와 맞춘다 */
   source: string;
 };
@@ -145,6 +148,18 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   },
 
   // ── ② 기능 안내 (DEC-036·038·039·041·042) ─────────────────
+  // ── 분야별 비서 (DEC-057) ─────────────────────────────────
+  // 이 항목까지는 정해진 안내다. 비서를 고르면 같은 창이 비서 대화로 바뀌고, 그때부터만 자유 입력·AI 답변이 켜진다
+  assistants: {
+    label: "전문 에이전트와 대화하기",
+    source: "DEC-057 · F-018",
+    lines: [
+      "집 계약, 온라인 명예훼손·성적 괴롭힘, 중고거래 사기를 맡는 전문 에이전트가 있어요. 아래에서 고르면 이 창에서 바로 대화할 수 있어요.",
+      "전문 에이전트와의 대화는 AI가 법제처 법령·판례를 먼저 찾아 상담하듯 정리하는 답변이에요. 분석이 끝난 질문마다 질문 한 번으로 세고(예시 질문 제외), 이름·연락처처럼 보이는 부분은 가려서 저장해요.",
+    ],
+    assistants: true,
+    links: [{ href: "/assistants", label: "비서 페이지에서 크게 보기" }],
+  },
   features: {
     label: "기능 안내",
     source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053",
