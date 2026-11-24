@@ -11,7 +11,7 @@ import { DOC_STAGE_LABEL, SIDE_LABEL, type ArchiveSide } from "@/lib/assistants/
 import type { CheckedPoint, DemoAnalysisResult } from "@/lib/citations/policy";
 import { call } from "@/lib/client/api";
 import { sourceRef } from "@/components/result/labels";
-import { DeepMapView } from "@/components/result/DeepMapView";
+import { CaseBoard } from "@/components/result/CaseBoard";
 
 type Filter = "all" | ArchiveSide;
 const FILTERS: { key: Filter; label: string }[] = [
@@ -172,9 +172,9 @@ function ArchiveCard({ item, onTry }: { item: ArchiveItem; onTry: (q: string) =>
           )}
 
           {r.deep && (
-            <Block title="사건 구조 시각자료">
+            <Block title="사건 정리 · 7개 탭">
               <div className="text-ink rounded-[12px] bg-white p-2 sm:p-3">
-                <DeepMapView result={r} />
+                <CaseBoard result={r} />
               </div>
             </Block>
           )}

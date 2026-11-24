@@ -3,7 +3,7 @@
 // 홈 질문창과 같은 질문창·같은 흐름(useCaseFileAsk)이고, 여기서는 사진이 있어야 보낼 수 있다.
 // 승패·가능성은 보여 주지 않는다. 결과는 일반 질문과 같은 결과 화면(/inquiries/[id])에서 본다.
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
 import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
@@ -28,7 +28,8 @@ const STEPS = [
   },
 ];
 
-export function CaseFileAsk() {
+/** examples: 예제 프리셋 목록(서버에서 그려 넘긴다) */
+export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
   const [text, setText] = useState("");
   const [hint, setHint] = useState<string | null>(null);
   const quota = useQuota();
@@ -87,6 +88,8 @@ export function CaseFileAsk() {
             : `서류 분석도 질문 1번으로 세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요.`}
         </p>
       )}
+
+      {examples}
 
       <section className="rounded-card border-line bg-soft mt-8 border px-5 py-4">
         <h2 className="text-ink text-[15px] font-semibold">알아 두세요</h2>

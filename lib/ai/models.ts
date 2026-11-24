@@ -7,9 +7,9 @@ type Env = Record<string, string | undefined>;
 /**
  * 단계별 설정. 모든 단계는 "무료 법제처 검색 + 답변 1회"로 같고(lib/ai/lite.ts), 답변 모델만 다르다.
  * - thinking: 생각 토큰도 출력 요금이다. Haiku는 disabled, Sonnet 5.5는 disabled가 400이라 between_tools.
- *   Opus 5.5는 생각을 끌 수 없다(disabled·budget_tokens 모두 400) — adaptive + effort medium(사용자 지정, 2026-11-19).
+ *   Opus 5.5는 생각을 끌 수 없다(disabled·budget_tokens 모두 400) — adaptive + effort xhigh(사용자 지정, 2026-11-25. 이전 medium·high).
  *   max_tokens가 생각 + 답변을 함께 묶으므로 상한은 지켜진다.
- * - effort: Light·Pro는 low, Pro Max는 medium.
+ * - effort: Light·Pro는 low, Pro Max는 xhigh (2026-11-25).
  * - capUsd: 질문 1건 Claude 비용 상한(질문 해석 Haiku 포함). 입력 약 9,000토큰 + answerTokens.max 출력 정가 기준
  *   (Haiku $0.0009+$0.0006 · Sonnet $0.018+$0.012 · Opus $0.036+$0.10).
  *   Light는 $0.0015 → **$0.002** (2026-11-19 사용자 결정): 질문 해석 입력이 약 4,900토큰으로 커져(DEC-033 갱신),
@@ -54,18 +54,20 @@ export const TIERS = {
     label: "Pro Max",
     model: "claude-opus-5-5",
     thinking: { type: "adaptive" },
-    // 2026-11-25 사용자 결정: effort medium → high. 생각이 길어져 출력 한도·시간·상한을 함께 늘린다
-    // (출력 12,000토큰 $0.24 + 입력 약 3만 토큰 $0.12 → 상한 $0.5, DeepSearch는 2배 $1.0)
-    effort: "high",
-    capUsd: 0.5,
-    answerTokens: { max: 12_000, min: 3_000 },
-    timeoutMs: 170_000,
-    weight: 334,
+    // 2026-11-25 사용자 결정: effort medium → high → **xhigh**(같은 날, Opus 5.5 최고 effort 요청). 생각이 길어져 출력 한도·시간·상한을 함께 늘린다.
+    // 실측(서류 분석 예시 DeepSearch 5건, xhigh): 출력 약 25,000~30,000토큰(질문 구조화 Haiku 포함), 판독 포함 215~262초.
+    // 일반: 출력 20,000토큰 $0.40 + 입력 약 3만 토큰 $0.12 → 상한 $0.6. DeepSearch: 출력 32,000토큰 $0.64 + 입력 약 2만 토큰 → 상한 $1.2(일반의 2배, DEC-041).
+    // 시간: 분석 라우트 300초 안에 구조화·검색 몫을 남기고 답변 호출은 일반 240초·DeepSearch 270초.
+    effort: "xhigh",
+    capUsd: 0.6,
+    answerTokens: { max: 20_000, min: 3_000 },
+    timeoutMs: 240_000,
+    weight: 400,
     deep: {
-      capUsd: 1.0,
-      answerTokens: { max: 16_000, min: 4_000 },
-      timeoutMs: 200_000,
-      weight: 667,
+      capUsd: 1.2,
+      answerTokens: { max: 32_000, min: 4_000 },
+      timeoutMs: 270_000,
+      weight: 800,
     },
   },
 } as const;
@@ -87,6 +89,29 @@ export function tierOf(id: TierId | null | undefined): TierProfile {
   const key = id ?? DEFAULT_TIER;
   return { id: key, ...TIERS[key] };
 }
+
+/**
+ * 긴 질문 = 자동 DeepSearch (DEC-062, 사용자 결정 2026-11-25). 가린 질문이 이 글자 수를 넘으면 DeepSearch 버튼을 누르지
+ * 않았어도 DeepSearch로 분석하고 7개 탭(개요·자료·사실관계·구조도·쟁점·리서치·노트)으로 보인다. 이하면 일반 답변 그대로.
+ */
+export const LONG_QUESTION_CHARS = 100;
+
+export const isLongQuestion = (maskedText: string): boolean =>
+  [...maskedText.trim()].length > LONG_QUESTION_CHARS;
+
+/**
+ * 긴 질문의 답변 설정 (DEC-062): 고른 단계와 상관없이 Opus 5.5 effort xhigh.
+ * xhigh는 생각이 길어 출력 한도를 24,000토큰으로 둔다 — 출력 24,000 × $20/M = $0.48 + 입력 약 4만 토큰 $0.16 + 구조화(Haiku)
+ * → 상한 $1.5. 분석 라우트 300초 안에 검증·저장까지 끝나게 답변 시간은 220초까지. 가중치 = 상한 ÷ 단위 올림.
+ */
+export const LONG_DEEP = {
+  tier: "max",
+  effort: "xhigh",
+  capUsd: 1.5,
+  answerTokens: { max: 24_000, min: 6_000 },
+  timeoutMs: 220_000,
+  weight: 1000,
+} as const;
 
 /**
  * 유료 분석 금액 상한 (DEC-026, 2026-11-18 사용자 결정): **주간 금액 하나만** (AI_WEEKLY_BUDGET_USD). 하루 상한은 두지 않는다.

@@ -23,7 +23,9 @@ import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
-import { DeepMapView } from "./DeepMapView";
+import { parseDeepMap } from "@/lib/ai/deep-policy";
+import { CaseBoard } from "./CaseBoard";
+import { QuickSheet } from "./QuickSheet";
 import { MaterialsView, materialsOfPoint } from "./MaterialsView";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 import { ProcedureTimeline } from "./ProcedureTimeline";
@@ -72,6 +74,7 @@ export function ResultPanel({
   const usedArticles = result.articles.filter((a) => a.used).length;
   const usedCases = result.cases.filter((c) => c.used).length;
   const plan = procedurePlan(result, question, category);
+  const board = parseDeepMap(result.deep) !== null;
 
   return (
     <article className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
@@ -109,9 +112,15 @@ export function ResultPanel({
 
       {parties}
 
-      {result.materials && <MaterialsView result={result} />}
-
-      {result.deep && <DeepMapView result={result} />}
+      {/* 100자를 넘는 질문(자동 DeepSearch)은 7개 탭 사건 정리, 그 밖은 한 장 요약 그림 (DEC-062). 첨부 자료는 정리의 자료 탭에 있다 */}
+      {board ? (
+        <CaseBoard result={result} inquiryId={inquiryId} />
+      ) : (
+        <>
+          {result.materials && <MaterialsView result={result} />}
+          <QuickSheet result={result} />
+        </>
+      )}
 
       {hasTimeline(plan) ? (
         <>

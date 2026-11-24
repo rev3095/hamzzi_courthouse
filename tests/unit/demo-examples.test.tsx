@@ -19,6 +19,9 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 afterEach(cleanup);
+// DEC-062: 답변 문단이 없던 쟁점은 출처 model 문단(DEC-055)으로 채웠다. 법제처 근거 문단만 실존·구절 검사를 받는다
+const lawPoints = <P extends { check: string }>(r: { answer: { points: P[] } }): P[] =>
+  r.answer.points.filter((p) => p.check !== "model");
 
 const norm = (s: string) => s.replace(/\s+/g, "");
 
@@ -26,8 +29,8 @@ describe.each(demoExamples().map((e) => [e.id, e] as const))("예시 %s", (_id, 
   const result = replayResult(findExample(ex.question)!);
 
   test("F-005 모든 답변 문단의 출처가 그 결과의 근거 목록에 있고, 법제처 재조회에서 실존이 확인됐다", () => {
-    expect(result.answer.points.length).toBeGreaterThan(0);
-    for (const p of result.answer.points) {
+    expect(lawPoints(result).length).toBeGreaterThan(0);
+    for (const p of lawPoints(result)) {
       const ref = sourceRef(p.source, result);
       expect(ref.url, p.source).toMatch(/^https:\/\/www\.law\.go\.kr\//);
       const citation = ref.label.replace(/^\S+ (?=\d{2,4}[가-힣])/, ""); // 판례는 "법원 사건번호" → 사건번호 (옛 사건번호는 연도가 두 자리)
@@ -37,7 +40,14 @@ describe.each(demoExamples().map((e) => [e.id, e] as const))("예시 %s", (_id, 
   });
 
   test("F-005 검증 통과 문단만 재생하고, 인용 행은 60자 이내 구절만 남긴다 (DEC-007)", () => {
-    expect(result.answer.points.every((p) => p.check === "verified")).toBe(true);
+    expect(lawPoints(result).every((p) => p.check === "verified")).toBe(true);
+    // model 문단은 출처 model·구절 없음이고, 사건 구조의 쟁점에 이어져 있다 (DEC-062 빈 쟁점 채우기)
+    result.answer.points.forEach((p, i) => {
+      if (p.check !== "model") return;
+      expect(p.source).toBe("model");
+      expect(p.quote).toBe("");
+      expect(result.deep?.issues.some((x) => x.points.includes(i))).toBe(true);
+    });
     for (const row of replayCitations(result)) {
       expect(row.status).toBe("verified");
       if (row.quote) expect(row.quote.length).toBeLessThanOrEqual(60);
@@ -71,8 +81,8 @@ describe.each(SIDES)("예시 쪽 %s", (_label, ex, side) => {
 
   test("F-005 그 쪽 요약 질문을 넣으면 그 쪽 답변을 재생하고, 문단은 모두 검증 통과·실존 확인", () => {
     expect(result.answer.points).toEqual(side.result.answer.points);
-    expect(result.answer.points.length).toBeGreaterThanOrEqual(2);
-    for (const p of result.answer.points) {
+    expect(lawPoints(result).length).toBeGreaterThanOrEqual(2);
+    for (const p of lawPoints(result)) {
       expect(p.check).toBe("verified");
       const ref = sourceRef(p.source, result);
       const citation = ref.label.replace(/^\S+ (?=\d{2,4}[가-힣])/, "");

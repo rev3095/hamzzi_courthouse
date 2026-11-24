@@ -144,23 +144,26 @@ export function replayResult(example: DemoExample): DemoAnalysisResult {
   return { ...example.result, mode: "replay", aiNotice: AI_NOTICE, searchScopeNote: REPLAY_NOTE };
 }
 
-/** 재생 결과의 인용 행 (result_citations). 판례 본문은 없고 60자 이내 구절만 (DEC-007) */
+/** 재생 결과의 인용 행 (result_citations). 법제처 근거 문단만. 판례 본문은 없고 60자 이내 구절만 (DEC-007) */
 export function replayCitations(result: DemoAnalysisResult): CitationRow[] {
-  return result.answer.points.map((p) => {
-    const isCase = p.source.startsWith("case:");
-    const claimedRef = isCase
-      ? p.source.slice("case:".length)
-      : p.source.replace(/^law:/, "").replace(/:/g, " ");
-    const verified = p.check === "verified";
-    return {
-      kind: isCase ? "case" : "statute",
-      claimedRef,
-      status: verified ? "verified" : "unverified",
-      source: "law_open_api_live",
-      sourceRef: p.source,
-      quote: verified && p.quote.length <= 60 ? p.quote : null,
-    };
-  });
+  // 출처 model 문단(DEC-055·062)은 실시간 분석과 같이 인용 행을 남기지 않는다 (lib/citations/policy)
+  return result.answer.points
+    .filter((p) => p.check !== "model")
+    .map((p) => {
+      const isCase = p.source.startsWith("case:");
+      const claimedRef = isCase
+        ? p.source.slice("case:".length)
+        : p.source.replace(/^law:/, "").replace(/:/g, " ");
+      const verified = p.check === "verified";
+      return {
+        kind: isCase ? "case" : "statute",
+        claimedRef,
+        status: verified ? "verified" : "unverified",
+        source: "law_open_api_live",
+        sourceRef: p.source,
+        quote: verified && p.quote.length <= 60 ? p.quote : null,
+      };
+    });
 }
 
 /**

@@ -13,11 +13,12 @@
 
 ## 파일
 
-| 파일             | 책임                                                                                                  |
-| ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `limits.ts`      | 브라우저·서버가 함께 쓰는 한도, 역할·자리·종류 값, `composeCaseText`. 다른 모듈을 끌어오지 않는다     |
-| `policy.ts`      | 순수 규칙: `parseReadRequest`(동의·장수·크기·종류), `READING_SCHEMA`, `screenReading`·`screenParties` |
-| `policy.test.ts` | 위 규칙의 단위 테스트                                                                                 |
+| 파일             | 책임                                                                                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `limits.ts`      | 브라우저·서버가 함께 쓰는 한도, 역할·자리·종류 값, `composeCaseText`. 다른 모듈을 끌어오지 않는다                                                         |
+| `policy.ts`      | 순수 규칙: `parseReadRequest`(동의·장수·크기·종류), `READING_SCHEMA`, `screenReading`·`screenParties`                                                     |
+| `policy.test.ts` | 위 규칙의 단위 테스트                                                                                                                                     |
+| `examples.ts`    | 예제 프리셋 (2026-11-25): `examples.json`(직접 쓴 가상 서류를 실제 흐름으로 미리 분석한 결과, 검증 통과 문단만) 읽기·재생. 화면 `/casefile/examples/[id]` |
 
 ## 지키는 것
 
@@ -34,3 +35,10 @@
 - 실제 사진의 판독 품질 (유료 호출이라 사용자 확인 뒤 1회만 — 절대 규칙 8).
 - 판독 1건 상한 금액 (무과금 토큰 세기로 사진 토큰을 잰 뒤 사용자가 정한다).
 - 앱(`mobile/`)에는 넣지 않았다.
+
+## 예제 프리셋 (2026-11-25)
+
+- 서류 그림: `evals/casefile-examples/docs/*.txt`(직접 쓴 가상 문서) → `scripts/render_casefile_examples.py`(무료) → `public/casefile-examples/*.png`. 2건은 실제 서면의 양식·쓰는 방식만 따랐고 사실관계·당사자·금액은 새로 썼다. 원본 자료(`evals/raw-data`)는 저장소에 올리지 않는다.
+- 만들기: `scripts/gen-casefile-examples.mjs`(**유료**, 사용자 허락 뒤) — 실제 서류 분석과 같은 길(판독 → `composeCaseText` → 질문 → DeepSearch Pro Max). 결과 `evals/casefile-examples/out/`.
+- 반영: `node scripts/merge-casefile-examples.mjs`(무료) — 검증 통과 문단만, 사건 구조의 쟁점 순번을 다시 잇는다 → `examples.json`.
+- 화면: `/casefile`의 '예제로 먼저 보기'(`components/casefile/CaseFileExampleList`) → `/casefile/examples/[id]`(서류 그림·읽은 내용·당사자 관계도 + `ResultPanel`의 사건 구조도). 모델·DB 호출과 질문 횟수 차감이 없다.
