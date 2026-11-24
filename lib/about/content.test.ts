@@ -1,6 +1,6 @@
 // 소개 메뉴 고정 문안 검사 (DEC-051). 절대 규칙 2(단정·판정 표현)·3(숫자)과 끊긴 링크를 막는다.
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
@@ -64,6 +64,9 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
 
   // 싣지 않기로 한 이름은 공개 저장소에 쓰지 않으려고 글자 수와 SHA-256 해시로만 둔다
   const HIDDEN_NAMES: [number, string][] = [
+    [3, "ccf4bec8e6f5067292c10aa66901bcbabf5645ee1ea919ccaacb1fad4c0e5db1"],
+    [6, "9b85ff07474b75a1fc6295f9922e46f359cf967aa37099f7ff8140e5ed98f450"],
+    [4, "1fdee2fb1c80424f53b58a0de239ff529c4dbbdd626079ce9673e3bba3a09760"],
     [5, "a89cec968fd8620b8bc5315a2ce84536b7155840885c60a4782917dfed6b1f2b"],
     [3, "c9f20e4be7fef1aec9e1b7dd910fdbfe90e68a0691ebf9832d76f42127abe7ce"],
     [3, "026809c140a9503fc4e76193ecd65e4350b4c44e796cd925dde044495d32f728"],
@@ -71,7 +74,7 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
   ];
   const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
-  // 협업 변호사·법무법인 이름은 DEC-055(2026-11-25)로 싣는다 — 목록에서 뺐다
+  // 자문 변호사·법무법인 이름도 싣지 않는다 (사용자 결정 2026-11-25) — 해시로만 둔다
   test("싣지 않기로 한 이름(경쟁 서비스·시범 지역)이 없다 (사용자 결정 2026-11-24)", () => {
     for (const s of ALL) {
       const chars = [...s];
@@ -80,6 +83,31 @@ describe("소개 메뉴 문안 (DEC-051)", () => {
           expect(sha(chars.slice(i, i + len).join("")), s).not.toBe(hash);
         }
       }
+    }
+  });
+
+  test("자문 변호사·법무법인 정보가 사이트·앱·AI 지시문 어디에도 없다 (사용자 결정 2026-11-25)", () => {
+    // 앞 세 항목(변호사·법무법인·회사 이름)만 본다. 화면·AI 지시문·안내 챗봇 소스 전체를 훑는다
+    const ADVISOR = HIDDEN_NAMES.slice(0, 3);
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      if (!existsSync(dir)) return;
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (/\.(tsx?|json|md)$/.test(e.name)) files.push(p);
+      }
+    };
+    ["app", "components", "lib", "mobile/src"].forEach(walk);
+    expect(files.length).toBeGreaterThan(50);
+    for (const f of files) {
+      const chars = [...readFileSync(f, "utf8")];
+      for (const [len, hash] of ADVISOR)
+        for (let i = 0; i + len <= chars.length; i++) {
+          // 해시는 비싸서 한글 글자로 시작할 때만 잰다
+          if (chars[i] < "가" || chars[i] > "힣") continue;
+          if (sha(chars.slice(i, i + len).join("")) === hash) expect.fail(`${f}: 자문 변호사 정보`);
+        }
     }
   });
 
