@@ -2,9 +2,11 @@
 // 검색 화면 /search (F-003, DEC-029 제안). 하루 질문 횟수와 별개 (DEC-017 제안). 관련도 점수는 보이지 않는다 (PRD 8.3).
 // 종류 탭: 판례 · 법령해석례 · 헌재 결정례 · 조세심판 재결례 · 관세청 해석 · 자치법규 · 행정규칙.
 // "민법 750조"·사건번호처럼 대상이 분명한 입력은 목록 대신 그 조문·판례로 바로 간다.
-// 검색 패널(출처·자주 찾는 검색어·검색 요령)과 결과 카드(건수·칩·19px 제목·자리표시)는 F-003 가독성 개편(e08a9e2) 구성을 따른다.
+// 검색 패널은 판례 아카이브(DEC-054)에서 간결하게 줄였다: 제목·검색/리서치 전환 → 종류 탭 → 검색창 → 출처 한 줄,
+// 자주 찾는 검색어는 처음 화면에만, 검색 요령은 접어 둔다. 결과 카드(건수·칩·19px 제목)는 F-003 가독성 개편(e08a9e2) 구성.
+// 결과 카드에서 리서치와 같은 보관함(hz:pins)에 바로 담는다 (DEC-054).
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   searchAdminRules,
   searchCases,
@@ -12,12 +14,12 @@ import {
   searchOrdinances,
   type ApiResult,
   type ClientError,
-  type DecisionDomain,
 } from "@/lib/client/api";
 import { DECISION_TABS, directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
 import { QuestionBox } from "../ask/QuestionBox";
+import { ArchiveSwitch } from "./ArchiveSwitch";
 import { KindTabs } from "./KindTabs";
 import {
   Highlighted,
@@ -25,11 +27,12 @@ import {
   RecentList,
   SearchCredit,
   SearchNotice,
+  recallSearch,
   rememberSearch,
   searchErrorText,
 } from "./parts";
-
-type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
+import { usePins } from "./recent";
+import { canPin, isKind, isPinned, togglePin, type Kind, type Row } from "./rows";
 
 const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "cases", label: "판례", placeholder: "예: 임대차 보증금 반환, 민법 750조, 2023다12345" },
@@ -57,7 +60,6 @@ export const QUICK_QUERIES = [
 const TIPS = [
   "사건의 핵심 낱말 두세 개로 찾아보세요. 예: 임대차 보증금 반환",
   "‘민법 750조’처럼 법령 이름(약칭도 돼요)과 조문 번호, 또는 사건번호를 적으면 바로 열어요.",
-  "이름·전화번호 같은 개인정보는 검색어에 넣지 말아 주세요.",
 ];
 
 type Item = {
@@ -71,6 +73,8 @@ type Item = {
   agencySite?: { label: string; url: string } | null;
   /** 자치법규만: 나란히 비교에 쓰는 번호 */
   compareId?: string;
+  /** 보관함에 담을 때 쓰는 자료 행 (리서치와 같은 모양, DEC-054) */
+  row: Row;
 };
 type Result = { items: Item[]; notice: string; searchScopeNote: string };
 
@@ -91,6 +95,16 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           title: c.caseName || c.caseNo,
           tags: tags(c.court, c.decidedAt && `선고 ${dotDate(c.decidedAt)}`, c.caseNo),
           sourceUrl: c.sourceUrl,
+          row: {
+            kind: "cases",
+            id: c.id,
+            href: `/cases/${c.id}`,
+            title: c.caseName || c.caseNo,
+            org: c.court,
+            date: c.decidedAt,
+            refNo: c.caseNo,
+            sourceUrl: c.sourceUrl,
+          },
         })),
       },
     };
@@ -109,6 +123,16 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           tags: tags(o.region, o.kind, o.effectiveFrom && `시행 ${dotDate(o.effectiveFrom)}`),
           sourceUrl: o.sourceUrl,
           compareId: o.id,
+          row: {
+            kind: "ordinances",
+            id: o.id,
+            href: `/ordinances/${o.id}`,
+            title: o.name,
+            org: o.region,
+            date: o.effectiveFrom,
+            refNo: o.kind,
+            sourceUrl: o.sourceUrl,
+          },
         })),
       },
     };
@@ -126,6 +150,16 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
           title: a.name,
           tags: tags(a.agency, a.kind, a.effectiveFrom && `시행 ${dotDate(a.effectiveFrom)}`),
           sourceUrl: a.sourceUrl,
+          row: {
+            kind: "admin_rules",
+            id: a.id,
+            href: null,
+            title: a.name,
+            org: a.agency,
+            date: a.effectiveFrom,
+            refNo: a.kind,
+            sourceUrl: a.sourceUrl,
+          },
         })),
       },
     };
@@ -144,6 +178,16 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
         tags: tags(d.agency, d.decidedAt && `${d.dateLabel} ${dotDate(d.decidedAt)}`, d.refNo),
         sourceUrl: d.sourceUrl,
         agencySite: d.agencySite ?? null,
+        row: {
+          kind,
+          id: d.id,
+          href: d.hasDetail ? `/decisions/${d.domain}/${d.id}` : null,
+          title: d.title,
+          org: d.agency,
+          date: d.decidedAt,
+          refNo: d.refNo,
+          sourceUrl: d.sourceUrl,
+        },
       })),
     },
   };
@@ -213,6 +257,28 @@ export function SearchView() {
     setState({ kind: "done", q, data: r.data });
   };
 
+  // 리서치 화면의 전환(?from=research, DEC-054)에서 오면 이 기기에 건네 둔 검색어로 바로 찾는다.
+  // 라우트 훅 대신 첫 렌더 뒤 주소를 한 번 읽는다 (cacheComponents)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") !== "research") return;
+    const q = recallSearch();
+    if (!q) return;
+    const kind = params.get("kind");
+    const k: Kind = isKind(kind) ? kind : "cases";
+    // 새로고침 때 다시 찾지 않게 전환 표시를 주소에서 지운다
+    window.history.replaceState(window.history.state, "", "/search");
+    queueMicrotask(() => {
+      setText(q);
+      setTab(k);
+      void submit(k, q);
+    });
+    // 처음 한 번만
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pins = usePins();
+
   // 검색 결과에서 검색어 낱말을 하이라이트한다 (F-003)
   const terms = state.kind === "done" ? highlightTerms(state.q) : [];
 
@@ -226,15 +292,12 @@ export function SearchView() {
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
-      <section className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
-        <p className="bg-soft text-muted w-fit rounded-[6px] px-2.5 py-1 text-xs font-semibold">
-          출처 · 법제처 국가법령정보센터
-        </p>
-        <h1 className="font-display text-ink mt-3 text-[28px] font-bold">판례·법령 검색</h1>
-        <p className="text-muted mt-2 text-[15px] leading-relaxed">
-          판례·해석례·재결례·자치법규를 법제처에서 바로 찾아요. 검색은 질문 횟수와 따로 세요.
-        </p>
-        <div className="mt-5">
+      <section className="rounded-panel border-line border bg-white px-[18px] py-[20px] lg:px-8 lg:py-7">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-ink text-[26px] font-bold">판례·법령 검색</h1>
+          <ArchiveSwitch current="search" searched={state.kind === "done"} kind={tab} />
+        </div>
+        <div className="mt-4">
           {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
           <KindTabs
             kinds={KINDS}
@@ -257,31 +320,27 @@ export function SearchView() {
             placeholder={spec.placeholder}
           />
         </div>
-        {tab === "cases" && (
+        <p className="text-muted mt-2 text-[12px]">
+          출처 · 법제처 국가법령정보센터 · 검색은 질문 횟수와 따로 세요 · 이름·전화번호 같은
+          개인정보는 검색어에 넣지 말아 주세요
+        </p>
+        {tab === "cases" && state.kind === "idle" && (
           <div className="mt-4">
             <p className="text-muted mb-2 text-[13px] font-semibold">자주 찾는 검색어</p>
             <QuickButtons onPick={quick} />
           </div>
         )}
-        <ul className="text-muted mt-4 grid gap-1 text-[13px] leading-relaxed">
-          {TIPS.map((t) => (
-            <li key={t}>· {t}</li>
-          ))}
-        </ul>
+        <details className="text-muted mt-3 text-[13px]">
+          <summary className="text-ink inline-flex min-h-9 cursor-pointer items-center font-semibold">
+            검색 요령
+          </summary>
+          <ul className="mt-1 grid gap-1 leading-relaxed">
+            {TIPS.map((t) => (
+              <li key={t}>· {t}</li>
+            ))}
+          </ul>
+        </details>
       </section>
-
-      <Link
-        href="/research"
-        className="border-honey-line bg-honey hover:border-gold rounded-card mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border px-5 py-4"
-      >
-        <span>
-          <span className="text-ink block text-[15px] font-bold">판례 리서치 화면으로 보기</span>
-          <span className="text-muted block text-[13px]">
-            목록 옆에서 요지를 바로 읽고, 법원·기간으로 거르고, 보관함에 모아 인용 표기를 복사해요.
-          </span>
-        </span>
-        <span className="text-link text-sm font-semibold">열기 →</span>
-      </Link>
 
       {state.kind === "idle" && <RecentList />}
       {state.kind === "error" && (
@@ -403,6 +462,20 @@ export function SearchView() {
                         />
                         비교에 담기
                       </label>
+                    )}
+                    {canPin(c.row) && (
+                      <button
+                        type="button"
+                        aria-pressed={isPinned(pins, c.row)}
+                        onClick={() => togglePin(pins, c.row)}
+                        className={`rounded-button inline-flex min-h-11 items-center border px-3 text-sm font-semibold ${
+                          isPinned(pins, c.row)
+                            ? "border-gold bg-honey text-ink"
+                            : "border-line text-ink bg-white"
+                        }`}
+                      >
+                        {isPinned(pins, c.row) ? "보관함에서 빼기" : "보관함에 담기"}
+                      </button>
                     )}
                   </div>
                 </li>
