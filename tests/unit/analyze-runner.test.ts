@@ -1,6 +1,7 @@
 // @vitest-environment node
 // 분석 실행 순서 (P5): 분석 → 검증 → 비로그인 횟수 차감 → 저장. 실패하면 failed 표시 (DEC-010, F-005).
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { TIERS } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
 
 vi.mock("server-only", () => ({}));
@@ -220,6 +221,49 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
     );
     expect(cite.verifyDraft).toHaveBeenCalled();
     expect(store.finishAnalysis).toHaveBeenCalled();
+  });
+
+  test("F-018 DEC-057 비서 질문은 고른 단계와 상관없이 Pro Max(Opus)로 답하고 대화 한마디 지시문을 넘긴다", async () => {
+    lite.runLiteAnalysis.mockResolvedValue({
+      ...LITE_OUT,
+      talk: { reply: "많이 놀라셨겠어요.", asks: [] },
+    });
+    cite.verifyDraft.mockResolvedValue({
+      result: { ...RESULT },
+      citations: [],
+      stats: { total: 1, removed: 0, quoteMismatch: 0 },
+    });
+    const out = await analyzeInquiry(INQ, ANON, new Headers(), undefined, {
+      tier: "light",
+      assistant: "market",
+    });
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight);
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      { maskedText: "마스킹본", context: expect.anything() },
+      expect.objectContaining({
+        tier: "max",
+        assistant: expect.objectContaining({
+          promptTag: "assistant-market-v3",
+          talkSystem: expect.stringContaining("중고천국"),
+        }),
+      }),
+    );
+    expect(out.result).toMatchObject({
+      assistant: "market",
+      assistantTalk: { reply: "많이 놀라셨겠어요.", asks: [] },
+    });
+  });
+
+  test("F-018 DEC-057 에이전트 질문은 deep을 보내도 DeepSearch가 아니라 일반 답변 경로(지시문·대화 한마디)로 간다", async () => {
+    lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { assistant: "home", deep: true });
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        assistant: expect.objectContaining({ promptTag: "assistant-home-v3" }),
+      }),
+    );
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight);
   });
 
   test("DEC-037 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {

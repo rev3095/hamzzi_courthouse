@@ -3,6 +3,8 @@
 // 근거 모음(EvidenceSet)은 이 함수 안에서만 쓰고 저장하지 않는다 (DEC-007).
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
+import { ASSISTANTS, ASSISTANT_ANSWER_TIER, type AssistantId } from "@/lib/assistants/agents";
+import { assistantLiteOptions } from "@/lib/assistants/run-config";
 import { settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import { runDeepAnalysis } from "@/lib/ai/deep";
 import { buildDeepMap } from "@/lib/ai/deep-policy";
@@ -32,11 +34,21 @@ export async function analyzeInquiry(
   owner: Owner,
   headers: Headers,
   onStep?: (e: StepEvent) => void,
-  opts: { category?: CategoryKey | null; tier?: TierId | null; deep?: boolean } = {},
+  opts: {
+    category?: CategoryKey | null;
+    tier?: TierId | null;
+    deep?: boolean;
+    /** 분야별 비서 (DEC-057). 지시문·고정 근거만 바꾸고 횟수·상한·검증은 일반 질문과 같다 */
+    assistant?: AssistantId | null;
+  } = {},
 ): Promise<{ resultId: string; result: DemoAnalysisResult }> {
   // 홈 카테고리(DEC-028)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
-  const caseHint = opts.category ? CATEGORIES[opts.category].caseQuery : null;
-  const lawHints = opts.category ? CATEGORIES[opts.category].lawHints : undefined;
+  // 분야별 비서(DEC-057)는 카테고리가 없을 때 비서의 고정 검색어·조문을 같은 자리에 쓴다
+  const assistant = opts.assistant ? ASSISTANTS[opts.assistant] : null;
+  const caseHint = opts.category
+    ? CATEGORIES[opts.category].caseQuery
+    : (assistant?.caseHint ?? null);
+  const lawHints = opts.category ? CATEGORIES[opts.category].lawHints : assistant?.lawHints;
   const started = Date.now();
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
@@ -45,9 +57,11 @@ export async function analyzeInquiry(
     // 비로그인 하루 횟수 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7).
     // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
     // 주간 예산은 단계 가중치만큼 차감한다 (DEC-036: Light 2 · Pro 20 · Pro Max 100단위)
-    const tier = tierOf(opts.tier);
+    // 분야별 비서는 고른 단계와 상관없이 법률 답변을 Pro Max(지금 Opus 5.5 effort high)로 쓴다 (DEC-057, 사용자 결정 2026-11-25)
+    const tier = tierOf(assistant ? ASSISTANT_ANSWER_TIER : opts.tier);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
-    const deep = opts.deep === true;
+    // 전문 에이전트 질문은 DeepSearch를 쓰지 않는다 — 지시문·대화 한마디가 일반 답변 경로에만 있다 (DEC-057)
+    const deep = opts.deep === true && !assistant;
     // 긴 질문(2,000자 넘게)은 입력 몫만큼 상한과 예산 가중치를 늘린다 (2026-11-25 질문 한도 10,000자)
     const allowance = longInputAllowanceUsd(tier.model, inquiry.masked_text.length);
     const capUsd = (deep ? tier.deep.capUsd : tier.capUsd) + allowance;
@@ -64,6 +78,7 @@ export async function analyzeInquiry(
         });
         if (hint) free.result.procedureHint = hint;
       }
+      if (assistant) free.result.assistant = assistant.id;
       const resultId = await finishAnalysis(
         {
           inquiryId: inquiry.id,
@@ -95,7 +110,17 @@ export async function analyzeInquiry(
       deepRun ??
       (await runLiteAnalysis(
         { maskedText: inquiry.masked_text, context },
-        { onStep, caseHint, lawHints, tier: tier.id, costCapUsd: capUsd },
+        {
+          onStep,
+          caseHint,
+          lawHints,
+          tier: tier.id,
+          costCapUsd: capUsd,
+          // 비서 지시문 + 대화 한마디(Haiku) + 질문 낱말에 맞는 사례 판례 (lib/assistants/run-config, 실호출 테스트와 같은 설정)
+          ...(assistant && {
+            assistant: assistantLiteOptions(assistant.id, inquiry.masked_text).assistant,
+          }),
+        },
       ));
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
     await settleAiQuota(weight, analysis.costUsd);
@@ -120,6 +145,11 @@ export async function analyzeInquiry(
       allowAi: !proposal,
     });
     if (hint) verified.result.procedureHint = hint;
+    if (assistant) {
+      verified.result.assistant = assistant.id;
+      // 대화 한마디(Haiku)는 근거가 없는 말이라 거르기를 통과한 것만 붙인다 (lib/assistants/talk)
+      if ("talk" in analysis && analysis.talk) verified.result.assistantTalk = analysis.talk;
+    }
 
     // 질문 1회는 분석이 성공했을 때 센다 (DEC-010). 차감·저장·상태 변경은 한 트랜잭션 —
     // 상한에 걸리거나 저장이 실패하면 결과도 차감도 남지 않는다

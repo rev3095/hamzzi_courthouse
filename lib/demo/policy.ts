@@ -7,6 +7,7 @@ import { scanInput } from "@/lib/pii";
 import { CATEGORY_LIST, type CategoryKey } from "@/lib/procedure/categories";
 import type { ArticleHit, CaseDetail, CaseHit } from "@/lib/search/types";
 import data from "./examples.json";
+import { findArchiveItem } from "@/lib/assistants/archive-data";
 
 export const FREE_PROMPT_VERSION = "free-2026-10-22";
 
@@ -116,11 +117,15 @@ export function findExample(maskedText: string): DemoExample | null {
   const q = normalize(maskedText);
   for (const e of EXAMPLES) {
     if (normalize(e.question) === q) return e;
-    // 다른 쪽의 요약 질문이면 그 쪽 답변을 재생한다
+    // 다른 쪽의 요약 질문이면 그 쪽 답변을 재생한다 (DEC-059)
     const side = e.sides?.find((s) => normalize(s.question) === q);
     if (side) return { ...e, question: side.question, result: side.result };
   }
-  return null;
+  // 전문 에이전트 아카이브(DEC-057)의 질문도 저장된 검증 결과를 재생한다 — "체험하기"는 비용·횟수 없이 같은 답을 본다
+  const item = findArchiveItem(maskedText);
+  return item
+    ? { id: `archive-${item.id}`, tags: [], question: item.question, result: item.result }
+    : null;
 }
 
 /** 재생 결과 — 저장된 분석에 무료 모드 표시와 안내만 바꿔 붙인다 */

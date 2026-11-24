@@ -46,3 +46,86 @@ export function openParam(search: string): string | null {
   const id = new URLSearchParams(search).get("open");
   return id && UUID.test(id) ? id : null;
 }
+
+// --- 마이페이지 데스크톱형 배치 (DEC-056 ③, 2026-11-25): 거르기 · 페이지 · 날짜 묶음 ------------------------
+
+/** 본문 목록 한 페이지의 세션 수 (사용자 선택 2026-11-25) */
+export const SESSION_PAGE_SIZE = 10;
+/** 사이드바 목록이 처음 보이는 수와 '더보기' 한 번에 더 보이는 수 */
+export const SIDEBAR_STEP = 8;
+/** 페이지 번호를 한 번에 보이는 수 (1·2·3·4·5) */
+export const PAGE_WINDOW = 5;
+
+export type SessionKindFilter = "all" | SessionItem["kind"];
+
+/** 목록에 보이는 글: 질문은 가린 문장, 사건은 사건 이름 */
+export const sessionText = (item: SessionItem) =>
+  item.kind === "question" ? item.question.maskedText : item.matter.title;
+
+const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** 종류와 찾는 말로 거른다. 찾는 말은 띄어쓰기·대소문자를 가리지 않는다 (이 화면 안에서만, 서버로 보내지 않는다) */
+export function filterSessions(
+  items: SessionItem[],
+  opts: { kind?: SessionKindFilter; query?: string } = {},
+): SessionItem[] {
+  const kind = opts.kind ?? "all";
+  const q = norm(opts.query ?? "");
+  return items.filter(
+    (item) => (kind === "all" || item.kind === kind) && (!q || norm(sessionText(item)).includes(q)),
+  );
+}
+
+/** 한 페이지 자르기. 페이지 번호는 1부터, 범위 밖이면 가까운 끝으로 맞춘다 */
+export function paginate<T>(items: T[], page: number, size = SESSION_PAGE_SIZE) {
+  const pages = Math.max(1, Math.ceil(items.length / size));
+  const current = Math.min(Math.max(1, Math.floor(page) || 1), pages);
+  const start = (current - 1) * size;
+  return {
+    items: items.slice(start, start + size),
+    page: current,
+    pages,
+    /** 이 페이지의 첫·마지막 순번 (1부터, 없으면 0) */
+    from: items.length === 0 ? 0 : start + 1,
+    to: Math.min(start + size, items.length),
+  };
+}
+
+/** 보일 페이지 번호들: 지금 페이지를 가운데쯤 두고 최대 PAGE_WINDOW개 */
+export function pageWindow(page: number, pages: number, width = PAGE_WINDOW): number[] {
+  const count = Math.min(width, pages);
+  const first = Math.min(Math.max(1, page - Math.floor(width / 2)), pages - count + 1);
+  return Array.from({ length: count }, (_, i) => first + i);
+}
+
+export const DAY_GROUPS = ["오늘", "어제", "지난 7일", "지난 30일", "이전"] as const;
+export type DayGroup = (typeof DAY_GROUPS)[number];
+
+const KST_MS = 9 * 60 * 60 * 1000;
+const kstDayIndex = (t: number) => Math.floor((t + KST_MS) / 86_400_000);
+
+/** 한국 시간 날짜로 몇 날 전인지에 따라 묶음 이름 */
+export function dayGroupOf(iso: string, now: number = Date.now()): DayGroup {
+  const t = time(iso);
+  const diff = kstDayIndex(now) - kstDayIndex(t);
+  if (diff <= 0) return "오늘";
+  if (diff === 1) return "어제";
+  if (diff < 7) return "지난 7일";
+  if (diff < 30) return "지난 30일";
+  return "이전";
+}
+
+/** 최근 순 목록을 날짜 묶음으로 (순서 유지, 빈 묶음은 뺀다) */
+export function groupByDay(
+  items: SessionItem[],
+  now: number = Date.now(),
+): { label: DayGroup; items: SessionItem[] }[] {
+  const out: { label: DayGroup; items: SessionItem[] }[] = [];
+  for (const item of items) {
+    const label = dayGroupOf(item.at, now);
+    const last = out[out.length - 1];
+    if (last && last.label === label) last.items.push(item);
+    else out.push({ label, items: [item] });
+  }
+  return out;
+}

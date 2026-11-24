@@ -42,7 +42,11 @@ export async function resolveOwner(
 ): Promise<Owner | null> {
   const actor = await getActor(scope);
   if (actor) {
-    const owner: Owner = { kind: "user", userId: actor.userId, anonSessionId: await getAnonSessionId() };
+    const owner: Owner = {
+      kind: "user",
+      userId: actor.userId,
+      anonSessionId: await getAnonSessionId(),
+    };
     return (await isAdminRequest()) ? { ...owner, admin: true } : owner;
   }
   const anonSessionId = opts.create ? await ensureAnonSession() : await getAnonSessionId();
@@ -407,7 +411,10 @@ export type SavedInquiry = {
   followup: boolean;
 };
 
-/** 내 질문 기록 (DEC-039): 로그인 사용자가 남기기로 한 질문, 최근 것부터 50건. 마스킹본만 돌려준다 */
+/** 내 세션에 싣는 남긴 질문 수 (최근 것부터). 화면이 한 페이지 10개씩 나눠 보인다 (DEC-056 ③, 이전 50) */
+export const SAVED_LIST_LIMIT = 200;
+
+/** 내 질문 기록 (DEC-039): 로그인 사용자가 남기기로 한 질문, 최근 것부터 SAVED_LIST_LIMIT건. 마스킹본만 돌려준다 */
 export async function listSavedInquiries(userId: string): Promise<SavedInquiry[]> {
   const { data, error } = await createServiceClient()
     .from("inquiries")
@@ -415,7 +422,7 @@ export async function listSavedInquiries(userId: string): Promise<SavedInquiry[]
     .eq("user_id", userId)
     .eq("saved", true)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(SAVED_LIST_LIMIT);
   if (error) throw new Error("inquiries 조회 실패");
   return (
     data as {
