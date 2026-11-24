@@ -16,7 +16,7 @@ import {
 } from "@/lib/client/matters";
 import { openParam } from "@/lib/client/sessions";
 import type { MatterData, MatterParty, MatterSummary } from "@/lib/matters/model";
-import { GoogleLoginButton } from "../LimitNotice";
+import { PresetWorkspace } from "./PresetWorkspace";
 import { useQuota } from "../useQuota";
 import { ResearchTab, type ResearchSeed } from "./ResearchTab";
 import { StructureMap } from "./StructureMap";
@@ -58,16 +58,8 @@ export function MattersView() {
         ) : signedIn ? (
           <Workspace />
         ) : (
-          <div className="mx-auto max-w-[440px] rounded-[8px] border border-[var(--line)] bg-white p-6">
-            <h2 className="text-ink text-[17px] font-bold">로그인하고 쓰는 기능이에요</h2>
-            <p className="text-muted mt-2 text-[14px] leading-relaxed">
-              사건 자료를 계정에 저장해 다음에 이어서 정리할 수 있게 하려고 로그인이 필요해요. 사건
-              자료는 본인만 볼 수 있어요.
-            </p>
-            <div className="mt-4">
-              <GoogleLoginButton next="/matters" />
-            </div>
-          </div>
+          // 로그인 전에는 가상 사건 프리셋으로 기능을 둘러본다 (DEC-061). 내 사건 저장은 로그인 뒤
+          <PresetWorkspace />
         )}
       </div>
     </div>
