@@ -1,4 +1,4 @@
-// 판례 아카이브 (DEC-053, F-003): 헤더 선택창, 검색 ↔ 리서치 전환(검색어는 주소에 싣지 않음), 같은 보관함.
+// 판례 아카이브 (DEC-054, F-003): 헤더 선택창, 검색 ↔ 리서치 전환(검색어는 주소에 싣지 않음), 같은 보관함.
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -48,7 +48,7 @@ afterEach(() => {
   window.history.replaceState(null, "", "/");
 });
 
-describe("헤더 판례 아카이브 (DEC-053)", () => {
+describe("헤더 판례 아카이브 (DEC-054)", () => {
   test("누르면 검색·리서치 중 하나를 고른다", () => {
     render(<ArchiveMenu />);
     fireEvent.click(screen.getByRole("button", { name: /판례 아카이브/ }));
@@ -61,7 +61,7 @@ describe("헤더 판례 아카이브 (DEC-053)", () => {
   });
 });
 
-describe("검색 ↔ 리서치 전환 (DEC-053)", () => {
+describe("검색 ↔ 리서치 전환 (DEC-054)", () => {
   test("F-007 전환 주소에는 자료 종류만 있고 검색어는 없다", () => {
     expect(archiveHref("research", "search", true, "cases")).toBe(
       "/research?from=search&kind=cases",

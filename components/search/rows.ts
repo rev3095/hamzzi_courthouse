@@ -1,4 +1,4 @@
-// 판례 아카이브 공통 (DEC-053): 검색(/search)과 리서치(/research)가 같은 자료 행·인용 표기·보관함 키를 쓴다.
+// 판례 아카이브 공통 (DEC-054): 검색(/search)과 리서치(/research)가 같은 자료 행·인용 표기·보관함 키를 쓴다.
 // 법제처가 준 값을 이어 붙이기만 한다 — 관련도 점수·유불리 판단을 만들지 않는다 (PRD 8.3, 절대 규칙 2).
 import type { DecisionDomain } from "@/lib/client/api";
 import { DECISION_TABS } from "@/lib/search/explore";

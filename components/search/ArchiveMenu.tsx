@@ -1,5 +1,5 @@
 "use client";
-// 헤더 '판례 아카이브' 버튼 (DEC-053, Figma에 없는 메뉴): 누르면 검색(/search) · 리서치(/research) 중 하나를 고른다.
+// 헤더 '판례 아카이브' 버튼 (DEC-054, Figma에 없는 메뉴): 누르면 검색(/search) · 리서치(/research) 중 하나를 고른다.
 import { HeaderPopover } from "../HeaderPopover";
 
 export const ARCHIVE_ITEMS = [
