@@ -21,7 +21,13 @@ import { Modal, PrimaryButton, SecondaryButton } from "../Modal";
 
 type Pending =
   | { kind: "none" }
-  | { kind: "consent"; text: string; deep: boolean; categories: string[] }
+  | {
+      kind: "consent";
+      text: string;
+      deep: boolean;
+      categories: string[];
+      onCreated?: (id: string) => void;
+    }
   | { kind: "pii"; id: string; findings: PiiFinding[]; maskedText: string }
   | { kind: "login" };
 
@@ -59,7 +65,13 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
     router.push(`/inquiries/${id}`);
   };
 
-  async function send(text: string, sensitiveConsent = false, deep = false) {
+  /** onCreated: 질문이 저장된 직후(결과 화면으로 가기 전) 불린다 — 서류 분석이 당사자 목록을 이 탭에 남길 때 쓴다 (F-015) */
+  async function send(
+    text: string,
+    sensitiveConsent = false,
+    deep = false,
+    onCreated?: (id: string) => void,
+  ) {
     setError(null);
     if (!text.trim()) {
       setError("내용을 적어 주세요.");
@@ -77,7 +89,13 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
     if (!r.ok) {
       if (r.error.code === "CONSENT_REQUIRED") {
         const cats = r.error.details?.categories;
-        setPending({ kind: "consent", text, deep, categories: Array.isArray(cats) ? cats : [] });
+        setPending({
+          kind: "consent",
+          text,
+          deep,
+          categories: Array.isArray(cats) ? cats : [],
+          onCreated,
+        });
       } else if (r.error.code === "LOGIN_REQUIRED" || isUserDailyLimit(r.error)) {
         notifyQuotaChanged();
         setPending({ kind: "login" });
@@ -88,6 +106,7 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
     }
     rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
     if (deep) rememberDeep(r.data.id);
+    onCreated?.(r.data.id);
     if (r.data.piiConfirmationRequired) {
       setPending({
         kind: "pii",
@@ -122,9 +141,9 @@ export function useAsk(opts: { parentInquiryId?: string; category?: CategoryKey 
         categories={pending.categories}
         busy={busy}
         onAccept={() => {
-          const { text, deep } = pending;
+          const { text, deep, onCreated } = pending;
           close();
-          void send(text, true, deep);
+          void send(text, true, deep, onCreated);
         }}
         onClose={close}
       />

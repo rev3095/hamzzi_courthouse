@@ -25,7 +25,13 @@ export default defineConfig({
     // 아니면 빈 값으로 덮어 Claude 실호출 테스트·평가가 건너뛰어지게 한다 (2026-10-22 사용자 지시: 별도 과금 금지)
     env: {
       ...readKey("OPEN_LAW_API_KEY"),
-      ...(process.env.ALLOW_PAID_API === "1" ? readKey("ANTHROPIC_API_KEY") : { ANTHROPIC_API_KEY: "" }),
+      // 법인·사업자 공개 정보 조회(F-015, DEC-052) — 무료 공식 API. 키가 없으면 그 테스트는 건너뛴다
+      ...readKey("NAVER_CLIENT_ID"),
+      ...readKey("NAVER_CLIENT_SECRET"),
+      ...readKey("DATA_GO_KR_SERVICE_KEY"),
+      ...(process.env.ALLOW_PAID_API === "1"
+        ? readKey("ANTHROPIC_API_KEY")
+        : { ANTHROPIC_API_KEY: "" }),
     },
     testTimeout: 90_000,
   },

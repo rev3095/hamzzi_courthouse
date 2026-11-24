@@ -1,6 +1,7 @@
 "use client";
 // 공통 헤더 (Figma 05 "헤더"): 로고·서비스명·BETA, 판례 검색(F-003, Figma에 없는 메뉴), 오늘 남은 질문 n/한도(DEC-024·031·033) 또는 관리자 · 무제한.
 // 커뮤니티(DEC-047, Figma에 없는 메뉴): 게시판으로 가는 말풍선 버튼.
+// 서류 분석(F-015·DEC-052, Figma에 없는 메뉴): 서류 사진을 올려 분석하는 화면으로 가는 버튼.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
 // 맨 오른쪽 프로필 아이콘 → 마이페이지(/me): Google 로그인·화면 설정 (DEC-032·033). 로그인하면 아이콘에 점 표시.
 // 범위 밖 메뉴(변호사 찾기·혼자 소송하기)와 다크 모드는 데모에서 숨긴다 (docs/07 결정 2).
@@ -46,6 +47,26 @@ export function SiteHeader() {
               />
             </svg>
             <span className="max-sm:sr-only">판례 검색</span>
+          </Link>
+          <Link
+            href="/casefile"
+            className="text-ink border-line hover:border-gold flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border bg-white px-3 text-sm font-bold"
+          >
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+              <path
+                d="M6 2.5h7l4 4v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8.5 11h5M8.5 14.5h5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="max-md:sr-only">서류 분석</span>
           </Link>
           <Link
             href="/community"

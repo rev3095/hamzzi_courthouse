@@ -4,6 +4,7 @@
 // 카테고리는 이 기기에만 질문과 함께 남겨 결과 화면 분류·무료 판례 검색을 돕는다 (lib/procedure/categories).
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
+// 질문창에 서류 사진을 붙이면 "물어보기"가 서류 분석 창(F-015, DEC-052)을 연다 — 동의 → 읽기 → 확인 뒤 질문 1번으로 분석한다.
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
@@ -13,6 +14,7 @@ import { DeepAsk } from "../ask/DeepAsk";
 import { limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
+import { useCaseFileAsk } from "../casefile/useCaseFileAsk";
 import { useQuota } from "../useQuota";
 import { HomeGuide, type GuideExample } from "./HomeGuide";
 
@@ -43,7 +45,13 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
   const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, " ").trim();
   const isExample = (q: string) => examples.some((e) => norm(e.question) === norm(q));
 
-  const submit = (q: string) => (blocked && !isExample(q) ? showLimit() : void send(q));
+  const caseFile = useCaseFileAsk({ send, busy, error, blocked, showLimit });
+  const submit = (q: string) => {
+    // 서류 사진이 붙어 있으면 서류 분석 창으로 간다 (글은 비워도 된다)
+    if (caseFile.start(q)) return;
+    if (blocked && !isExample(q)) showLimit();
+    else void send(q);
+  };
   const focusBox = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -105,9 +113,14 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
           onChange={setText}
           onSubmit={() => submit(text)}
           busy={busy}
-          placeholder={current?.placeholder}
+          placeholder={
+            caseFile.attach.items.length > 0
+              ? "서류에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
+              : current?.placeholder
+          }
           inputRef={inputRef}
           askTools
+          attach={caseFile.attach}
           onDeep={() => (blocked ? showLimit() : setDeepOpen(true))}
         />
         {deepOpen && (
@@ -121,6 +134,7 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
             }}
           />
         )}
+        {caseFile.flow}
         {error ? (
           <p role="alert" className="text-warn-text mt-3 text-center text-sm">
             {error}
@@ -132,6 +146,11 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
               : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 가이드의 예시 답변은 횟수에 들어가지 않아요.`}
           </p>
         )}
+        <p className="mt-1 text-center text-[13px]">
+          <Link href="/casefile" className="text-link underline-offset-2 hover:underline">
+            내용증명·소장 같은 서류 사진으로 분석하기 →
+          </Link>
+        </p>
       </div>
       <div className="mt-6 flex w-full justify-center">
         <HomeGuide

@@ -1,6 +1,7 @@
 import { maskPii, type PiiFinding } from "./detect";
 import { detectSensitive, type SensitiveCategory } from "./sensitive";
 
+export { maskContacts, nameAfterRelation } from "./detect";
 export type { PiiFinding, PiiType } from "./detect";
 export type { SensitiveCategory } from "./sensitive";
 

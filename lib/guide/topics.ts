@@ -34,6 +34,8 @@ export const GUIDE_LIMITS = {
   seedPost: 10,
   /** 커뮤니티 댓글 하나에 쌓이는 씨앗 (DEC-047, SEEDS.comment) */
   seedComment: 5,
+  /** 서류 분석에 붙일 수 있는 사진 수 (DEC-052, CASEFILE_LIMITS.maxImages) */
+  casefileImages: 5,
 } as const;
 
 const L = GUIDE_LIMITS;
@@ -142,13 +144,14 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   // ── ② 기능 안내 (DEC-036·038·039·041·042) ─────────────────
   features: {
     label: "기능 안내",
-    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042",
+    source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052",
     lines: [
       "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 질문 기록이 있어요.",
     ],
     next: [
       "features-tiers",
       "features-deep",
+      "features-casefile",
       "features-examples",
       "features-procedure",
       "features-history",
@@ -176,6 +179,18 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     ],
     links: [{ href: "/examples/deep-lease-01", label: "DeepSearch 예시 보기" }],
     next: ["features-tiers", "rules"],
+  },
+  "features-casefile": {
+    label: "서류 사진으로도 물어볼 수 있어요?",
+    source: "DEC-052 · PRD F-015 · lib/casefile/limits.ts",
+    lines: [
+      `질문창 왼쪽의 사진 버튼으로 내용증명·소장·계약서 같은 서류 사진을 ${L.casefileImages}장까지 붙일 수 있어요. 사진을 끌어다 놓거나 붙여넣어도 돼요.`,
+      "사진은 동의를 받은 뒤에만 AI에게 보내 글자를 읽고, 서버에 저장하지 않아요. 읽은 내용은 개인정보를 가린 사건 개요로 보여 드리고, 직접 고친 뒤에 분석을 시작해요.",
+      "당사자는 서류에 적힌 역할로만 나눠 보여 드려요. 누가 옳은지, 사건이 어떻게 될지는 판단하지 않아요. 개인은 이름을 보여 주지 않고 찾아보지도 않아요.",
+      "서류 분석도 질문 한 번으로 세요. AI 답변이 꺼져 있거나 비용 상한에 닿은 동안에는 사진을 읽지 못해서, 서류 내용을 글로 적어 물어봐 주세요.",
+    ],
+    links: [{ href: "/casefile", label: "서류 분석" }],
+    next: ["features-deep", "rules"],
   },
   "features-examples": {
     label: "예시 답변은 어디서 봐요?",

@@ -26,6 +26,10 @@ export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds:
 export const EXAMPLE_RATE: RateRule = { bucket: "example", limit: 30, windowSeconds: 3600 };
 /** 문서 초안 도우미(DEC-023): 같은 네트워크 1시간 10회 (유료 호출이라 따로 센다) */
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
+/** 서류 판독(F-015, DEC-052): 같은 네트워크 1시간 10회 (유료 호출이고 질문 횟수는 분석 때 세므로 따로 막는다) */
+export const CASEFILE_RATE: RateRule = { bucket: "casefile", limit: 10, windowSeconds: 3600 };
+/** 법인·사업자 공개 정보 조회(F-015): 같은 네트워크 1시간 30회 (외부 공식 API 호출) */
+export const BUSINESS_RATE: RateRule = { bucket: "business", limit: 30, windowSeconds: 3600 };
 
 /**
  * 유료(Claude) 분석 전체 상한 (DEC-026·036). 주간 금액 하나만 둔다(기본 $80, DEC-031 임시 — 하루 상한 없음).

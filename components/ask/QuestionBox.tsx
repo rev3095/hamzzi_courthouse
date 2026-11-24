@@ -3,7 +3,10 @@
 // D+의 모드 전환 버튼(AI 질문 / 판례 검색)은 데모 범위 밖이라 뺐다.
 // AI 질문창(askTools)에는 입력란 아래에 답변 모드 선택(TierSlider, DEC-036)과 DeepSearch 버튼(DEC-038)을 둔다 — Figma에 없는 추가 요소.
 // 판례 검색창(/search)은 모델을 쓰지 않으므로 보이지 않는다.
-import { useId, type Ref } from "react";
+// attach를 넘기면 서류 사진 붙이기(F-015, DEC-052)가 켜진다: 왼쪽 버튼 · 끌어다 놓기 · 붙여넣기 → 입력란 아래 사진 줄. Figma에 없는 추가 요소.
+import { useId, useState, type Ref } from "react";
+import { AttachButton, AttachTray } from "./AttachTray";
+import { imageFilesOf, type Attachments } from "./useAttachments";
 import { SaveToggle } from "./SaveToggle";
 import { TierSlider } from "./TierSlider";
 
@@ -20,6 +23,7 @@ export function QuestionBox({
   inputRef,
   askTools = false,
   onDeep,
+  attach,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -34,17 +38,38 @@ export function QuestionBox({
   askTools?: boolean;
   /** DeepSearch 창 열기. 있으면 답변 모드 옆에 버튼을 보인다 */
   onDeep?: () => void;
+  /** 서류 사진 붙이기 (F-015). 있으면 붙이기 버튼과 사진 줄을 보인다 */
+  attach?: Attachments;
 }) {
   const id = useId();
+  const [dragging, setDragging] = useState(false);
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         if (!busy) onSubmit();
       }}
-      className="rounded-card w-full bg-white p-[5px] shadow-[0_0_0_1px_var(--line),0_8px_24px_rgba(26,34,51,0.08)]"
+      {...(attach && {
+        onDragOver: (e: React.DragEvent) => {
+          if (![...e.dataTransfer.types].includes("Files")) return;
+          e.preventDefault();
+          setDragging(true);
+        },
+        onDragLeave: () => setDragging(false),
+        onDrop: (e: React.DragEvent) => {
+          setDragging(false);
+          const files = imageFilesOf(e.dataTransfer);
+          if (files.length === 0) return;
+          e.preventDefault();
+          void attach.add(files);
+        },
+      })}
+      className={`rounded-card w-full bg-white p-[5px] shadow-[0_0_0_1px_var(--line),0_8px_24px_rgba(26,34,51,0.08)] ${
+        dragging ? "outline-gold outline-2 outline-dashed" : ""
+      }`}
     >
       <div className="rounded-button flex items-stretch overflow-hidden">
+        {attach && <AttachButton attach={attach} disabled={busy} />}
         <label htmlFor={id} className="sr-only">
           {label}
         </label>
@@ -59,10 +84,17 @@ export function QuestionBox({
               if (!busy) onSubmit();
             }
           }}
+          onPaste={(e) => {
+            if (!attach) return;
+            const files = imageFilesOf(e.clipboardData);
+            if (files.length === 0) return;
+            e.preventDefault();
+            void attach.add(files);
+          }}
           maxLength={MAX_QUESTION_CHARS}
           rows={size === "lg" ? 2 : 1}
           placeholder={placeholder}
-          className={`text-ink placeholder:text-muted/70 min-h-16 flex-1 resize-none bg-white px-4 py-[18px] leading-snug outline-none ${
+          className={`text-ink placeholder:text-muted/70 min-h-16 flex-1 resize-none bg-white ${attach ? "pr-4 pl-1" : "px-4"} py-[18px] leading-snug outline-none ${
             size === "lg" ? "text-[17px] lg:text-lg" : "text-base"
           }`}
         />
@@ -82,6 +114,7 @@ export function QuestionBox({
           <span className="sr-only lg:not-sr-only lg:text-[15px] lg:font-semibold">물어보기</span>
         </button>
       </div>
+      {attach && <AttachTray attach={attach} />}
       {askTools && <SaveToggle />}
       {askTools && (
         <div className="border-line mx-1 mt-1 flex flex-wrap items-center justify-between gap-x-3 border-t">

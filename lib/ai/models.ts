@@ -97,6 +97,8 @@ export const DEFAULT_WEEKLY_BUDGET_USD = 80;
 export const BUDGET_UNIT_USD = 0.0015;
 /** 문서 초안(DEC-023)·절차 분류(DEC-037) 1건. 둘 다 Haiku $0.0015 이하 */
 export const HELPER_WEIGHT = 1;
+/** 서류 판독(F-015, DEC-052) 1건. Haiku 비전 상한 $0.005 ÷ 단위 $0.0015 올림 (단위 테스트가 확인) */
+export const CASEFILE_WEIGHT = 4;
 
 /** 주간 예산을 단위로 바꾼 값. 0이면 유료 분석 없음, 잘못된 값은 기본값 */
 export function weeklyBudgetUnits(env: Env = process.env): number {

@@ -8,13 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 제품 요구사항
 - PRD: `docs/PRD.md` — 구현 전에 해당 **F-ID 절만** 읽는다. 전체를 읽지 않는다.
-- 현재 단계: **Phase 1** (F-001~F-007, F-013) + F-014 절차 안내 데모판(DEC-021) + 문서 작성 `[게이트]`(DEC-022). 그 밖의 Phase 2 기능은 지시가 있을 때만 작업한다. 진행 상황은 `git log`와 PRD 0절을 본다.
+- 현재 단계: **Phase 1** (F-001~F-007, F-013) + F-014 절차 안내 데모판(DEC-021) + 문서 작성 `[게이트]`(DEC-022) + F-015 서류 분석(DEC-052). 그 밖의 Phase 2 기능은 지시가 있을 때만 작업한다. 진행 상황은 `git log`와 PRD 0절을 본다.
 - 지금은 **데모**를 먼저 만든다 (DEC-009~013): 판례·법령은 korean-law-mcp 실시간 조회, 결과 형식은 참고 프로토타입과 같게, 비로그인 하루 횟수 제한(절대 규칙 7).
 - 절대 규칙 (PRD 3·8·10장 요약):
   1. 검증 근거에 없는 판례·조문·사건번호는 출력하지 않는다. 렌더링 전에 대조한다 (F-005). 데모의 검증 근거는 그 요청에서 법제처로부터 가져온 자료이고, 인용 구절 원문 일치와 `verify_citations` 재조회를 통과해야 한다 (DEC-009).
   2. 승소·처벌·해결 가능성을 확정 표현하지 않는다. "반드시", "무조건", "100%" 금지 (N1). **승률·성공 확률·유불리를 판단하는 기능·숫자·문구·게이지는 만들지 않는다** — 자리표시로도 넣지 않는다(사용자 재확인 2026-11-15). 허용: 단계별 "혼자 가능 / 전문가 권장" 라벨(DEC-002)과 "근거 판례 n건 · 관련 조문 n개" 같은 사실 표시.
   3. 기간·비용 숫자는 계산 함수나 공식 기준 결과만 쓴다. LLM이 숫자를 만들지 않는다. 조문·판례 원문 구절 안에 있는 숫자는 인용으로 쓸 수 있다.
-  4. 개인정보는 프롬프트·로그·에러 메시지에 남기지 않는다 (F-007). 입력 원문은 DB에 저장하지 않고 마스킹본만 저장한다 (DEC-006).
+  4. 개인정보는 프롬프트·로그·에러 메시지에 남기지 않는다 (F-007). 입력 원문은 DB에 저장하지 않고 마스킹본만 저장한다 (DEC-006). **예외 하나**(DEC-052, 사용자 결정 2026-11-24): 서류 사진(F-015)은 미리 가릴 수 없어, 사진 전송·민감정보 동의를 모두 받은 요청에서만 판독 호출 1회에 그대로 보낸다 — 사진·판독 원문은 저장·로그하지 않고 가린 사건 개요만 내보낸다. 개인의 이름은 내보내지 않고, 개인을 찾는 검색은 만들지 않는다.
   5. `[게이트]` 기능(F-010~F-012), 모든 과금, 법률문서 생성은 F-013 승인 전 비활성 상태로만 구현한다.
   6. 모든 AI 결과에 "AI 생성 · 법률 자문 아님"을 표시한다. 문구는 직접 쓰지 말고 `AI_NOTICE`(lib/api/respond.ts)를 쓴다.
   7. 비로그인은 **하루**(한국 시간 0시~24시, 0시 초기화) 해석이 필요한 실제 질문 **5회**(이어 묻기 포함, DEC-031 공모전 임시값 — 이전 3회, `ANON_QUESTION_LIMIT`)만 허용하고, 그 이후 요청은 서버에서 `LOGIN_REQUIRED`로 막는다 (DEC-005, DEC-010, DEC-024). 예외: **예시 질문**은 저장된 분석 재생(토큰 0)이라 횟수 검사·차감이 없다(DEC-027, 대신 같은 네트워크 1시간 30회), 관리자 모드(`/admin`, `ADMIN_PASSCODE`)는 횟수 제한이 없다. 관리자도 비용 상한은 그대로 받는다. 로그인은 **Google로만** 하고, 로그인 사용자는 하루 **10회**(`USER_QUESTION_LIMIT`, DEC-035).
@@ -83,10 +83,11 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - `AI_PERIOD_BUDGET_USD`(기본 **$95**, DEC-040 — 2026-11-20 잠깐 $80이었다가 사용자 확인으로 되돌림) **2026-11-25 24시(한국 시간)까지**는 위 주간 상한 대신 이 기간 예산 하나로 센다(lib/ai/models.ts `PERIOD_BUDGET`·`periodBudget`). 상한이 아니라 **실제로 쓴 금액**만 차감한다: `tryAiQuota`가 호출 전에 단계 상한을 먼저 잡고(`reserve_ai_budget`) `settleAiQuota`가 답변 뒤 차액을 돌려준다(`settle_ai_budget`, 마이그레이션 `20261118210000`). $95에 닿으면 기간 끝까지 무료 모드. 기간이 끝나면 주간 규칙으로 돌아간다. Claude를 부르는 새 경로를 만들면 `tryAiQuota` 뒤에 `settleAiQuota(가중치, 실제 비용)`을 꼭 부른다
 - `ADMIN_PASSCODE` 관리자 모드 비밀번호(DEC-024). `ADMIN_PASSWORD`라는 이름도 받는다(둘 다 있으면 `ADMIN_PASSCODE`). 둘 다 없으면 관리자 모드가 꺼진다. 저장소가 공개라 코드·문서에 값을 쓰지 않는다
 - `NEXT_PUBLIC_GOOGLE_LOGIN` `1`이면 Google 로그인 버튼을 켠다(DEC-035). 빌드 때 들어가므로 바꾸면 다시 배포. Supabase에 Google 공급자·돌아올 주소를 먼저 설정한다 — `?next=`가 붙으므로 허용 주소는 `https://<도메인>/auth/callback**`처럼 와일드카드로. 꺼져 있으면 `/auth/callback`도 세션을 만들지 않는다
+- `NAVER_CLIENT_ID`·`NAVER_CLIENT_SECRET`(네이버 개발자센터, 지역 검색 API) · `DATA_GO_KR_SERVICE_KEY`(공공데이터포털 금융위원회_기업기본정보) F-015 법인·사업자 공개 정보 조회(DEC-052). 없으면 그 출처는 꺼지고 바로 가기 링크만 보인다
 - `ANON_IP_SALT` 비로그인 IP 해시용. 없으면 개발에서는 IP 상한이 꺼지고, production에서는 분석 마무리(`finishAnalysis`)·IP 사전 검사가 오류를 낸다
 
 ## 폴더
-`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·search·documents·studio·guide·me·community) · `lib/{api,auth,inquiries,gate,pii,ai,demo,community,search,citations,calc,procedure,documents,mascot,guide,reader,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `mobile/` 앱(Capacitor android·ios, 오프라인 판독 `lib/reader`) · `twa/` 처음 방식(TWA, 올리지 않음) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
+`app/` 화면·`app/api/v1/` API · `components/` 화면 컴포넌트(home·result·ask·casefile·search·documents·studio·guide·me·community) · `lib/{api,auth,inquiries,gate,pii,ai,demo,community,casefile,business,search,citations,calc,procedure,documents,mascot,guide,reader,client,supabase}` 모듈(README가 있는 모듈은 README에 책임. `auth`·`inquiries`·`client`는 README 없음 — 아래 코드 구조 참고) · `mobile/` 앱(Capacitor android·ios, 오프라인 판독 `lib/reader`) · `twa/` 처음 방식(TWA, 올리지 않음) · `collector/` Python 수집기 · `supabase/` DB · `tests/{unit,e2e,live,fixtures}` (live = 실호출, fixtures = 녹화한 외부 응답) · `evals/` AI 평가셋
 
 ## 코드 구조 (여러 파일에 걸친 규칙)
 - 라우트는 `withRoute`(lib/api/route.ts)로 감싼다: requestId 부여, `ApiError` → 표준 에러, 그 밖의 예외 → `INTERNAL_ERROR`. 로그에는 본문·쿼리·예외 메시지를 남기지 않는다.
@@ -119,6 +120,7 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - 햄찌 안내 챗봇(DEC-030, components/guide/GuideBot + lib/guide/topics.ts): 고정 문안 메뉴뿐이고 Claude를 부르지 않으며 자유 입력을 받지 않는다(`GUIDE_NOTICE`). 문안 속 횟수는 브라우저 묶음에 서버 모듈을 끌어오지 않으려고 `GUIDE_LIMITS`에 옮겨 두고, `lib/guide/policy.test.ts`가 원래 상수·개인정보처리방침 문구와 같은지, 허용 숫자·링크·단정/판정 표현을 검사한다. **횟수·기능·정책을 바꾸면 안내 문안도 같이 고친다**(테스트가 상수 불일치는 잡지만 설명 문장의 사실 여부는 못 잡는다). 끄기 설정은 이 기기 localStorage `hz:guidebot`(lib/client/prefs.ts).
 - 커뮤니티·씨앗(DEC-047, lib/community README): 게시판 `/community`·`/community/[id]`, API `/api/v1/community/*`·`GET /me/seeds`. 라우트는 lib/community/service.ts만 부르고, 규칙은 policy.ts(순수), DB는 store.ts. 비로그인 글은 비밀번호(scrypt 해시, lib/community/password.ts)로, 로그인 글은 계정으로 수정·삭제한다 — 권한은 `canChange` 한 곳에서 본다. 제목·본문·댓글은 `scanInput` 마스킹본만 저장하고 응답에는 계정 ID·해시를 싣지 않는다(`postView`·`commentView`). AI를 부르지 않으며 `AI_NOTICE` 대신 `COMMUNITY_NOTICE`. 민감정보로 보이는 글은 `sensitiveConsent` 없이는 `409 CONSENT_REQUIRED`, 신고 `REPORT_FOLD_AT`건이면 제목·본문을 가린다(관리자 모드가 되돌림). 씨앗(글 10·댓글 5, 씨앗 1 = 할인 1원)은 로그인 사용자에게만 쌓이고 DB 함수 `award_seeds`·`revoke_seeds`가 하루 상한·중복·회수를 맡는다. **씨앗을 할인에 쓰는 기능은 과금이라 `billing` 게이트 승인 전까지 만들지 않는다**(`SEEDS.redeemEnabled = false`, 절대 규칙 5). 숫자를 바꾸면 화면 문구는 `SEEDS` 상수를 읽으므로 PRD DEC-047만 맞춘다.
 - 앱 화면(DEC-049, `mobile/src`): 탭 다섯(법정·판례 법령·절차 서식·광장·내 정보). 서버 호출은 `mobile/src/api.ts` 한 곳(웹과 같은 `/api/v1`, 기기에서는 CapacitorHttp) — 연결 확인이 실패하면 화면은 기기 안 자료(`library.ts`: 예시·조문·판례 목록·예시 글)로 동작하고 그 상태를 화면 위에 표시한다. 앱에 새 온라인 기능을 넣을 때도 서버 규칙(횟수·금액 상한·검증)을 앱에서 다시 만들지 않고, 닿지 않을 때의 화면을 함께 만든다. 분석 호출은 재시도하지 않는다. 브라우저 확인창(`confirm`)을 쓰지 않고 `Sheet`를 쓴다(웹 게시본에서 막힌다). 장식은 `ornament.tsx`(SVG)·`styles.css`. 개발 서버로 온라인 경로를 볼 때는 로컬 서버를 띄우고 `APP_API_PROXY=http://localhost:3100 VITE_API_BASE=/api/v1`(Git Bash는 `MSYS_NO_PATHCONV=1`)로 `vite --config mobile/vite.config.ts`.
+- 서류 분석(F-015, DEC-052, lib/casefile·lib/business README): 질문창의 사진 붙이기(components/ask/useAttachments·AttachTray, 브라우저에서 줄여 JPEG로) → `components/casefile/CaseFileFlow`(동의 두 항목 → 읽기 → 확인·수정) → `POST /casefiles/read`(lib/ai/casefile.ts Haiku 비전 1회, 상한 `CASEFILE_READ_COST_CAP_USD`, `tryAiQuota(CASEFILE_WEIGHT)` → `settleAiQuota`) → 확인한 개요를 `useAsk.send(text, true, true)`로 보내 DeepSearch 경로로 분석한다. 판독 결과는 lib/casefile/policy.ts `screenReading`이 거른다(개인 이름 버림·`scanInput`·조문/사건번호·단정 표현 문장 제거). 당사자는 서류에 적힌 역할·자리로만 나누고 판정하지 않는다 — 목록은 `sessionStorage`(`hz:f:<id>`)에만 두고 결과 화면 `PartiesCard`가 보인다. 공개 정보 조회(`POST /businesses/lookup`)는 법인·사업자만, 공식 API만(lib/business/source.ts), 모델 없음·`BUSINESS_NOTICE`. **개인을 찾는 검색·대표자 이름 표시는 만들지 않는다.** 사진이 든 요청의 토큰 추정은 `estimateRequestTokens`(장당 고정값)를 쓴다 — base64를 글자 수로 세지 않는다.
 - 브라우저 쪽 API 호출과 남은 질문 수는 lib/client/api.ts·components/useQuota.ts 한 저장소로 공유한다(헤더·홈·이어 묻기가 같은 값을 본다).
 - server-only 모듈을 직접 import하는 테스트는 `vi.mock("server-only", () => ({}))`를 둔다. 외부 응답은 tests/fixtures에 줄여서 녹화하고, 실명은 가상 이름으로 바꾼다.
 

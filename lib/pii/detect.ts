@@ -303,3 +303,27 @@ export function maskPii(text: string): PiiScan {
     .map((type) => ({ type, count: counts.get(type)! }));
   return { maskedText: masked, findings };
 }
+
+/**
+ * 번호·이메일·주소 꼴만 가린다 (이름은 그대로 둔다). 사건 진행(F-016, DEC-053)처럼 본인 사건 자료의 이름을
+ * 보여야 하는 곳에서, 연락처·등록번호가 화면·저장소에 남지 않게 할 때 쓴다. 가리기 규칙은 maskPii의 숫자 패턴과 같다.
+ */
+export function maskContacts(text: string): string {
+  let masked = text;
+  for (const [type, re] of NUMERIC) {
+    masked = masked.replace(re, (m) =>
+      type === "account" && !/^\d+$/.test(m) && (digitCount(m) < 10 || digitCount(m) > 16)
+        ? m
+        : TOKEN[type],
+    );
+  }
+  return masked;
+}
+
+/**
+ * 관계·역할어 바로 뒤에 온 낱말에서 조사·호칭을 떼고 이름으로 보이는 부분을 돌려준다 (없으면 null).
+ * maskPii의 "관계어 + 이름" 규칙과 같은 판단이다 — 서류 판독(F-015)이 서류 역할어(발신인·수신인 등) 뒤에도 쓰려고 내보낸다.
+ */
+export function nameAfterRelation(token: string): string | null {
+  return nameStem(token);
+}

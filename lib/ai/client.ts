@@ -4,7 +4,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { ApiError } from "@/lib/api/errors";
 import { required } from "@/lib/supabase/env";
-import { COST_CAP_USD, estimateTokens, planCall, usageCost } from "./cost";
+import { COST_CAP_USD, estimateRequestTokens, planCall, usageCost } from "./cost";
 import { aiMode } from "./mode";
 
 export type CreateParams = Anthropic.Beta.MessageCreateParamsNonStreaming;
@@ -49,14 +49,12 @@ export function withCostCap(inner: ModelClient, capUsd: number = COST_CAP_USD): 
     async create(params, options) {
       const stage = typeof params.model === "string" ? params.model : "model";
       let inputTokens: number;
+      // 사진이 든 요청(F-015)은 글자 수로 세면 안 되므로 요청 단위 추정을 쓴다
+      const estimate = () => estimateRequestTokens([params.system, params.messages, params.tools]);
       try {
-        inputTokens = inner.countTokens
-          ? await inner.countTokens(params)
-          : estimateTokens(JSON.stringify([params.system, params.messages, params.tools]));
+        inputTokens = inner.countTokens ? await inner.countTokens(params) : estimate();
       } catch {
-        inputTokens = estimateTokens(
-          JSON.stringify([params.system, params.messages, params.tools]),
-        );
+        inputTokens = estimate();
       }
       const plan = planCall({
         model: params.model,

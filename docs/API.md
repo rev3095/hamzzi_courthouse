@@ -37,7 +37,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | 403 | `FEATURE_GATED` | 게이트 미승인 (`details.featureKey`, `details.status`) | F-013 |
 | 403 | `LAWYER_NOT_VERIFIED` | 미승인 변호사 계정 | F-010 AC1 |
 | 404 | `NOT_FOUND` | 리소스 없음. **판례·조문 404는 "검증 근거에 없음"을 뜻하며 대체 내용을 생성하지 않음** | F-003 AC3 |
-| 409 | `CONSENT_REQUIRED` | 필요한 동의 없음 (`details.kind`) | F-007 AC2, F-009 AC2 |
+| 409 | `CONSENT_REQUIRED` | 필요한 동의 없음 (`details.kind`) | F-007 AC2, F-009 AC2, F-015 AC1 |
 | 409 | `INVALID_STATE` | 허용되지 않는 상태 전이 | F-012 AC3 |
 | 422 | `PII_CONFIRMATION_REQUIRED` | PII 탐지 후 사용자 확인 전 분석 요청 | F-007 AC1 |
 | 422 | `BRIEF_NEEDS_EDIT` | 간접 식별 위험 | F-011 AC2 |
@@ -70,6 +70,8 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029 |
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
+| POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
+| POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
@@ -259,6 +261,22 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - 자치법규 검색 → `{ items: [{ id, name, region, kind, effectiveFrom, promulgatedAt, sourceUrl }], outcome, searchScopeNote, notice }`, 상세 → `{ ...위 항목, articles: [{ articleNo, title, text }], notice }`. `id` = 법제처 자치법규일련번호.
 - 행정규칙 검색 → `{ items: [{ id, name, kind, agency, issuedAt, effectiveFrom, sourceUrl }], … }` — 현행만, 본문은 법제처 원문 링크로.
 - 검색어 규칙·상한은 `/cases`와 같다.
+
+### POST `/casefiles/read` (F-015, DEC-052)
+`req { images: { mediaType: "image/jpeg" | "image/png" | "image/webp"; data: string(base64) }[] (1~5장); question?: string (500자 이하); consent: { images: true; sensitive: true } }`
+→ `200 { reading: { docTypes: string[]; summary: string; claims: string[]; parties: { role; side: "claimant" | "respondent" | "other"; kind: "business" | "agency" | "person"; name }[] } | null; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 법률 자문 아님" | null }` (`cache-control: no-store`)
+- **동의**: 사진 전송(`consent.images`)과 민감정보 처리(`consent.sensitive`)를 따로 받는다. 하나라도 `true`가 아니면 `409 CONSENT_REQUIRED` + `details.kind` `casefile_images`·`sensitive_info` — 사진을 모델로 보내지 않는다.
+- **사진**: 서류 사진은 미리 가릴 수 없어 판독 호출(Haiku 비전 1회)에만 그대로 쓴다(절대 규칙 4의 예외) — 토큰 세기 호출에도 사진을 보내지 않고 장당 고정값으로 상한을 확인한다. 사진·판독 원문은 저장·로그하지 않는다. 사진 한 장 base64 820,000자, 전체 4,000,000자까지. 종류는 내용 앞부분으로 다시 확인한다. 넘으면 `400 VALIDATION_ERROR` + `details.reason` `too_many`·`too_large`·`media_type`·`encoding`(값은 싣지 않는다), 사진이 없으면 `400 EMPTY_INPUT`.
+- **응답**: `docTypes`는 정해진 목록(`DOC_TYPES`)의 값뿐이다. `summary`·`claims`는 가린 문장이다 — `scanInput`에 더해, 모델이 따로 적어 준 개인 이름 목록(응답에 싣지 않고 버린다)·서류 역할어 뒤의 이름 꼴·차량번호·생년월일·지번 주소를 가린다. 조문 번호·사건번호(지급명령·가사 등 사건부호 포함)가 든 문장과, 사건 개요에서 결과·유불리를 내다보는 문장은 빠지고 그 수가 `dropped`에 실린다(내용은 싣지 않는다). 서류의 주장을 옮긴 요구·주장 칸에는 판정 표현 검사를 걸지 않는다(단정 표현만). `parties`의 `name`은 표지(주식회사·법원 등)가 있는 상호·기관 이름만 있고 대표자·담당자 이름과 직함은 잘라 낸다. 개인(`person`)은 언제나 빈 문자열이다. `role`은 서류에 적힌 절차상 역할(발신인·수신인·원고·피고·피의자 등 정해진 값 — "피해자"·"가해자"는 없다), `side`는 서류에서의 자리이며 옳고 그름을 뜻하지 않는다.
+- **횟수·비용**: 하루 질문 횟수를 다 썼으면 `401 LOGIN_REQUIRED`(비로그인)·`429 RATE_LIMITED`(`reason: "user_daily"`)로 모델 전에 막는다. 차감은 하지 않는다 — 확인한 개요를 `POST /inquiries` → `/analyze`로 분석할 때 1회 센다. 같은 네트워크 1시간 10회(`reason: "casefile_hourly"`, 관리자 모드 제외). 1건 비용 상한 $0.005(임시값)와 전체 예산을 받고, 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai.used: false`로 알린다.
+- 판독 결과는 저장하지 않는다. 화면은 사용자가 확인·수정한 개요를 `POST /inquiries`(`sensitiveConsent: true`)로 보내고 `/analyze`에 `deep: true`를 붙인다. 당사자 목록은 브라우저(sessionStorage)에만 둔다.
+
+### POST `/businesses/lookup` (F-015 AC4, DEC-052)
+`req { name: string (2~40자) }` → `200 { places: Source<{ title; category; address; roadAddress; link }>; corps: Source<{ corpName; address; establishedAt; industry; homepage }>; links: { label; url }[]; notice: "공개 자료 검색 결과 · AI 생성 아님 · 같은 곳인지 직접 확인 필요" }` (`no-store`), `Source<T> = { status: "ok" | "empty" | "no_key" | "failed"; items: T[] }`
+- 모델을 쓰지 않는다. 출처는 네이버 지역 검색 API(`places`)와 공공데이터포털 금융위원회 기업기본정보(`corps`) — 둘 다 상호·법인만 돌려준다. 개인을 찾는 기능이 아니다.
+- 대표자 이름·법인등록번호·사업자등록번호·전화번호는 싣지 않는다. 찾은 곳이 서류의 당사자와 같은 곳인지, 어떤 곳인지는 판단하지 않는다.
+- 이름은 본문으로만 받는다(주소·접속 기록에 남지 않게). 연락처·주소·번호가 섞인 이름은 `400 VALIDATION_ERROR` + `details.reason: "contact_info"`, 상호·기관 표지(주식회사·법인·은행·법원 등)가 없는 이름(개인 이름·일반 낱말)은 `reason: "not_business"`로 외부에 보내지 않는다. 대표자·담당자 이름과 직함이 붙어 오면 잘라 낸 상호만 쓴다. 조회한 이름·결과는 저장하지 않는다.
+- 키가 없으면 그 출처는 `no_key`, 외부 오류는 `failed`(오류 내용·키·요청 주소는 싣지 않는다). `links`(네이버 지도·인터넷등기소·DART)는 언제나 있다. 레이트 리밋: 같은 네트워크 1시간 30회(`reason: "business_hourly"`).
 
 ### POST `/results/{id}/feedback`
 `req { helpful: boolean; comment?: string (500자 이하) }` → `204`. 결과 소유자만(비로그인은 같은 익명 세션) — 남의 결과 `403`, 없으면 `404`.

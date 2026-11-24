@@ -46,6 +46,7 @@ export function ResultPanel({
   inquiryId,
   category,
   askHref,
+  parties,
 }: {
   result: DemoAnalysisResult;
   question: string | null;
@@ -63,6 +64,8 @@ export function ResultPanel({
   category?: CategoryKey | null;
   /** 예시 답변 화면(/examples/[id]): 심층 질문 대신 "내 상황으로 질문하기"로 홈에 보낸다 (질문 횟수 차감 없음, DEC-028) */
   askHref?: string;
+  /** 서류 분석(F-015)으로 만든 질문의 당사자 카드 */
+  parties?: React.ReactNode;
 }) {
   const searchOnly = result.mode === "search_only";
   const usedArticles = result.articles.filter((a) => a.used).length;
@@ -100,6 +103,8 @@ export function ResultPanel({
       </div>
 
       <SummaryStrip result={result} plan={plan} />
+
+      {parties}
 
       {result.deep && <DeepMapView result={result} />}
 

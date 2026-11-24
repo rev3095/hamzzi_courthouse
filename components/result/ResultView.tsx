@@ -27,6 +27,7 @@ import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
 import { Feedback } from "./Feedback";
+import { PartiesCard } from "./PartiesCard";
 import { ResultPanel } from "./ResultPanel";
 import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 
@@ -417,6 +418,7 @@ function DoneView({
       onDeepAsk={focusBox}
       inquiryId={parentId}
       category={category}
+      parties={<PartiesCard inquiryId={parentId} />}
       followUp={<FollowUp parentId={parentId} text={text} setText={setText} inputRef={inputRef} />}
       footer={<Feedback resultId={resultId} />}
     />

@@ -35,6 +35,14 @@ export const UNDERSTAND_TOKENS = { max: 450, min: 150 } as const;
 export const DOC_DRAFT_COST_CAP_USD = 0.0015;
 export const DOC_DRAFT_TOKENS = { max: 900, min: 300 } as const;
 
+/**
+ * 서류 판독(F-015, DEC-052) 1건 상한 — Haiku 비전 1회. **임시값, 사용자 확인 전**.
+ * 계산: 사진 5장을 장당 IMAGE_TOKEN_ESTIMATE(5,000)토큰으로 넉넉히 잡은 입력 약 27,000토큰($0.0027) + 출력 2,000토큰($0.001).
+ * 실제 입력은 호출 전에 무과금 토큰 세기로 재고, 상한을 넘으면 부르지 않는다.
+ */
+export const CASEFILE_READ_COST_CAP_USD = 0.005;
+export const CASEFILE_READ_TOKENS = { max: 2_000, min: 600 } as const;
+
 /** 재검색이 답변 몫을 먹지 않게 남겨 두는 금액 */
 export const ANSWER_RESERVE_USD = 0.005;
 /** 이 이상이면 비싼 장문 구간 단가가 붙으므로 요청하지 않는다 */
@@ -81,6 +89,25 @@ export function usageCost(model: string, u: CallUsage): number {
  */
 export function estimateTokens(text: string): number {
   return Math.ceil(text.length * 1.5);
+}
+
+/** 토큰 세기를 못 쓸 때 사진 한 장을 이만큼으로 친다 (고해상도 사진의 최대치보다 크게) */
+export const IMAGE_TOKEN_ESTIMATE = 5_000;
+
+/**
+ * 요청 전체(system·messages·tools)의 보수적 토큰 추정. 사진(base64)은 글자 수로 세면 터무니없이 커지므로
+ * 내용을 빼고 장당 IMAGE_TOKEN_ESTIMATE로 친다 (F-015).
+ */
+export function estimateRequestTokens(parts: unknown): number {
+  let images = 0;
+  const text = JSON.stringify(parts, (_key, value: unknown) => {
+    if (value && typeof value === "object" && (value as { type?: unknown }).type === "image") {
+      images += 1;
+      return { type: "image" };
+    }
+    return value;
+  });
+  return estimateTokens(text ?? "") + images * IMAGE_TOKEN_ESTIMATE;
 }
 
 export type CallPlan =
