@@ -3,6 +3,7 @@ import "server-only";
 import { ApiError } from "@/lib/api/errors";
 import type { RequestScope } from "@/lib/api/route";
 import { createServiceClient, createUserClient } from "@/lib/supabase/server";
+import { profileView, type MyProfile } from "./profile";
 
 export type Role = "user" | "lawyer" | "admin";
 export type Actor = { userId: string; role: Role };
@@ -20,6 +21,17 @@ export async function getActor(scope: RequestScope): Promise<Actor | null> {
     .maybeSingle<{ role: Role }>();
   if (error) throw new Error("profiles 조회 실패");
   return { userId, role: profile?.role ?? "user" };
+}
+
+/**
+ * 로그인 사용자 본인의 프로필 (DEC-056): Google 로그인 때 인증 서비스가 받아 둔 이름·사진 주소.
+ * 비로그인이면 null. 이메일은 싣지 않고, 값은 로그·에러에 남기지 않는다.
+ */
+export async function getMyProfile(scope: RequestScope): Promise<MyProfile | null> {
+  const { data } = await (await createUserClient()).auth.getUser();
+  if (!data.user?.id) return null;
+  scope.setUser(data.user.id);
+  return profileView(data.user.user_metadata);
 }
 
 /** 지정 역할만 허용. 비로그인 401 UNAUTHENTICATED, 역할 불일치 403 FORBIDDEN (API.md 1·3절). */

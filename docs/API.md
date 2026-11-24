@@ -59,7 +59,8 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | POST `/inquiries/{id}/answers` | user 소유자 | 추가 질문 답변 | F-002 AC2 |
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
 | GET `/me/quota` | anon·user | 오늘 남은 질문 수(비로그인 0~`ANON_QUESTION_LIMIT` · Google 로그인 0~10), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024, DEC-035 |
-| GET `/me/inquiries` | user | 내 질문 기록(남기기로 한 질문, 마스킹본) | DEC-039 |
+| GET `/me/inquiries` | user | 내 세션의 질문(남기기로 한 질문, 마스킹본). 마이페이지 '내 세션'은 이 목록과 `GET /matters`를 최근 순으로 합쳐 보인다 | DEC-039, DEC-056 |
+| GET `/me/profile` | user | 마이페이지 프로필: Google 로그인 때 인증 서비스가 받아 둔 이름·프로필 사진 주소(`{ name, avatarUrl }`, 없으면 null). 이메일은 싣지 않는다. 사진 주소는 googleusercontent.com의 https만. 새로 저장하지 않고 `no-store` | DEC-056 |
 | GET `/auth/callback` (API 밖, `app/auth/callback`) | 공개 | Google 로그인에서 돌아오는 주소. Supabase 코드를 세션 쿠키로 바꾸고 `next`(사이트 안 경로만, `safeNextPath`)로 보낸다. 실패하면 `/me?login=failed` | DEC-035 |
 | POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
 | GET `/cases` | 공개 (질문 3회와 별개, DEC-017) | 판례 직접 검색 | F-003 |

@@ -1,16 +1,18 @@
 "use client";
-// 마이페이지 (DEC-032·035): 프로필(Google 로그인) + 화면 설정 + 내 기록.
+// 마이페이지 (DEC-032·035·056): 프로필(Google 로그인) + 화면 설정 + 내 세션 + 내 기록.
 // 로그인 상태와 관리자 모드(DEC-024)는 따로 보여 준다 — 둘 다 켜져 있으면 둘 다 표시.
 // 로그인은 Google 계정으로만 한다(DEC-035). NEXT_PUBLIC_GOOGLE_LOGIN이 꺼져 있으면 버튼은 "준비 중" 비활성.
-// 로그인 여부는 서버가 판단한 /me/quota 값만 본다. 이메일·이름은 이 화면에 싣지 않는다.
+// 로그인 여부는 서버가 판단한 /me/quota 값만 본다. 이메일은 이 화면에 싣지 않는다.
+// 로그인하면 Google 계정 이름·프로필 사진(GET /me/profile, DEC-056)을 본인에게만 보여 준다 — 이 화면 메모리에만 두고 저장하지 않는다.
 // 설정은 이 브라우저에만 저장한다(lib/client/prefs.ts). 개인정보 입력을 받지 않는다.
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
-import { isSignedIn } from "@/lib/client/api";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { greeting } from "@/lib/auth/profile";
+import { getMyProfile, isSignedIn } from "@/lib/client/api";
 import { GOOGLE_LOGIN_ENABLED, signOut } from "@/lib/client/login";
 import { setGuideBotEnabled, useGuideBotEnabled } from "@/lib/client/prefs";
 import { GoogleLoginButton, LOGIN_MORE_TEXT } from "../LimitNotice";
-import { MyInquiries } from "../MyInquiries";
+import { MySessions } from "../MySessions";
 import { MySeeds } from "./MySeeds";
 import { useQuota } from "../useQuota";
 
@@ -26,6 +28,22 @@ export function MyPage() {
   const signedIn = isSignedIn(quota);
   const failed = useSyncExternalStore(noSubscribe, loginFailed, () => false);
   const [signOutFailed, setSignOutFailed] = useState(false);
+  const [profile, setProfile] = useState<{ name: string | null; avatarUrl: string | null } | null>(
+    null,
+  );
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    let live = true;
+    void getMyProfile().then((r) => {
+      if (live && r.ok) setProfile(r.data);
+    });
+    return () => {
+      live = false;
+    };
+  }, [signedIn]);
+  const avatar = signedIn && !avatarFailed ? (profile?.avatarUrl ?? null) : null;
 
   return (
     <div className="mx-auto w-full max-w-[560px] space-y-5 px-4 py-10">
@@ -33,12 +51,27 @@ export function MyPage() {
 
       <section aria-labelledby="me-profile" className={card}>
         <div className="flex items-center gap-4">
-          <span className="bg-cream text-muted flex size-14 shrink-0 items-center justify-center rounded-full">
-            <ProfileIcon size={28} />
+          <span className="bg-cream text-muted flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full">
+            {avatar ? (
+              // Google 프로필 사진 주소(googleusercontent.com)를 그대로 보여 준다 — 사진을 우리 서버로 옮기지 않는다
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatar}
+                alt=""
+                width={56}
+                height={56}
+                referrerPolicy="no-referrer"
+                className="size-14 object-cover"
+                data-testid="me-avatar"
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <ProfileIcon size={28} />
+            )}
           </span>
           <div className="min-w-0">
             <h2 id="me-profile" className="text-ink text-lg font-bold">
-              {signedIn ? "Google 계정으로 로그인했어요" : "로그인하지 않았어요"}
+              {signedIn ? greeting(profile?.name ?? null) : "로그인하지 않았어요"}
             </h2>
             {quota?.admin && (
               <span
@@ -131,13 +164,14 @@ export function MyPage() {
       {signedIn && (
         <section aria-labelledby="me-history" className={card}>
           <h2 id="me-history" className="text-ink text-lg font-bold">
-            내 질문 기록
+            내 세션
           </h2>
           <p className="text-muted mt-2 text-[13px] leading-relaxed">
-            &lsquo;내 기록에 남기기&rsquo;를 켜고 보낸 질문만 모여요. 가린 문장과 답변만 보관하고,
-            보관 기간이 지나면 지워져요. 예시 질문은 기록에 남지 않아요.
+            &lsquo;내 기록에 남기기&rsquo;를 켜고 보낸 질문과 사건 진행의 사건이 최근 것부터 모여요.
+            질문은 가린 문장과 답변만 보관하고, 보관 기간이 지나면 지워져요. 예시 질문은 남지
+            않아요.
           </p>
-          <MyInquiries />
+          <MySessions />
         </section>
       )}
 

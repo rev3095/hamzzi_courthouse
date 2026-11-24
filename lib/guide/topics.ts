@@ -147,7 +147,7 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     label: "기능 안내",
     source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053",
     lines: [
-      "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 질문 기록이 있어요.",
+      "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 세션이 있어요.",
     ],
     links: [{ href: "/about/features", label: "기능 가이드 전체 보기" }],
     next: [
@@ -241,11 +241,11 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     next: ["features-history", "pricing-future"],
   },
   "features-history": {
-    label: "내 질문 기록은 어떻게 남겨요?",
-    source: "DEC-039 · DEC-035",
+    label: "내 세션은 어떻게 남겨요?",
+    source: "DEC-039 · DEC-035 · DEC-056",
     lines: [
-      "Google로 로그인하면 질문창 아래에 '내 기록에 남기기'가 보여요. 켜고 보낸 질문과 답변만 마이페이지의 '내 질문 기록'에 모여요.",
-      "예시 질문과 관리자 모드로 보낸 질문은 기록 남기기를 켜도 남지 않아요. 가린 문장과 답변만 보관하고, 보관 기간은 다른 기록과 같아요.",
+      "Google로 로그인하면 질문창 아래에 '내 기록에 남기기'가 보여요. 켜고 보낸 질문과 답변이 마이페이지의 '내 세션'에 모여요. 사건 진행에서 만든 사건도 함께 보여요.",
+      "예시 질문과 관리자 모드로 보낸 질문은 기록 남기기를 켜도 남지 않아요. 질문은 가린 문장과 답변만 보관하고 보관 기간이 지나면 지워져요. 사건은 지우기 전까지 계정에 남아요.",
     ],
     links: [{ href: "/me", label: "마이페이지" }],
     next: ["roadmap-login", "rules-privacy"],
