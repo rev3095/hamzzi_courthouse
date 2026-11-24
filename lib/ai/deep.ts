@@ -114,6 +114,10 @@ export async function runDeepAnalysis(
     persona?: string;
     /** 프롬프트 버전 꼬리표 (비서 지시문 버전 등) */
     promptTag?: string;
+    /** 답변 effort를 단계 값 대신 쓴다 — 미리 만드는 예시(가상 사건 프리셋 보강)에서만 쓴다. 서비스 요청 경로는 단계 값 그대로 */
+    effort?: "low" | "medium" | "high" | "xhigh";
+    /** 답변 출력 한도를 단계 값 대신 쓴다 — xhigh는 생각 토큰이 많아 단계 한도로는 답이 잘린다 (미리 만드는 예시 전용) */
+    answerMaxTokens?: number;
   } = {},
 ): Promise<DeepAnalysisOutput> {
   const tier = tierOf(deps.long ? LONG_DEEP.tier : deps.tier);
@@ -267,7 +271,7 @@ export async function runDeepAnalysis(
           "deep_answer",
           {
             model: tier.model,
-            max_tokens: answer.tokens.max,
+            max_tokens: deps.answerMaxTokens ?? answer.tokens.max,
             thinking: tier.thinking,
             system: [
               { type: "text", text: DEEP_ANSWER_SYSTEM },
@@ -275,7 +279,7 @@ export async function runDeepAnalysis(
               ...(deps.persona ? [{ type: "text" as const, text: deps.persona }] : []),
             ],
             output_config: {
-              effort: answer.effort,
+              effort: deps.effort ?? answer.effort,
               format: {
                 type: "json_schema",
                 schema: withMaterialRefs(

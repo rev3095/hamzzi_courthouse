@@ -38,7 +38,7 @@ describe.each(MATTER_PRESETS.map((p) => [p.title, p] as const))("프리셋 %s", 
         for (const s of n.sources) expect(s.url).toMatch(/^https:\/\/www\.law\.go\.kr\//);
     const free = [
       p.data.summary,
-      ...p.data.docs.flatMap((d) => [d.title, d.gist]),
+      ...p.data.docs.flatMap((d) => [d.title, d.gist, d.body ?? ""]),
       ...p.data.facts.map((f) => f.what),
       ...p.data.parties.flatMap((x) => [x.name, x.role, x.note]),
       ...p.data.demands.map((d) => d.what),
@@ -53,6 +53,17 @@ describe.each(MATTER_PRESETS.map((p) => [p.title, p] as const))("프리셋 %s", 
         /\d{2,4}\s?(다|도|두|누|가합|가단|나|노|고합|고단|헌마|헌바)\s?\d{2,7}/,
       );
     }
+  });
+
+  // 보강은 사건 단위로 채운다 — 원본을 받은 사건은 서류마다 원본과 요약본을 모두 갖춘다
+  test.skipIf(!p.data.docs.some((d) => d.body))("서류 원본을 받은 사건은 자료마다 원본(지어낸 가상 서류 본문)과 요약본이 있다 (DEC-061 보강)", () => {
+    for (const d of p.data.docs) {
+      expect((d.body ?? "").length, d.title).toBeGreaterThanOrEqual(300);
+      expect(d.body, d.title).not.toMatch(/주소\s*:\s*[가-힣]+(시|도)\s/);
+    }
+    expect(p.data.notes.some((n) => n.kind === "summary" && n.title === "한눈에 보는 요약본")).toBe(
+      true,
+    );
   });
 
   test("N1 단정 표현이 없다 · F-007 연락처·주민번호·계좌·이메일 꼴이 없다", () => {
