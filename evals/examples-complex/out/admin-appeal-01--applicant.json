@@ -1,0 +1,421 @@
+{
+  "id": "admin-appeal-01--applicant",
+  "category": "admin_appeal",
+  "question": "저는 ○○시에서 직원 3명과 작은 술집 겸 음식점을 운영하고 있습니다. 2026년 2월 중순 금요일 밤, 손님 4명이 함께 들어왔습니다. 아르바이트 직원이 주문을 받으며 일행 중 한 명에게 신분증을 요구했고, 그 손님은 주민등록증을 보여줬습니다. 생년월일상 성인이었고 사진도 얼굴과 비슷해 보여 술을 내줬습니다. 나머지 3명은 '같은 대학 동기'라고 해서 따로 확인하지 않았다고 합니다. 매장 CCTV에는 직원이 신분증을 받아 들여다보는 장면이 찍혀 있습니다.\n\n한 시간쯤 뒤 경찰이 신고를 받고 출동했고, 4명 모두 고등학교 3학년인 만 18세라는 사실이 드러났습니다. 나중에 보니 보여준 주민등록증은 다른 사람 것에 사진을 바꿔 붙인 위조품이었고, 경찰도 이를 확인해 그 학생은 따로 공문서위조 등으로 조사받는다고 들었습니다. 저와 직원은 3월 초 경찰서에서 청소년보호법 위반으로 피의자 조사를 받았고, 아직 검찰 처분 결과는 받지 못했습니다.\n\n3월 중순 구청에서 영업정지 2개월 처분 사전통지서가 왔습니다. 저는 의견제출서에 위조 신분증이었다는 점과 CCTV 캡처를 첨부해 냈지만, 4월 초 그대로 영업정지 2개월 처분서가 송달됐습니다. 처분서에는 '일행 중 1명만 확인했고 나머지는 확인하지 않아 주의의무를 다하지 않았다'는 취지가 적혀 있고, 영업정지 시작일도 정해져 있습니다. 문을 닫으면 임대료와 직원 급여를 감당하기 어렵고 단골도 끊길까 걱정입니다.\n\n제가 아직 모르는 것은 이렇습니다. 위조 신분증에 속은 경우 행정처분을 면제하거나 감경할 수 있는 규정이 지금 법령에 있는지, 있다면 일행 중 일부만 확인한 경우에도 적용되는지, 검찰에서 불기소나 기소유예가 나오면 행정처분에 영향이 있는지, 영업정지 대신 과징금으로 바꿔 달라고 할 수 있는지, 그리고 이 사건에서 처분 감경 기준이 제대로 고려됐는지입니다.\n\n무엇을 확인해야 하는지, 행정심판과 행정소송 중 무엇을 먼저 해야 하는지, 영업정지 시작 전에 집행정지를 어떤 순서로 신청해야 하는지, 그리고 지금 행정심판 청구서에 청구 취지와 청구 이유를 어떻게 쓰고 어떤 증거를 붙여야 하는지 알고 싶습니다.",
+  "at": "2026-11-24T17:31:58.752Z",
+  "elapsedMs": 100045,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 16984,
+    "tokens_out": 10828,
+    "latency_ms": 99197
+  },
+  "costUsdUpperEstimate": 0.2845,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "청소년 보호법",
+        "식품위생법",
+        "행정절차법",
+        "행정심판법",
+        "행정소송법",
+        "식품위생법 시행령",
+        "청소년 보호법 시행령",
+        "주류 면허 등에 관한 법률",
+        "청소년 보호법 시행규칙"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "처분 취소",
+        "청소년 주류 제공 위조 신분증 영업정지 처분 감경",
+        "청소년 주류 제공 신분증 확인 일부 영업정지 처분 취소"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "네, 지금 법령에 면제 규정이 있습니다. 식품위생법 시행령 제52조 제3항은 청소년이 신분증을 위조·변조·도용해 영업자가 청소년인 줄 몰랐고, 그 사정이 CCTV 영상이나 진술 등으로 확인되면 행정처분을 '감경'이 아니라 '면제'하도록 정합니다. 직원이 신분증을 받아 보는 CCTV 장면과 경찰의 위조 확인 사실은 이 요건에 바로 닿는 자료입니다.",
+          "source": "law:식품위생법시행령:제52조",
+          "quote": "신분증 위조ᆞ변조 또는 도용으로 청소년인 사실을 알지 못한 사정이 영상정보처리기기에",
+          "check": "verified"
+        },
+        {
+          "text": "학생들이 법에서 말하는 청소년이었는지도 확인해 보세요. 청소년 보호법 제2조는 19세 미만을 청소년으로 보지만, 19세가 되는 해의 1월 1일을 맞이한 사람은 제외합니다. 단속 당시 이미 그해를 맞은 학생이었다면 청소년이 아니고, 그렇지 않았다면 청소년입니다. 수사기록이나 처분서에서 학생들의 출생연도를 확인해 보시길 권합니다.",
+          "source": "law:청소년보호법:제2조",
+          "quote": "19세 미만인 사람을 말한다. 다만, 19세가 되는 해의 1월 1일을 맞이한 사람은 제외한다.",
+          "check": "verified"
+        },
+        {
+          "text": "감경과 관련해서는 식품위생법 시행규칙 제89조의 행정처분 기준에 감경 사유가 있으니, 구청이 이를 검토했는지 확인해 보세요. 과거 같은 위반 이력이 없다면 유리한 사정입니다. 위조 신분증에 속은 경위, 대학 동기라는 말 외에 나이를 확인할 다른 수단이 있었는지, 생계 피해 등을 고려하지 않았다면 재량권 일탈·남용(행정소송법 제27조)으로 다툴 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "절차는 행정심판부터 하시는 쪽을 권합니다. 비용 부담이 적고 처분 변경도 구할 수 있습니다. 다만 심판청구만으로는 영업정지가 멈추지 않으므로, 시작일 전에 심판청구서와 집행정지신청서를 동시에 내고 임대료·급여 자료로 '긴급한 손해 예방 필요'를 소명하세요. 시작일이 촉박하다면 행정소송과 법원의 집행정지도 함께 검토해 보세요.",
+          "source": "law:행정심판법:제30조",
+          "quote": "집행정지 신청은 심판청구와 동시에 또는 심판청구에 대한",
+          "check": "verified"
+        },
+        {
+          "text": "청구 취지는 '피청구인이 청구인에게 한 영업정지 처분을 취소한다'로 쓰고, 예비적으로 '과징금 부과 등으로 변경한다'를 둘 수 있습니다. 청구 이유에는 식품위생법 시행령 제52조의 면제 사유, 재량권 일탈·남용, 이유 제시 미흡을 적으세요. 증거로는 처분서, 의견제출서, CCTV 원본, 위조 확인 수사자료, 위반 이력 없음 자료, 임대료·급여 자료를 붙이시길 권합니다. 청구기간(행정심판법 제27조)도 꼭 확인하세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:청소년보호법:제2조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제2조",
+        "title": "정의",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:청소년보호법:제17조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제17조",
+        "title": "구분ㆍ격리 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C17%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법:제82조",
+        "lawName": "식품위생법",
+        "articleNo": "제82조",
+        "title": "영업정지 등의 처분에 갈음하여 부과하는 과징금 처분",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C82%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법:제37조",
+        "lawName": "식품위생법",
+        "articleNo": "제37조",
+        "title": "영업허가 등",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C37%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:행정절차법:제23조",
+        "lawName": "행정절차법",
+        "articleNo": "제23조",
+        "title": "처분의 이유 제시",
+        "effectiveFrom": "2022-07-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EC%A0%88%EC%B0%A8%EB%B2%95/%EC%A0%9C23%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:행정절차법:제27조",
+        "lawName": "행정절차법",
+        "articleNo": "제27조",
+        "title": "의견제출",
+        "effectiveFrom": "2022-07-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EC%A0%88%EC%B0%A8%EB%B2%95/%EC%A0%9C27%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:행정심판법:제27조",
+        "lawName": "행정심판법",
+        "articleNo": "제27조",
+        "title": "심판청구의 기간",
+        "effectiveFrom": "2023-03-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EC%8B%AC%ED%8C%90%EB%B2%95/%EC%A0%9C27%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:행정심판법:제30조",
+        "lawName": "행정심판법",
+        "articleNo": "제30조",
+        "title": "집행정지",
+        "effectiveFrom": "2023-03-21",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EC%8B%AC%ED%8C%90%EB%B2%95/%EC%A0%9C30%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:행정소송법:제20조",
+        "lawName": "행정소송법",
+        "articleNo": "제20조",
+        "title": "제소기간",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%ED%96%89%EC%A0%95%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C20%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법시행령:제52조",
+        "lawName": "식품위생법 시행령",
+        "articleNo": "제52조",
+        "title": "허가취소 등",
+        "effectiveFrom": "2026-08-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C52%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:청소년보호법시행령:제44조",
+        "lawName": "청소년 보호법 시행령",
+        "articleNo": "제44조",
+        "title": "과징금의 부과기준",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C44%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:청소년보호법:제54조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제54조",
+        "title": "과징금",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C54%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:청소년보호법시행령:제45조",
+        "lawName": "청소년 보호법 시행령",
+        "articleNo": "제45조",
+        "title": "과징금의 부과 및 납부",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C45%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주류면허등에관한법률:제25조",
+        "lawName": "주류 면허 등에 관한 법률",
+        "articleNo": "제25조",
+        "title": "장부 기록의무",
+        "effectiveFrom": "2026-07-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%EB%A5%98%20%EB%A9%B4%ED%97%88%20%EB%93%B1%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C25%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:청소년보호법시행규칙:제11조",
+        "lawName": "청소년 보호법 시행규칙",
+        "articleNo": "제11조",
+        "title": "과징금의 징수절차",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C11%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:식품위생법:제44조",
+        "lawName": "식품위생법",
+        "articleNo": "제44조",
+        "title": "영업자 등의 준수사항",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%8B%9D%ED%92%88%EC%9C%84%EC%83%9D%EB%B2%95/%EC%A0%9C44%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:청소년보호법:제62조",
+        "lawName": "청소년 보호법",
+        "articleNo": "제62조",
+        "title": "양벌규정",
+        "effectiveFrom": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%B2%AD%EC%86%8C%EB%85%84%20%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C62%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "625315",
+        "caseNo": "2026두31375",
+        "caseName": "재산세 부과 처분 취소",
+        "court": "대법원",
+        "decidedAt": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625315",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "193182",
+        "caseNo": "2011두11266",
+        "caseName": "청소년관람불가등급분류결정처분취소",
+        "court": "대법원",
+        "decidedAt": "2013-11-14",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=193182",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "625317",
+        "caseNo": "2026두31443",
+        "caseName": "취득세등부과처분취소",
+        "court": "대법원",
+        "decidedAt": "2026-10-08",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625317",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "209975",
+        "caseNo": "2011구합7793",
+        "caseName": "청소년유해매체물결정통보및고시처분취소",
+        "court": "서울행법",
+        "decidedAt": "2011-08-25",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=209975",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "625371",
+        "caseNo": "2024두46736",
+        "caseName": "법인세등부과처분취소청구의소",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625371",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "172762",
+        "caseNo": "2010누32237",
+        "caseName": "청소년관람불가등급분류결정처분취소",
+        "court": "서울고등법원",
+        "decidedAt": "2011-04-20",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=172762",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "625373",
+        "caseNo": "2026두30813",
+        "caseName": "법인세원천징수처분취소청구의소",
+        "court": "대법원",
+        "decidedAt": "2026-09-03",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=625373",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 11
+      },
+      {
+        "keyword": "처분 취소",
+        "total": 6
+      },
+      {
+        "keyword": "청소년 주류 제공 위조 신분증 영업정지 처분 감경",
+        "total": 6
+      },
+      {
+        "keyword": "청소년 주류 제공 신분증 확인 일부 영업정지 처분 취소",
+        "total": 0
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": false,
+      "items": [
+        {
+          "citation": "식품위생법 시행령 제52조",
+          "exists": true
+        },
+        {
+          "citation": "청소년 보호법 제2조",
+          "exists": true
+        },
+        {
+          "citation": "행정심판법 제30조",
+          "exists": true
+        }
+      ],
+      "removed": 4
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "술집 운영자",
+          "role": "질문자, 처분 상대방(영업자)"
+        },
+        {
+          "label": "아르바이트 직원",
+          "role": "신분증을 받아 확인한 직원"
+        },
+        {
+          "label": "위조 신분증 소지 학생",
+          "role": ""
+        },
+        {
+          "label": "일행 3명(미확인 학생)",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2026년 2월 중순 금요일 밤",
+          "who": "아르바이트 직원",
+          "what": "손님 4명 중 1명의 주민등록증을 확인하고 술을 제공했다."
+        },
+        {
+          "when": "한 시간쯤 뒤",
+          "who": "",
+          "what": "신고를 받고 출동해 4명이 만 18세 고등학생임을 확인했다."
+        },
+        {
+          "when": "나중",
+          "who": "",
+          "what": "보여준 주민등록증이 사진을 바꿔 붙인 위조품임을 확인했다."
+        },
+        {
+          "when": "3월 초",
+          "who": "",
+          "what": "경찰서에서 청소년보호법 위반 피의자 조사를 받았다."
+        },
+        {
+          "when": "3월 중순",
+          "who": "",
+          "what": "영업정지 2개월 처분 사전통지서를 보냈다."
+        },
+        {
+          "when": "4월 초",
+          "who": "",
+          "what": "의견제출 내용을 반영하지 않고 영업정지 2개월 처분서를 송달했다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "위조 신분증에 속은 경우 행정처분 면제·감경 규정이 있는지",
+          "points": [
+            0,
+            1
+          ]
+        },
+        {
+          "title": "일행 일부만 확인한 경우에도 확인 의무 면책이 되는지",
+          "points": [
+            2
+          ]
+        },
+        {
+          "title": "검찰 불기소 처분이 행정처분에 영향을 주는지",
+          "points": [
+            3,
+            4
+          ]
+        }
+      ],
+      "unknowns": [
+        "위조 신분증임을 알 수 없었다는 사정을 처분 전에 구청에 충분히 소명했는지",
+        "일행 3명이 대학 동기라는 말 외에 나이를 추가로 확인할 방법이 있었는지",
+        "검찰의 처분 결과가 언제 나올 예정인지",
+        "과거 같은 위반으로 행정처분을 받은 적이 있는지",
+        "영업정지 시작일까지 집행정지 신청 가능한 기간이 남아 있는지"
+      ]
+    }
+  }
+}

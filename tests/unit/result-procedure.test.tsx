@@ -46,7 +46,12 @@ describe("F-014 결과 요약형 레이아웃", () => {
   test("N1·절대 규칙 3 확률·승소 가능성·예상 기간 숫자가 없다", () => {
     const { container } = renderLease();
     const text = container.textContent ?? "";
-    expect(text).not.toMatch(/%|확률|승소 가능성|이길 수|개월|예상 기간|예상 비용/);
+    expect(text).not.toMatch(/%|확률|승소 가능성|이길 수|예상 기간|예상 비용/);
+    // 기간 숫자는 조문 원문 구절을 인용할 때만 (예: "임대차기간이 끝나기 2개월 전까지") — 검증된 인용 구절에 있어야 한다
+    const result = resultOf(lease.question);
+    const quotes = result.answer.points.map((p) => p.quote.replace(/\s/g, "")).join(" ");
+    for (const m of text.matchAll(/\d+\s*개월/g))
+      expect(quotes.includes(m[0].replace(/\s/g, "")), m[0]).toBe(true);
   });
 
   test("DEC-021 타임라인은 참고용 표시와 단계별 난이도 라벨을 단다", () => {

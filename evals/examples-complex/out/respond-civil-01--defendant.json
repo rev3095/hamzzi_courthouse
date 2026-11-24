@@ -1,0 +1,461 @@
+{
+  "id": "respond-civil-01--defendant",
+  "category": "respond_civil",
+  "question": "저는 2016년부터 카드사 A의 신용카드를 썼습니다. 2019년 봄 운영하던 가게를 접으면서 결제를 못 하게 됐고, 2019년 가을부터 연체가 시작됐습니다. 마지막으로 본 청구서에는 남은 카드대금이 약 520만 원이었던 것으로 기억합니다. 2021년 초 카드사 A 쪽 추심 직원에게 전화가 와서 사정을 말했고, 그때 30만 원을 한 번 입금했습니다. 그 뒤로는 연락이 거의 없었습니다. 2023년쯤 처음 듣는 회사에서 전화가 와 카드값 이야기를 하길래 '지금은 어렵고 나중에 연락하겠다'고만 하고 끊은 적이 있는데, 정확히 뭐라고 말했는지는 기억이 흐립니다. 그 사이 이사를 한 번 했고, 카드사가 [이름1]을 다른 회사에 넘겼다는 통지서를 받은 기억은 없습니다. 그런데 2026년 3월 중순 법원에서 지급명령 정본이 왔습니다. [이름1]자는 회사 B라는 대부업체이고, 카드사 A로부터 [이름1]을 양수했다며 원금 610만 원과 연체이자 약 900만 원, 합계 약 1,510만 원을 지급하라는 내용입니다. 원금이 제 기억보다 90만 원 많고, 이자는 원금보다도 큽니다. 혹시 예전에 카드론을 받은 게 포함됐는지도 확실하지 않습니다. 제가 가진 자료는 2019년 무렵 청구서 사진 몇 장, 2021년 30만 원 입금한 은행 거래내역뿐입니다. 주변에서는 너무 오래된 빚이라 시효가 지났을 수도 있다고 하는데, 2021년 입금이나 2023년 통화 때문에 시효가 다시 계산되는 건지 모르겠습니다. 또 [이름1]양도 통지를 못 받았으면 회사 B가 저에게 청구할 수 있는지, 연체이자를 어떤 이율로 계산한 건지도 궁금합니다. 지급명령을 그냥 두면 어떤 효력이 생기는지, 이의신청을 하려면 언제까지 어디에 내야 하는지 법령으로 확인하고 싶습니다. 소멸시효·채무승인, [이름1]양도 대항요건, 원금과 이율 산정이라는 쟁점을 놓고 무엇을 확인해야 하는지, 이의신청 뒤 소송으로 넘어가면 어떤 순서로 진행되는지, 그리고 지금 지급명령 이의신청서를 어떻게 써야 하는지(이유를 얼마나 적어야 하는지, 어떤 자료를 함께 내야 하는지) 알려주세요.",
+  "at": "2026-11-24T17:46:31.504Z",
+  "elapsedMs": 105967,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 13719,
+    "tokens_out": 11269,
+    "latency_ms": 105315
+  },
+  "costUsdUpperEstimate": 0.28026,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "민법",
+        "이자제한법",
+        "민사소송법",
+        "여신전문금융업법 시행령",
+        "조세특례제한법",
+        "법인세법 시행령",
+        "여신전문금융업법"
+      ],
+      "lawKeywords": [
+        "질문 문장 (지능형 법령검색)",
+        "지급명령 이의신청",
+        "신용카드 대금 소멸시효 채무승인 시효중단 상사시효",
+        "카드대금 연체이자 최고이자율 초과 이자제한법 원금 산정",
+        "민사소송법 제470조 (조문이 나오는 판례)",
+        "민사소송법 제256조 (조문이 나오는 판례)"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "민법 제168조에 따르면 소멸시효는 청구, 압류·가압류·가처분, 승인으로 중단됩니다. 예전에 추심 직원과 통화한 뒤 일부 금액을 입금하신 것이 빚의 일부를 갚는 취지였다면 채무 승인으로 평가될 수 있습니다. 그 경우 그때부터 시효가 새로 진행합니다. 승인으로 볼 사정이 없었다면 처음 연체가 시작된 무렵부터 계산하게 됩니다.",
+          "source": "law:민법:제168조",
+          "quote": "소멸시효는 다음 각호의 사유로 인하여 중단된다.",
+          "check": "verified"
+        },
+        {
+          "text": "신용카드 대금은 상행위로 생긴 채권으로 보아 상법 제64조의 상사시효가 적용되는 것이 일반적입니다. 빚의 일부를 갚은 것은 채무 승인으로 보는 경향이 있습니다. 시효는 법원이 알아서 따져 주지 않으므로 소송에서 질문자께서 '소멸시효가 완성됐다'고 직접 주장하셔야 합니다. 시효가 중단됐다는 사정은 회사 B가 증명해야 합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "처음 듣는 회사와 통화하면서 '지금은 어렵고 나중에 연락하겠다'고만 하셨다면, 빚의 존재와 금액을 인정한 승인으로 보기 어렵다고 주장할 수 있습니다. 반대로 금액을 인정하거나 갚겠다고 약속했고 그 내용이 녹음돼 있다면 사정이 달라집니다. 시효 완성 전이면 승인, 완성 뒤라면 시효이익 포기가 문제될 수 있습니다. 회사 B에 녹음·기록이 있는지 밝히라고 요구해 보세요.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "앞 쟁점에서 시효 완성이 인정되면 원금·이자 다툼은 그만큼 의미가 줄어듭니다. 다만 시효가 받아들여지지 않을 수도 있으니 함께 다투는 쪽이 안전합니다. 회사 B에 채권양도계약서, 원금 구성(일시불·할부·현금서비스·카드론) 내역, 적용 이율과 계산 기간을 내라고 요구하세요. 기억하시는 청구서 금액과 차이 나는 부분은 회사 B가 증명해야 합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "이자제한법 제2조는 금전대차에서 최고이자율을 넘는 계약상 이자를 무효로 하고, 그 기준을 약정한 때의 이자율로 정합니다. 다만 카드사·대부업체 채권은 적용 범위가 달라질 수 있습니다. 그래서 연체이자를 어떤 약정이율로, 언제부터 계산했는지 회사 B가 먼저 밝히게 한 뒤 상한을 넘는지 따져 보시길 권합니다.",
+          "source": "law:이자제한법:제2조",
+          "quote": "계약상의 이자로서 제1항에서 정한 최고이자율을 초과하는 부분은 무효로 한다.",
+          "check": "verified"
+        },
+        {
+          "text": "민법 제450조에 따라 채권양도는 양도인이 통지하거나 채무자가 승낙해야 채무자에게 대항할 수 있습니다. 통지가 없었거나 옛 주소로만 가서 도달하지 않았다면 이 점을 다툴 수 있습니다. 다만 소송 중에 통지가 도달하면 보완될 수 있습니다. 또 대항요건이 없는 양수인의 재판상 청구에도 시효중단 효력이 있다는 판례(대법원 2005다41818 판결)가 있어, 결정적인 방어가 되지 않을 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "민사소송법 제470조에 따라 지급명령을 송달받은 날부터 2주 이내에 이의신청을 하면 지급명령은 그 범위에서 효력을 잃습니다. 이 기간은 불변기간이라 늘어나지 않습니다. 송달받은 정확한 날짜를 우편 송달 기록으로 확인하고, 기한 안에 되도록 빨리 내시길 권합니다.",
+          "source": "law:민사소송법:제470조",
+          "quote": "채무자가 지급명령을 송달받은 날부터 2주 이내에 이의신청을 한 때에는",
+          "check": "verified"
+        },
+        {
+          "text": "민사소송법 제474조에 따라 이의신청이 없으면 지급명령은 확정판결과 같은 효력을 갖습니다. 그러면 회사 B가 이를 근거로 통장·급여 압류 같은 강제집행에 나설 수 있습니다. 시효나 금액을 다투기도 훨씬 어려워지므로 그냥 두지 않는 쪽이 좋습니다.",
+          "source": "law:민사소송법:제474조",
+          "quote": "각하결정이 확정된 때에는 지급명령은 확정판결과 같은 효력이 있다",
+          "check": "verified"
+        },
+        {
+          "text": "이의신청서는 지급명령을 보낸 법원에 서면이나 전자소송으로 냅니다. 이유는 '청구 전부에 대하여 이의함' 정도만 적어도 됩니다(민사소송법 제469조). 이의하면 소송으로 넘어가고(민사소송법 제472조), 법원 안내에 따라 답변서를 냅니다. 이때 시효·양도 대항요건·원금·이율 주장과 함께 청구서 사진, 입금 거래내역을 내세요. 답변서를 내지 않으면 민사소송법 제257조에 따라 변론 없이 판결이 날 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:민법:제168조",
+        "lawName": "민법",
+        "articleNo": "제168조",
+        "title": "소멸시효의 중단사유",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C168%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제296조",
+        "lawName": "민법",
+        "articleNo": "제296조",
+        "title": "소멸시효의 중단, 정지와 불가분성",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C296%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:이자제한법:제2조",
+        "lawName": "이자제한법",
+        "articleNo": "제2조",
+        "title": "이자의 최고한도",
+        "effectiveFrom": "2025-07-22",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9D%B4%EC%9E%90%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C2%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:이자제한법:제3조",
+        "lawName": "이자제한법",
+        "articleNo": "제3조",
+        "title": "이자의 사전공제",
+        "effectiveFrom": "2025-07-22",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%9D%B4%EC%9E%90%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C3%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사소송법:제474조",
+        "lawName": "민사소송법",
+        "articleNo": "제474조",
+        "title": "지급명령의 효력",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C474%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제468조",
+        "lawName": "민사소송법",
+        "articleNo": "제468조",
+        "title": "지급명령의 기재사항",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C468%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사소송법:제470조",
+        "lawName": "민사소송법",
+        "articleNo": "제470조",
+        "title": "이의신청의 효력",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C470%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제256조",
+        "lawName": "민사소송법",
+        "articleNo": "제256조",
+        "title": "답변서의 제출의무",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C256%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사소송법:제257조",
+        "lawName": "민사소송법",
+        "articleNo": "제257조",
+        "title": "변론 없이 하는 판결",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C257%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:여신전문금융업법시행령:제26조",
+        "lawName": "여신전문금융업법 시행령",
+        "articleNo": "제26조",
+        "title": "과태료의 부과기준",
+        "effectiveFrom": "2026-05-06",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%97%AC%EC%8B%A0%EC%A0%84%EB%AC%B8%EA%B8%88%EC%9C%B5%EC%97%85%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C26%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:조세특례제한법:제126조의2",
+        "lawName": "조세특례제한법",
+        "articleNo": "제126조의2",
+        "title": "신용카드 등 사용금액에 대한 소득공제",
+        "effectiveFrom": "2026-09-18",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A1%B0%EC%84%B8%ED%8A%B9%EB%A1%80%EC%A0%9C%ED%95%9C%EB%B2%95/%EC%A0%9C126%EC%A1%B0%EC%9D%982",
+        "used": false
+      },
+      {
+        "id": "law:법인세법시행령:제41조",
+        "lawName": "법인세법 시행령",
+        "articleNo": "제41조",
+        "title": "기업업무추진비의 신용카드등의 사용",
+        "effectiveFrom": "2026-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%B2%95%EC%9D%B8%EC%84%B8%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C41%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:여신전문금융업법시행령:제25조",
+        "lawName": "여신전문금융업법 시행령",
+        "articleNo": "제25조",
+        "title": "규제의 재검토",
+        "effectiveFrom": "2026-05-06",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%97%AC%EC%8B%A0%EC%A0%84%EB%AC%B8%EA%B8%88%EC%9C%B5%EC%97%85%EB%B2%95%20%EC%8B%9C%ED%96%89%EB%A0%B9/%EC%A0%9C25%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:주식ㆍ사채등의전자등록에관한법률:제19조",
+        "lawName": "주식ㆍ사채 등의 전자등록에 관한 법률",
+        "articleNo": "제19조",
+        "title": "계좌관리기관",
+        "effectiveFrom": "2024-12-31",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%A3%BC%EC%8B%9D%E3%86%8D%EC%82%AC%EC%B1%84%20%EB%93%B1%EC%9D%98%20%EC%A0%84%EC%9E%90%EB%93%B1%EB%A1%9D%EC%97%90%20%EA%B4%80%ED%95%9C%20%EB%B2%95%EB%A5%A0/%EC%A0%9C19%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:여신전문금융업법:제72조",
+        "lawName": "여신전문금융업법",
+        "articleNo": "제72조",
+        "title": "과태료",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%97%AC%EC%8B%A0%EC%A0%84%EB%AC%B8%EA%B8%88%EC%9C%B5%EC%97%85%EB%B2%95/%EC%A0%9C72%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:여신전문금융업법:제57조",
+        "lawName": "여신전문금융업법",
+        "articleNo": "제57조",
+        "title": "허가ㆍ등록의 취소 등",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%97%AC%EC%8B%A0%EC%A0%84%EB%AC%B8%EA%B8%88%EC%9C%B5%EC%97%85%EB%B2%95/%EC%A0%9C57%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:여신전문금융업법:제11조",
+        "lawName": "여신전문금융업법",
+        "articleNo": "제11조",
+        "title": "허가 등의 공고",
+        "effectiveFrom": "2025-10-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%97%AC%EC%8B%A0%EC%A0%84%EB%AC%B8%EA%B8%88%EC%9C%B5%EC%97%85%EB%B2%95/%EC%A0%9C11%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "240933",
+        "caseNo": "2024마5496",
+        "caseName": "손해배상(기)[지급명령 송달 전 채무자의 이의신청의 효력이 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2024-06-07",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=240933",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "601499",
+        "caseNo": "2024마5324",
+        "caseName": "소송비용부담및확정[채무자가 지급명령 정본을 송달받은 후 변호사를 선임하여 이의신청을 하였으나 채권자가 인지를 보정하지 않아 지급명령신청서가 각하된 경우 변호사 보수가 소송비용에 포함될 수 있는지 문제된 사건]",
+        "court": "대법원",
+        "decidedAt": "2024-05-30",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=601499",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "83393",
+        "caseNo": "2004마535",
+        "caseName": "지급명령이의신청에대한각하",
+        "court": "대법원",
+        "decidedAt": "2004-07-21",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=83393",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "621993",
+        "caseNo": "2025그1024",
+        "caseName": "집행에관한이의[민사소송법 및 민사소송규칙에서 담보의 제공방식으로 정하고 있는 ‘지급을 보증하겠다는 위탁계약을 맺은 문서’의 범위가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=621993",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "619467",
+        "caseNo": "2024그834",
+        "caseName": "승계집행문부여에대한이의",
+        "court": "대법원",
+        "decidedAt": "2026-04-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619467",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "624887",
+        "caseNo": "2025나55476(본소), 2025나55477(반소)",
+        "caseName": "렌탈계약의양수금·부당이득금",
+        "court": "수원지방법원",
+        "decidedAt": "2026-03-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624887",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "619005",
+        "caseNo": "2024누10184",
+        "caseName": "재산세등 부과처분 취소",
+        "court": "부산고등법원",
+        "decidedAt": "2025-12-18",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619005",
+        "fromBody": true,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문 문장 (지능형 법령검색)",
+        "total": 11
+      },
+      {
+        "keyword": "지급명령 이의신청",
+        "total": 6
+      },
+      {
+        "keyword": "신용카드 대금 소멸시효 채무승인 시효중단 상사시효",
+        "total": 0
+      },
+      {
+        "keyword": "카드대금 연체이자 최고이자율 초과 이자제한법 원금 산정",
+        "total": 0
+      },
+      {
+        "keyword": "민사소송법 제470조 (조문이 나오는 판례)",
+        "total": 7
+      },
+      {
+        "keyword": "민사소송법 제256조 (조문이 나오는 판례)",
+        "total": 7
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "민법 제168조",
+          "exists": true
+        },
+        {
+          "citation": "이자제한법 제2조",
+          "exists": true
+        },
+        {
+          "citation": "민사소송법 제470조",
+          "exists": true
+        },
+        {
+          "citation": "민사소송법 제474조",
+          "exists": true
+        }
+      ],
+      "removed": 0
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "질문자",
+          "role": ""
+        },
+        {
+          "label": "카드사 A",
+          "role": ""
+        },
+        {
+          "label": "회사 B",
+          "role": "양수인인 대부업체(지급명령 신청인)"
+        },
+        {
+          "label": "추심 직원",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2016년",
+          "who": "질문자",
+          "what": "카드사 A의 신용카드를 사용하기 시작한다."
+        },
+        {
+          "when": "2019년 봄",
+          "who": "질문자",
+          "what": "가게를 접으면서 카드 결제를 하지 못하게 된다."
+        },
+        {
+          "when": "2019년 가을",
+          "who": "카드사 A",
+          "what": "질문자의 카드대금 연체가 시작된다."
+        },
+        {
+          "when": "2021년 초",
+          "who": "추심 직원",
+          "what": "전화로 사정을 듣고 질문자가 30만 원을 입금한다."
+        },
+        {
+          "when": "2023년쯤",
+          "who": "회사 B",
+          "what": "처음 듣는 회사에서 전화가 와 질문자가 상환이 어렵다고 답한다."
+        },
+        {
+          "when": "2026년 3월 중순",
+          "who": "회사 B",
+          "what": "법원 지급명령 정본이 송달되어 원금 610만 원, 연체이자 약 900만 원을 청구한다."
+        }
+      ],
+      "issues": [
+        {
+          "title": "소멸시효가 완성되었거나 중단·갱신되었는지",
+          "points": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "title": "청구 원금과 연체이자 산정이 적법한지",
+          "points": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "title": "지급명령 이의신청 기한과 효력",
+          "points": [
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "unknowns": [
+        "2019년 이후 카드사 A가 채무를 승인하거나 분할 상환을 요청한 서면이 있었는지?",
+        "2021년 30만 원 입금이 채무 승인이나 일부 변제로 처리되었는지?",
+        "2023년 통화 내용(상환 의사 표시 여부)을 녹음하거나 기록해 둔 자료가 있는지?",
+        "카드론이나 현금서비스 등 다른 상품이 청구 원금에 포함되어 있는지?",
+        "카드사 A가 채권 양도를 통지한 우편이나 문자가 있었는지, 이사 전 주소가 정확했는지?"
+      ]
+    }
+  }
+}

@@ -295,7 +295,7 @@ function LawSlide({ v }: { v: Vars }) {
   const revenue: [string, string, string][] = [
     ["무료 1", "법률 상담", "법령·판례를 근거로 바로 답해요"],
     ["무료 2", "문서 대리 작성", "소장·내용증명을 햄찌법원이 대신 써요"],
-    ["무료 3", "협업 변호사 자문", "이고업 변호사 자문으로 운영해요"],
+    ["무료 3", "수익 0원", "이용료·수수료를 받지 않아요"],
   ];
   return (
     <Slide
@@ -303,7 +303,7 @@ function LawSlide({ v }: { v: Vars }) {
       n={7}
       eyebrow="운영 원칙"
       title="모든 기능을 무료로, 수익은 0원입니다"
-      source="협업 변호사: 이고업 변호사(한일법무법인 구성원 변호사, 드림위드파트너스 대표). 유료화 계획은 없습니다."
+      source="유료화 계획은 없습니다."
     >
       <div className={k("grid12")}>
         <div className={k("card", "list")} style={{ gridColumn: "span 6" }}>

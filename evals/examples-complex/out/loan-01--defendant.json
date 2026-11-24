@@ -1,0 +1,486 @@
+{
+  "id": "loan-01--defendant",
+  "category": "loan",
+  "question": "2025년 3월에 ○○시에서 카페를 열면서 오랜 친구에게 도움을 받았습니다. 친구가 제 계좌로 200만 원을 보냈고, 나머지 300만 원은 제가 부탁해서 인테리어 업자에게 직접 보냈습니다. 200만 원은 빌린 돈이 맞고 9월 말까지 갚겠다고 메신저로 말한 것도 기억합니다. 그런데 300만 원은 당시 친구가 \"가게 잘되면 나도 좀 나눠줘\"라고 해서, 저는 가게에 투자하는 돈으로 이해했습니다. 그때 메신저에 \"잘되면 수익 같이 나누자\"고 제가 보낸 말이 남아 있지만, 지분이나 비율을 정한 문서는 없습니다. 갚은 것도 있습니다. 2025년 7월에 30만 원을 계좌로 보냈고, 8월쯤 가게에서 현금 50만 원을 직접 건넸는데 영수증이나 메시지는 없고 그 자리에 있던 직원이 봤을 뿐입니다. 또 친구가 가을에 모임 케이터링으로 음료와 디저트를 60만 원어치 주문하고 \"빌린 돈에서 까자\"고 말로만 하고 계산하지 않았습니다. 주문 기록은 가게 포스에 남아 있습니다. 장사가 어려워 갚는 날을 미루긴 했지만 떼먹을 생각은 없었습니다. 그런데 2026년 4월 초, 법원에서 지급명령 정본을 받았습니다. 친구가 500만 원 전부와 지연손해금을 청구했고, 받은 30만 원 이야기는 없습니다. 지금 가게 정리를 알아보는 중이라 보증금에 가압류가 들어오지 않을까 걱정도 됩니다. 제가 확인하고 싶은 것은 이렇습니다. 이의신청을 해야 하는 기한이 정확히 언제부터 어떻게 계산되는지, 이의신청서에 이유를 자세히 써야 하는지, 200만 원은 인정하고 나머지만 다툴 수 있는지, 300만 원이 투자라는 주장을 하려면 무엇이 필요한지, 증거 없는 현금 50만 원과 케이터링 대금 60만 원을 변제나 상계로 주장할 수 있는지 궁금합니다. 그리고 이의신청 뒤 소송으로 넘어가면 어떤 순서로 진행되고 답변서는 언제 내는지, 지금 이의신청서를 어떻게 써야 하는지 알려주세요.",
+  "at": "2026-11-24T17:42:59.197Z",
+  "elapsedMs": 107041,
+  "meta": {
+    "model": "claude-opus-5-5",
+    "prompt_version": "deep-2026-11-25b-title60+lite-2026-11-25-free-consult",
+    "tokens_in": 14007,
+    "tokens_out": 11322,
+    "latency_ms": 106600
+  },
+  "costUsdUpperEstimate": 0.28247,
+  "result": {
+    "outcome": "grounded",
+    "aiNotice": "AI 생성 · 무료 법률 상담",
+    "intent": {
+      "area": "",
+      "goal": "",
+      "laws": [
+        "민사소송법",
+        "민법",
+        "민사집행법",
+        "민사집행규칙",
+        "상가건물 임대차보호법"
+      ],
+      "lawKeywords": [
+        "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "대여금",
+        "지급명령 이의신청 기간 송달일 기산",
+        "투자금 대여금 구별 금전 교부 원인 증명"
+      ]
+    },
+    "answer": {
+      "points": [
+        {
+          "text": "이의신청 기한은 지급명령 정본이 송달된 날부터 2주입니다. 민사소송법 제468조는 지급명령에 이 기한을 안내하도록 정하고 있습니다. 기준은 실제로 정본을 받은 날이므로, 우편 송달 내역이나 정본에 적힌 송달일부터 먼저 확인해 보시길 권합니다.",
+          "source": "law:민사소송법:제468조",
+          "quote": "채무자가 지급명령이 송달된 날부터 2주 이내에 이의신청을 할 수 있다",
+          "check": "verified"
+        },
+        {
+          "text": "기간은 민사소송법 제170조, 민법 제157조에 따라 송달받은 다음 날부터 세고, 끝날이 토요일·공휴일이면 민법 제161조로 그다음 날까지입니다. 이 기간은 늘릴 수 없습니다. 이미 지났다면 민사소송법 제474조로 지급명령이 확정판결과 같은 효력을 가지며, 본인 책임 없는 사유가 있을 때만 민사소송법 제173조의 추후보완을 검토할 수 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "이의신청서에는 이유를 적지 않아도 되고, 사건번호와 이의한다는 뜻만 적으면 됩니다. 민사소송법 제470조상 일부만 이의하면 나머지는 확정될 수 있으니, 빌린 돈 부분까지 전부 이의한 뒤 답변서에서 차용은 인정하고 갚은 돈을 빼 달라고 하는 쪽이 유리할 수 있습니다. 이의 뒤에는 민사소송법 제472조로 소송이 되고, 법원의 답변서 제출 안내 기한을 지키시면 됩니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "빌려준 돈(소비대차)이 되려면 받은 사람이 같은 금액을 돌려주기로 약정해야 합니다. 그래서 인테리어 업자에게 보낸 돈을 받을 때 원금을 돌려주기로 약속했는지가 핵심입니다. 돌려주기로 했다면 대여금으로, 원금 반환 없이 가게 성과에 따라 이익만 나누기로 했다면 대여로 보기 어렵다는 주장이 가능합니다.",
+          "source": "law:민법:제598조",
+          "quote": "상대방은 그와 같은 종류, 품질 및 수량으로 반환할 것을 약정함으로써",
+          "check": "verified"
+        },
+        {
+          "text": "돈이 오간 사실은 인정하되 다른 이유로 받았다고 다투면, 대여 사실은 빌려줬다는 쪽이 증명해야 한다는 것이 대법원 2014다26187 판결의 태도로 알려져 있습니다. 투자 주장을 하려면 수익을 나누자는 대화 전체, 업자에게 직접 보낸 경위, 이후 원금 반환 언급 여부를 모아 두세요. 다만 원금은 돌려받고 이익만 더 받기로 한 것으로 보이면 대여로 판단될 여지도 있습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "대여금으로 인정되더라도 갚는 날을 정하지 않았다면, 친구가 상당한 기간을 정해 먼저 반환을 요구해야 합니다. 반면 갚을 날을 약속한 부분은 그날이 지난 뒤부터 지연 책임이 문제될 수 있습니다. 친구가 청구한 지연손해금의 시작일이 맞는지도 답변서에서 따져 보실 만합니다.",
+          "source": "law:민법:제603조",
+          "quote": "반환시기의 약정이 없는 때에는 대주는 상당한 기간을 정하여 반환을 최고하여야 한다",
+          "check": "verified"
+        },
+        {
+          "text": "갚았다는 사실은 갚은 쪽이 증명해야 합니다. 계좌로 보낸 돈은 이체 내역을 답변서에 첨부하면 됩니다. 현금은 영수증이 없어도 그 자리에 있던 직원을 민사소송법 제303조의 증인으로 신청하거나 사실확인서를 받을 수 있습니다. 증언만으로는 판단이 갈릴 수 있으니 당시 출금·매출 기록이나 현금을 언급한 대화도 함께 찾아보시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "케이터링 대금은 친구가 질문자에게 줄 돈이므로 민법 제492조의 상계로 빌린 돈과 맞비길 수 있습니다. 친구가 빌린 돈에서 빼자고 합의한 사실이 인정되면 그때 이미 정리된 것이고, 합의가 증명되지 않더라도 민법 제493조에 따라 답변서에 상계 의사를 밝히면 됩니다. 포스 주문 기록과 그 무렵 대화를 증거로 내시면 좋겠습니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        },
+        {
+          "text": "갚을 빚을 지정하지 않고 일부만 갚으면 법이 정한 순서로 충당되는데, 판례는 이 순서를 변제이익과 이행기 기준으로 봅니다. 대법원 2025다215255 판결은 지정 없이 일부를 갚으면 원칙적으로 모든 채무를 승인한 것으로 봅니다. 투자금을 주장하신다면 당시 빌린 돈을 갚는 뜻이었음을 보여 주는 대화를 함께 내시는 편이 안전합니다.",
+          "source": "case:2025다215255",
+          "quote": "제2호에서 변제이익을, 제3호에서 이행기를 기준으로 법정변제충당의 순서를 정한다",
+          "check": "verified"
+        },
+        {
+          "text": "가압류 집행에는 강제집행 규정이 준용되므로, 친구가 가압류 결정을 받으면 가게 보증금 반환채권도 묶일 수 있습니다. 가압류는 소송 진행 중에도 신청될 수 있어 미리 대비해 두시는 게 좋습니다.",
+          "source": "law:민사집행법:제291조",
+          "quote": "가압류의 집행에 대하여는 강제집행에 관한 규정을 준용한다",
+          "check": "verified"
+        },
+        {
+          "text": "다툼 없는 빌린 돈 부분은 여력이 있다면 일부라도 갚거나, 친구가 받지 않으면 민법 제487조의 변제공탁을 해 두는 것이 지연손해금과 집행 위험을 줄이는 데 도움이 될 수 있습니다. 가게 정리는 보증금 처분을 서두르면 오해를 살 수 있으니 소송 경과에 맞춰 진행하시길 권합니다.",
+          "source": "model",
+          "quote": "",
+          "check": "model"
+        }
+      ]
+    },
+    "articles": [
+      {
+        "id": "law:민사소송법:제469조",
+        "lawName": "민사소송법",
+        "articleNo": "제469조",
+        "title": "지급명령의 송달",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C469%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사소송법:제468조",
+        "lawName": "민사소송법",
+        "articleNo": "제468조",
+        "title": "지급명령의 기재사항",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C468%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제598조",
+        "lawName": "민법",
+        "articleNo": "제598조",
+        "title": "소비대차의 의의",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C598%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민법:제599조",
+        "lawName": "민법",
+        "articleNo": "제599조",
+        "title": "파산과 소비대차의 실효",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C599%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제90조",
+        "lawName": "민법",
+        "articleNo": "제90조",
+        "title": "채권신고기간내의 변제금지",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C90%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제91조",
+        "lawName": "민법",
+        "articleNo": "제91조",
+        "title": "채권변제의 특례",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C91%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제291조",
+        "lawName": "민사집행법",
+        "articleNo": "제291조",
+        "title": "가압류집행에 대한 본집행의 준용",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C291%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사집행법:제293조",
+        "lawName": "민사집행법",
+        "articleNo": "제293조",
+        "title": "부동산가압류집행",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C293%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민법:제603조",
+        "lawName": "민법",
+        "articleNo": "제603조",
+        "title": "반환시기",
+        "effectiveFrom": "2026-03-17",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EB%B2%95/%EC%A0%9C603%EC%A1%B0",
+        "used": true
+      },
+      {
+        "id": "law:민사소송법:제462조",
+        "lawName": "민사소송법",
+        "articleNo": "제462조",
+        "title": "적용의 요건",
+        "effectiveFrom": "2026-10-02",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%86%8C%EC%86%A1%EB%B2%95/%EC%A0%9C462%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제283조",
+        "lawName": "민사집행법",
+        "articleNo": "제283조",
+        "title": "가압류결정에 대한 채무자의 이의신청",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C283%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제290조",
+        "lawName": "민사집행법",
+        "articleNo": "제290조",
+        "title": "가압류 이의신청규정의 준용",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C290%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제309조",
+        "lawName": "민사집행법",
+        "articleNo": "제309조",
+        "title": "가처분의 집행정지",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C309%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행규칙:제178조",
+        "lawName": "민사집행규칙",
+        "articleNo": "제178조",
+        "title": "예탁원 또는 예탁자의 진술의무",
+        "effectiveFrom": "2025-07-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EA%B7%9C%EC%B9%99/%EC%A0%9C178%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제46조",
+        "lawName": "민사집행법",
+        "articleNo": "제46조",
+        "title": "이의의 소와 잠정처분",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C46%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제285조",
+        "lawName": "민사집행법",
+        "articleNo": "제285조",
+        "title": "가압류이의신청의 취하",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C285%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:상가건물임대차보호법:제5조",
+        "lawName": "상가건물 임대차보호법",
+        "articleNo": "제5조",
+        "title": "보증금의 회수",
+        "effectiveFrom": "2026-05-12",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EC%83%81%EA%B0%80%EA%B1%B4%EB%AC%BC%20%EC%9E%84%EB%8C%80%EC%B0%A8%EB%B3%B4%ED%98%B8%EB%B2%95/%EC%A0%9C5%EC%A1%B0",
+        "used": false
+      },
+      {
+        "id": "law:민사집행법:제16조",
+        "lawName": "민사집행법",
+        "articleNo": "제16조",
+        "title": "집행에 관한 이의신청",
+        "effectiveFrom": "2026-02-01",
+        "sourceUrl": "https://www.law.go.kr/%EB%B2%95%EB%A0%B9/%EB%AF%BC%EC%82%AC%EC%A7%91%ED%96%89%EB%B2%95/%EC%A0%9C16%EC%A1%B0",
+        "used": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "618179",
+        "caseNo": "2025다215255",
+        "caseName": "대여금[소멸시효가 나중에 완성되는 채무가 먼저 완성되는 채무보다 변제이익이 많다고 보아야 하는지가 문제 된 사건]",
+        "court": "대법원",
+        "decidedAt": "2026-02-26",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=618179",
+        "fromBody": false,
+        "used": true
+      },
+      {
+        "id": "624887",
+        "caseNo": "2025나55476(본소), 2025나55477(반소)",
+        "caseName": "렌탈계약의양수금·부당이득금",
+        "court": "수원지방법원",
+        "decidedAt": "2026-03-11",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624887",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "619443",
+        "caseNo": "2023나2014313",
+        "caseName": "부당이득금",
+        "court": "서울고등법원",
+        "decidedAt": "2024-01-19",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=619443",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "624227",
+        "caseNo": "2026다202468, 202469",
+        "caseName": "공사대금등청구의소·건물철거등청구",
+        "court": "대법원",
+        "decidedAt": "2026-07-16",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=624227",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "616527",
+        "caseNo": "2023다285162",
+        "caseName": "손해배상(국)",
+        "court": "대법원",
+        "decidedAt": "2026-01-22",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=616527",
+        "fromBody": false,
+        "used": false
+      },
+      {
+        "id": "220037",
+        "caseNo": "2021노345",
+        "caseName": "자본시장과금융투자업에관한법률위반·증거은닉교사·특정경제범죄가중처벌등에관한법률위반(횡령)·업무상횡령·사문서위조·위조사문서행사·주식회사등의외부감사에관한법률위반·사기",
+        "court": "서울고등법원",
+        "decidedAt": "2021-08-10",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=220037",
+        "fromBody": true,
+        "used": false
+      },
+      {
+        "id": "623019",
+        "caseNo": "2025마7365",
+        "caseName": "결정(조서)경정",
+        "court": "대법원",
+        "decidedAt": "2026-06-12",
+        "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=623019",
+        "fromBody": false,
+        "used": false
+      }
+    ],
+    "searches": [
+      {
+        "keyword": "질문을 법률 용어로 바꾼 문장 (지능형 법령검색)",
+        "total": 11
+      },
+      {
+        "keyword": "대여금",
+        "total": 4
+      },
+      {
+        "keyword": "지급명령 이의신청 기간 송달일 기산",
+        "total": 6
+      },
+      {
+        "keyword": "투자금 대여금 구별 금전 교부 원인 증명",
+        "total": 6
+      }
+    ],
+    "trace": [],
+    "searchScopeNote": "국가법령정보센터(법제처)에서 이번 질문으로 찾은 현행 법령 조문과 판례만 근거로 썼습니다. 찾지 못한 판례·법령이 없다는 뜻은 아닙니다.",
+    "mode": "ai",
+    "recheck": {
+      "ok": true,
+      "items": [
+        {
+          "citation": "민사소송법 제468조",
+          "exists": true
+        },
+        {
+          "citation": "민법 제598조",
+          "exists": true
+        },
+        {
+          "citation": "민법 제603조",
+          "exists": true
+        },
+        {
+          "citation": "2025다215255",
+          "exists": true
+        },
+        {
+          "citation": "민사집행법 제291조",
+          "exists": true
+        }
+      ],
+      "removed": 1
+    },
+    "deep": {
+      "parties": [
+        {
+          "label": "질문자(채무자)",
+          "role": "카페 운영자, 지급명령 피신청인"
+        },
+        {
+          "label": "친구(채권자)",
+          "role": "대여금 지급명령 신청인"
+        },
+        {
+          "label": "인테리어 업자",
+          "role": "300만 원 송금을 받은 자"
+        },
+        {
+          "label": "가게 직원",
+          "role": ""
+        }
+      ],
+      "events": [
+        {
+          "when": "2025년 3월",
+          "who": "친구(채권자)",
+          "what": "질문자 계좌로 200만 원을 송금했으며 질문자는 빌린 돈이라고 인정함"
+        },
+        {
+          "when": "2025년 3월",
+          "who": "친구(채권자)",
+          "what": "질문자의 부탁으로 인테리어 업자에게 300만 원을 직접 송금함"
+        },
+        {
+          "when": "2025년 9월 말 예정",
+          "who": "질문자(채무자)",
+          "what": "200만 원을 9월 말까지 갚겠다고 메신저로 약속함"
+        },
+        {
+          "when": "2025년 7월",
+          "who": "질문자(채무자)",
+          "what": "친구 계좌로 30만 원을 송금함"
+        },
+        {
+          "when": "2025년 8월",
+          "who": "질문자(채무자)",
+          "what": "가게에서 친구에게 현금 50만 원을 건넸으나 영수증이나 메시지는 없고 직원만 목격함"
+        },
+        {
+          "when": "가을",
+          "who": "친구(채권자)",
+          "what": "모임 케이터링 음료·디저트 60만 원어치를 주문하고 빌린 돈에서 공제하자고 말로만 함"
+        },
+        {
+          "when": "2026년 4월 초",
+          "who": "친구(채권자)",
+          "what": "500만 원 및 지연손해금을 청구하는 지급명령이 법원에서 송달됨"
+        }
+      ],
+      "issues": [
+        {
+          "title": "지급명령 이의신청 기한과 방식은 어떻게 되는지",
+          "points": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "title": "300만 원이 투자금인지 대여금인지",
+          "points": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "title": "현금 50만 원 변제와 케이터링 대금 상계가 인정되는지",
+          "points": [
+            6,
+            7,
+            8
+          ]
+        },
+        {
+          "title": "가압류 등 집행 위험을 어떻게 다룰지",
+          "points": [
+            9,
+            10
+          ]
+        }
+      ],
+      "unknowns": [
+        "지급명령 정본을 실제로 받은 날짜는 언제인지",
+        "이의신청서를 이미 제출했거나 기한이 얼마나 남았는지",
+        "200만 원 차용증이나 메신저 대화에 상환 조건이 구체적으로 남아 있는지",
+        "300만 원 송금 당시 투자 조건을 주고받은 대화 전체가 남아 있는지",
+        "30만 원 송금 내역과 50만 원 현금 수령을 입증할 자료가 더 있는지"
+      ]
+    }
+  }
+}

@@ -52,7 +52,7 @@ import {
 } from "./policy";
 import { DEEP_ANSWER_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prompts";
 
-export const DEEP_PROMPT_VERSION = "deep-2026-11-25-free-consult";
+export const DEEP_PROMPT_VERSION = "deep-2026-11-25b-title60";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
 // 2026-11-19 첫 실호출에서 구조화가 실패해 일반 답변으로 내려갔다. 사실 8개·쟁점 4개·확인할 사실 5개를 한국어 JSON으로
 // 쓰면 1,000토큰을 넘을 수 있어(출력 한도 초과 = 실패) 한도를 2,000으로 늘렸다. Haiku 출력 2,000토큰 = $0.001
@@ -89,6 +89,10 @@ export async function runDeepAnalysis(
     costCapUsd?: number;
     caseHint?: string | null;
     lawHints?: { lawName: string; articleNos: string[] }[];
+    /** 꼭 근거에 넣을 판례 일련번호 — 그 요청에서 법제처로 다시 가져온다 (전문 에이전트 아카이브 만들기, DEC-057) */
+    pinnedCaseIds?: string[];
+    /** 답변이 어긋나지 않게 할 검토 메모 (아카이브 만들기 전용, 사용자 입력이 아니다) */
+    notes?: string;
   } = {},
 ): Promise<DeepAnalysisOutput> {
   const tier = tierOf(deps.tier);
@@ -186,6 +190,11 @@ export async function runDeepAnalysis(
   for (const r of byIssue)
     if (r.status === "fulfilled") for (const a of r.value) evidence.addArticle(a);
   for (const a of found.articles) evidence.addArticle(a);
+  // 지정한 판례는 검색 결과보다 앞에 둔다(넘기는 판례 수가 정해져 있다). 가져오지 못하면 빠진다
+  const pinned = await Promise.all(
+    (deps.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
+  );
+  for (const c of pinned) if (c) evidence.addCase(c);
   for (const c of found.cases) evidence.addCase(c);
 
   // ③ 쟁점별 답변
@@ -221,6 +230,11 @@ export async function runDeepAnalysis(
                 content: [
                   userMessage(input.maskedText, context),
                   `<사건_구조>\n${structDigest(struct)}\n</사건_구조>`,
+                  ...(deps.notes
+                    ? [
+                        `<검토_메모>\n이 메모와 어긋나게 쓰지 않습니다. 메모의 내용도 근거 목록에 그 근거가 있을 때만 근거 문단으로 씁니다.\n${deps.notes}\n</검토_메모>`,
+                      ]
+                    : []),
                   `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
                 ].join("\n\n"),
