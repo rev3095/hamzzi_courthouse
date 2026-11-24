@@ -108,7 +108,7 @@ describe("DEC-057 저장된 아카이브 세트", () => {
     }
   });
 
-  test("절대 규칙 1: 근거 답변·민사·형사 문단은 모두 그 세트 근거 목록에 있는 출처이고 검증을 거쳤다", () => {
+  test("절대 규칙 1: 근거 문단은 그 세트 근거 목록의 출처로 인용 검증을 거쳤고, 그 밖은 모델 근거 문단(DEC-055)이다", () => {
     for (const item of all) {
       const known = new Set([
         ...item.result.articles.map((a) => a.id),
@@ -120,6 +120,13 @@ describe("DEC-057 저장된 아카이브 세트", () => {
         ...item.civil.points,
         ...item.criminal.points,
       ]) {
+        // 결과 확정 표현은 어느 문단에도 없다 (절대 규칙 2)
+        expect(isAssertive(p.text), `${item.id}: ${p.text}`).toBe(false);
+        // DEC-055: 법제처 근거 밖은 모델이 아는 근거 문단(source "model", check "model")으로만 남는다
+        if (p.source === "model") {
+          expect(p.check, `${item.id}: ${p.text}`).toBe("model");
+          continue;
+        }
         expect(known.has(p.source), `${item.id}: ${p.source}`).toBe(true);
         expect(["verified", "quote_mismatch"]).toContain(p.check);
         expect(isAssertive(p.text), `${item.id}: ${p.text}`).toBe(false);

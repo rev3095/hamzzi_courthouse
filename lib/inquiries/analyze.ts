@@ -57,10 +57,11 @@ export async function analyzeInquiry(
     // 비로그인 하루 횟수 제한·저장은 유료 모드와 같은 트랜잭션으로 처리한다 (절대 규칙 7).
     // 예시 질문 재생은 해석이 필요 없는 저장된 결과라 횟수를 차감하지 않는다 (DEC-027). 주간 카운터도 세지 않는다
     // 주간 예산은 단계 가중치만큼 차감한다 (DEC-036: Light 2 · Pro 20 · Pro Max 100단위)
-    // 분야별 비서는 고른 단계와 상관없이 법률 답변을 Opus 5.5(effort medium, Pro Max)로 쓴다 (DEC-057, 사용자 결정 2026-11-25)
+    // 분야별 비서는 고른 단계와 상관없이 법률 답변을 Pro Max(지금 Opus 5.5 effort high)로 쓴다 (DEC-057, 사용자 결정 2026-11-25)
     const tier = tierOf(assistant ? ASSISTANT_ANSWER_TIER : opts.tier);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
-    const deep = opts.deep === true;
+    // 전문 에이전트 질문은 DeepSearch를 쓰지 않는다 — 지시문·대화 한마디가 일반 답변 경로에만 있다 (DEC-057)
+    const deep = opts.deep === true && !assistant;
     // 긴 질문(2,000자 넘게)은 입력 몫만큼 상한과 예산 가중치를 늘린다 (2026-11-25 질문 한도 10,000자)
     const allowance = longInputAllowanceUsd(tier.model, inquiry.masked_text.length);
     const capUsd = (deep ? tier.deep.capUsd : tier.capUsd) + allowance;

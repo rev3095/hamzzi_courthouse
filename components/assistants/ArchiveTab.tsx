@@ -280,6 +280,13 @@ function Points({ points, result }: { points: CheckedPoint[]; result: DemoAnalys
   return (
     <ol>
       {points.map((p, i) => {
+        // 법제처 근거 없이 모델이 쓴 문단(DEC-055)은 결과 화면처럼 출처 상자 없이 문단만 보인다
+        if (p.check === "model")
+          return (
+            <li key={i} className="hza-point">
+              <p>{p.text}</p>
+            </li>
+          );
         const ref = sourceRef(p.source, result);
         return (
           <li key={i} className="hza-point text-[15px] leading-relaxed">

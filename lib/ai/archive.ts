@@ -26,7 +26,7 @@ import { userMessage } from "./message";
 import { tierOf } from "./models";
 import { screenPoints } from "./policy";
 
-export const ARCHIVE_PROMPT_VERSION = "archive-2026-11-25";
+export const ARCHIVE_PROMPT_VERSION = "archive-2026-11-25b";
 
 const ARCHIVE_SYSTEM = `당신은 햄찌법원 전문 에이전트의 사례 정리 담당(AI)입니다. 한 사연에 대해 사용자가 실제로 도움을 받을 수 있게 아래 항목을 정리합니다.
 입력: 사연, 사용자의 입장(원고 쪽 또는 피고 쪽)과 서류 단계(내용증명을 쓰는지·받았는지, 소장·고소장을 쓰는지·받았는지, 서류 전 내용 정리 단계인지), 이미 검증된 답변 요약, 근거 목록.
@@ -42,6 +42,8 @@ const ARCHIVE_SYSTEM = `당신은 햄찌법원 전문 에이전트의 사례 정
 - 근거 목록에 없는 법령·조문·판례·사건번호를 쓰지 않습니다. 요건 설명은 civil·criminal 문단에서 근거 키와 함께만 합니다.
 - situation·steps·evidence·document·note에는 숫자(날짜·기간·금액)와 조문 번호·사건번호를 쓰지 않습니다. 기간은 "정해진 기간 안에"처럼 씁니다.
 - 사용자 사건이 성립한다·처벌된다·이긴다·돌려받는다고 단정하지 않습니다. 요건은 "이 조문은 ~한 경우를 정하고 있어요"처럼 설명하고, 판단은 법원·수사기관이 한다고 씁니다. "반드시"·"무조건" 같은 표현과 승패·가능성·유불리 판단을 쓰지 않습니다.
+- 검토 메모가 있으면 그 사실과 어긋나게 쓰지 않습니다. 메모의 내용도 근거 문단에는 근거 목록에 그 근거가 있을 때만 씁니다.
+- 에이전트 자신이나 이 서비스에 대한 말("저는 피해자를 돕는 비서라서" 등)을 쓰지 않습니다. 사용자의 상황과 할 일만 씁니다.
 - 쉬운 말과 존댓말로 씁니다.`;
 
 export type ArchiveBuild = { item: ArchiveItem; costUsd: number };
@@ -61,8 +63,11 @@ export async function buildArchiveItem(
       model: deps.model,
       lawSource: deps.lawSource,
       tier: "max",
-      caseHint: a.caseHint,
-      lawHints: a.lawHints,
+      // 시나리오의 꼭 가져올 조문을 앞에 둔다 (무료 검색은 앞에서부터 셋까지 가져온다)
+      caseHint: scenario.focus?.caseHint ?? a.caseHint,
+      lawHints: [...(scenario.focus?.lawHints ?? []), ...a.lawHints],
+      pinnedCaseIds: scenario.focus?.pinnedCaseIds,
+      notes: scenario.focus?.notes,
     },
   );
   // ② 검증 + 시각자료
@@ -100,6 +105,11 @@ export async function buildArchiveItem(
           content: [
             userMessage(maskedText, []),
             `<입장_서류단계>\n${SIDE_LABEL[scenario.side]} · ${DOC_STAGE_LABEL[scenario.stage]}\n</입장_서류단계>`,
+            ...(scenario.focus?.notes
+              ? [
+                  `<검토_메모>\n이 메모와 어긋나게 쓰지 않습니다.\n${scenario.focus.notes}\n</검토_메모>`,
+                ]
+              : []),
             `<검증된_답변>\n${result.answer.points.map((p) => `- ${p.text}`).join("\n") || "(없음)"}\n</검증된_답변>`,
             `<근거_목록>\n${liteDigest(deep.evidence, keys)}\n</근거_목록>`,
             `출처로 쓸 수 있는 근거 키: ${keys.join(", ")}`,

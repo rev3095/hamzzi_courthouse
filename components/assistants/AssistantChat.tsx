@@ -3,7 +3,7 @@
 // 한 번 보내기 = 질문 1건이다. 일반 질문과 같은 길을 간다:
 //   POST /inquiries (scanInput 마스킹·민감정보 동의, 절대 규칙 4) → 둘째 질문부터 parentInquiryId로 이어 묻기
 //   → POST /analyze { assistant } (하루 횟수·비용 상한·인용 검증은 서버가 그대로, 절대 규칙 1·7)
-// 말풍선에는 검증을 통과한 문단만 보이고, 문단마다 출처와 AI 고지(AI_NOTICE)을 단다 (절대 규칙 6).
+// 말풍선에는 검증을 통과한 문단(과 DEC-055의 모델 근거 문단)만 보이고, 문단마다 출처와 AI 고지(AI_NOTICE)을 단다 (절대 규칙 6).
 // 이 기기(sessionStorage)에는 질문 번호와 서버가 돌려준 마스킹본만 둔다 — 원문은 입력란에만 있다 (DEC-006).
 // usePathname 같은 라우트 훅은 쓰지 않는다 (cacheComponents, 레이아웃의 안내 챗봇에서도 쓰인다).
 import Link from "next/link";
@@ -390,6 +390,13 @@ function AnswerBubble({
       {points.length > 0 ? (
         <ol>
           {points.map((p, i) => {
+            // 법제처 근거 없이 모델이 쓴 문단(DEC-055)은 결과 화면처럼 출처 상자 없이 문단만 보인다
+            if (p.check === "model")
+              return (
+                <li key={i} className="hza-point">
+                  <p>{p.text}</p>
+                </li>
+              );
             const ref = sourceRef(p.source, result);
             return (
               <li key={i} className="hza-point">

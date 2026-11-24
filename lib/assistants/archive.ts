@@ -148,6 +148,8 @@ export function guideLineOk(text: string): boolean {
   if (!t || t.length > ARCHIVE_LIMITS.line) return false;
   if (hasNumber(t)) return false;
   if (isAssertive(t) || OUTCOME.test(t)) return false;
+  // 정리 문장은 사용자의 상황만 — 에이전트·서비스 자신에 대한 말은 버린다
+  if (/고소미|내집마련|중고천국|비서|에이전트|햄찌/.test(t)) return false;
   if (LEGAL_CONCLUSION.test(t) || LAW_BASIS.test(t.replace(/\s+/g, ""))) return false;
   if (articlesIn(t).length > 0 || caseNumbersIn(t).length > 0) return false;
   if (scanInput(t).findings.length > 0) return false;

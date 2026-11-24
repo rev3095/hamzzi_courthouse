@@ -254,6 +254,18 @@ describe("DEC-036 사용자가 고른 단계로 답변한다", () => {
     });
   });
 
+  test("F-018 DEC-057 에이전트 질문은 deep을 보내도 DeepSearch가 아니라 일반 답변 경로(지시문·대화 한마디)로 간다", async () => {
+    lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { assistant: "home", deep: true });
+    expect(lite.runLiteAnalysis).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        assistant: expect.objectContaining({ promptTag: "assistant-home-v3" }),
+      }),
+    );
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight);
+  });
+
   test("DEC-037 승인된 절차 라벨이 있으면 결과에 싣는다 (유료 경로는 분류 호출 허용)", async () => {
     lite.runLiteAnalysis.mockResolvedValue(LITE_OUT);
     cite.verifyDraft.mockResolvedValue({
