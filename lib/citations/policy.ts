@@ -3,6 +3,7 @@
 // ①·③ 실패(실존 미확인 포함)는 문단을 빼고, ②만 실패하면 "확인 필요"(quote_mismatch)로 표시한다.
 import type { DeepMap } from "@/lib/ai/deep-policy";
 import type { VirtualDocument } from "@/lib/documents/virtual";
+import type { AnalysisTiming } from "@/lib/ai/timing";
 import type { AssistantId } from "@/lib/assistants/agents";
 import type { AssistantTalk } from "@/lib/assistants/talk";
 import type { MaterialsMap } from "@/lib/materials/map";
@@ -130,6 +131,8 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   materials?: MaterialsMap;
   /** 가상 문서 (DEC-062): 예시 질문(가상 사연) 결과에만 붙는 문서 초안. 서비스 요청 경로에서는 만들지 않는다 */
   document?: VirtualDocument;
+  /** 단계별 분석 시간 (DEC-063): 전체 ms와 단계마다의 ms. 글은 담지 않는다 */
+  timing?: AnalysisTiming;
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";

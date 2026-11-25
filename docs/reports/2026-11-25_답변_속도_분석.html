@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>햄찌법원 답변 속도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work — 신문 그래픽 데스크처럼, 결론이 제목
+   IDEA 한 질문이 지나가는 작업 공정표(간트)를 직접 고쳐 보는 계기판
+   PICTURE 위: 단계별 막대가 시간축 위에 놓이는 공정표 시뮬레이터 / 가운데: 출력 토큰 × 걸린 시간 실측 산점도
+   COLOUR 깊은 바다 #0a2540 바탕(두 테마 공통), 하늘 #8fd3ff, 흰색, 신호 분홍 #ff5c8a
+   TYPE Hanken Grotesk 300 큰 숫자 + Noto Sans KR 본문
+   LAYOUT 세 개의 가로 띠: 시뮬레이터(가장 큼) · 실측 데이터 · 왜 느린지와 할 일. 600px 아래는 한 줄로 쌓음 */
+:root{color-scheme:dark;--bg:#0a2540;--deep:#071a2f;--panel:#0f2f52;--line:#24507e;--ink:#f3f8ff;--mute:#a9c3dd;--sky:#8fd3ff;--pink:#ff5c8a;--amber:#ffc65c;--mint:#7be0b4}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans KR","Hanken Grotesk",system-ui,sans-serif;overflow-x:clip}
+.band{padding-block:clamp(26px,4vw,56px);padding-inline:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1{font:700 clamp(30px,4.4vw,50px)/1.1 "Noto Sans KR",sans-serif;letter-spacing:-.02em;margin:0 0 12px;text-wrap:balance}
+h2{font:700 clamp(22px,2.6vw,30px)/1.2 "Noto Sans KR",sans-serif;margin:0 0 8px;letter-spacing:-.01em}
+h3{font-size:17px;margin:0 0 6px}
+p{margin:0 0 10px;max-width:70ch}
+.lead{color:var(--mute);font-size:17px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(11em,1fr));gap:10px;margin:18px 0 22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font:300 clamp(30px,3.6vw,44px)/1 "Hanken Grotesk",sans-serif;white-space:nowrap}
+.kpi span{color:var(--mute);font-size:13px}
+.sim{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+button,select,input{font:inherit;color:var(--ink)}
+.pre{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
+.pre[aria-pressed=true]{background:var(--sky);color:#061a2e;border-color:var(--sky);font-weight:700}
+.pre:focus-visible,select:focus-visible,input:focus-visible,.mini:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.gantt{display:grid;gap:8px;margin-top:6px}
+.row{display:grid;grid-template-columns:9.5em minmax(0,1fr);gap:10px;align-items:center}
+.row .nm{font-size:14px;line-height:1.3}
+.track{position:relative;height:30px;background:var(--deep);border-radius:8px}
+.bar{position:absolute;top:3px;bottom:3px;border-radius:6px;display:flex;align-items:center;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .lbl{position:absolute;left:6px;font-size:12px;color:#061a2e;font-weight:700;white-space:nowrap}
+.axis{display:grid;grid-template-columns:9.5em minmax(0,1fr);gap:10px;font-size:12px;color:var(--mute)}
+.ticks{position:relative;height:18px}
+.ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.marker{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--pink)}
+.res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.res div{background:var(--deep);border-radius:10px;padding:10px 12px}
+.res b{display:block;font:300 clamp(26px,3vw,38px)/1.05 "Hanken Grotesk",sans-serif;white-space:nowrap}
+.res span{font-size:13px;color:var(--mute)}
+.res .hot b{color:var(--pink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--mute);margin-top:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.ed{display:grid;gap:10px}
+.st{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px}
+.st header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.st header b{font-size:14px}
+.f{display:grid;grid-template-columns:7em minmax(0,1fr) 4.6em;gap:8px;align-items:center;font-size:13px;color:var(--mute)}
+.f output{color:var(--ink);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--sky);height:28px}
+select{background:var(--deep);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-height:36px;font-size:14px}
+.tg{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;min-height:32px}
+.tg input{width:18px;height:18px;accent-color:var(--pink)}
+.mini{background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 10px;min-height:32px;cursor:pointer;font-size:13px;color:var(--mute)}
+.fig{position:relative;height:380px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font-family:"Hanken Grotesk","Noto Sans KR",sans-serif;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{color:var(--mute);font-weight:500}
+td{font-variant-numeric:tabular-nums}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(16em,1fr));gap:14px}
+.why .card p{color:var(--mute);font-size:15px}
+.do li{margin-bottom:8px}
+.note{font-size:13px;color:var(--mute)}
+.tip{position:absolute;pointer-events:none;background:#061a2e;border:1px solid var(--sky);border-radius:8px;padding:6px 9px;font-size:13px;display:none;white-space:nowrap;z-index:2}
+@media(max-width:860px){.sim,.two{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.row,.axis{grid-template-columns:6.5em minmax(0,1fr)}.res{grid-template-columns:minmax(0,1fr)}.fig{height:300px}.f{grid-template-columns:5.5em minmax(0,1fr) 4.2em}}
+@media(prefers-reduced-motion:no-preference){.bar{transition:left .35s,width .35s}}
+</style>
+</head>
+<body>
+<section class="band">
+<div class="wrap">
+<h1>답변 시간의 90%는 모델이 글자를 쓰는 시간이에요</h1>
+<p class="lead">햄찌법원 분석 271건(2026-11-01 ~ 11-25, 개발 DB)을 재 보니, Opus DeepSearch는 <b>걸린 시간 ≈ 6.5초 + 출력 1,000토큰마다 8.3초</b>로 거의 정확히 맞아요(R² 0.99). 검색·검증 같은 나머지는 6~7초뿐이고, 나머지는 모델이 생각하고 쓰는 토큰 수가 정합니다. 아래 공정표에서 단계를 바꿔 보며 줄일 방법을 시험해 보세요.</p>
+<div class="kpis" id="kpis"></div>
+
+<div class="sim">
+  <div class="card">
+    <div class="presets" id="presets" role="group" aria-label="미리 정한 구성"></div>
+    <div class="gantt" id="gantt" aria-live="polite"></div>
+    <div class="axis"><span></span><div class="ticks" id="ticks"></div></div>
+    <div class="legend"><span><i style="background:var(--sky)"></i>모델 생각 토큰</span><span><i style="background:var(--mint)"></i>모델 답 토큰</span><span><i style="background:var(--amber)"></i>법제처 검색·검증</span><span><i style="background:var(--pink);width:3px"></i>사용자가 첫 글자를 보는 때</span></div>
+    <div class="res" id="res"></div>
+    <p class="note" style="margin-top:10px">초당 토큰 속도는 실측 중간값(Haiku 148 · Sonnet 105 · Opus 111, 출력 500토큰 넘는 행 기준)에 첫 응답 대기 0.8초를 더해 계산해요. 비용은 출력 토큰 정가만 셉니다. Google AI 구성은 공개된 동작 방식으로 잡은 가정이에요.</p>
+  </div>
+  <div class="card">
+    <h3>단계 편집기</h3>
+    <div class="ed" id="ed"></div>
+    <label class="tg" style="margin-top:10px"><input type="checkbox" id="stream"> 답을 쓰는 동안 바로 보여 주기(스트리밍)</label>
+    <button class="mini" id="reset" type="button" style="margin-top:6px">이 구성 처음 값으로</button>
+  </div>
+</div>
+</div>
+</section>
+
+<section class="band" style="background:var(--deep)">
+<div class="wrap">
+<h2>실측: 출력 토큰이 늘면 시간이 그만큼 늘어요</h2>
+<p class="lead">점 하나가 분석 1건이에요. 선은 경로별 직선 맞춤입니다. 예시 답변을 만들려고 관리자 모드로 돌린 분석이 많이 섞여 있어요(11-25에 186건).</p>
+<div class="two">
+  <div class="card"><div class="fig" id="sc"><svg id="scs" role="img" aria-label="출력 토큰과 걸린 시간 산점도"></svg><div class="tip" id="tip"></div></div>
+  <div class="legend" id="sclg"></div></div>
+  <div class="card"><h3>경로별 걸린 시간</h3><div class="scroll"><table id="tbl"></table></div>
+  <p class="note" style="margin-top:10px">검색 전용(무료 모드)은 모델 없이 법제처만 불러 1.3~2.1초예요. 법제처 자체는 빠릅니다.</p></div>
+</div>
+</div>
+</section>
+
+<section class="band">
+<div class="wrap">
+<h2>Google AI는 왜 1~2초인가</h2>
+<div class="why">
+  <div class="card"><h3>첫 글자를 바로 흘려보냄</h3><p>구글은 답을 쓰는 즉시 화면에 흘려보내요(스트리밍). 1~2초는 다 쓴 시간이 아니라 첫 글자가 보인 시간이에요. 햄찌법원은 답 전체를 JSON으로 다 받고, 인용을 법제처에서 다시 확인한 뒤에야 보여 줍니다.</p></div>
+  <div class="card"><h3>생각 토큰이 거의 없음</h3><p>검색 요약용 빠른 모델은 생각을 짧게 하거나 하지 않아요. Opus 5.5는 생각을 끌 수 없고, effort high에서 DeepSearch 1건에 평균 약 1만 토큰(대부분 생각)을 씁니다. 초당 약 110토큰이라 이것만 80~90초예요. xhigh는 상한 24,000토큰이라 최대 3분을 넘길 수 있어요.</p></div>
+  <div class="card"><h3>검증하지 않음</h3><p>구글 요약은 인용을 법령 원문과 대조하지 않아요. 햄찌법원은 조문·판례를 법제처에서 다시 조회해 맞는 문단만 남깁니다(절대 규칙 1). 다만 이 단계는 몇 초뿐이라 느린 이유는 아니에요.</p></div>
+  <div class="card"><h3>미리 만든 답이 많음</h3><p>자주 묻는 검색어는 미리 만들어 둔 요약을 바로 꺼내요. 햄찌법원도 예시 질문은 저장된 답을 재생해 0초예요(22건).</p></div>
+</div>
+<h2 style="margin-top:30px">줄이는 방법 (위 편집기로 효과 확인)</h2>
+<ol class="do">
+  <li><b>빠른 답 먼저, 깊은 답은 이어서</b> — Haiku가 5초 안에 요약과 사건 구조를 먼저 보여 주고, Opus 답은 뒤에서 완성되면 바꿔 끼웁니다. 프리셋 "빠른 답 먼저"로 첫 글자가 약 90초 → 약 1초, 요약 전체는 약 5초에 보여요.</li>
+  <li><b>스트리밍</b> — 답 문단을 다 쓰기 전에 하나씩 보여 주기. 다만 문단마다 인용 검증을 끝내고 내보내야 해서(절대 규칙 1) 문단 단위로 흘려보내는 방식이 맞아요.</li>
+  <li><b>effort 조절</b> — 긴 질문 xhigh → high만 해도 생각 토큰이 줄어 1분 이상 빨라지고 비용도 줄어요(답 질 차이는 평가로 확인 필요, 유료).</li>
+  <li><b>구조화와 검색을 겹치기</b> — 사건 구조화(Haiku)와 질문 전체 검색을 동시에 시작하면 몇 초를 아낍니다. 효과는 작아요.</li>
+</ol>
+<p class="note">지금부터 모든 분석은 단계별 시간(준비·질문 해석·검색·답변 쓰기·검증·정리)을 결과에 함께 저장해요(DEC-063). 다음 판에서는 이 페이지의 단계 막대를 추정이 아니라 실측으로 채울 수 있어요.</p>
+</div>
+</section>
+
+<script>
+{
+const ROWS = [["11-01 11:31","replay",0,0,0,1],["11-01 11:31","search_only",0,0,0,1288],["11-01 11:41","replay",0,0,0,1],["11-01 11:47","replay",0,0,0,0],["11-01 12:14","search_only",0,0,0,1377],["11-01 12:16","replay",0,0,0,2],["11-01 12:17","replay",0,0,0,0],["11-01 15:09","search_only",0,0,0,1572],["11-01 15:11","replay",0,0,0,0],["11-01 18:37","replay",0,0,0,1],["11-07 04:47","search_only",0,0,0,1745],["11-11 15:31","replay",0,0,0,1],["11-14 20:50","replay",0,0,0,1],["11-14 20:51","replay",0,0,0,0],["11-14 20:51","replay",0,0,0,0],["11-15 17:12","replay",0,0,0,2],["11-15 18:22","replay",0,0,0,2],["11-15 18:23","replay",0,0,0,1],["11-15 23:30","replay",0,0,0,1],["11-15 23:31","replay",0,0,0,1],["11-15 23:35","replay",0,0,0,1],["11-17 22:25","replay",0,0,0,2],["11-17 23:20","replay",0,0,0,1],["11-18 17:00","sonnet",0,6765,784,9934],["11-18 20:50","sonnet",0,7127,617,9025],["11-18 20:52","sonnet",0,5001,721,10877],["11-18 20:54","sonnet",0,7135,958,11483],["11-18 20:56","sonnet",0,4849,233,6531],["11-18 23:12","sonnet",0,5165,502,8360],["11-18 23:44","sonnet",0,7329,989,13519],["11-19 05:40","opus",0,10761,2100,25531],["11-19 12:43","opus",0,10051,1673,24634],["11-19 12:43","opus",0,8880,1654,20571],["11-19 12:43","opus",0,8713,1494,18235],["11-19 12:44","opus",0,10252,1794,22316],["11-19 12:44","opus",0,9806,1989,24417],["11-19 12:44","opus",0,7938,1906,22717],["11-19 12:45","opus",0,9357,2101,25278],["11-19 12:45","opus",0,10428,1765,20899],["11-19 12:46","opus",0,11373,2044,24701],["11-19 12:46","opus",0,11567,1803,22679],["11-19 12:46","opus",0,7986,1612,21590],["11-19 12:47","opus",0,10013,1738,22517],["11-19 12:47","opus",0,9485,1819,21657],["11-19 12:47","opus",0,10259,1734,20049],["11-19 12:48","opus",0,10434,1701,22251],["11-19 12:48","opus",0,10320,1896,22343],["11-19 12:49","opus",0,10525,1602,19629],["11-19 12:49","opus",0,10081,2247,25525],["11-19 12:49","opus",0,7776,1411,18187],["11-19 12:50","opus",0,10057,1689,21630],["11-19 12:50","opus",0,8837,1850,22484],["11-19 12:50","opus",0,9057,1539,19759],["11-19 13:16","opus",0,8938,1594,22679],["11-19 13:17","opus",0,7331,1706,21626],["11-19 13:17","opus",0,11568,2145,25808],["11-19 13:18","opus",0,12070,1981,30190],["11-19 14:41","opus",1,14646,3082,29483],["11-19 20:59","sonnet",1,14444,1897,17986],["11-19 20:59","haiku",1,13730,2173,14656],["11-19 20:59","sonnet",0,6277,754,11815],["11-19 21:42","opus",0,7495,1825,25129],["11-19 21:42","opus",0,8259,1570,20712],["11-19 21:42","opus",0,6417,1834,22548],["11-19 21:43","opus",0,7459,1895,23033],["11-19 21:43","opus",0,6560,2097,24966],["11-19 21:44","opus",0,8198,1948,22397],["11-20 00:45","opus",0,7281,1795,23637],["11-20 00:46","opus",0,8319,1678,21081],["11-20 00:46","opus",0,7232,1994,24245],["11-20 00:47","opus",0,7499,2228,24895],["11-20 00:47","opus",0,7902,1945,24669],["11-20 00:47","opus",0,8039,1626,21410],["11-20 11:15","search_only",0,0,0,1995],["11-20 11:38","opus",0,6839,1875,22479],["11-20 11:42","opus",0,6588,1958,24146],["11-24 16:34","sonnet",0,8671,961,16086],["11-24 19:52","opus",0,7585,2187,26780],["11-24 19:54","opus",0,7629,1923,24794],["11-24 19:55","replay",0,0,0,1],["11-24 19:57","replay",0,0,0,0],["11-24 19:57","opus",0,7279,2306,27602],["11-24 19:57","search_only",0,0,0,2134],["11-24 20:29","opus",0,8614,1781,21770],["11-25 01:04","opus",0,8772,1777,21322],["11-25 01:05","opus",1,16881,5735,50808],["11-25 01:09","opus",0,8337,1935,23272],["11-25 01:10","opus",0,11697,2741,31472],["11-25 01:57","replay",0,0,0,0],["11-25 01:58","opus",0,8428,2783,31403],["11-25 01:58","opus",0,10103,3038,33062],["11-25 02:03","opus",0,7805,2944,33200],["11-25 02:03","opus",1,17912,3785,35836],["11-25 02:04","opus",0,6341,2353,30815],["11-25 02:04","opus",1,16062,7346,68868],["11-25 02:04","opus",0,10444,3094,34955],["11-25 02:04","opus",1,18121,9686,86058],["11-25 02:04","opus",0,10030,2127,26549],["11-25 02:05","opus",0,10596,3668,39519],["11-25 02:05","opus",0,10696,3192,36340],["11-25 02:05","opus",0,9420,2369,28841],["11-25 02:05","opus",1,15595,8540,76134],["11-25 02:05","opus",1,18163,10301,91113],["11-25 02:05","opus",0,9128,2721,35746],["11-25 02:06","opus",1,18868,14112,117016],["11-25 02:06","opus",0,6869,2685,29483],["11-25 02:06","opus",1,13076,14184,126376],["11-25 02:06","opus",0,9123,3203,33001],["11-25 02:07","opus",0,8618,2652,29818],["11-25 02:08","opus",0,9561,3347,36781],["11-25 02:08","opus",1,19360,11658,102186],["11-25 02:08","opus",0,10164,3274,35719],["11-25 02:08","opus",0,9262,6936,77610],["11-25 02:09","opus",0,9313,3435,41258],["11-25 02:09","opus",0,10215,3539,37900],["11-25 02:09","opus",0,10984,3162,34731],["11-25 02:10","opus",0,9028,4567,50104],["11-25 02:10","opus",1,15875,8717,82374],["11-25 02:10","opus",1,17815,7254,75856],["11-25 02:10","opus",0,9382,2865,34424],["11-25 02:11","opus",0,9473,3200,34352],["11-25 02:11","opus",0,8403,3770,41307],["11-25 02:11","opus",1,18530,5116,45647],["11-25 02:11","opus",1,17628,3539,31006],["11-25 02:12","opus",0,10464,2273,28030],["11-25 02:12","opus",1,7700,4315,38712],["11-25 02:12","opus",0,9169,3537,39683],["11-25 02:12","opus",1,16827,4609,44353],["11-25 02:12","opus",0,8519,3605,39176],["11-25 02:13","opus",0,10431,3186,35631],["11-25 02:13","opus",0,6663,2898,34738],["11-25 02:14","opus",1,14365,6863,63064],["11-25 02:14","opus",1,16022,12227,103547],["11-25 02:14","opus",1,16286,2667,27316],["11-25 02:15","opus",1,16662,9347,86494],["11-25 02:15","opus",0,9325,2994,34025],["11-25 02:15","opus",0,9347,3125,31964],["11-25 02:15","opus",0,8355,3298,34357],["11-25 02:15","opus",0,7985,3029,34607],["11-25 02:16","opus",0,9899,3364,34357],["11-25 02:16","opus",0,5036,3711,37781],["11-25 02:17","opus",0,10640,2434,29624],["11-25 02:17","opus",0,8759,2082,24866],["11-25 02:18","opus",0,7871,3264,33673],["11-25 02:18","opus",1,15160,9310,90592],["11-25 02:18","opus",0,8126,3038,34641],["11-25 02:18","opus",1,14155,11572,108322],["11-25 02:19","opus",1,11482,4498,43248],["11-25 02:19","opus",0,8217,2981,32956],["11-25 02:19","opus",0,10032,2680,30441],["11-25 02:20","opus",1,15978,6848,67025],["11-25 02:20","opus",0,9717,3507,37895],["11-25 02:20","opus",0,9152,3761,40479],["11-25 02:20","opus",0,8998,2757,31720],["11-25 02:21","opus",1,17181,4972,46358],["11-25 02:21","opus",0,7060,2902,34961],["11-25 02:21","opus",0,10844,3125,35781],["11-25 02:21","opus",1,18161,11014,95718],["11-25 02:22","opus",1,16443,4338,37663],["11-25 02:22","opus",0,10004,2576,30840],["11-25 02:22","opus",0,10129,3348,35467],["11-25 02:22","opus",0,10378,3559,38562],["11-25 02:23","opus",1,17728,4069,40837],["11-25 02:23","opus",1,15347,6618,62291],["11-25 02:23","opus",0,10099,3503,39180],["11-25 02:23","opus",1,17166,3632,34337],["11-25 02:24","opus",1,18370,4137,40845],["11-25 02:24","opus",0,9789,3643,39986],["11-25 02:24","opus",0,7419,3057,33473],["11-25 02:24","opus",0,10001,2628,28848],["11-25 02:25","opus",1,17238,10948,95246],["11-25 02:25","opus",0,10140,3867,39717],["11-25 02:26","opus",0,6592,2905,29393],["11-25 02:26","opus",1,17152,5193,48738],["11-25 02:26","opus",0,8866,3440,36775],["11-25 02:27","opus",0,8704,2306,28348],["11-25 02:27","opus",0,8650,4632,50082],["11-25 02:28","opus",0,9181,2733,30869],["11-25 02:28","opus",0,8278,4766,48686],["11-25 02:28","opus",0,8870,2331,27649],["11-25 02:28","opus",1,17983,9096,83325],["11-25 02:29","opus",1,16496,3080,32538],["11-25 02:29","opus",0,9647,2875,32269],["11-25 02:30","opus",1,16032,8951,78202],["11-25 02:30","opus",0,9032,2987,32993],["11-25 02:31","opus",1,18429,14433,129536],["11-25 02:31","opus",0,9964,3180,40499],["11-25 02:31","opus",1,15497,8653,78385],["11-25 02:31","opus",0,9652,2908,36207],["11-25 02:31","opus",1,18888,9981,87729],["11-25 02:31","opus",1,16984,10828,99197],["11-25 02:32","opus",1,13449,11882,113114],["11-25 02:32","opus",1,17151,14148,123404],["11-25 02:32","opus",1,16186,4162,41000],["11-25 02:32","opus",1,16312,16643,150616],["11-25 02:33","opus",1,18655,10706,97337],["11-25 02:33","opus",1,16977,13054,111249],["11-25 02:33","opus",1,17856,11572,102270],["11-25 02:33","opus",1,16800,9330,84111],["11-25 02:33","opus",1,13377,6311,59917],["11-25 02:34","opus",1,14801,14741,128131],["11-25 02:34","opus",1,13029,7881,72043],["11-25 02:35","opus",1,16299,9528,87161],["11-25 02:35","opus",1,17329,11450,101394],["11-25 02:35","opus",1,18630,14075,122898],["11-25 02:35","opus",1,16175,11569,109359],["11-25 02:35","opus",1,13779,9088,81555],["11-25 02:35","opus",1,17099,11501,98515],["11-25 02:36","opus",1,14879,8507,80586],["11-25 02:36","opus",1,14889,9666,89676],["11-25 02:37","opus",1,18286,9546,80636],["11-25 02:37","opus",1,16189,11083,103428],["11-25 02:37","opus",1,16893,9616,86492],["11-25 02:37","opus",1,16407,11694,102808],["11-25 02:37","opus",1,16784,8262,71855],["11-25 02:38","opus",1,16155,8339,80011],["11-25 02:38","opus",1,15219,9163,87337],["11-25 02:39","opus",1,15930,11879,102965],["11-25 02:39","opus",1,17675,12753,112961],["11-25 02:39","opus",1,14866,8958,78076],["11-25 02:39","opus",1,14343,8505,74255],["11-25 02:39","opus",1,14601,12244,110517],["11-25 02:40","opus",1,14255,10095,94331],["11-25 02:40","opus",1,17450,9039,81444],["11-25 02:40","opus",0,7313,2828,32323],["11-25 02:41","opus",1,15594,13124,115778],["11-25 02:41","opus",1,18169,13033,116273],["11-25 02:41","opus",1,17682,13422,117373],["11-25 02:41","opus",1,18689,15726,138738],["11-25 02:41","opus",1,17706,10946,101497],["11-25 02:42","opus",1,17954,9573,88637],["11-25 02:42","opus",1,15399,7551,69073],["11-25 02:42","opus",1,18257,8439,72477],["11-25 02:42","opus",1,14007,11322,106600],["11-25 02:43","opus",1,17867,10422,93736],["11-25 02:43","opus",1,13826,8784,77506],["11-25 02:43","opus",1,15861,13920,125533],["11-25 02:44","opus",1,17394,8828,79016],["11-25 02:44","opus",1,15193,13896,123475],["11-25 02:44","opus",1,16764,10430,92675],["11-25 02:44","opus",1,16958,10200,85101],["11-25 02:44","opus",1,17406,11712,103064],["11-25 02:45","opus",1,17828,8786,80103],["11-25 02:45","opus",1,15975,12142,106339],["11-25 02:46","opus",1,17666,11065,100413],["11-25 02:46","opus",1,17348,14264,128059],["11-25 02:46","opus",1,13719,11269,105315],["11-25 02:46","opus",1,13970,12603,115848],["11-25 02:47","opus",1,16840,11790,107714],["11-25 02:47","opus",1,15594,7462,69207],["11-25 02:47","opus",1,19797,6379,57805],["11-25 02:47","opus",1,18346,11290,103750],["11-25 02:48","opus",1,18048,10449,93814],["11-25 02:48","opus",1,16367,13007,115368],["11-25 02:48","opus",1,19020,10762,92755],["11-25 02:48","opus",1,18758,12363,106380],["11-25 02:49","opus",1,18100,10527,93717],["11-25 02:49","opus",1,17191,11798,103464],["11-25 02:49","opus",1,16160,10986,97824],["11-25 02:49","opus",1,17402,7883,68403],["11-25 02:50","opus",1,17590,8874,78574],["11-25 02:50","opus",1,18057,10622,94849],["11-25 02:52","opus",1,17650,12565,107335],["11-25 02:58","opus",1,16656,7501,70401],["11-25 06:02","opus",1,17061,26451,227410],["11-25 06:06","opus",1,16955,25299,210575],["11-25 06:11","opus",1,16652,30025,255728],["11-25 06:14","opus",1,16388,7248,65604],["11-25 06:15","opus",1,15831,28501,238554],["11-25 06:18","opus",1,14821,10579,94506],["11-25 06:18","opus",1,16959,24876,209075]];
+const TPS = { haiku: 148, sonnet: 105, opus: 111 };
+const PRICE = { haiku: 0.5, sonnet: 10, opus: 20 };
+const TTFT = 0.8;
+const S = (name, o) => Object.assign({ name, type: "model", model: "opus", think: 0, out: 0, secs: 0, par: false, show: false }, o);
+const PRESETS = {
+  normal: { name: "지금 · 일반 질문", stream: false, stages: [
+    S("준비·맥락", { type: "wait", secs: 0.4 }),
+    S("질문 해석", { model: "haiku", think: 0, out: 350 }),
+    S("법령·판례 검색", { type: "wait", secs: 1.7 }),
+    S("답변 쓰기", { think: 1900, out: 700, show: true }),
+    S("인용 검증", { type: "wait", secs: 2.5 }) ] },
+  deep: { name: "지금 · DeepSearch(high)", stream: false, stages: [
+    S("준비·맥락", { type: "wait", secs: 0.4 }),
+    S("사건 구조화", { model: "haiku", out: 1700 }),
+    S("쟁점별 검색", { type: "wait", secs: 3.5 }),
+    S("답변 쓰기", { think: 6500, out: 2000, show: true }),
+    S("인용 검증", { type: "wait", secs: 3 }) ] },
+  long: { name: "지금 · 100자 초과(xhigh)", stream: false, stages: [
+    S("준비·맥락", { type: "wait", secs: 0.4 }),
+    S("사건 구조화", { model: "haiku", out: 1700 }),
+    S("쟁점별 검색", { type: "wait", secs: 3.5 }),
+    S("답변 + 정리판", { think: 11000, out: 2800, show: true }),
+    S("인용 검증", { type: "wait", secs: 3 }) ] },
+  fast: { name: "빠른 답 먼저", stream: true, stages: [
+    S("준비·맥락", { type: "wait", secs: 0.4 }),
+    S("빠른 요약(Haiku)", { model: "haiku", out: 600, show: true }),
+    S("사건 구조화", { model: "haiku", out: 1700, par: true }),
+    S("쟁점별 검색", { type: "wait", secs: 3.5 }),
+    S("깊은 답(Opus high)", { think: 6500, out: 2000 }),
+    S("인용 검증", { type: "wait", secs: 3 }) ] },
+  google: { name: "Google AI형(가정)", stream: true, stages: [
+    S("미리 만든 검색 색인", { type: "wait", secs: 0.3 }),
+    S("빠른 모델 요약", { model: "haiku", out: 500, show: true }) ] },
+};
+let key = "long";
+let cur = clone(PRESETS[key]);
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const fmt = (s) => (s >= 100 ? Math.round(s) : s.toFixed(1)) + "초";
+
+function run(p) {
+  let t = 0, prevStart = 0, out = [];
+  for (const st of p.stages) {
+    const start = st.par ? prevStart : t;
+    const think = st.type === "model" ? st.think / TPS[st.model] : 0;
+    const ans = st.type === "model" ? st.out / TPS[st.model] : 0;
+    const dur = st.type === "model" ? TTFT + think + ans : st.secs;
+    out.push({ st, start, dur, think, ans });
+    prevStart = start;
+    t = Math.max(t, start + dur);
+  }
+  const total = t;
+  const shown = out.find((x) => x.st.show) || out[out.length - 1];
+  const first = p.stream && shown.st.type === "model" ? shown.start + TTFT + shown.think : total;
+  const cost = p.stages.reduce((s, st) => s + (st.type === "model" ? ((st.think + st.out) * PRICE[st.model]) / 1e6 : 0), 0);
+  return { out, total, first, cost };
+}
+
+function render() {
+  const r = run(cur);
+  const max = Math.max(10, Math.ceil(r.total / 10) * 10);
+  $("gantt").innerHTML = r.out.map((x) => {
+    const left = (x.start / max) * 100, w = Math.max(0.6, (x.dur / max) * 100);
+    let inner;
+    if (x.st.type === "model") {
+      const tot = x.dur || 1;
+      inner = `<i style="width:${(TTFT / tot) * 100}%;background:#3d6a96"></i><i style="width:${(x.think / tot) * 100}%;background:var(--sky)"></i><i style="width:${(x.ans / tot) * 100}%;background:var(--mint)"></i>`;
+    } else inner = `<i style="width:100%;background:var(--amber)"></i>`;
+    return `<div class="row"><div class="nm">${esc(x.st.name)}</div><div class="track"><div class="bar" style="left:${left}%;width:${w}%" title="${esc(x.st.name)} ${fmt(x.dur)}">${inner}<span class="lbl">${w > 9 ? fmt(x.dur) : ""}</span></div></div></div>`;
+  }).join("") + `<div class="row"><div class="nm" style="color:var(--pink)">첫 글자</div><div class="track" style="background:transparent"><div class="marker" style="left:${(r.first / max) * 100}%"></div></div></div>`;
+  const step = max <= 30 ? 5 : max <= 120 ? 20 : max <= 240 ? 40 : 60;
+  let tk = "";
+  for (let v = 0; v <= max; v += step) tk += `<span style="left:${(v / max) * 100}%">${v}초</span>`;
+  $("ticks").innerHTML = tk;
+  $("res").innerHTML = `<div class="hot"><b>${fmt(r.first)}</b><span>사용자가 첫 글자를 보는 때</span></div><div><b>${fmt(r.total)}</b><span>모든 단계가 끝나는 때</span></div><div><b>$${r.cost.toFixed(3)}</b><span>출력 토큰 비용(정가)</span></div>`;
+  $("stream").checked = cur.stream;
+  $("presets").innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="pre" type="button" data-k="${k}" aria-pressed="${k === key}">${esc(p.name)}</button>`).join("");
+}
+
+function editor() {
+  $("ed").innerHTML = cur.stages.map((st, i) => {
+    const sl = (f, lab, min, maxv, stepv, unit) => `<label class="f"><span>${lab}</span><input type="range" id="s${i}${f}" data-i="${i}" data-f="${f}" min="${min}" max="${maxv}" step="${stepv}" value="${st[f]}"><output id="o${i}${f}">${st[f].toLocaleString()}${unit}</output></label>`;
+    const head = `<header><b>${esc(st.name)}</b>${i > 0 ? `<label class="tg"><input type="checkbox" data-i="${i}" data-f="par" ${st.par ? "checked" : ""}> 앞 단계와 동시에</label>` : ""}</header>`;
+    if (st.type === "wait") return `<div class="st">${head}${sl("secs", "걸리는 시간", 0, 15, 0.1, "초")}</div>`;
+    return `<div class="st">${head}<label class="f"><span>모델</span><select data-i="${i}" data-f="model" id="m${i}">${["haiku", "sonnet", "opus"].map((m) => `<option value="${m}" ${m === st.model ? "selected" : ""}>${m === "haiku" ? "Haiku 5.5" : m === "sonnet" ? "Sonnet 5.5" : "Opus 5.5"}</option>`).join("")}</select><span></span></label>${sl("think", "생각 토큰", 0, 24000, 100, "")}${sl("out", "답 토큰", 0, 6000, 50, "")}<label class="tg"><input type="radio" name="show" data-i="${i}" data-f="show" ${st.show ? "checked" : ""}> 이 단계 글을 사용자에게 보여 줌</label></div>`;
+  }).join("");
+}
+
+$("ed").addEventListener("input", (e) => {
+  const el = e.target, i = +el.dataset.i, f = el.dataset.f;
+  if (Number.isNaN(i) || !f) return;
+  const st = cur.stages[i];
+  if (f === "par") st.par = el.checked;
+  else if (f === "show") cur.stages.forEach((s, j) => (s.show = j === i));
+  else if (f === "model") st.model = el.value;
+  else {
+    st[f] = +el.value;
+    const o = $(`o${i}${f}`);
+    if (o) o.textContent = st[f].toLocaleString() + (f === "secs" ? "초" : "");
+  }
+  render();
+});
+$("presets").addEventListener("click", (e) => {
+  const k = e.target.closest("[data-k]")?.dataset.k;
+  if (!k) return;
+  key = k; cur = clone(PRESETS[k]); editor(); render();
+});
+$("stream").addEventListener("change", (e) => { cur.stream = e.target.checked; render(); });
+$("reset").addEventListener("click", () => { cur = clone(PRESETS[key]); editor(); render(); });
+
+// ── 실측 ──
+const rows = ROWS.map(([at, model, deep, tin, tout, ms]) => ({ at, model, deep: !!deep, tin, tout, s: ms / 1000 }));
+const GROUPS = [
+  { k: "opus-deep", name: "Opus DeepSearch", color: "#ff5c8a", f: (r) => r.model === "opus" && r.deep },
+  { k: "opus", name: "Opus 일반", color: "#8fd3ff", f: (r) => r.model === "opus" && !r.deep },
+  { k: "sonnet", name: "Sonnet", color: "#ffc65c", f: (r) => r.model === "sonnet" },
+  { k: "haiku", name: "Haiku", color: "#7be0b4", f: (r) => r.model === "haiku" },
+];
+const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : 0; };
+function fit(a) {
+  const n = a.length; if (n < 3) return null;
+  const x = a.map((r) => r.tout / 1000), y = a.map((r) => r.s);
+  const mx = x.reduce((s, v) => s + v) / n, my = y.reduce((s, v) => s + v) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) ** 2; syy += (y[i] - my) ** 2; }
+  const b = sxy / sxx; return { b, a: my - b * mx, r2: (sxy * sxy) / (sxx * syy) };
+}
+const deepFit = fit(rows.filter(GROUPS[0].f));
+const deepRows = rows.filter(GROUPS[0].f);
+const kp = [
+  [fmt(q(deepRows.map((r) => r.s), 0.5)), "Opus DeepSearch 중간값"],
+  [Math.round(q(deepRows.map((r) => r.tout), 0.5)).toLocaleString(), "그때 출력 토큰 중간값"],
+  [`${deepFit.b.toFixed(1)}초`, "출력 1,000토큰마다 늘어나는 시간"],
+  [fmt(q(deepRows.map((r) => r.s), 0.9)), "90%가 이 시간 안에 끝남"],
+];
+$("kpis").innerHTML = kp.map(([v, l]) => `<div class="kpi"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+
+const tblRows = [
+  ["예시 재생", rows.filter((r) => r.model === "replay")],
+  ["검색 전용(무료)", rows.filter((r) => r.model === "search_only")],
+  ...GROUPS.map((g) => [g.name, rows.filter(g.f)]),
+];
+$("tbl").innerHTML = `<thead><tr><th>경로</th><th>건수</th><th>중간값</th><th>90%</th><th>최대</th><th>출력 토큰</th></tr></thead><tbody>` +
+  tblRows.filter(([, a]) => a.length).map(([n, a]) => `<tr><td>${esc(n)}</td><td>${a.length}</td><td>${fmt(q(a.map((r) => r.s), 0.5))}</td><td>${fmt(q(a.map((r) => r.s), 0.9))}</td><td>${fmt(Math.max(...a.map((r) => r.s)))}</td><td>${Math.round(q(a.map((r) => r.tout), 0.5)).toLocaleString()}</td></tr>`).join("") + `</tbody>`;
+$("sclg").innerHTML = GROUPS.filter((g) => rows.some(g.f)).map((g) => `<span><i style="background:${g.color}"></i>${esc(g.name)}</span>`).join("");
+
+const svg = $("scs"), tip = $("tip");
+function drawScatter() {
+  const W = svg.clientWidth, H = svg.clientHeight, m = { l: 44, r: 16, t: 14, b: 36 };
+  const pts = rows.filter((r) => GROUPS.some((g) => g.f(r)));
+  const xm = Math.ceil(Math.max(...pts.map((r) => r.tout)) / 5000) * 5;
+  const ym = Math.ceil(Math.max(...pts.map((r) => r.s)) / 50) * 50;
+  const X = (v) => m.l + (v / xm) * (W - m.l - m.r), Y = (v) => H - m.b - (v / ym) * (H - m.t - m.b);
+  let g = "";
+  for (let v = 0; v <= ym; v += 50) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#24507e"/><text x="${m.l - 6}" y="${Y(v) + 4}" text-anchor="end" fill="#a9c3dd" font-size="12">${v}s</text>`;
+  const xs = W < 520 ? 10 : 5;
+  for (let v = 0; v <= xm; v += xs) g += `<text x="${X(v)}" y="${H - m.b + 18}" text-anchor="middle" fill="#a9c3dd" font-size="12">${v}k</text>`;
+  g += `<text x="${W - m.r}" y="${H - 4}" text-anchor="end" fill="#a9c3dd" font-size="12">출력 토큰</text>`;
+  for (const gr of GROUPS) {
+    const a = rows.filter(gr.f); const f = fit(a);
+    if (f && gr.k.startsWith("opus")) { const x1 = Math.max(...a.map((r) => r.tout)) / 1000; g += `<line x1="${X(0)}" y1="${Y(f.a)}" x2="${X(x1)}" y2="${Y(f.a + f.b * x1)}" stroke="${gr.color}" stroke-width="2" stroke-dasharray="5 4" opacity=".8"/>`; }
+    g += a.map((r) => `<circle cx="${X(r.tout / 1000)}" cy="${Y(r.s)}" r="4.5" fill="${gr.color}" fill-opacity=".75" stroke="#0f2f52" stroke-width="1.5" data-t="${esc(`${gr.name} · ${r.at} · 출력 ${r.tout.toLocaleString()}토큰 · ${fmt(r.s)}`)}"/>`).join("");
+  }
+  const lx = X(xm * 0.52), ly = Y(ym * 0.9);
+  g += `<text x="${lx}" y="${ly}" fill="#ff5c8a" font-size="13" font-weight="700">DeepSearch: ${deepFit.a.toFixed(1)}초 + ${deepFit.b.toFixed(1)}초 × 출력 1천 토큰</text><text x="${lx}" y="${ly + 18}" fill="#a9c3dd" font-size="12">R² ${deepFit.r2.toFixed(2)} · ${deepRows.length}건</text>`;
+  svg.innerHTML = g;
+}
+svg.addEventListener("mousemove", (e) => {
+  const t = e.target.closest("circle");
+  if (!t) { tip.style.display = "none"; return; }
+  const b = $("sc").getBoundingClientRect();
+  tip.textContent = t.dataset.t; tip.style.display = "block";
+  tip.style.left = Math.min(e.clientX - b.left + 10, b.width - tip.offsetWidth - 4) + "px"; tip.style.top = e.clientY - b.top - 36 + "px";
+});
+svg.addEventListener("mouseleave", () => (tip.style.display = "none"));
+const scRO = new ResizeObserver(drawScatter);
+scRO.observe(svg);
+
+editor();
+render();
+}
+</script>
+</body>
+</html>

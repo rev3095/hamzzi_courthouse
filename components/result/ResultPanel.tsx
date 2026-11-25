@@ -24,6 +24,7 @@ import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
 import { parseDeepMap } from "@/lib/ai/deep-policy";
+import { parseTiming } from "@/lib/ai/timing";
 import { CaseBoard } from "./CaseBoard";
 import { QuickSheet } from "./QuickSheet";
 import { MaterialsView, materialsOfPoint } from "./MaterialsView";
@@ -204,6 +205,15 @@ function AnswerFirst({ result }: { result: DemoAnalysisResult }) {
   );
 }
 
+/** 이번 분석에 걸린 시간 (DEC-063, 잰 값). 재생·검색 전용은 보이지 않는다 */
+function timingText(result: DemoAnalysisResult): string | null {
+  const t = parseTiming(result.timing);
+  if (!t || result.mode !== "ai") return null;
+  const answer = t.stages.find((s) => s.stage === "answer");
+  const sec = (ms: number) => `${Math.max(1, Math.round(ms / 1000))}초`;
+  return answer ? `분석 ${sec(t.totalMs)} · 답변 쓰기 ${sec(answer.ms)}` : `분석 ${sec(t.totalMs)}`;
+}
+
 /** 결과 머리 사실 요약: 근거 개수 + 추천 첫 단계의 난이도. 확률·가능성은 쓰지 않는다 */
 function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: ProcedurePlan }) {
   return (
@@ -211,6 +221,11 @@ function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: Proc
       <li className="rounded-button bg-soft text-ink px-3 py-1.5 text-sm">
         {evidenceSummary(result)}
       </li>
+      {timingText(result) && (
+        <li className="rounded-button bg-soft text-muted px-3 py-1.5 text-sm">
+          {timingText(result)}
+        </li>
+      )}
       {hasTimeline(plan) && (
         <li className="rounded-button bg-cream text-label px-3 py-1.5 text-sm font-semibold">
           추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}

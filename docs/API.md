@@ -204,6 +204,7 @@ type DemoAnalysisResult = {
            plan?: { kinds: ("civil"|"criminal"|"administrative"|"family"|"labor"|"other")[]; // DEC-062 사건 정리판(긴 질문만): 절차 종류
                     sides: { party: string; side: "claimant"|"respondent"|"complainant"|"accused"|"agency"|"third"; actions: string[] }[]; // 당사자 자리와 할 수 있는 대응 (판정 아님)
                     prep: { item: string; why: string }[] } };    // 준비할 자료. 숫자는 사용자가 적은 것만, 조문·사건번호·단정 표현 없음
+  timing?: { totalMs: number; stages: { stage: "prepare"|"intent"|"search"|"agent"|"answer"|"verify"|"finish"; ms: number }[] }; // DEC-063 단계별 분석 시간(잰 값)
   document?: { kind: string; formTitle: string; title: string; sections: { heading: string; body: string }[] }; // DEC-062 가상 문서: 예시 질문(가상 사연) 결과에만
   assistant?: "home" | "report" | "market";        // DEC-057: 전문 에이전트 대화에서 받은 답변이면 그 에이전트
   assistantTalk?: { reply: string; asks: string[] }; // DEC-057: 에이전트 대화 한마디(Haiku). 숫자·법령·판례·판정 표현이 없게 거른 것만
