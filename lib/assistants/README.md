@@ -17,3 +17,7 @@
 - 화면: `components/assistants/` — `AssistantChat`(대화, 비서 페이지·안내 챗봇 비서 모드 공용), `AssistantPage`(비서별 배치), `AssistantCards`(홈·목록 카드), 스킨은 `assistants.css`(`hza-` 접두어, `data-hza`로 색을 바꾼다).
 - 실존 확인(무료 법제처 조회): `tests/live/assistant-cases.live.test.ts` — 사례 판례의 사건번호·법원·선고일, 고정 조문·사례 관련 조문.
 - 새 사례는 공개 판례(법제처)나 직접 쓴 가상 사례만 쓴다. 실제 사용자 질문·민간 상담 글은 쓰지 않는다. 판결문 속 이름·주소·금액·대화명은 옮기지 않는다.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 분야별 비서(F-018, DEC-057, lib/assistants README): 내집마련·고소미·중고천국. 화면 이름은 '전문 에이전트'. 새 AI 경로가 아니라 analyze 본문 `assistant`로 라이트 답변에 비서 지시문(두 번째 시스템 블록)·고정 조문·사례 판례(그 요청에서 법제처 재조회)를 더할 뿐이고, 답변 단계는 Pro Max(지금 Opus 5.5 effort high, DEC-050) 고정 + Haiku 대화 한마디(lib/assistants/talk.ts `screenTalk`로 숫자·법령·판정을 거른다). 설정은 lib/assistants/run-config.ts 한 곳(실호출 테스트 `tests/live/assistants.live.test.ts`도 같은 것, 유료·`ASSISTANT_LIVE=1`). 에이전트 페이지의 '아카이브' 탭은 미리 만든 질답 세트(에이전트마다 10개, 원고 7 : 피고 3, 시나리오 lib/assistants/archive-scenarios.ts)이고 데이터는 저장소 `lib/assistants/archive-data/*.json`(운영 DB에 쓰지 않는다) — 만들기는 `tests/live/assistant-archive.live.test.ts`(유료, `ARCHIVE_GEN=1`, lib/ai/archive.ts: DeepSearch Pro Max + 정리 한 번, 민사·형사 문단도 verifyDraft, 근거 없는 정리 문장은 `guideLineOk`). 아카이브 질문은 `findExample`이 저장된 답을 재생한다(DEC-027과 같은 취급) — 대화 한 턴 = 질문 1건(이어 묻기), 횟수·비용 상한·인용 검증·개인정보 가림은 일반 질문과 같다. 화면은 `/assistants`·`/assistants/[id]`(components/assistants, 스킨은 `assistants.css`의 `hza-`·`data-hza`, 비서마다 색·배치가 다르다 — Figma 밖 예외)와 홈 가이드 아래 카드·헤더 ☰ 메뉴·안내 챗봇 비서 모드. 사례 문안은 숫자·단정·개인정보 금지(policy.test.ts), 실존은 `tests/live/assistant-cases.live.test.ts`(무료).

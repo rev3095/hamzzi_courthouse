@@ -30,3 +30,7 @@
 - 판례(`court_cases`, `case_chunks`, `case_statute_refs`)는 **`deid_check = 'passed'`인 행만** 검색·반환한다. `pending`·`flagged`는 제외한다.
 - 서버 검색은 service_role로 실행되어 RLS를 우회한다. 그래서 이 필터를 RLS에 맡기지 말고 **모든 검색 쿼리에 직접 건다**.
 - 검색 테스트에 `pending`·`flagged` 판례가 결과에 나오지 않는 케이스를 넣는다.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 판례·법령 탐색(DEC-029): `createLawSource()`는 `LawSource`(분석·검증)와 `LawExplorer`(결정문·연혁·시점 조문·3단 비교·신구 대조·별표·자치법규·행정규칙)를 함께 돌려준다. 판례 밖 자료 16종(결정문 12 + 조약·학칙·공사공단·공공기관 규정·영문 법령)의 target·필드 이름·상세 항목은 `DECISION_DOMAINS`(explore.ts) 한 표에 있다 — 새 종류는 여기에만 더하고 실호출(`tests/live/explore.live.test.ts`)로 필드 이름을 확인한다. 순수 규칙은 lib/search/explore.ts, 화면은 `/search`(종류 탭·바로 가기)·`/research`(업무용 리서치: 목록 + 옆 미리보기 + 보관함)·`/laws/[name]`·`/decisions/[domain]/[id]`·`/ordinances/[id]`. 모두 LLM 없음 — `SEARCH_NOTICE`, 관련도·심각도·유불리 판정 없음(절대 규칙 2), 결정문은 요지 항목만(DEC-007 원칙), 인증키가 든 `/DRF/` 주소는 응답에 싣지 않는다. 검색어는 주소에 두지 않고 `sessionStorage`(`hz:sq`)로만 화면 사이에 건네며, 조회 이력·보관함(`hz:recent`·`hz:pins`)은 공개 자료의 제목·주소만 localStorage에 둔다. 공개 저장소 lexdiff(BSL 1.1)의 기능 목록만 참고했고 코드는 가져오지 않는다. 헤더는 '판례 아카이브'(DEC-054) 한 버튼으로 검색·리서치를 고르고, 두 화면은 `ArchiveSwitch`로 오가며(주소에는 `from`·`kind`만) 보관함·자료 행·인용 표기는 components/search/rows.ts를 함께 쓴다.
