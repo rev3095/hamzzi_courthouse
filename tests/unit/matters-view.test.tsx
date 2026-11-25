@@ -117,7 +117,53 @@ describe("F-016 AC1 로그인 전용", () => {
       },
     });
     render(<MattersView />);
-    expect(await screen.findByRole("button", { name: /가상 사건/ })).toBeTruthy();
+    const list = await screen.findByTestId("matter-list");
+    expect(within(list).getByRole("button", { name: /가상 사건/ })).toBeTruthy();
+    // 사건을 고르기 전에는 새 사건 만들기 하나가 주된 행동이고, 진행 단계 탭은 보이지 않는다
+    expect(screen.getByRole("button", { name: "사건 만들기" })).toBeTruthy();
+    expect(screen.queryByRole("tab")).toBeNull();
+  });
+
+  test("사건을 열면 단계가 세 묶음으로 보이고, 개요는 다음 할 일 하나를 먼저 보여 준다", async () => {
+    quota.value = {
+      anonymous: false,
+      used: 0,
+      limit: 10,
+      remaining: 10,
+      loginRequired: false,
+      admin: false,
+    };
+    api.listMatters.mockResolvedValue({
+      ok: true,
+      data: {
+        items: [
+          {
+            id: "m1",
+            title: "가상 사건",
+            updatedAt: "t",
+            counts: { docs: 0, parties: 0, issues: 0, notes: 0 },
+          },
+        ],
+      },
+    });
+    api.getMatter.mockResolvedValue({
+      ok: true,
+      data: { id: "m1", title: "가상 사건", updatedAt: "t", data: emptyMatter() },
+    });
+    render(<MattersView />);
+    fireEvent.click(
+      within(await screen.findByTestId("matter-list")).getByRole("button", { name: /가상 사건/ }),
+    );
+    expect(await screen.findByRole("heading", { level: 1, name: "가상 사건" })).toBeTruthy();
+    for (const group of ["1 모으기", "2 정리하기", "3 찾고 기록하기"]) {
+      expect(screen.getByText(group)).toBeTruthy();
+    }
+    expect(screen.getAllByRole("tab")).toHaveLength(7);
+    // 빈 사건의 다음 할 일은 자료 올리기다. 평가·판정 낱말은 없다
+    const todo = screen.getByTestId("next-step");
+    expect(todo.textContent).not.toMatch(/유리|불리|승소|패소|가능성/);
+    fireEvent.click(within(todo).getByRole("button", { name: /자료 올리기/ }));
+    expect(screen.getByRole("tab", { name: "자료" }).getAttribute("aria-selected")).toBe("true");
   });
 });
 

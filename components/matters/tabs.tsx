@@ -52,32 +52,73 @@ const MY_SIDE: Record<MySide, string> = {
 
 // --- 개요 ----------------------------------------------------------------------------------
 
+/** 개요 맨 위 '다음 할 일' 하나 — 아직 비어 있는 첫 단계로 안내한다. 담긴 항목이 있는지만 보고, 내용을 평가하지 않는다 */
+function nextStep(d: MatterData): { tab: TabKey; title: string; text: string; action: string } {
+  if (d.docs.length === 0 && d.facts.length === 0) {
+    return {
+      tab: "docs",
+      title: "서류부터 올려 보세요",
+      text: "서류 사진이나 문서를 올리면 AI가 읽어 사실관계·당사자·요구로 나눠 담아요. 직접 적으려면 사실관계 단계에서 적으면 돼요.",
+      action: "자료 올리기",
+    };
+  }
+  if (d.parties.length === 0) {
+    return {
+      tab: "map",
+      title: "당사자와 관계를 그려 보세요",
+      text: "누가 누구에게 무엇을 요구하는지 구조도에 놓아 보세요.",
+      action: "구조도 열기",
+    };
+  }
+  if (d.issues.length === 0) {
+    return {
+      tab: "issues",
+      title: "살펴볼 질문을 모아 보세요",
+      text: "따로 확인할 쟁점을 적거나 AI로 정리할 수 있어요.",
+      action: "쟁점 열기",
+    };
+  }
+  if (d.notes.length === 0) {
+    return {
+      tab: "research",
+      title: "법령·판례와 회사 정보를 찾아 붙여 보세요",
+      text: "찾은 내용은 노트로 저장해 사건에 남겨요.",
+      action: "리서치 열기",
+    };
+  }
+  return {
+    tab: "notes",
+    title: "찾은 내용을 노트에 계속 덧붙이면 돼요",
+    text: "단계마다 담긴 내용은 위 메뉴에서 언제든 고칠 수 있어요.",
+    action: "노트 열기",
+  };
+}
+
 export function OverviewTab({
   data,
   update,
   go,
   onExport,
-}: TabProps & { go: (tab: TabKey) => void; onExport: () => void }) {
-  const steps: { tab: TabKey; name: string; count: number; todo: string }[] = [
-    { tab: "docs", name: "자료", count: data.docs.length, todo: "서류 사진을 올려 읽어 보세요" },
-    { tab: "facts", name: "사실관계", count: data.facts.length, todo: "날짜순으로 정리돼요" },
-    {
-      tab: "map",
-      name: "구조도",
-      count: data.parties.length,
-      todo: "당사자와 관계를 그림으로 봐요",
-    },
-    { tab: "issues", name: "쟁점", count: data.issues.length, todo: "살펴볼 질문을 모아요" },
-    { tab: "research", name: "리서치", count: 0, todo: "회사와 법령·판례를 찾아 붙여요" },
-    { tab: "notes", name: "노트", count: data.notes.length, todo: "찾은 내용을 계속 덧붙여요" },
-  ];
+  onDelete,
+}: TabProps & { go: (tab: TabKey) => void; onExport: () => void; onDelete?: () => void }) {
+  const todo = nextStep(data);
   return (
     <section>
-      <SectionTitle
-        title="개요"
-        hint="이 사건을 한눈에 보는 곳이에요. 아래 순서대로 채워 가면 돼요."
-      />
-      <label className="mt-3 block">
+      <div
+        className={`${card} flex flex-wrap items-center justify-between gap-3 px-4 py-4`}
+        data-testid="next-step"
+      >
+        <div className="min-w-0 flex-1 basis-[260px]">
+          <p className={label}>다음 할 일</p>
+          <p className="text-ink mt-0.5 text-[16px] font-bold">{todo.title}</p>
+          <p className="text-muted mt-0.5 text-[13px] leading-relaxed">{todo.text}</p>
+        </div>
+        <button type="button" className={btn} onClick={() => go(todo.tab)}>
+          {todo.action} →
+        </button>
+      </div>
+
+      <label className="mt-5 block">
         <span className={label}>사건 한 줄 요약</span>
         <textarea
           className={`${field} mt-1`}
@@ -105,28 +146,7 @@ export function OverviewTab({
         </div>
       </fieldset>
 
-      <ol className="mt-4 grid gap-2 sm:grid-cols-3">
-        {steps.map((s, i) => (
-          <li key={s.tab}>
-            <button
-              type="button"
-              onClick={() => go(s.tab)}
-              className={`${card} hover:border-ink w-full px-4 py-3 text-left`}
-            >
-              <span className={label}>{i + 1}단계</span>
-              <span className="text-ink mt-0.5 flex items-baseline justify-between text-[15px] font-bold">
-                {s.name}
-                {s.tab !== "research" && (
-                  <span className="text-[13px] font-semibold">{s.count}</span>
-                )}
-              </span>
-              <span className="text-muted mt-0.5 block text-[12px]">{s.todo}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
-
-      <div className="mt-5">
+      <div className="mt-6">
         <SectionTitle
           title="서류의 요구와 기한"
           hint="AI가 서류에서 읽은 내용이에요. 날짜는 원문과 대조해 주세요."
@@ -201,13 +221,14 @@ export function OverviewTab({
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
+      <div className="border-line mt-6 flex flex-wrap items-center gap-2 border-t pt-4">
         <button type="button" className={btnLine} onClick={onExport}>
           파일로 내보내기
         </button>
-        <span className="text-muted text-[12px]">
+        <span className="text-muted flex-1 text-[12px]">
           사건 자료를 이 기기에 파일(JSON)로 내려받아요.
         </span>
+        {onDelete && <ConfirmButton onConfirm={onDelete}>사건 지우기</ConfirmButton>}
       </div>
     </section>
   );
@@ -266,7 +287,8 @@ export function DocsTab({ data, update, go }: TabProps & { go: (tab: TabKey) => 
     <section>
       <SectionTitle
         title="자료"
-        hint={`서류 사진·문서(PDF·한글·워드·파워포인트·엑셀·텍스트)를 ${CASEFILE_LIMITS.maxImages}개까지 올리면 AI가 읽어 사실관계·당사자·요구를 나눠 담아요. 사진·파일은 저장하지 않아요.`}
+        hint="서류를 올리면 AI가 읽어 사실관계·당사자·요구로 나눠 담아요. 사진·파일은 저장하지 않아요."
+        more={`서류 사진과 문서(PDF·한글·워드·파워포인트·엑셀·텍스트)를 ${CASEFILE_LIMITS.maxImages}개까지 올릴 수 있어요.`}
       />
       <div
         className={`${card} mt-3 p-3`}
@@ -413,7 +435,8 @@ export function FactsTab({ data, update }: TabProps) {
     <section>
       <SectionTitle
         title="사실관계"
-        hint="날짜순이에요. 서류의 주장도 '누가 그렇게 적었는지'와 함께 담아요. 서류 읽기로 넣은 법령 조문·사건번호는 법제처에서 확인된 것만 남기고 나머지는 가렸어요(직접 고친 내용은 확인하지 않아요). 눌러서 바로 고칠 수 있어요."
+        hint="날짜순이에요. 눌러서 바로 고칠 수 있어요. 조문·사건번호는 법제처에서 확인된 것만 남겨요(직접 고친 내용은 확인하지 않아요)."
+        more="서류의 주장도 '누가 그렇게 적었는지'와 함께 담아요. 서류 읽기로 넣은 법령 조문·사건번호는 법제처에서 확인된 것만 남기고 나머지는 가렸어요(직접 고친 내용은 확인하지 않아요)."
         right={fromDocs ? <AiTag notice={AI_NOTICE} /> : null}
       />
       {facts.length === 0 ? (
@@ -793,7 +816,8 @@ export function NotesTab({
     <section>
       <SectionTitle
         title="노트"
-        hint="찾은 내용과 생각을 계속 덧붙이는 곳이에요. 본문에 [[당사자 이름]]처럼 적으면 그 항목과 이어져 마우스를 올렸을 때 요약이 떠요."
+        hint="찾은 내용과 생각을 계속 덧붙이는 곳이에요."
+        more="본문에 [[당사자 이름]]처럼 적으면 그 항목과 이어져 마우스를 올렸을 때 요약이 떠요."
       />
       <form
         className={`${card} mt-3 p-3`}
