@@ -13,7 +13,12 @@ export const STAGE_LABELS = {
 } as const;
 export type TimedStage = keyof typeof STAGE_LABELS;
 
-export type AnalysisTiming = { totalMs: number; stages: { stage: TimedStage; ms: number }[] };
+export type AnalysisTiming = {
+  totalMs: number;
+  stages: { stage: TimedStage; ms: number }[];
+  /** 빠른 답 먼저(DEC-064): 시작부터 요약이 화면으로 나간 때까지. 요약이 없었으면 없다 */
+  previewMs?: number;
+};
 
 /** 진행 신호의 단계 이름을 보고서 단계로 맞춘다 (같은 일을 하는 다른 이름을 하나로) */
 export function timedStage(stage: string): TimedStage | null {
@@ -29,6 +34,8 @@ export function stageClock(now: () => number = Date.now) {
   const start = now();
   const marks: { stage: TimedStage; at: number }[] = [{ stage: "prepare", at: start }];
   return {
+    /** 시작부터 지금까지 ms */
+    elapsed: () => Math.max(0, now() - start),
     mark(stage: string) {
       const s = timedStage(stage);
       if (!s || marks[marks.length - 1].stage === s) return;
@@ -59,5 +66,12 @@ export function parseTiming(v: unknown): AnalysisTiming | null {
     const stage = typeof x.stage === "string" ? timedStage(x.stage) : null;
     return stage && typeof x.ms === "number" ? [{ stage, ms: x.ms }] : [];
   });
-  return { totalMs: t.totalMs, stages };
+  return {
+    totalMs: t.totalMs,
+    stages,
+    ...((v as { previewMs?: unknown }).previewMs !== undefined &&
+      typeof (v as { previewMs?: unknown }).previewMs === "number" && {
+        previewMs: (v as { previewMs: number }).previewMs,
+      }),
+  };
 }

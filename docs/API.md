@@ -204,7 +204,7 @@ type DemoAnalysisResult = {
            plan?: { kinds: ("civil"|"criminal"|"administrative"|"family"|"labor"|"other")[]; // DEC-062 사건 정리판(긴 질문만): 절차 종류
                     sides: { party: string; side: "claimant"|"respondent"|"complainant"|"accused"|"agency"|"third"; actions: string[] }[]; // 당사자 자리와 할 수 있는 대응 (판정 아님)
                     prep: { item: string; why: string }[] } };    // 준비할 자료. 숫자는 사용자가 적은 것만, 조문·사건번호·단정 표현 없음
-  timing?: { totalMs: number; stages: { stage: "prepare"|"intent"|"search"|"agent"|"answer"|"verify"|"finish"; ms: number }[] }; // DEC-063 단계별 분석 시간(잰 값)
+  timing?: { totalMs: number; previewMs?: number; stages: { stage: "prepare"|"intent"|"search"|"agent"|"answer"|"verify"|"finish"; ms: number }[] }; // DEC-063 단계별 분석 시간(잰 값)
   document?: { kind: string; formTitle: string; title: string; sections: { heading: string; body: string }[] }; // DEC-062 가상 문서: 예시 질문(가상 사연) 결과에만
   assistant?: "home" | "report" | "market";        // DEC-057: 전문 에이전트 대화에서 받은 답변이면 그 에이전트
   assistantTalk?: { reply: string; asks: string[] }; // DEC-057: 에이전트 대화 한마디(Haiku). 숫자·법령·판례·판정 표현이 없게 거른 것만
@@ -229,7 +229,7 @@ type DemoAnalysisResult = {
 - 스트림이 끊겨도 분석은 끝까지 저장되며, 결과는 `GET /inquiries/{id}/result`로 다시 볼 수 있다.
 - 스트림을 연 뒤의 오류는 `error { code, message, details?, requestId }` 이벤트로 보낸다(HTTP 상태는 200). 스트림 전 검사 오류는 일반 JSON 오류다. 함수 실행 한도 120초(`maxDuration`), 분석 예산 100초 (DEC-014, 목표 p95 ≤ 90초).
 - 출처가 그 요청의 자료에 없거나 `verify_citations`에서 실존이 확인되지 않은 문단은 응답에서 뺀다. 원문 구절만 다르면 `quote_mismatch`로 "확인 필요"를 표시한다(F-005 AC2).
-- **스트리밍**: `Accept: text/event-stream`이면 SSE로 진행 단계를 보낸다. 이벤트는 `step { stage: "intent"|"search"|"agent"|"answer"|"verify"; message: string; added?: string[] }`, 마지막에 `result { resultId, result }` 또는 `error { code, message }`. 이벤트에도 입력 원문을 넣지 않는다.
+- **스트리밍**: `Accept: text/event-stream`이면 SSE로 진행 단계를 보낸다. 이벤트는 `step { stage: "intent"|"search"|"agent"|"answer"|"verify"; message: string; added?: string[] }`, 유료 분석(답변 모델이 Haiku가 아닐 때)은 그 사이에 `preview { summary: string; checks: string[]; nextSteps: string[] }`를 한 번 보낼 수 있다(DEC-064 빠른 답 먼저 — Haiku 요약, 조문·사건번호·사연에 없는 숫자·단정 표현 없음, 저장하지 않음). 마지막에 `result { resultId, result }` 또는 `error { code, message }`. 이벤트에도 입력 원문을 넣지 않는다.
 
 ### PATCH `/inquiries/{id}/facts`
 `req { stated?: string[]; toConfirm?: string[] }` → `200 { id, userEdited: true }`. 수정 후 재분석은 `analyze` 재호출.
