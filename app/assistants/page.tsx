@@ -33,54 +33,79 @@ const RULES = [
 export default function AssistantsPage() {
   return (
     <main className="bg-bg flex flex-1 flex-col">
-      <div className="mx-auto w-full max-w-[1120px] px-4 py-10 lg:py-14">
-        <p className="text-gold text-[12px] font-semibold tracking-[0.12em]">햄찌법원 · AI</p>
-        <h1 className="font-display text-ink mt-2 text-[34px] font-black lg:text-[44px]">
+      {/* 화면 구성 (2026-11-26 사용자 요청): 처음에는 '누구에게 물어볼지' 세 장만 보인다. 설명은 아래에 접어 둔다 */}
+      <div className="mx-auto w-full max-w-[1000px] px-4 py-12 lg:py-16">
+        <h1 className="font-display text-ink text-[32px] font-bold lg:text-[38px]">
           전문 에이전트
         </h1>
-        <p className="text-muted mt-3 max-w-[680px] text-[16px] leading-relaxed">
-          자주 묻는 세 분야를 맡은 AI 에이전트예요. 집 계약, 온라인에서 겪은 명예훼손·성적 괴롭힘,
-          중고거래 사기를 대화하듯 물어보면 법령·판례를 근거로 정리해 드려요.
+        <p className="text-muted mt-3 max-w-[560px] text-[16px] leading-[1.75]">
+          분야를 고르고 대화하듯 물어보세요. 법령·판례를 근거로 정리해 드려요.
         </p>
-        <p className="bg-ink mt-4 w-fit rounded-[6px] px-2.5 py-1 text-xs font-semibold text-white">
+        <p className="border-line text-ink mt-4 w-fit rounded-[6px] border bg-white px-2.5 py-1 text-xs font-semibold">
           {AI_NOTICE}
         </p>
 
-        <div className="mt-8">
+        <div className="mt-10">
           <AssistantCards />
         </div>
 
-        <section aria-labelledby="as-how" className="mt-12">
-          <h2 id="as-how" className="font-display text-ink text-[26px] font-bold">
-            이렇게 답해요
-          </h2>
-          <ol className="mt-5 grid gap-4 md:grid-cols-3">
-            {HOW.map((h, i) => (
-              <li key={h.title} className="rounded-card border-line border bg-white p-5">
-                <p className="text-gold text-[13px] font-bold">{i + 1}</p>
-                <h3 className="text-ink mt-1 text-[17px] font-bold">{h.title}</h3>
-                <p className="text-muted mt-2 text-[15px] leading-relaxed">{h.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section aria-labelledby="as-rules" className="mt-12">
-          <h2 id="as-rules" className="font-display text-ink text-[26px] font-bold">
-            꼭 알아 두세요
-          </h2>
-          <ul className="text-ink mt-4 max-w-[760px] list-disc space-y-2 pl-5 text-[15px] leading-relaxed">
-            {RULES.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-          <p className="text-muted mt-4 text-[14px]">
-            챗봇(오른쪽 아래 햄찌 버튼)에서도 맨 위 선택기로 에이전트를 골라 바로 대화할 수 있어요.{" "}
-            <Link href="/about/features" className="text-link underline">
-              햄찌법원 기능 가이드
-            </Link>
-          </p>
-        </section>
+        <div className="rounded-card border-line mt-12 border bg-white px-5 sm:px-7">
+          <details className="group">
+            <summary className="text-ink flex min-h-14 cursor-pointer list-none items-center justify-between text-[17px] font-bold [&::-webkit-details-marker]:hidden">
+              <span id="as-how">이렇게 답해요</span>
+              <span aria-hidden="true" className="text-muted text-xl font-normal group-open:hidden">
+                +
+              </span>
+              <span
+                aria-hidden="true"
+                className="text-muted hidden text-xl font-normal group-open:inline"
+              >
+                −
+              </span>
+            </summary>
+            <ol className="space-y-5 pt-1 pb-6">
+              {HOW.map((h, i) => (
+                <li key={h.title} className="flex gap-4">
+                  <span
+                    aria-hidden="true"
+                    className="border-line text-muted flex size-7 shrink-0 items-center justify-center rounded-full border text-[13px] font-semibold"
+                  >
+                    {i + 1}
+                  </span>
+                  <div>
+                    <h3 className="text-ink text-[16px] font-bold">{h.title}</h3>
+                    <p className="text-muted mt-1.5 text-[15px] leading-[1.75]">{h.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </details>
+          <details className="group border-line border-t" open>
+            <summary className="text-ink flex min-h-14 cursor-pointer list-none items-center justify-between text-[17px] font-bold [&::-webkit-details-marker]:hidden">
+              <span id="as-rules">꼭 알아 두세요</span>
+              <span aria-hidden="true" className="text-muted text-xl font-normal group-open:hidden">
+                +
+              </span>
+              <span
+                aria-hidden="true"
+                className="text-muted hidden text-xl font-normal group-open:inline"
+              >
+                −
+              </span>
+            </summary>
+            <ul className="text-ink list-disc space-y-2.5 pt-1 pb-6 pl-5 text-[15px] leading-[1.75]">
+              {RULES.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </details>
+        </div>
+        <p className="text-muted mt-5 text-[14px] leading-[1.75]">
+          오른쪽 아래 햄찌 버튼에서도 에이전트를 골라 바로 대화할 수 있어요.{" "}
+          <Link href="/about/features" className="text-link underline">
+            기능 가이드
+          </Link>
+        </p>
       </div>
     </main>
   );

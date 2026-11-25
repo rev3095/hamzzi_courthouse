@@ -2,8 +2,9 @@
 // 사건 진행 화면 /matters (F-016, DEC-053) — 변호사가 맡은 사건을 진행 순서대로 정리하는 도구.
 // 자료(서류 읽기) → 사실관계 → 구조도 → 쟁점 → 리서치 → 노트. 로그인 사용자만 쓰고 사건 자료는 계정에 저장된다.
 // 판단 도구가 아니라 정리 도구다: 승패·유불리·책임 비율 같은 판정을 보여 주지 않는다 (절대 규칙 2).
-// 화면은 흑백 업무용 톤(판례 리서치와 같은 결)이고, 자세한 내용은 마우스를 올리거나 눌러 펼친다.
-import { useCallback, useEffect, useRef, useState } from "react";
+// 화면 구성 (2026-11-26 사용자 요청): 판례 리서치(DEC-054)처럼 사이트 기본 바탕 위에 같은 폭의 둥근 패널로 담고,
+// 화면은 둘뿐이다 — ① 사건 목록(새 사건 만들기 하나가 주된 행동) ② 사건 한 건(MatterBoard). 목록과 탭을 한 화면에 겹쳐 두지 않는다.
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { isSignedIn } from "@/lib/client/api";
 import {
   createMatter,
@@ -15,96 +16,59 @@ import {
   type LoadedMatter,
 } from "@/lib/client/matters";
 import { openParam } from "@/lib/client/sessions";
-import type { MatterData, MatterParty, MatterSummary } from "@/lib/matters/model";
-import { PresetWorkspace } from "./PresetWorkspace";
+import type { MatterData, MatterSummary } from "@/lib/matters/model";
 import { useQuota } from "../useQuota";
-import { ResearchTab, type ResearchSeed } from "./ResearchTab";
-import { StructureMap } from "./StructureMap";
-import { DocsTab, FactsTab, IssuesTab, NotesTab, OverviewTab, type TabKey } from "./tabs";
-import { ConfirmButton, Empty, btn, btnLine, field } from "./ui";
-
-const TABS: { key: TabKey; name: string }[] = [
-  { key: "overview", name: "개요" },
-  { key: "docs", name: "자료" },
-  { key: "facts", name: "사실관계" },
-  { key: "map", name: "구조도" },
-  { key: "issues", name: "쟁점" },
-  { key: "research", name: "리서치" },
-  { key: "notes", name: "노트" },
-];
+import { MatterBoard } from "./MatterBoard";
+import { PresetWorkspace } from "./PresetWorkspace";
+import type { TabKey } from "./tabs";
+import { Empty, MatterCard, SectionTitle } from "./ui";
 
 type Save = "idle" | "saving" | "saved" | "failed";
 
 export function MattersView() {
   const quota = useQuota();
-  const signedIn = isSignedIn(quota);
   return (
-    <div className="bg-soft flex-1">
-      <div className="bg-ink text-white">
-        <div className="mx-auto w-full max-w-[1320px] px-4 py-6 lg:py-8">
-          <p className="text-xs font-bold tracking-[0.14em] text-white/70">CASE WORKSPACE</p>
-          <h1 className="font-display mt-1 text-[26px] font-bold">사건 진행</h1>
-          <p className="mt-1 text-sm text-white/75">
-            서류를 읽어 사실관계·당사자·쟁점으로 나누고, 찾은 내용을 계속 덧붙이는 정리 도구예요.
-            판단은 하지 않아요.
-          </p>
-        </div>
-      </div>
-      <div className="mx-auto w-full max-w-[1320px] px-4 py-6">
+    <div className="flex-1">
+      <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 pb-10 lg:pt-12">
         {quota === null ? (
           <p className="text-muted text-sm" aria-live="polite">
             불러오는 중…
           </p>
-        ) : signedIn ? (
-          <SignedIn />
+        ) : isSignedIn(quota) ? (
+          <Workspace />
         ) : (
           // 로그인 전에는 가상 사건 프리셋으로 기능을 둘러본다 (DEC-061). 내 사건 저장은 로그인 뒤
-          <PresetWorkspace />
+          <PresetWorkspace home={<HomeHead />} />
         )}
       </div>
     </div>
   );
 }
 
-/** 로그인 화면: 내 사건과 가상 사건 예시(DEC-061)를 오간다. 예시는 '내 사건으로 가져오기'로 계정에 복사할 수 있다 */
-function SignedIn() {
-  const [view, setView] = useState<"mine" | "presets">("mine");
+/** 사건 목록 화면의 머리 패널. 로그인하면 여기서 바로 새 사건을 만든다 */
+function HomeHead({ children }: { children?: ReactNode }) {
   return (
-    <div>
-      <div role="tablist" aria-label="사건 보기" className="mb-4 flex gap-1.5">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === "mine"}
-          onClick={() => setView("mine")}
-          className={view === "mine" ? btn : btnLine}
-        >
-          내 사건
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={view === "presets"}
-          onClick={() => setView("presets")}
-          className={view === "presets" ? btn : btnLine}
-        >
-          가상 사건 예시
-        </button>
-      </div>
-      {view === "mine" ? <Workspace /> : <PresetWorkspace signedIn />}
-    </div>
+    <section
+      aria-label="사건 진행"
+      className="rounded-panel bg-ink px-[18px] py-[22px] text-white lg:px-8 lg:py-8"
+    >
+      <p className="text-xs font-bold tracking-[0.14em] text-white/70">CASE WORKSPACE</p>
+      <h1 className="font-display mt-1 text-[26px] font-bold">사건 진행</h1>
+      <p className="mt-1 text-sm text-white/75">
+        서류를 올리면 사실관계·당사자·쟁점으로 나눠 담는 정리 도구예요. 판단은 하지 않아요.
+      </p>
+      {children}
+    </section>
   );
 }
 
 function Workspace() {
   const [list, setList] = useState<MatterSummary[] | null>(null);
   const [matter, setMatter] = useState<LoadedMatter | null>(null);
-  const [tab, setTab] = useState<TabKey>("overview");
+  const [firstTab, setFirstTab] = useState<TabKey>("overview");
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [save, setSave] = useState<Save>("idle");
-  const [seed, setSeed] = useState<ResearchSeed>({});
-  const [noteSeed, setNoteSeed] = useState<{ partyId: string; name: string } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<{ id: string; data: MatterData } | null>(null);
 
@@ -155,16 +119,18 @@ function Workspace() {
     [flush],
   );
 
+  function show(m: LoadedMatter, tab: TabKey) {
+    setMatter(m);
+    setFirstTab(tab);
+    setSave("idle");
+  }
+
   async function open(id: string) {
     await flush();
     setError(null);
     const r = await getMatter(id);
     if (!r.ok) return setError(matterErrorText(r.error.code, r.error.details?.reason));
-    setMatter(r.data);
-    setTab("overview");
-    setSave("idle");
-    setSeed({});
-    setNoteSeed(null);
+    show(r.data, "overview");
   }
 
   // 마이페이지 '내 세션'에서 고른 사건을 바로 연다 (/matters?open=<id>, DEC-056).
@@ -185,189 +151,125 @@ function Workspace() {
     const r = await createMatter(title.trim());
     if (!r.ok) return setError(matterErrorText(r.error.code, r.error.details?.reason));
     setTitle("");
-    setMatter(r.data);
-    setTab("docs");
-    setSave("idle");
+    // 새 사건은 첫 단계(자료)에서 시작한다
+    show(r.data, "docs");
     void refresh();
   }
 
-  function exportFile() {
-    if (!matter) return;
-    const blob = new Blob([JSON.stringify({ title: matter.title, data: matter.data }, null, 1)], {
-      type: "application/json",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "matter.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
+  async function back() {
+    await flush();
+    setMatter(null);
+    setError(null);
+    void refresh();
   }
 
-  const go = (t: TabKey) => setTab(t);
-  const toCompany = (p: MatterParty) => {
-    setSeed({ company: { name: p.name, partyId: p.id } });
-    setTab("research");
-  };
+  const alert = error && (
+    <p
+      role="alert"
+      className="text-ink mt-3 rounded-[6px] border border-[var(--ink)] bg-white px-3 py-2 text-[13px] font-semibold"
+    >
+      {error}
+    </p>
+  );
+
+  if (matter) {
+    return (
+      <MatterBoard
+        key={matter.id}
+        id={matter.id}
+        title={matter.title}
+        data={matter.data}
+        update={update}
+        firstTab={firstTab}
+        onBack={() => void back()}
+        status={
+          <span className="text-[12px] text-white/70" aria-live="polite" data-testid="save-state">
+            {save === "saving"
+              ? "저장 중…"
+              : save === "saved"
+                ? "저장됨"
+                : save === "failed"
+                  ? "저장하지 못했어요"
+                  : ""}
+          </span>
+        }
+        banner={alert}
+        onDelete={() => {
+          const id = matter.id;
+          pending.current = null;
+          setMatter(null);
+          void deleteMatter(id).then(refresh);
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-      <aside aria-label="내 사건">
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (title.trim()) void create();
-          }}
-        >
-          <input
-            className={field}
-            value={title}
-            maxLength={80}
-            placeholder="새 사건 이름"
-            onChange={(e) => setTitle(e.target.value)}
-            aria-label="새 사건 이름"
-          />
-          <button type="submit" className={btn} disabled={!title.trim()}>
-            만들기
-          </button>
-        </form>
-        <ul className="mt-3 space-y-1.5" data-testid="matter-list">
-          {(list ?? []).map((m) => (
-            <li key={m.id}>
-              <button
-                type="button"
-                onClick={() => void open(m.id)}
-                aria-current={matter?.id === m.id}
-                className={`w-full rounded-[6px] border px-3 py-2 text-left ${
-                  matter?.id === m.id
-                    ? "border-ink bg-ink text-white"
-                    : "border-line text-ink hover:border-ink bg-white"
-                }`}
-              >
-                <span className="block truncate text-[14px] font-semibold">{m.title}</span>
-                <span
-                  className={`block text-[12px] ${matter?.id === m.id ? "text-white/70" : "text-muted"}`}
-                >
-                  자료 {m.counts.docs} · 당사자 {m.counts.parties} · 쟁점 {m.counts.issues} · 노트{" "}
-                  {m.counts.notes}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        {list !== null && list.length === 0 && (
-          <p className="text-muted mt-3 text-[13px] leading-relaxed">
-            아직 사건이 없어요. 위에 사건 이름을 적고 만들어 보세요.
-          </p>
-        )}
-      </aside>
-
-      <div className="min-w-0">
-        {error && (
-          <p
-            role="alert"
-            className="text-ink mb-3 rounded-[6px] border border-[var(--ink)] bg-white px-3 py-2 text-[13px] font-semibold"
-          >
-            {error}
-          </p>
-        )}
-        {!matter ? (
-          <Empty>왼쪽에서 사건을 고르거나 새로 만들어 주세요.</Empty>
-        ) : (
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-ink min-w-0 truncate text-[20px] font-bold">{matter.title}</h2>
-              <span className="flex items-center gap-3">
-                <span
-                  className="text-muted text-[12px]"
-                  aria-live="polite"
-                  data-testid="save-state"
-                >
-                  {save === "saving"
-                    ? "저장 중…"
-                    : save === "saved"
-                      ? "저장됨"
-                      : save === "failed"
-                        ? "저장하지 못했어요"
-                        : ""}
-                </span>
-                <ConfirmButton
-                  onConfirm={() => {
-                    const id = matter.id;
-                    pending.current = null;
-                    setMatter(null);
-                    void deleteMatter(id).then(refresh);
-                  }}
-                >
-                  사건 지우기
-                </ConfirmButton>
-              </span>
-            </div>
-            <div
-              className="mt-3 flex gap-1.5 overflow-x-auto pb-1"
-              role="tablist"
-              aria-label="사건 진행 단계"
+    <PresetWorkspace
+      signedIn
+      onImported={(m) => {
+        show(m, "overview");
+        void refresh();
+      }}
+      home={
+        <>
+          <HomeHead>
+            <form
+              className="mt-5 flex max-w-[640px] gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (title.trim()) void create();
+              }}
             >
-              {TABS.map((t, i) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === t.key}
-                  onClick={() => setTab(t.key)}
-                  className={`${tab === t.key ? btn : btnLine} shrink-0 whitespace-nowrap`}
-                >
-                  {i > 0 && <span className="mr-1 opacity-60">{i}</span>}
-                  {t.name}
-                </button>
-              ))}
-            </div>
-            <div className="mt-4" role="tabpanel">
-              {tab === "overview" && (
-                <OverviewTab data={matter.data} update={update} go={go} onExport={exportFile} />
-              )}
-              {tab === "docs" && <DocsTab data={matter.data} update={update} go={go} />}
-              {tab === "facts" && <FactsTab data={matter.data} update={update} />}
-              {tab === "map" && (
-                <StructureMap
-                  data={matter.data}
-                  update={update}
-                  onCompany={toCompany}
-                  onSearch={(query) => {
-                    setSeed({ query });
-                    setTab("research");
-                  }}
-                  onNote={(p) => {
-                    setNoteSeed({ partyId: p.id, name: p.name });
-                    setTab("notes");
-                  }}
-                />
-              )}
-              {tab === "issues" && (
-                <IssuesTab matterId={matter.id} data={matter.data} update={update} />
-              )}
-              {tab === "research" && (
-                <ResearchTab
-                  key={`${seed.company?.partyId ?? ""}|${seed.query ?? ""}`}
-                  matterId={matter.id}
-                  data={matter.data}
-                  update={update}
-                  seed={seed}
-                  onSaved={() => setNoteSeed(null)}
-                />
-              )}
-              {tab === "notes" && (
-                <NotesTab
-                  key={noteSeed?.partyId ?? "notes"}
-                  data={matter.data}
-                  update={update}
-                  seed={noteSeed}
-                />
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+              <input
+                className="text-ink placeholder:text-muted/70 min-h-12 w-full rounded-[8px] border border-white bg-white px-4 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                value={title}
+                maxLength={80}
+                placeholder="새 사건 이름 (예: 용역 대금 내용증명)"
+                onChange={(e) => setTitle(e.target.value)}
+                aria-label="새 사건 이름"
+              />
+              <button
+                type="submit"
+                className="text-ink min-h-12 shrink-0 rounded-[8px] bg-white px-5 text-[14px] font-bold whitespace-nowrap disabled:opacity-50"
+                disabled={!title.trim()}
+              >
+                사건 만들기
+              </button>
+            </form>
+            <p className="mt-2 text-[12px] text-white/60">
+              만들면 바로 서류 올리기로 넘어가요. 사건 자료는 내 계정에 저장돼요.
+            </p>
+          </HomeHead>
+          {alert}
+          <section aria-label="내 사건" className="mt-8">
+            <SectionTitle title="내 사건" />
+            {list === null ? (
+              <p className="text-muted mt-3 text-[13px]" aria-live="polite">
+                불러오는 중…
+              </p>
+            ) : list.length === 0 ? (
+              <div className="mt-3">
+                <Empty>
+                  아직 사건이 없어요. 위에 사건 이름을 적어 만들거나, 아래 가상 사건을 열어 먼저
+                  둘러보세요.
+                </Empty>
+              </div>
+            ) : (
+              <ul
+                className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                data-testid="matter-list"
+              >
+                {list.map((m) => (
+                  <li key={m.id}>
+                    <MatterCard title={m.title} counts={m.counts} onClick={() => void open(m.id)} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      }
+    />
   );
 }

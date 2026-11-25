@@ -107,20 +107,69 @@ export function Empty({ children }: { children: ReactNode }) {
 export function SectionTitle({
   title,
   hint,
+  more,
   right,
 }: {
   title: string;
+  /** 한 줄 안내. 길어지는 설명은 more로 넘긴다 */
   hint?: string;
+  /** '자세히'에 마우스를 올리거나 누르면 뜨는 긴 설명 (확인 범위·쓰는 법) */
+  more?: ReactNode;
   right?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-2">
       <div>
         <h2 className="text-ink text-[17px] font-bold">{title}</h2>
-        {hint && <p className="text-muted mt-0.5 text-[13px] leading-relaxed">{hint}</p>}
+        {(hint || more) && (
+          <p className="text-muted mt-0.5 text-[13px] leading-relaxed">
+            {hint}
+            {more && (
+              <>
+                {" "}
+                <Hover panel={more}>
+                  <span className="text-ink font-semibold">자세히</span>
+                </Hover>
+              </>
+            )}
+          </p>
+        )}
       </div>
       {right}
     </div>
+  );
+}
+
+/** 사건 목록의 한 칸 (내 사건·가상 사건 공통). 숫자는 담긴 항목 수다 */
+export function MatterCard({
+  title,
+  counts,
+  tag,
+  onClick,
+}: {
+  title: string;
+  counts: { docs: number; parties: number; issues: number; notes: number };
+  tag?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${card} hover:border-ink h-full w-full px-4 py-3 text-left`}
+    >
+      <span className="flex items-start justify-between gap-2">
+        <span className="text-ink line-clamp-2 text-[15px] leading-snug font-bold">{title}</span>
+        {tag && (
+          <span className="border-line text-muted shrink-0 rounded-[4px] border px-1.5 py-0.5 text-[11px] font-semibold">
+            {tag}
+          </span>
+        )}
+      </span>
+      <span className="text-muted mt-1.5 block text-[12px]">
+        자료 {counts.docs} · 당사자 {counts.parties} · 쟁점 {counts.issues} · 노트 {counts.notes}
+      </span>
+    </button>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 // 전문 에이전트 '아카이브' 탭 (F-018, DEC-057): 가상 사연으로 미리 만든 질답 세트(원고 7 : 피고 3).
 // 한 세트 = 지금 상황·절차 단계 → 사건 구조 시각자료 → 민사 관점·형사 관점(검증된 문단) → 필요한 증거 → 서류 정리 단계 → 근거 답변 전체.
-// 처음에는 요약만 보이고 '더보기'로 펼친다. '이 질문으로 체험하기'는 같은 질문을 대화로 보내고, 서버는 저장된 답을 재생한다(비용·횟수 0).
+// 처음에는 제목·질문만 보이고 '답변 미리 보기'로 펼친다 (AI가 쓴 정리는 펼친 뒤 고지와 함께 보인다). '이 질문으로 체험하기'는 같은 질문을 대화로 보내고, 서버는 저장된 답을 재생한다(비용·횟수 0).
 // 자료는 GET /api/v1/assistants/{id}/archive로 탭을 열 때 받는다(브라우저 묶음에 넣지 않는다).
 import { useEffect, useState } from "react";
 import { AI_NOTICE } from "@/lib/api/respond";
@@ -47,23 +47,18 @@ export function ArchiveTab({
 
   return (
     <section aria-labelledby={`hza-archive-${assistant}`} className="mt-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2
-            id={`hza-archive-${assistant}`}
-            className="hza-title font-display text-[26px] font-bold"
-          >
-            아카이브
+          <h2 id={`hza-archive-${assistant}`} className="hza-title text-[20px] font-bold">
+            미리 만든 질답
           </h2>
-          <p className="hza-muted mt-1 max-w-[720px] text-[14px] leading-relaxed">
-            가상 사연으로 미리 만든 질답 세트예요. 원고 쪽(청구·고소하는 쪽)과 피고 쪽(서류를 받은
-            쪽)을 나눠, 지금 상황과 단계·민사와 형사 관점·필요한 증거·서류 정리 순서까지 담았어요.
-            &apos;체험하기&apos;를 누르면 같은 질문으로 대화를 시작해요(질문 횟수에 들어가지
-            않아요).
+          <p className="hza-muted mt-2 max-w-[640px] text-[15px] leading-[1.75]">
+            가상 사연으로 미리 만든 질문과 답변이에요. &apos;체험하기&apos;를 누르면 같은 질문으로
+            대화를 시작하고, 질문 횟수에 들어가지 않아요.
           </p>
           <p className="hza-notice">{AI_NOTICE} · 가상 사연으로 미리 만든 답변</p>
         </div>
-        <div role="radiogroup" aria-label="입장 고르기" className="flex gap-1">
+        <div role="radiogroup" aria-label="입장 고르기" className="flex gap-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
@@ -101,8 +96,8 @@ function ArchiveCard({ item, onTry }: { item: ArchiveItem; onTry: (q: string) =>
   const [allAnswer, setAllAnswer] = useState(false);
   const r = item.result;
   return (
-    <li className="hza-card p-5 sm:p-6">
-      <div className="flex flex-wrap gap-2">
+    <li className="hza-card p-6 sm:p-7">
+      <div className="flex flex-wrap items-center gap-2">
         <span
           className="hza-case-kind"
           data-kind={item.side === "plaintiff" ? "precedent" : "fictional"}
@@ -111,40 +106,42 @@ function ArchiveCard({ item, onTry }: { item: ArchiveItem; onTry: (q: string) =>
         </span>
         <span className="hza-badge">{DOC_STAGE_LABEL[item.stage]}</span>
         <span className="hza-badge">가상 사연</span>
-        {/* 접힌 상태에서도 AI가 쓴 정리(지금 상황)가 보이므로 고지를 카드 머리에 단다 (절대 규칙 6) */}
-        <span className="hza-notice mt-0">{AI_NOTICE}</span>
       </div>
-      <h3 className="mt-3 text-[18px] leading-snug font-bold">{item.title}</h3>
-      <p className={`hza-muted mt-2 text-[15px] leading-relaxed ${open ? "" : "line-clamp-3"}`}>
+      <h3 className="mt-4 text-[18px] leading-snug font-bold">{item.title}</h3>
+      {/* 접힌 상태에서는 제목과 질문 두 줄만 보인다 — AI가 쓴 정리(지금 상황)는 펼친 뒤 고지와 함께 보인다 (절대 규칙 6) */}
+      <p className={`hza-muted mt-2.5 text-[15px] leading-[1.75] ${open ? "" : "line-clamp-2"}`}>
         “{item.question}”
       </p>
-      {item.situation && (
-        <p className={`mt-3 text-[15px] leading-relaxed ${open ? "" : "line-clamp-2"}`}>
-          <span className="hza-accent-text font-bold">지금 상황 · </span>
-          {item.situation}
-        </p>
+      {open && item.situation && (
+        <div className="mt-5">
+          <p className="flex flex-wrap items-center gap-2">
+            <span className="hza-eyebrow">지금 상황</span>
+            <span className="hza-notice mt-0">{AI_NOTICE}</span>
+          </p>
+          <p className="mt-1.5 text-[15px] leading-[1.75]">{item.situation}</p>
+        </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-5 flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          className="hza-btn min-h-11 text-[14px]"
+          onClick={() => onTry(item.question)}
+        >
+          이 질문으로 체험하기
+        </button>
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
           className="hza-chip font-semibold"
         >
-          {open ? "접기" : "더보기 · 단계·시각자료·민사/형사·증거"}
-        </button>
-        <button
-          type="button"
-          className="hza-btn min-h-10 text-[14px]"
-          onClick={() => onTry(item.question)}
-        >
-          이 질문으로 체험하기
+          {open ? "접기" : "답변 미리 보기"}
         </button>
       </div>
 
       {open && (
-        <div className="mt-6 space-y-7">
+        <div className="mt-8 space-y-9 border-t border-[var(--hza-line)] pt-8">
           {(item.steps.now || item.steps.next.length > 0) && (
             <Block title="절차상 지금 단계">
               {item.steps.now && (
@@ -247,7 +244,7 @@ function ArchiveCard({ item, onTry }: { item: ArchiveItem; onTry: (q: string) =>
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="hza-accent-text mb-2 text-[13px] font-bold tracking-[0.06em]">{title}</h4>
+      <h4 className="hza-title mb-3 text-[16px] font-bold">{title}</h4>
       {children}
     </div>
   );
@@ -263,8 +260,8 @@ function SidePoints({
   result: DemoAnalysisResult;
 }) {
   return (
-    <div className="rounded-[12px] border border-[var(--hza-line)] p-4">
-      <h4 className="hza-accent-text mb-2 text-[14px] font-bold">{title}</h4>
+    <div className="rounded-[12px] border border-[var(--hza-line)] p-5">
+      <h4 className="hza-title mb-3 text-[16px] font-bold">{title}</h4>
       {side.points.length > 0 ? (
         <Points points={side.points} result={result} />
       ) : (
