@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { maskPii } from "./detect";
+import { maskPii, maskSurnameStubs } from "./detect";
 import { scanInput } from "./index";
 import { detectSensitive } from "./sensitive";
 
@@ -302,5 +302,61 @@ describe("F-007 AC2 민감정보 가능성", () => {
     const scan = scanInput("우울증 진단을 받았어요");
     expect(scan.sensitive).toEqual(["health"]);
     expect(JSON.stringify(scan.sensitive)).not.toContain("우울증");
+  });
+});
+
+describe("F-015 AC2 성 한 글자 + ○○ 꼴 (절대 규칙 4)", () => {
+  test("성씨만 남은 가린 이름은 ○○○로, 상호·기관·조문의 ○○는 그대로", () => {
+    expect(maskSurnameStubs("박○○과 최○○, 김OO 씨, 이○영")).toEqual({
+      text: "○○○과 ○○○, ○○○ 씨, ○○○",
+      count: 4,
+    });
+    const plain =
+      "○○물산 주식회사, ○○시, 서울○○지방법원, 인천○○지방법원, 제○○조, ○○○, **이하** 같음, 2025. 3. 1.";
+    expect(maskSurnameStubs(plain)).toEqual({ text: plain, count: 0 });
+  });
+
+  test("붙여 쓴 조사·호칭, 다른 가림 기호, 한 자리 가림, 역할어에 붙은 이름도 가린다", () => {
+    const cases: [string, string][] = [
+      ["박○○씨가 왔다", "○○○씨가 왔다"],
+      ["박○○님이", "○○○님이"],
+      ["박○○에게는", "○○○에게는"],
+      ["박○○으로부터", "○○○으로부터"],
+      ["박○○과의 계약", "○○○과의 계약"],
+      ["박○○이었다", "○○○이었다"],
+      ["박○○까지", "○○○까지"],
+      ["박○○측은", "○○○측은"],
+      ["임차인 홍*동 씨에게", "임차인 ○○○ 씨에게"],
+      ["홍O동, 홍ㅇ동, 홍길* 씨, 홍길○에게", "○○○, ○○○, ○○○ 씨, ○○○에게"],
+      ["박○ 씨", "○○○ 씨"],
+      ["박○O, 김oo, 김xx", "○○○, ○○○, ○○○"],
+      ["김ＯＯ, 김＊＊", "○○○, ○○○"],
+      ["김〇〇, 김□□, 김△△, 김●●, 김◇◇", "○○○, ○○○, ○○○, ○○○, ○○○"],
+      ["임대인박○○은", "임대인○○○은"],
+      ["피고인○○은", "피고인○○은"],
+      ["황보○○ 씨, 선우○ 씨, 제갈○○ 씨", "○○○ 씨, ○○○ 씨, ○○○ 씨"],
+      ["박■■ 씨, 박◎◎ 씨, 박▲▲ 씨", "○○○ 씨, ○○○ 씨, ○○○ 씨"],
+      ["박○○○○ 씨", "○○○ 씨"],
+    ];
+    for (const [input, want] of cases) expect(maskSurnameStubs(input).text, input).toBe(want);
+  });
+
+  test("서류의 O/X 표·각주 표시는 이름으로 보지 않는다 (사실을 바꾸지 않는다)", () => {
+    for (const plain of [
+      "보증금 반환X, 이자 지급O",
+      "서명X",
+      "유효X",
+      "이행X 여부",
+      "공사X",
+      "이자* 연 5%",
+      "정산* 별도",
+      "주* 참고",
+      "이행○, 지급×",
+      "유○ 무×",
+      "이자*는 별도",
+      "정산*의 범위",
+    ]) {
+      expect(maskSurnameStubs(plain), plain).toEqual({ text: plain, count: 0 });
+    }
   });
 });
