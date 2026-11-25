@@ -10,6 +10,7 @@ import { runDeepAnalysis } from "@/lib/ai/deep";
 import { buildDeepMap } from "@/lib/ai/deep-policy";
 import { runLiteAnalysis } from "@/lib/ai/lite";
 import { longInputAllowanceUsd } from "@/lib/ai/cost";
+import { stageClock } from "@/lib/ai/timing";
 import { BUDGET_UNIT_USD, LONG_DEEP, isLongQuestion, tierOf, type TierId } from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
@@ -51,6 +52,12 @@ export async function analyzeInquiry(
     : (assistant?.caseHint ?? null);
   const lawHints = opts.category ? CATEGORIES[opts.category].lawHints : assistant?.lawHints;
   const started = Date.now();
+  // 단계별 시간 (DEC-063): 진행 신호마다 시각을 붙여 결과의 timing으로 남긴다 — 속도 보고서·결과 화면이 읽는다
+  const clock = stageClock();
+  const step = (e: StepEvent) => {
+    clock.mark(e.stage);
+    onStep?.(e);
+  };
   try {
     // 무료 모드(기본, DEC-015): Claude를 부르지 않는다. 예시 질문 재생 또는 법제처 검색 전용.
     // 유료 모드라도 예시 질문은 미리 만든 분석을 재생한다(비용 0). 주간 전체 상한(DEC-019·020·026·031, 기본 $80)을
@@ -82,7 +89,7 @@ export async function analyzeInquiry(
     if (aiMode() === "free" || example || !(await tryAiQuota(weight))) {
       // 자료가 붙은 질문은 예시 답변을 재생하지 않는다 (자료와 상관없는 저장 답변이 자료 옆에 보이지 않게)
       const free = await runFreeAnalysis(inquiry.masked_text, {
-        onStep,
+        onStep: step,
         caseHint,
         lawHints,
         ...(materials.length > 0 && { noReplay: true }),
@@ -101,6 +108,8 @@ export async function analyzeInquiry(
         const freeMaterials = buildMaterialsMap(materials, [], []);
         if (freeMaterials) free.result.materials = freeMaterials;
       }
+      clock.mark("finish");
+      free.result.timing = clock.done();
       const resultId = await finishAnalysis(
         {
           inquiryId: inquiry.id,
@@ -126,7 +135,7 @@ export async function analyzeInquiry(
       ? await runDeepAnalysis(
           { maskedText: inquiry.masked_text, context, ...(materials.length > 0 && { materials }) },
           {
-            onStep,
+            onStep: step,
             caseHint,
             lawHints,
             tier: tier.id,
@@ -146,7 +155,7 @@ export async function analyzeInquiry(
       (await runLiteAnalysis(
         { maskedText: inquiry.masked_text, context, ...(materials.length > 0 && { materials }) },
         {
-          onStep,
+          onStep: step,
           caseHint,
           lawHints,
           tier: tier.id,
@@ -160,9 +169,10 @@ export async function analyzeInquiry(
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
     await settleAiQuota(weight, analysis.costUsd);
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
-      onStep,
+      onStep: step,
       screened: analysis.dropped.length,
     });
+    clock.mark("finish");
     // 사건 구조도의 쟁점에는 검증을 통과해 남은 문단만 잇는다 (빠진 문단은 그림에서도 빠진다)
     if (deepRun?.struct) {
       verified.result.deep = buildDeepMap(
@@ -198,6 +208,7 @@ export async function analyzeInquiry(
 
     // 질문 1회는 분석이 성공했을 때 센다 (DEC-010). 차감·저장·상태 변경은 한 트랜잭션 —
     // 상한에 걸리거나 저장이 실패하면 결과도 차감도 남지 않는다
+    verified.result.timing = clock.done();
     const resultId = await finishAnalysis(
       {
         inquiryId: inquiry.id,
