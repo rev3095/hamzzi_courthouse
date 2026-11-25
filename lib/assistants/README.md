@@ -14,7 +14,8 @@
 | `policy.test.ts` | 문안 검사(숫자·단정·판정 표현·개인정보), 섹션 라벨, 예시 질문 재생, analyze 본문 검사 |
 
 - 서버: `lib/inquiries/analyze.ts`가 `assistant`를 받아 `runLiteAnalysis`(lib/ai/lite.ts)에 `{ persona, pinnedCaseIds, promptTag }`를 넘긴다. 지시문은 답변 지시문 뒤 두 번째 시스템 블록이다. 지시문·질문 예를 바꾸면 `promptTag`(`assistant-{id}-v1`)를 올린다.
-- 화면: `components/assistants/` — `AssistantChat`(대화, 비서 페이지·안내 챗봇 비서 모드 공용), `AssistantPage`(비서별 배치), `AssistantCards`(홈·목록 카드), 스킨은 `assistants.css`(`hza-` 접두어, `data-hza`로 색을 바꾼다).
+- 화면: `components/assistants/` — `AssistantChat`(대화, 비서 페이지·안내 챗봇 비서 모드 공용), `AssistantPage`(세 비서 공통 배치), `AssistantCards`(홈·목록 카드), 스킨은 `assistants.css`(`hza-` 접두어, `data-hza`로 색을 바꾼다).
+- 화면 구성 (2026-11-26 사용자 요청 — 아래 옮겨 온 규칙의 "비서마다 색·배치가 다르다"를 대신한다): 세 비서는 **같은 배치에 색조만 다르다**. 한 화면에 머리(이름·한 줄) → 탭(대화하기 | 미리 만든 질답) → 대화 → 접어 둔 도움말 → 접어 둔 사례 순이고, 도움말·사례·아카이브 세트는 처음에 제목만 보인다. 색은 연한 바탕에 진한 글자(고소미도 밝은 바탕 — 어두운 남색 바탕·깎은 모서리·두꺼운 테두리·어긋난 그림자는 쓰지 않는다), 글줄 간격은 본문 1.75 안팎. 색을 바꾸면 본문·보조 글자 대비 4.5:1을 다시 계산한다. AI가 쓴 내용이 보이는 자리(아카이브의 '지금 상황', 답변)에는 그 자리에 `AI_NOTICE`를 둔다.
 - 실존 확인(무료 법제처 조회): `tests/live/assistant-cases.live.test.ts` — 사례 판례의 사건번호·법원·선고일, 고정 조문·사례 관련 조문.
 - 새 사례는 공개 판례(법제처)나 직접 쓴 가상 사례만 쓴다. 실제 사용자 질문·민간 상담 글은 쓰지 않는다. 판결문 속 이름·주소·금액·대화명은 옮기지 않는다.
 

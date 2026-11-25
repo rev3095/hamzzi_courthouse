@@ -213,32 +213,39 @@ export function AssistantChat({
         role="log"
         aria-live="polite"
         aria-busy={busy}
-        className={`hza-log flex-1 space-y-4 overflow-y-auto ${
-          compact ? "px-3 py-4" : "hza-card h-[min(640px,72dvh)] px-4 py-5 sm:px-6"
+        // 페이지에서는 대화가 쌓이는 만큼만 커진다 — 처음부터 큰 빈 칸을 두지 않아 질문창이 바로 보인다
+        className={`hza-log flex-1 overflow-y-auto ${
+          compact ? "space-y-4 px-3 py-4" : "hza-card max-h-[72dvh] space-y-6 px-5 py-6 sm:px-7"
         }`}
       >
         <BotRow id={id} compact={compact}>
           <div className="hza-bot">
             <p>{a.greeting}</p>
-            {a.disclaimer && <p className="hza-muted mt-2 text-[13px]">{a.disclaimer}</p>}
+            {/* 비서 페이지는 머리에 같은 안내가 있어 챗봇 창에서만 말풍선에 싣는다 */}
+            {compact && a.disclaimer && (
+              <p className="hza-muted mt-2 text-[13px]">{a.disclaimer}</p>
+            )}
           </div>
         </BotRow>
 
         {turns.length === 0 && (
-          <div className="flex flex-wrap gap-2 pl-11" role="group" aria-label="질문 예">
-            {a.starters.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="hza-chip"
-                onClick={() => {
-                  setText(s);
-                  input.current?.focus();
-                }}
-              >
-                {s.trim()}
-              </button>
-            ))}
+          <div className={compact ? "pl-10" : "sm:pl-[46px]"} role="group" aria-label="질문 예">
+            <p className="hza-muted mb-2.5 text-[13px] font-semibold">이렇게 물어볼 수 있어요</p>
+            <div className="flex flex-col items-start gap-2.5">
+              {a.starters.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="hza-chip"
+                  onClick={() => {
+                    setText(s);
+                    input.current?.focus();
+                  }}
+                >
+                  {s.trim()}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -269,10 +276,9 @@ export function AssistantChat({
 
       <form
         onSubmit={submit}
-        className={compact ? "border-t border-[var(--hza-line)] px-3 pt-2.5 pb-3" : "mt-4"}
+        className={compact ? "border-t border-[var(--hza-line)] px-3 pt-2.5 pb-3" : "mt-5"}
       >
-        {!compact && quota?.ai !== false && <TierFixed />}
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2.5">
           <label htmlFor={`hza-input-${id}-${variant}`} className="sr-only">
             {a.name}에게 질문하기
           </label>
@@ -304,8 +310,9 @@ export function AssistantChat({
             {ask.error}
           </p>
         )}
-        <div className="hza-muted mt-2 flex flex-wrap items-center justify-between gap-2 text-[12px]">
+        <div className="hza-muted mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] leading-relaxed">
           <span>
+            {!compact && quota?.ai !== false && <TierFixed />}
             분석이 끝난 질문마다 1회로 세요(예시 질문 제외)
             {quota &&
               !quota.admin &&
@@ -465,9 +472,9 @@ function SearchOnly({ result }: { result: DemoAnalysisResult }) {
 /** 비서 답변 모드는 고정이다 (DEC-057 ⑧): 근거 답변 Pro Max, 대화 한마디는 가벼운 모델. 화면에는 모델 이름을 싣지 않는다 */
 function TierFixed() {
   return (
-    <p className="hza-muted mb-2 text-[13px]">
-      <span className="font-semibold">답변 모드 {TIER_TEXT[ASSISTANT_ANSWER_TIER].name}</span> ·
-      비서 대화는 이 모드로 고정이에요
-    </p>
+    <>
+      <span className="font-semibold">답변 모드 {TIER_TEXT[ASSISTANT_ANSWER_TIER].name} 고정</span>
+      {" · "}
+    </>
   );
 }

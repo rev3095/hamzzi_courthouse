@@ -21,13 +21,13 @@ export function AssistantCards({ compact = false }: { compact?: boolean }) {
             data-hza={a.id}
             className="hza-root hza-card max-sm:min-w-[78%] max-sm:snap-start"
           >
-            <Link href={a.href} className="flex h-full flex-col gap-3 p-5 text-left">
+            <Link href={a.href} className="flex h-full flex-col gap-3.5 p-6 text-left">
               <AssistantEmblem id={a.id} size={compact ? 44 : 52} />
-              <span className="hza-title font-display text-[22px] leading-tight font-black">
+              <span className="hza-title font-display text-[22px] leading-tight font-bold">
                 {a.name}
               </span>
-              <span className="hza-muted text-[14px] leading-relaxed">{a.tagline}</span>
-              <span className="hza-accent-text mt-auto pt-1 text-[14px] font-bold">
+              <span className="hza-muted text-[14px] leading-[1.7]">{a.tagline}</span>
+              <span className="hza-accent-text mt-auto pt-2 text-[14px] font-bold">
                 대화 시작 →
               </span>
             </Link>
