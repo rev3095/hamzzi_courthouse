@@ -8,7 +8,13 @@ import { z } from "zod";
 import { pdfPageCount } from "@/lib/ai/cost";
 import { citationsIn, isAssertive } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
-import { nameAfterRelation, scanInput, type PiiFinding, type SensitiveCategory } from "@/lib/pii";
+import {
+  maskSurnameStubs,
+  nameAfterRelation,
+  scanInput,
+  type PiiFinding,
+  type SensitiveCategory,
+} from "@/lib/pii";
 import {
   CASEFILE_LIMITS,
   CASEFILE_MEDIA_TYPES,
@@ -357,7 +363,9 @@ const EXTRA_NUMERIC: [string, RegExp][] = [
  * 돌려주는 added는 새로 가린 이름·그 밖의 개수.
  */
 export function maskMore(masked: string, personNames: string[]) {
-  let text = masked;
+  // ⓪ 서면이 이미 일부 가린 "박○○" 꼴은 성씨도 남기지 않는다
+  const stubs = maskSurnameStubs(masked);
+  let text = stubs.text;
   let other = 0;
   for (const [token, re] of EXTRA_NUMERIC) {
     text = text.replace(re, () => {
@@ -372,7 +380,7 @@ export function maskMore(masked: string, personNames: string[]) {
     if (!tokens.has(n)) tokens.set(n, `[이름${next++}]`);
     return tokens.get(n)!;
   };
-  let name = 0;
+  let name = stubs.count;
 
   // ① 모델이 적어 준 이름: 글 전체에서 (앞 글자가 이어지지 않는 자리만)
   for (const n of nameTargets(personNames)) {
@@ -505,6 +513,10 @@ export function orgNameOf(
   for (const n of nameTargets(personNames)) {
     t = t.replace(new RegExp(`(?<![가-힣A-Za-z])${escapeRe(n)}`, "g"), "").trim();
   }
+  // 서면이 일부 가린 사람 이름("박○○", "○○○님")은 낱말째 뗀다 ("○○물산"처럼 붙은 상호는 그대로)
+  t = maskSurnameStubs(t)
+    .text.replace(/(?:^|\s)○○○[가-힣]{0,3}(?=\s|$)/g, " ")
+    .trim();
   // 상호 뒤에 띄어 붙은 마지막 낱말이 이름 꼴이면 뗀다: "주식회사 한빛주택 ○○○" (표지가 든 낱말은 그대로)
   const words = squash(t).split(" ");
   // 앞부분이 "주식회사" 같은 법인 꼴 낱말 하나뿐이면 뒤 낱말이 상호다 — 떼지 않는다

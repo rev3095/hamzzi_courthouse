@@ -387,6 +387,40 @@ describe("F-015 AC2 개인 이름이 새는 경로 막기 (절대 규칙 4)", ()
     }
   });
 
+  test("F-015 AC2 서면이 일부 가린 '박○○' 꼴은 성씨도 남기지 않는다 (절대 규칙 4)", () => {
+    const out = read({
+      summary:
+        "임대인 박○○은 보증금을 돌려주지 않았습니다. 임차인은 최○○에게 내용증명을 보냈습니다. 중개인 이○영도 함께 있었습니다.",
+      claims: [
+        "박○○는 보증금을 돌려 달라는 요구를 받았습니다.",
+        "김OO 씨와 정** 씨에게 연락했습니다.",
+      ],
+    });
+    const all = [out.reading.summary, ...out.reading.claims].join(" ");
+    for (const leak of ["박○", "최○", "이○", "김O", "정*"]) expect(all, leak).not.toContain(leak);
+    expect(out.reading.summary).toContain("임대인 ○○○은");
+    expect(out.reading.summary).toContain("○○○에게");
+    expect(out.reading.claims[1]).toBe("○○○ 씨와 ○○○ 씨에게 연락했습니다.");
+    expect(out.findings.find((f) => f.type === "name")?.count).toBeGreaterThanOrEqual(5);
+
+    // 상호·기관·지역의 ○○, 조문 자리는 그대로 둔다
+    for (const plain of [
+      "○○물산 주식회사가 대금을 받았습니다.",
+      "○○시청에 민원을 냈습니다.",
+      "○○지방법원에 소장을 냈습니다.",
+      "서울○○지방법원 민사과에 물었습니다.",
+      "주식회사 ○○건설이 공사를 맡았습니다.",
+      "○○○은 계약서에 서명했습니다.",
+    ]) {
+      expect(maskMore(plain, []).text, plain).toBe(plain);
+    }
+    // 상호 뒤에 붙은 가린 대표자 이름은 낱말째 뗀다
+    expect(orgNameOf("주식회사 한빛주택 박○○", "business")).toBe("주식회사 한빛주택");
+    expect(orgNameOf("한빛주택(주) 홍*동", "business")).toBe("한빛주택(주)");
+    expect(orgNameOf("주식회사 한빛주택 박○○님", "business")).toBe("주식회사 한빛주택");
+    expect(orgNameOf("○○물산 주식회사", "business")).toBe("○○물산 주식회사");
+  });
+
   test("서류 종류는 정해진 목록의 값만 받는다", () => {
     const out = read({ docTypes: ["내용증명", "김민수 차용증", "내용증명", "계약서"] });
     expect(out.reading.docTypes).toEqual(["내용증명", "계약서"]);
