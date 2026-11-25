@@ -137,6 +137,11 @@ Next.js 코드를 쓰기 전에 @AGENTS.md 를 따른다 (이 버전은 학습 �
 - Docker가 없으면 SQL은 `uv run --no-project --with pglast` 파서로 문법만 확인할 수 있다 (적용 검증 아님).
 - hook (.claude/settings.json): 편집 전 `protect.mjs`가 `.env*`(`.env.example` 제외)·`*.pem`·`*.key`·`secrets/` 편집을 막고, 편집 후 `format.mjs`가 ts·js·css·json에 prettier, ts·js에 `eslint --fix`, collector의 py에 `ruff format`을 자동 실행한다. 손으로 포맷을 맞출 필요는 없고, 편집 뒤 포맷 변경이 diff에 섞일 수 있다.
 - 여러 Claude 세션(데스크톱 앱·VS Code)이 이 폴더(main 체크아웃)에서 동시에 고치고 커밋한다. 여기서 `git add -A`·커밋을 하면 다른 세션의 작업 중 파일이 섞여 배포가 깨진 적이 있다(2026-11-18). 변경은 `git worktree add ../<이름> origin/main`으로 만든 별도 폴더에서 하고 `git push origin HEAD:main`으로 올린다. Windows에서 worktree 폴더는 경로가 길어 `git worktree remove`가 실패하므로 `cmd /c 'rmdir /s /q "\\?\<절대경로>"'` 뒤 `git worktree prune`으로 지운다.
+- worktree는 **절대 경로**로 만든다. `git -C <저장소> worktree add <상대경로>`는 상대 경로를 저장소 기준으로 풀어 main 작업 폴더 *안에* 폴더를 만든다(다른 세션의 통째 추가에 섞일 수 있다).
+- worktree에는 `.env.local`이 없다. 실호출 테스트(`vitest.live.config.ts`)는 `HZ_ENV_FILE=<main 폴더>/.env.local`로 파일 위치를 알려 준다(값은 읽기만 하고 출력하지 않는다).
+- 다른 세션 PR을 병합할 때: origin/main에서 만든 통합 worktree에서 `git merge --no-ff origin/<브랜치>` → 검사 → `git push origin HEAD:main`(GitHub가 PR을 '병합됨'으로 처리하고 Vercel이 main을 배포한다). 다른 세션이 먼저 병합하는 일이 잦으니 푸시 직전에 `git fetch`로 다시 본다. PRD 16장 DEC 표는 거의 매번 충돌한다 — 두 줄을 모두 남긴다.
+- 큰 출력이 필요한 Claude 호출(`max_tokens`가 큰 미리 만들기 스크립트)은 SDK가 스트리밍을 요구한다 — `client.messages.stream(...).finalMessage()`. effort xhigh는 생각이 길어 출력 한도가 작으면 답이 잘린다(`capped`) — 미리 만드는 예시 전용으로 `runDeepAnalysis`의 `effort`·`answerMaxTokens` 덮어쓰기를 쓰고, 서비스 경로는 `TIERS` 값 그대로 둔다.
+- 백그라운드로 돌린 유료 실행(`pnpm exec vitest … live`)을 멈출 때 셸만 끝내면 vitest 자식 node 프로세스가 계속 돌며 과금하고 파일을 고친다(2026-11-25 실제로 겪음). node 프로세스까지 끝났는지 확인한다(PowerShell `Get-CimInstance Win32_Process -Filter "name='node.exe'"`의 CommandLine).
 - `pnpm exec prettier --write lib`처럼 폴더째 포맷하면 관련 없는 파일이 바뀐다. 고친 파일만 지정한다.
 - `.env*`는 settings.json이 읽기도 막는다. 키가 필요한 스크립트는 실행 시 `.env.local`을 읽게 한다 (예: scripts/korean-law-mcp.mjs).
 - korean-law-mcp는 두 가지로 쓴다 (DEC-009). ① `.mcp.json`의 MCP 서버는 Claude Code 개발 보조용(키는 `.env.local`의 `LAW_OC`, 없으면 `OPEN_LAW_API_KEY`). ② 서비스 코드는 MCP 프로토콜이 아니라 라이브러리 함수(`korean-law-mcp/lib/*`, `korean-law-mcp/tools/*`)를 서버에서 직접 import하고, 한 어댑터 모듈을 거쳐서만 호출한다. 실시간 조회한 판례 본문은 저장하지 않는다 (DEC-007).
