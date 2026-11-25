@@ -173,8 +173,24 @@ export function ResultView({ id }: { id: string }) {
   );
 }
 
+/**
+ * 진행 단계 정리: 같은 문구는 처음 한 번만 남긴다 (DeepSearch는 쟁점마다 검색해 같은 문구가 여러 번 온다).
+ * 출처 목록(added)은 보이지 않는다 — 너무 많아 화면이 복잡해진다 (2026-11-26)
+ */
+export function uniqueSteps(steps: StepEvent[]): StepEvent[] {
+  const seen = new Set<string>();
+  return steps.filter((s) => !seen.has(s.message) && (seen.add(s.message), true));
+}
+
 /** 분석 진행 패널 (편집기 미리보기에서도 쓴다) */
-export function Analyzing({ question, steps }: { question: string | null; steps: StepEvent[] }) {
+export function Analyzing({
+  question,
+  steps: all,
+}: {
+  question: string | null;
+  steps: StepEvent[];
+}) {
+  const steps = uniqueSteps(all);
   return (
     <section
       aria-live="polite"
@@ -196,7 +212,6 @@ export function Analyzing({ question, steps }: { question: string | null; steps:
             key={i}
             n={i + 1}
             message={s.message}
-            added={s.added}
             state={i === steps.length - 1 ? "진행 중" : "완료"}
           />
         ))}
@@ -205,17 +220,7 @@ export function Analyzing({ question, steps }: { question: string | null; steps:
   );
 }
 
-function StepRow({
-  n,
-  message,
-  added,
-  state,
-}: {
-  n: number;
-  message: string;
-  added?: string[];
-  state: "진행 중" | "완료";
-}) {
+function StepRow({ n, message, state }: { n: number; message: string; state: "진행 중" | "완료" }) {
   const done = state === "완료";
   return (
     <li className="rounded-card border-line flex items-start gap-3 border px-4 py-3">
@@ -228,9 +233,6 @@ function StepRow({
       </span>
       <div className="flex-1">
         <p className="text-ink text-[15px]">{message}</p>
-        {added && added.length > 0 && (
-          <p className="text-muted text-[13px]">추가: {added.join(", ")}</p>
-        )}
       </div>
       <span className={`text-[13px] ${done ? "text-success-text" : "text-gold"}`}>{state}</span>
     </li>
