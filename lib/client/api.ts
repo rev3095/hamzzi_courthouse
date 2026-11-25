@@ -3,6 +3,7 @@
 import type { MaterialReading } from "@/lib/materials/limits";
 import { readTier } from "./tier";
 import type { StepEvent } from "@/lib/ai/policy";
+import type { QuickPreview } from "@/lib/ai/quick-policy";
 import type { ErrorCode, ErrorDetails } from "@/lib/api/errors";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import type { PiiFinding } from "@/lib/pii";
@@ -370,7 +371,7 @@ export async function analyzeStream(
   onStep: (e: StepEvent) => void,
   category?: string | null,
   /** 분야별 비서 대화(DEC-057). 정해진 값만 서버가 받는다 */
-  extra: { assistant?: string } = {},
+  extra: { assistant?: string; onPreview?: (p: QuickPreview) => void } = {},
 ): Promise<ApiResult<AnalyzedResult>> {
   const assistant = extra.assistant ?? recallAssistant(id);
   let res: Response;
@@ -414,6 +415,8 @@ export async function analyzeStream(
       buffer = buffer.slice(cut + 2);
       if (!parsed) continue;
       if (parsed.event === "step") onStep(parsed.data as StepEvent);
+      // 빠른 답 먼저 (DEC-064): 완성된 답보다 먼저 오는 짧은 요약
+      else if (parsed.event === "preview") extra.onPreview?.(parsed.data as QuickPreview);
       else if (parsed.event === "result") return { ok: true, data: parsed.data as AnalyzedResult };
       else if (parsed.event === "error") return { ok: false, error: parsed.data as ClientError };
     }

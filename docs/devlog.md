@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-24 동안 세션 17개가 남긴 작업 기록 518건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-25 동안 세션 18개가 남긴 작업 기록 524건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -40,6 +40,8 @@
     전·월세/임대(내집마련), 온라인 명예훼손·성희롱 등 소규모 사건(고소미), 중고 거래 사기(중고천국) 비서를 별도 스타일 페이지·챗봇 채팅·메뉴·홈 묶음으로 넣는 작업. 계획 먼저.
   - **서류 분석·사건 진행 이어서 (재검토 위반 고치기)** — Claude Desktop · 2026-11-24 · 기록 0건  
     VS Code 세션의 서류 분석·사건 진행을 이어받아 legal-reviewer 재검토 위반 2건과 판독 개선, 쟁점 정리 실호출, 법무 검토 항목을 마무리하는 하위 세션.
+  - **서류 분석 예제 프리셋 5건·Pro Max xhigh** — Claude Desktop · 2026-11-25 · 기록 6건 · PR 30  
+    서류 분석(F-015) 예제 프리셋을 실제 서류 분석과 같은 길로 실호출해 만들고(실제 서면 양식 2건·600자 넘는 가상 사건 3건), 실제 양식 2건은 사용자 계정 기록에도 남긴다. 도중에 Pro Max를 Opus 5.5 effort xhigh로 바꾸라는 요청이 더해졌다.
 - **VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티)** — VS Code · 2026-11-18 ~ 2026-11-20 · 기록 71건  
   VS Code에서 시작해 lexdiff 기능 범위의 판례·법령 탐색을 독자 구현하고, 문서 작성 검증, 답변 단계 선택, DeepSearch, 예시 답변 확대, 질문 해석 라벨링까지 이어 간 개발 세션.
 - **서류 이미지 분석·사건 진행 (VS Code)** — VS Code (Claude Code) · 2026-11-24 · 기록 11건  
@@ -48,6 +50,20 @@
 ---
 
 ## 날짜별 기록
+
+### 2026-11-25 (수)
+
+#### 메인 개발 (Legal tech 플랫폼 개발 계획)
+
+
+##### ↳ 서류 분석 예제 프리셋 5건·Pro Max xhigh
+
+- `06:00` **[feature] 서류 분석 예제용 가상 서류 5장** — 협업 변호사 실제 서면 중 내용증명 회신·민사 답변서의 양식과 쓰는 방식만 따르고 사실관계·당사자·금액은 새로 쓴 2건, 징계해고 통지서·렌탈료 지급명령·디자인 외주 메신저 대화 가상 사건 3건을 직접 썼다. 사람·회사는 ○○로 가렸고, 글을 그림으로 바꾸는 무료 스크립트로 서류 사진을 만들었다. 원본 자료는 저장소에 올리지 않았다. (F-015, DEC-052)
+- `06:10` **[확인] 실제 서류 분석 흐름으로 예제 실호출 5건 (사용자 허락)** — 관리자 모드 개발 서버에서 판독(Haiku) → 확인한 개요 합치기 → DeepSearch Pro Max(Opus 5.5 xhigh) 순서로 1건씩 돌렸다. 분석 문장 1,086~1,356자, 출력 약 25,000~30,000토큰, 판독 포함 215~262초(보고 기준). 인용 검증 통과 문단만 남기니 건마다 2~7문단이었다. 예시 생성이 곧 서류 분석 흐름 전체의 실호출 점검이 됐다. (F-015, DEC-052)
+- `06:15` **[확인] 실제 양식 2건을 사용자 계정 기록에 추가** — 사용자가 관리자 모드를 직접 켠 뒤, 배포 사이트 서류 분석 화면에서 사진 붙이기 → 동의 두 항목 → 판독 → 분석(Pro Max, 기록 남기기)으로 내용증명 회신·답변서 2건을 올렸다. 두 건 모두 '내 기록'에 남은 것을 확인했다. 배포 전이라 이 2건은 effort high로 답했다. (F-015, DEC-039)
+- `06:27` **[feature] 서류 분석 화면에 '예제로 먼저 보기'와 예시 화면** — /casefile에 예제 5건 목록, /casefile/examples/[id]에 서류 그림·읽은 내용(AI 고지)·당사자 관계도·질문과 결과 화면(사건 구조도·사실관계 흐름·쟁점별 근거)을 정적으로 그린다. 모델·DB 호출과 질문 횟수 차감이 없다. legal-reviewer 지적으로 판독 칸에 AI 고지를 붙이고, 성+○○ 꼴을 가리고, 검증 안 된 모델 인용이 든 생성 원본은 저장소에서 뺐다. ([`b4ac308`](https://github.com/rev3095/hamzzi_courthouse/commit/b4ac308), F-015, DEC-052)
+- `06:27` **[결정] Pro Max를 Opus 5.5 effort xhigh로** — 사용자 요청으로 effort high → xhigh. 실측에 맞춰 출력 한도 20,000/32,000토큰, 답변 시간 240/270초(분석 라우트 300초 안), 상한 $0.6/$1.2(DeepSearch는 일반의 2배 규칙, 가중치 400/800)로 바꾸고 테스트·PRD를 맞췄다. ([`b4ac308`](https://github.com/rev3095/hamzzi_courthouse/commit/b4ac308), DEC-050, DEC-041)
+- `07:28` **[확인] PR 30 병합·배포 확인** — PR 30이 병합됐고(병합 커밋 b778e71) 배포 사이트에서 예시 화면이 서류 그림·사건 정리와 함께 열리는 것을 확인했다. 판독이 당사자 자리·해지 주체를 가끔 뒤바꾸는 점과, 서비스 판독 경로의 성+○○ 가리기는 남은 일로 따로 세션을 열었다(보고 기준). ([`b778e71`](https://github.com/rev3095/hamzzi_courthouse/commit/b778e71), F-015)
 
 ### 2026-11-24 (화)
 
@@ -859,6 +875,7 @@
 | 2026-11-20 | 메인 개발 (Legal tech 플랫폼 개발 계획) | 판독기 수정(상대의 요구를 전하는 문장)을 푸시·PR·병합한다. | DEC-048 |
 | 2026-11-20 | VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티) | 기간 예산은 $95 그대로(오전의 $80은 해석 차이), 같은 네트워크 하루 100회는 추천안대로 유지. | DEC-050 |
 | 2026-11-24 | 메인 개발 (Legal tech 플랫폼 개발 계획) | 서류 PDF는 사진과 같이 동의 뒤 그대로 판독에 보낸다(문서는 글만 꺼내 가린 뒤). | DEC-052 |
+| 2026-11-25 | 서류 분석 예제 프리셋 5건·Pro Max xhigh | Pro Max 답변을 Opus 5.5 effort xhigh로 올리고 출력·시간·상한을 실측에 맞춰 늘린다(일반 $0.6, DeepSearch $1.2). | DEC-050 |
 
 ## 결정 로그 (PRD 16.2)
 
@@ -918,6 +935,15 @@
 | DEC-052 | 서류 분석 — 서류 사진 판독, 당사자 구도, 법인·사업자 공개 정보 조회 (2026-11-24 사용자 요청·결정, F-015) |
 | DEC-054 | 판례 아카이브 — 검색·리서치를 한 메뉴로 (2026-11-24 사용자 요청, DEC-029 화면 변경) |
 | DEC-053 | 사건 진행 — 로그인 전용 사건 정리 도구 (2026-11-24 사용자 요청·결정, F-016) |
+| DEC-055 | 전면 개정 — 무료 법률 상담·문서 대리 작성, 수익 0원 (2026-11-25 사용자 결정) |
+| DEC-056 | 마이페이지 '내 세션'·Google 프로필 (2026-11-24 사용자 요청) |
+| DEC-057 | 분야별 비서 — 내집마련·고소미·중고천국 (2026-11-24 사용자 요청·결정, F-018) |
+| DEC-058 | 자료 첨부 — 일반 질문·이어 묻기·DeepSearch·검색에 사진 붙이기 (2026-11-24 사용자 요청·결정, F-017) |
+| DEC-059 | 복잡한 사연 예시 — 쪽별 답변·문서 작성 절차 (2026-11-25 사용자 요청) |
+| DEC-060 | 자문 변호사 정보 비공개 (2026-11-25 사용자 결정) |
+| DEC-061 | 사건 분석 가상 사건 프리셋 (2026-11-25 사용자 요청) |
+| DEC-062 | 긴 질문 자동 DeepSearch · 7개 탭 사건 정리 · 가상 문서 (2026-11-25 사용자 요청·결정) |
+| DEC-063 | 답변 속도 측정·보고서 (2026-11-25 사용자 요청) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -1077,10 +1103,39 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 207개 (병합 제외)</summary>
+<details><summary>main 커밋 236개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`8ef43c4`](https://github.com/rev3095/hamzzi_courthouse/commit/8ef43c4) | 2026-11-26 06:03 | docs: CLAUDE.md 환경 주의에 worktree 절대 경로·HZ_ENV_FILE·병합 순서·스트리밍·유료 실행 멈추기 함정 추가 |
+| [`1781b86`](https://github.com/rev3095/hamzzi_courthouse/commit/1781b86) | 2026-11-26 06:01 | docs: CLAUDE.md에 DEC-062(긴 질문 자동 DeepSearch·7개 탭)·DEC-063(단계별 분석 시간) 반영, 끝난 기간 예산 표시 |
+| [`528cd81`](https://github.com/rev3095/hamzzi_courthouse/commit/528cd81) | 2026-11-26 06:01 | docs: CLAUDE.md 줄이기 — 기능별 긴 규칙을 모듈 README로 옮기고 미리 만든 AI 데이터·프리셋 거르기 설명 추가 |
+| [`6744ab1`](https://github.com/rev3095/hamzzi_courthouse/commit/6744ab1) | 2026-11-25 17:31 | feat: F-006 DEC-063 단계별 분석 시간 기록·답변 속도 보고서 |
+| [`c669a0e`](https://github.com/rev3095/hamzzi_courthouse/commit/c669a0e) | 2026-11-25 08:08 | feat: F-016 가상 사건 예시 다섯 건 모두 채움 — 서류 원본·요약본·쟁점 근거, 유불리 문장 거르기 (DEC-053·DEC-061) |
+| [`22efd5e`](https://github.com/rev3095/hamzzi_courthouse/commit/22efd5e) | 2026-11-25 07:22 | feat: F-005 DEC-062 긴 질문 자동 DeepSearch·7개 탭 사건 정리·한 장 요약 그림 |
+| [`9e2a8c0`](https://github.com/rev3095/hamzzi_courthouse/commit/9e2a8c0) | 2026-11-25 07:07 | fix: F-016 가상 사건 예시 근거 문단에서 유리·가능성 판단 문장 빼기, 보강 범위 문서 맞춤 (DEC-053·DEC-061) |
+| [`6bd2924`](https://github.com/rev3095/hamzzi_courthouse/commit/6bd2924) | 2026-11-25 07:02 | feat: F-016 가상 사건 예시 보강 — 서류 원본·한눈에 보는 요약본·빈 쟁점 근거, 로그인 화면 '가상 사건 예시' 탭과 내 사건으로 가져오기 (DEC-061) |
+| [`b4ac308`](https://github.com/rev3095/hamzzi_courthouse/commit/b4ac308) | 2026-11-25 06:27 | feat: F-015 서류 분석 예제 프리셋 5건 + Pro Max effort xhigh (DEC-052·DEC-050) |
+| [`887c858`](https://github.com/rev3095/hamzzi_courthouse/commit/887c858) | 2026-11-25 06:26 | fix: DEC-059 main 병합 — 비서 아카이브 재생과 쪽별 예시 재생을 함께, 예전 짧은 질문은 원래 쪽 답변만 재생 |
+| [`5e79f65`](https://github.com/rev3095/hamzzi_courthouse/commit/5e79f65) | 2026-11-25 06:16 | feat: F-017 자료 첨부 — 질문·이어 묻기·DeepSearch·검색에 사진·PDF·문서 붙이기, Haiku 판독, 자료 정리 시각화 (DEC-058) |
+| [`e444073`](https://github.com/rev3095/hamzzi_courthouse/commit/e444073) | 2026-11-25 06:20 | chore: DEC-060 main 병합 후 PRD 이름 다시 빼기, 이름 검사를 n글자 묶음 한 번씩만 재게 (시간 초과) |
+| [`4e1699a`](https://github.com/rev3095/hamzzi_courthouse/commit/4e1699a) | 2026-11-25 06:12 | feat: F-016 DEC-061 사건 분석 가상 사건 프리셋 — 로그인 없이 둘러보기 |
+| [`d4f5936`](https://github.com/rev3095/hamzzi_courthouse/commit/d4f5936) | 2026-11-25 06:02 | chore: DEC-060 자문 변호사 정보 비공개 — 사이트·안내 챗봇·약관·AI 지시문에서 뺌 |
+| [`a4d676b`](https://github.com/rev3095/hamzzi_courthouse/commit/a4d676b) | 2026-11-25 03:12 | feat: F-005 DEC-059 복잡한 사연 예시 — 쪽별 답변·문서 작성 절차 |
+| [`59fe328`](https://github.com/rev3095/hamzzi_courthouse/commit/59fe328) | 2026-11-25 02:38 | fix: F-018 아카이브 legal-reviewer 지적 반영 — 13세트 재생성, 새 규칙(DEC-055) 맞춤 (DEC-057) |
+| [`10c0263`](https://github.com/rev3095/hamzzi_courthouse/commit/10c0263) | 2026-11-25 02:12 | feat: F-018 전문 에이전트 — 내집마련·고소미·중고천국 대화·아카이브(원고 7 : 피고 3 질답 세트) (DEC-057) |
+| [`d7dee1e`](https://github.com/rev3095/hamzzi_courthouse/commit/d7dee1e) | 2026-11-25 02:03 | fix: 내 세션 legal-reviewer 제안 반영 — 목록 주석 정리, 세션 찾기 자동완성 끔, 테스트 fetch 되돌림, 안내 챗봇 관리자 모드 기록 문구를 2026-11-25 결정에 맞춤 (DEC-056, DEC-039) |
+| [`62f9012`](https://github.com/rev3095/hamzzi_courthouse/commit/62f9012) | 2026-11-25 02:00 | feat: 마이페이지 '내 세션'을 데스크톱형 배치로 — 사이드바(새 질문·세션 찾기·메뉴·날짜별 최근 세션 더보기·프로필) + 본문(종류 탭·한 페이지 10개·페이지 번호) (DEC-056, DEC-039) |
+| [`2a401b4`](https://github.com/rev3095/hamzzi_courthouse/commit/2a401b4) | 2026-11-25 01:47 | feat: F-002 로그인 + 관리자 모드로 한 질문도 본인 기록(내 세션)에 남김 (DEC-039, 사용자 결정 2026-11-25) |
+| [`4d2eaf4`](https://github.com/rev3095/hamzzi_courthouse/commit/4d2eaf4) | 2026-11-25 01:46 | F-005 F-013 DEC-055 전면 무료 개정: 무료 법률 상담·문서 대리 작성, 수익 0원 |
+| [`18508e4`](https://github.com/rev3095/hamzzi_courthouse/commit/18508e4) | 2026-11-25 01:42 | feat: Pro Max를 Opus 5.5 effort high로 — 상한 $0.5(DeepSearch $1.0)·출력 12,000/16,000토큰·시간 170/200초, 분석 라우트 300초, 질문 한도 50,000자 (DEC-050, F-006) |
+| [`0da4421`](https://github.com/rev3095/hamzzi_courthouse/commit/0da4421) | 2026-11-25 01:35 | chore: evals/raw-data(변호사 협업 실제 자료)를 저장소에서 제외 — 극비, 이 PC에만 |
+| [`33afad6`](https://github.com/rev3095/hamzzi_courthouse/commit/33afad6) | 2026-11-25 01:04 | docs: 절대 규칙 4 예외 둘 범위에 마이페이지 '내 세션'의 사건 이름 추가 (DEC-056, 사용자 확인) |
+| [`64859ab`](https://github.com/rev3095/hamzzi_courthouse/commit/64859ab) | 2026-11-24 20:09 | feat: 마이페이지 '내 세션'·Google 프로필 (DEC-056, DEC-039, F-016) |
+| [`a88635a`](https://github.com/rev3095/hamzzi_courthouse/commit/a88635a) | 2026-11-25 01:05 | fix: F-016 AC2 서류 읽기 지시문 — 문서 글의 [이름n] 가림 표시를 그대로 옮기고 이름을 짐작하지 않게 (DEC-052, DEC-053) |
+| [`94f9d3d`](https://github.com/rev3095/hamzzi_courthouse/commit/94f9d3d) | 2026-11-24 20:26 | fix: 사건 진행 legal-reviewer 재검토 반영 — 서류 속 조문·사건번호 재조회, 기업 조사 개인 차단 (F-016, DEC-053) |
+| [`a08eec1`](https://github.com/rev3095/hamzzi_courthouse/commit/a08eec1) | 2026-11-25 01:07 | feat: F-002 질문 한도 2,000 → 10,000자, 긴 질문은 입력 비용만큼 답변 상한·예산 가중치를 늘림 (F-006, F-015) |
+| [`10f8a12`](https://github.com/rev3095/hamzzi_courthouse/commit/10f8a12) | 2026-11-24 20:26 | docs: devlog에 답변 먼저 보이기·서류 분석 30개·문서 읽기·PDF 결정·PR 21~23 반영 |
 | [`9d23f8d`](https://github.com/rev3095/hamzzi_courthouse/commit/9d23f8d) | 2026-11-24 20:25 | docs: 절대 규칙 4 예외 하나에 PDF 포함 — 서류 PDF는 사진과 같이 동의 뒤 그대로 판독 (사용자 결정 2026-11-24, DEC-052, F-015) |
 | [`c33136f`](https://github.com/rev3095/hamzzi_courthouse/commit/c33136f) | 2026-11-24 20:21 | fix: F-015 서류 분석 legal-reviewer 지적 반영 — 동의 문구에 PDF·문서 전송 방식, PDF 쪽 수 추정·20쪽 한도, 문서 글 태그 흉내 막기 (DEC-052) |
 | [`52494b2`](https://github.com/rev3095/hamzzi_courthouse/commit/52494b2) | 2026-11-24 20:17 | feat: F-015 서류 분석 — 사진 30개까지, PDF·한글(hwp·hwpx)·워드·파워포인트·엑셀·텍스트 문서도 읽기 (DEC-052, F-016) |
@@ -1293,7 +1348,7 @@
 
 ## 문서 아카이브
 
-저장소의 md 문서 65개. 디자인 버전의 "문서" 탭에서 읽기 좋게 볼 수 있다.
+저장소의 md 문서 68개. 디자인 버전의 "문서" 탭에서 읽기 좋게 볼 수 있다.
 
 ### 보고서 (15)
 
@@ -1322,10 +1377,10 @@
 - [05. 햄찌법원 브랜드 가이드 v0.1](05_브랜드_가이드.md) — `docs/05_브랜드_가이드.md` · 수정 2026-10-19
 - [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-24
 - [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-20
-- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-24
-- [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-24
-- [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-24
-- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-24
+- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-25
+- [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-25
+- [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-25
+- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-25
 - [PRD 초안 검토·수정·검증 결과](PRD_review.md) — `docs/PRD_review.md` · 수정 2026-10-19
 
 ### 조사 (6)
@@ -1341,28 +1396,31 @@
 
 - [devlog — Claude Code 섹션 (답변 전문, 최신순)](devlog/claude-code.md) — `docs/devlog/claude-code.md` · 수정 2026-11-20
 
-### 모듈 설명 (24)
+### 모듈 설명 (27)
 
 - [햄찌법원 (Hamzzi Court)](../README.md) — `README.md` · 수정 2026-10-21
 - [햄찌법원 수집기 (collector)](../collector/README.md) — `collector/README.md` · 수정 2026-10-19
 - [evals — AI 평가셋 (PRD 8.4)](../evals/README.md) — `evals/README.md` · 수정 2026-10-22
-- [lib/ai — AI 오케스트레이터 (F-002, F-006, F-008)](../lib/ai/README.md) — `lib/ai/README.md` · 수정 2026-11-19
+- [복잡한 사연 예시 — 쪽별 답변·문서 작성 절차 (DEC-059, 2026-11-25)](../evals/examples-complex/README.md) — `evals/examples-complex/README.md` · 수정 2026-11-25
+- [lib/ai — AI 오케스트레이터 (F-002, F-006, F-008)](../lib/ai/README.md) — `lib/ai/README.md` · 수정 2026-11-25
 - [lib/api — API 라우트 공통 (docs/API.md 2·3·6절)](../lib/api/README.md) — `lib/api/README.md` · 수정 2026-10-19
+- [lib/assistants — 분야별 비서 (F-018, DEC-057)](../lib/assistants/README.md) — `lib/assistants/README.md` · 수정 2026-11-26
 - [lib/business — 법인·사업자 공개 정보 조회 (F-015 AC4, DEC-052)](../lib/business/README.md) — `lib/business/README.md` · 수정 2026-11-24
 - [lib/calc — 계산 모듈 (F-014)](../lib/calc/README.md) — `lib/calc/README.md` · 수정 2026-10-19
-- [lib/casefile — 서류 분석 (F-015, DEC-052)](../lib/casefile/README.md) — `lib/casefile/README.md` · 수정 2026-11-24
-- [lib/citations — 인용 검증기 (F-005)](../lib/citations/README.md) — `lib/citations/README.md` · 수정 2026-10-21
-- [lib/community — 커뮤니티와 씨앗 (DEC-047)](../lib/community/README.md) — `lib/community/README.md` · 수정 2026-11-20
+- [lib/casefile — 서류 분석 (F-015, DEC-052)](../lib/casefile/README.md) — `lib/casefile/README.md` · 수정 2026-11-26
+- [lib/citations — 인용 검증기 (F-005)](../lib/citations/README.md) — `lib/citations/README.md` · 수정 2026-11-25
+- [lib/community — 커뮤니티와 씨앗 (DEC-047)](../lib/community/README.md) — `lib/community/README.md` · 수정 2026-11-26
 - [lib/demo — 무료 모드 (DEC-015)](../lib/demo/README.md) — `lib/demo/README.md` · 수정 2026-11-20
-- [lib/documents — 단계별 공식 서식 설문·편집·내보내기 [게이트] (DEC-022·023·025)](../lib/documents/README.md) — `lib/documents/README.md` · 수정 2026-11-18
+- [lib/documents — 단계별 공식 서식 설문·편집·내보내기 (DEC-022·023·025·055)](../lib/documents/README.md) — `lib/documents/README.md` · 수정 2026-11-26
 - [lib/gate — 기능 게이트 (F-013)](../lib/gate/README.md) — `lib/gate/README.md` · 수정 2026-10-19
-- [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-24
-- [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-19
-- [lib/matters — 사건 진행 (F-016, DEC-053)](../lib/matters/README.md) — `lib/matters/README.md` · 수정 2026-11-24
+- [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-26
+- [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-26
+- [lib/materials — 자료 첨부 (F-017, DEC-058)](../lib/materials/README.md) — `lib/materials/README.md` · 수정 2026-11-26
+- [lib/matters — 사건 진행 (F-016, DEC-053)](../lib/matters/README.md) — `lib/matters/README.md` · 수정 2026-11-26
 - [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-21
-- [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-19
-- [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-20
-- [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-18
+- [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-26
+- [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-25
+- [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-26
 - [lib/supabase — DB·인증 클라이언트](../lib/supabase/README.md) — `lib/supabase/README.md` · 수정 2026-10-21
 - [햄찌법원 앱 (Capacitor) 변경 기록](../mobile/CHANGELOG.md) — `mobile/CHANGELOG.md` · 수정 2026-11-20
 - [CapApp-SPM](../mobile/ios/App/CapApp-SPM/README.md) — `mobile/ios/App/CapApp-SPM/README.md` · 수정 2026-11-20
@@ -1370,11 +1428,11 @@
 
 ### Claude Code 지침 (7)
 
-- [legal-reviewer.md](../.claude/agents/legal-reviewer.md) — `.claude/agents/legal-reviewer.md` · 수정 2026-10-19
+- [legal-reviewer.md](../.claude/agents/legal-reviewer.md) — `.claude/agents/legal-reviewer.md` · 수정 2026-11-25
 - [데이터 소스 추가](../.claude/skills/add-crawler/SKILL.md) — `.claude/skills/add-crawler/SKILL.md` · 수정 2026-10-19
 - [API 엔드포인트 추가](../.claude/skills/add-endpoint/SKILL.md) — `.claude/skills/add-endpoint/SKILL.md` · 수정 2026-10-19
 - [DB 마이그레이션 추가](../.claude/skills/add-migration/SKILL.md) — `.claude/skills/add-migration/SKILL.md` · 수정 2026-10-19
 - [Figma → 코드 반영](../.claude/skills/figma-sync/SKILL.md) — `.claude/skills/figma-sync/SKILL.md` · 수정 2026-10-22
 - [AGENTS.md](../AGENTS.md) — `AGENTS.md` · 수정 2026-10-19
-- [CLAUDE.md](../CLAUDE.md) — `CLAUDE.md` · 수정 2026-11-24
+- [CLAUDE.md](../CLAUDE.md) — `CLAUDE.md` · 수정 2026-11-26
 

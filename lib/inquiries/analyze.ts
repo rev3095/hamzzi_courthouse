@@ -11,7 +11,16 @@ import { buildDeepMap } from "@/lib/ai/deep-policy";
 import { runLiteAnalysis } from "@/lib/ai/lite";
 import { longInputAllowanceUsd } from "@/lib/ai/cost";
 import { stageClock } from "@/lib/ai/timing";
-import { BUDGET_UNIT_USD, LONG_DEEP, isLongQuestion, tierOf, type TierId } from "@/lib/ai/models";
+import type { QuickPreview } from "@/lib/ai/quick-policy";
+import { QUICK_MODEL, runQuickPreview } from "@/lib/ai/quick";
+import {
+  BUDGET_UNIT_USD,
+  LONG_DEEP,
+  QUICK_WEIGHT,
+  isLongQuestion,
+  tierOf,
+  type TierId,
+} from "@/lib/ai/models";
 import type { StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
@@ -40,6 +49,8 @@ export async function analyzeInquiry(
     category?: CategoryKey | null;
     tier?: TierId | null;
     deep?: boolean;
+    /** 빠른 답 먼저 (DEC-064): 주면 유료 분석과 동시에 Haiku 요약을 만들어 넘긴다 (SSE 요청만) */
+    onPreview?: (p: QuickPreview) => void;
     /** 분야별 비서 (DEC-057). 지시문·고정 근거만 바꾸고 횟수·상한·검증은 일반 질문과 같다 */
     assistant?: AssistantId | null;
   } = {},
@@ -80,10 +91,13 @@ export async function analyzeInquiry(
       tier.model,
       inquiry.masked_text.length + materialsChars(materials),
     );
+    // 빠른 답 먼저(DEC-064)는 화면으로 받을 수 있는 요청(SSE)이고 답변 모델이 Haiku가 아닐 때만 — 예산에 그만큼 더 잡는다
+    const quickOn = !!opts.onPreview && tier.model !== QUICK_MODEL;
     const capUsd = (long ? LONG_DEEP.capUsd : deep ? tier.deep.capUsd : tier.capUsd) + allowance;
     const weight =
       (long ? LONG_DEEP.weight : deep ? tier.deep.weight : tier.weight) +
-      Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9);
+      Math.ceil(allowance / BUDGET_UNIT_USD - 1e-9) +
+      (quickOn ? QUICK_WEIGHT : 0);
     // 자료가 붙은 질문은 예시 재생으로 보지 않는다
     const example = findExampleFor(inquiry.masked_text, materials) !== null;
     if (aiMode() === "free" || example || !(await tryAiQuota(weight))) {
@@ -129,6 +143,23 @@ export async function analyzeInquiry(
     }
 
     const context = await loadFollowupContext(inquiry.parent_inquiry_id, owner);
+    // 빠른 답 먼저: 기다리지 않고 동시에 돌린다. 요약이 오면 바로 화면으로, 실패하면 조용히 없다
+    let previewMs: number | undefined;
+    const quick = quickOn
+      ? runQuickPreview({
+          maskedText: inquiry.masked_text,
+          context,
+          ...(materials.length > 0 && { materials }),
+        })
+          .then((q) => {
+            if (q.preview) {
+              previewMs = clock.elapsed();
+              opts.onPreview?.(q.preview);
+            }
+            return q.costUsd;
+          })
+          .catch(() => 0)
+      : Promise.resolve(0);
     // 일반 질문: 무료 법제처 검색 + 답변 1회 (DEC-020·026·036)
     // DeepSearch: 사건 구조화(Haiku) + 쟁점별 검색 + 쟁점별 답변 1회 (DEC-041). 답변 모델은 둘 다 고른 단계
     const deepRun = deep
@@ -167,7 +198,7 @@ export async function analyzeInquiry(
         },
       ));
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
-    await settleAiQuota(weight, analysis.costUsd);
+    await settleAiQuota(weight, analysis.costUsd + (await quick));
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep: step,
       screened: analysis.dropped.length,
@@ -208,7 +239,7 @@ export async function analyzeInquiry(
 
     // 질문 1회는 분석이 성공했을 때 센다 (DEC-010). 차감·저장·상태 변경은 한 트랜잭션 —
     // 상한에 걸리거나 저장이 실패하면 결과도 차감도 남지 않는다
-    verified.result.timing = clock.done();
+    verified.result.timing = { ...clock.done(), ...(previewMs !== undefined && { previewMs }) };
     const resultId = await finishAnalysis(
       {
         inquiryId: inquiry.id,

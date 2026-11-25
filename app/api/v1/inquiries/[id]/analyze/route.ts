@@ -77,6 +77,8 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
         tier,
         deep,
         assistant,
+        // 빠른 답 먼저 (DEC-064): 완성된 답보다 먼저 보이는 짧은 요약. 저장하지 않는다
+        onPreview: (p) => send("preview", p),
       });
       send("result", { status: "analyzed", ...out });
     },
