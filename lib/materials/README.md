@@ -36,3 +36,7 @@
 - 실제 사진의 판독 품질 (유료 호출이라 사용자 확인 뒤 1회만 — 절대 규칙 8).
 - 자료가 붙은 질문의 답변 입력이 Light 단계 상한($0.002) 안에 드는지 — 넘으면 근거를 하나씩 빼고 다시 잰다.
 - 앱(`mobile/`)에는 넣지 않았다.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 자료 첨부(F-017, DEC-058, lib/materials README): 홈 질문창·DeepSearch 창·결과 화면 심층 질문·`/search`가 같은 사진 붙이기(useAttachments·AttachTray, `attachNoun`)를 쓴다. 홈은 보낼 때 `AttachChoice`로 자료 첨부/서류 분석을 고른다. `components/ask/MaterialsFlow`(동의 두 항목 → 읽기 → 확인·수정) → `POST /materials/read`(lib/ai/materials.ts Haiku 비전 1회, 상한 `MATERIALS_READ_COST_CAP_USD`, `tryAiQuota(MATERIALS_WEIGHT)` → `settleAiQuota`, 서류 판독과 같은 `CASEFILE_RATE`) → `useAsk.send(…, materials)` → POST /inquiries가 `parseStoredMaterials`로 다시 가려 `inquiries.materials`에 둔다. 분석은 `readStoredMaterials` → `runLiteAnalysis`/`runDeepAnalysis`의 `materials` → `userMessage`의 `<첨부_자료>`(근거 아님) · `withMaterialRefs`로 문단별 자료 번호 → 검증 뒤 `buildMaterialsMap` → 결과 `materials` → `components/result/MaterialsView`. **자료는 출처(source)가 될 수 없고, 증거 가치·유불리를 판단하지 않는다.** 활용 안내는 고정 문안(lib/materials/tips.ts, 검사 policy.test.ts). 검색 화면은 정리를 그 화면 메모리에만 두고 고른 검색어로 법제처만 찾는다.

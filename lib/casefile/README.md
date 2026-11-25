@@ -42,3 +42,7 @@
 - 만들기: `scripts/gen-casefile-examples.mjs`(**유료**, 사용자 허락 뒤) — 실제 서류 분석과 같은 길(판독 → `composeCaseText` → 질문 → DeepSearch Pro Max). 결과 `evals/casefile-examples/out/`.
 - 반영: `node scripts/merge-casefile-examples.mjs`(무료) — 검증 통과 문단만, 사건 구조의 쟁점 순번을 다시 잇는다 → `examples.json`.
 - 화면: `/casefile`의 '예제로 먼저 보기'(`components/casefile/CaseFileExampleList`) → `/casefile/examples/[id]`(서류 그림·읽은 내용·당사자 관계도 + `ResultPanel`의 사건 구조도). 모델·DB 호출과 질문 횟수 차감이 없다.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 서류 분석(F-015, DEC-052, lib/casefile·lib/business README): 질문창의 사진 붙이기(components/ask/useAttachments·AttachTray, 브라우저에서 줄여 JPEG로) → `components/casefile/CaseFileFlow`(동의 두 항목 → 읽기 → 확인·수정) → `POST /casefiles/read`(lib/ai/casefile.ts Haiku 비전 1회, 상한 `CASEFILE_READ_COST_CAP_USD`, `tryAiQuota(CASEFILE_WEIGHT)` → `settleAiQuota`) → 확인한 개요를 `useAsk.send(text, true, true)`로 보내 DeepSearch 경로로 분석한다. 판독 결과는 lib/casefile/policy.ts `screenReading`이 거른다(개인 이름 버림·`scanInput`·조문/사건번호·단정 표현 문장 제거). 당사자는 서류에 적힌 역할·자리로만 나누고 판정하지 않는다 — 목록은 `sessionStorage`(`hz:f:<id>`)에만 두고 결과 화면 `PartiesCard`가 보인다. 공개 정보 조회(`POST /businesses/lookup`)는 법인·사업자만, 공식 API만(lib/business/source.ts), 모델 없음·`BUSINESS_NOTICE`. **개인을 찾는 검색·대표자 이름 표시는 만들지 않는다.** 사진이 든 요청의 토큰 추정은 `estimateRequestTokens`(장당 고정값)를 쓴다 — base64를 글자 수로 세지 않는다.

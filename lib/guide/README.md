@@ -18,3 +18,7 @@
 6. 개발자 이메일(사용자 요청)은 공개 저장소에 그대로 보인다. 화면에서는 '이메일 보기'를 눌러야 나타나고, 코드에는 조각으로 둔다.
 
 `pnpm exec vitest run lib/guide tests/unit/guide-bot.test.tsx`
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 햄찌 안내 챗봇(DEC-030, components/guide/GuideBot + lib/guide/topics.ts): 고정 문안 메뉴뿐이고 Claude를 부르지 않으며 자유 입력을 받지 않는다(`GUIDE_NOTICE`). 예외는 맨 위 '대화 상대' 선택기로 전문 에이전트를 고른 뒤뿐(DEC-057, `AssistantChat`을 창 안에 띄운다). 문안 속 횟수는 브라우저 묶음에 서버 모듈을 끌어오지 않으려고 `GUIDE_LIMITS`에 옮겨 두고, `lib/guide/policy.test.ts`가 원래 상수·개인정보처리방침 문구와 같은지, 허용 숫자·링크·단정/판정 표현을 검사한다. **횟수·기능·정책을 바꾸면 안내 문안도 같이 고친다**(테스트가 상수 불일치는 잡지만 설명 문장의 사실 여부는 못 잡는다). 끄기 설정은 이 기기 localStorage `hz:guidebot`(lib/client/prefs.ts).

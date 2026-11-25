@@ -23,3 +23,7 @@
 ## 열어 둔 것
 
 댓글 수정, 검색, 민감정보 동의 문구의 법무 검토, 로그인 사용자 삭제 요청에 커뮤니티 글을 포함할지.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 커뮤니티·씨앗(DEC-047, lib/community README): 게시판 `/community`·`/community/[id]`, API `/api/v1/community/*`·`GET /me/seeds`. 라우트는 lib/community/service.ts만 부르고, 규칙은 policy.ts(순수), DB는 store.ts. 비로그인 글은 비밀번호(scrypt 해시, lib/community/password.ts)로, 로그인 글은 계정으로 수정·삭제한다 — 권한은 `canChange` 한 곳에서 본다. 제목·본문·댓글은 `scanInput` 마스킹본만 저장하고 응답에는 계정 ID·해시를 싣지 않는다(`postView`·`commentView`). AI를 부르지 않으며 `AI_NOTICE` 대신 `COMMUNITY_NOTICE`. 민감정보로 보이는 글은 `sensitiveConsent` 없이는 `409 CONSENT_REQUIRED`, 신고 `REPORT_FOLD_AT`건이면 제목·본문을 가린다(관리자 모드가 되돌림). 씨앗(글 10·댓글 5)은 활동 기록이고 돈·할인으로 바꾸지 않는다(DEC-055). 로그인 사용자에게만 쌓이고 DB 함수 `award_seeds`·`revoke_seeds`가 하루 상한·중복·회수를 맡는다. **씨앗을 할인·현금으로 바꾸는 기능은 만들지 않는다**(절대 규칙 5). 숫자를 바꾸면 화면 문구는 `SEEDS` 상수를 읽으므로 PRD DEC-047만 맞춘다.

@@ -21,3 +21,7 @@
 
 - `pnpm dev`는 같은 네트워크의 다른 기기 요청도 받는다. 브라우저 요청은 막지만 헤더를 꾸민 도구 요청까지 막지는 못하니, 그림을 바꿀 때는 `pnpm studio`를 쓴다.
 - 저장한 그림과 `manifest.json` 변경은 `git status`에 보인다. 커밋 전에 내가 올린 그림인지 확인한다.
+
+## 여러 파일에 걸친 규칙 (CLAUDE.md에서 옮김, 2026-11-25)
+
+- 마스코트(lib/mascot, README에 상태 표): 화면은 `HamzziJudge mood=…`로 상태만 넘기고, 그 상태 그림이 없으면 기본 그림을 쓴다. 결과 화면 오류 코드 → 상태는 `moodForError`. 상태 그림은 `pnpm studio`의 `/studio`에서 바꾸고 `public/mascot/moods/`·`lib/mascot/manifest.json`을 커밋해야 배포에 반영된다. 결과 머리 아이콘 얼굴(`manifest.faces`)은 편집기가 바꾸지 않는 별도 파일이다. 캐릭터는 결과를 가리지 않게 작게 둔다(브랜드 가이드 2.4).
