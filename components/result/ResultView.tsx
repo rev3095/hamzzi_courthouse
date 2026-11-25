@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { StepEvent } from "@/lib/ai/policy";
+import type { QuickPreview } from "@/lib/ai/quick-policy";
+import { QuickPreviewCard } from "./QuickPreviewCard";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import {
   analyzeStream,
@@ -36,7 +38,7 @@ import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 
 type View =
   | { kind: "loading" }
-  | { kind: "analyzing"; steps: StepEvent[] }
+  | { kind: "analyzing"; steps: StepEvent[]; preview?: QuickPreview }
   | { kind: "done"; result: DemoAnalysisResult; resultId: string }
   | { kind: "error"; error: ClientError };
 
@@ -85,6 +87,13 @@ export function ResultView({ id }: { id: string }) {
       },
       // 렌더 값 대신 저장소에서 바로 읽는다 — 화면 상태가 바뀌어도 분석을 다시 시작하지 않게
       categoryOf(recallQuestion(id).category),
+      {
+        // 빠른 답 먼저 (DEC-064): 완성된 답이 오면 결과 화면으로 바뀌며 사라진다
+        onPreview: (p) => {
+          if (!alive.current) return;
+          setView((v) => (v.kind === "analyzing" ? { ...v, preview: p } : v));
+        },
+      },
     );
     if (!alive.current) return;
     if (r.ok) {
@@ -144,7 +153,9 @@ export function ResultView({ id }: { id: string }) {
         </p>
       )}
       {view.kind === "loading" && <Analyzing question={question.text} steps={[]} />}
-      {view.kind === "analyzing" && <Analyzing question={question.text} steps={view.steps} />}
+      {view.kind === "analyzing" && (
+        <Analyzing question={question.text} steps={view.steps} preview={view.preview} />
+      )}
       {view.kind === "done" &&
         (view.result.outcome === "no_result_in_scope" ? (
           <NoResult result={view.result} question={question.text} />
@@ -174,7 +185,15 @@ export function ResultView({ id }: { id: string }) {
 }
 
 /** 분석 진행 패널 (편집기 미리보기에서도 쓴다) */
-export function Analyzing({ question, steps }: { question: string | null; steps: StepEvent[] }) {
+export function Analyzing({
+  question,
+  steps,
+  preview,
+}: {
+  question: string | null;
+  steps: StepEvent[];
+  preview?: QuickPreview;
+}) {
   return (
     <section
       aria-live="polite"
@@ -182,6 +201,7 @@ export function Analyzing({ question, steps }: { question: string | null; steps:
       className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8"
     >
       <QuestionQuote text={question} />
+      {preview && <QuickPreviewCard preview={preview} />}
       <div className="mt-6 flex flex-col items-center text-center">
         <HamzziJudge size={104} interactive={false} mood="thinking" knocking />
         <p className="font-display text-ink mt-4 text-xl font-bold">

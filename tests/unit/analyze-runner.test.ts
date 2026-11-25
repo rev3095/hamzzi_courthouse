@@ -1,7 +1,7 @@
 // @vitest-environment node
 // 분석 실행 순서 (P5): 분석 → 검증 → 비로그인 횟수 차감 → 저장. 실패하면 failed 표시 (DEC-010, F-005).
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { LONG_DEEP, TIERS } from "@/lib/ai/models";
+import { LONG_DEEP, QUICK_WEIGHT, TIERS } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
 
 vi.mock("server-only", () => ({}));
@@ -17,6 +17,9 @@ vi.mock("@/lib/ai/lite", () => lite);
 // 긴 질문(DEC-062)은 DeepSearch로 간다. DeepSearch 안쪽은 lib/ai/deep-policy.test.ts·실호출 테스트가 본다
 const deepMod = vi.hoisted(() => ({ runDeepAnalysis: vi.fn() }));
 vi.mock("@/lib/ai/deep", () => deepMod);
+// 빠른 답 먼저(DEC-064). 거르기는 lib/ai/quick-policy.test.ts가 본다
+const quickMod = vi.hoisted(() => ({ QUICK_MODEL: "claude-haiku-5-5", runQuickPreview: vi.fn() }));
+vi.mock("@/lib/ai/quick", () => quickMod);
 // 절차 분류 보조(DEC-037)는 tests/unit/procedure-labels.test.ts에서 따로 본다
 const hint = vi.hoisted(() => ({ procedureHintFor: vi.fn(async () => undefined) }));
 vi.mock("@/lib/inquiries/procedure-hint", () => hint);
@@ -84,6 +87,51 @@ beforeEach(() => {
   store.finishAnalysis.mockImplementation(async () => {
     calls.push("finish");
     return "r-1";
+  });
+});
+
+describe("DEC-064 빠른 답 먼저", () => {
+  const PREVIEW = { summary: "보증금 문제로 보여요.", checks: [], nextSteps: [] };
+  test("SSE 요청이면 Haiku 요약을 넘기고, 예산에 요약 몫을 더해 실제 비용으로 정산한다", async () => {
+    quickMod.runQuickPreview.mockResolvedValue({ preview: PREVIEW, costUsd: 0.0005 });
+    lite.runLiteAnalysis.mockResolvedValueOnce({
+      draft: { answer: { points: [] } },
+      evidence: {},
+      dropped: [],
+      usage: { inputTokens: 1, outputTokens: 2, cacheReadTokens: 0 },
+      model: "claude-opus-5-5",
+      promptVersion: "v",
+      costUsd: 0.1,
+    });
+    const got: unknown[] = [];
+    const out = await analyzeInquiry(INQ, ANON, new Headers(), undefined, {
+      onPreview: (p) => got.push(p),
+    });
+    expect(got).toEqual([PREVIEW]);
+    expect(rate.tryAiQuota).toHaveBeenCalledWith(TIERS.max.weight + QUICK_WEIGHT);
+    expect((rate.settleAiQuota.mock.calls[0] as unknown as [number, number])[1]).toBeCloseTo(
+      0.1005,
+    );
+    expect((out.result as { timing?: { previewMs?: number } }).timing?.previewMs).toEqual(
+      expect.any(Number),
+    );
+  });
+
+  test("받을 곳이 없거나(일반 JSON 요청) 답변 모델이 Haiku(Light)면 부르지 않는다", async () => {
+    await analyzeInquiry(INQ, ANON, new Headers());
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, {
+      tier: "light",
+      onPreview: () => {},
+    });
+    expect(quickMod.runQuickPreview).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).toHaveBeenLastCalledWith(TIERS.light.weight);
+  });
+
+  test("요약이 걸러져 없으면 화면으로 보내지 않는다", async () => {
+    quickMod.runQuickPreview.mockResolvedValue({ preview: null, costUsd: 0.0004 });
+    const got: unknown[] = [];
+    await analyzeInquiry(INQ, ANON, new Headers(), undefined, { onPreview: (p) => got.push(p) });
+    expect(got).toEqual([]);
   });
 });
 

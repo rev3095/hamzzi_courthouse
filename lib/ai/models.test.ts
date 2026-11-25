@@ -4,6 +4,7 @@ import { PRICES, planCall } from "./cost";
 import { aiMode } from "./mode";
 import {
   BUDGET_UNIT_USD,
+  QUICK_WEIGHT,
   DEFAULT_TIER,
   DEFAULT_WEEKLY_BUDGET_USD,
   HELPER_WEIGHT,
@@ -130,5 +131,12 @@ describe("DEC-036 끄는 스위치만 남긴다", () => {
     expect(aiMode({ ANTHROPIC_API_KEY: "k" })).toBe("paid");
     expect(aiMode({ AI_MODE: "pro-full", ANTHROPIC_API_KEY: "k" })).toBe("paid");
     expect(aiMode({ AI_MODE: "pro" })).toBe("free");
+  });
+});
+
+describe("DEC-064 빠른 답 먼저 가중치", () => {
+  test("요약 상한 $0.002 ÷ 단위 올림", async () => {
+    const { QUICK_CAP_USD } = await import("./quick-policy");
+    expect(QUICK_WEIGHT).toBe(Math.ceil(QUICK_CAP_USD / BUDGET_UNIT_USD - 1e-9));
   });
 });
