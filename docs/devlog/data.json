@@ -235,6 +235,19 @@
    "purpose": "VS Code 세션의 서류 분석·사건 진행을 이어받아 legal-reviewer 재검토 위반 2건과 판독 개선, 쟁점 정리 실호출, 법무 검토 항목을 마무리하는 하위 세션.",
    "transcripts": [],
    "requests": 1
+  },
+  {
+   "key": "casefile-examples",
+   "parent": "main",
+   "title": "서류 분석 예제 프리셋 5건·Pro Max xhigh",
+   "tool": "Claude Desktop",
+   "prs": [
+    30
+   ],
+   "period": "2026-11-25",
+   "purpose": "서류 분석(F-015) 예제 프리셋을 실제 서류 분석과 같은 길로 실호출해 만들고(실제 서면 양식 2건·600자 넘는 가상 사건 3건), 실제 양식 2건은 사용자 계정 기록에도 남긴다. 도중에 Pro Max를 Opus 5.5 effort xhigh로 바꾸라는 요청이 더해졌다.",
+   "transcripts": [],
+   "requests": 4
   }
  ],
  "entries": [
@@ -6484,6 +6497,89 @@
    "detail": "PR 21(마이페이지 '내 세션'·Google 프로필, DEC-056), PR 22(일반 질문·검색 자료 첨부, F-017·DEC-055, 마이그레이션 병합 전 적용 필요), PR 23(분야별 비서, F-017·DEC-056으로 겹침)이 CI를 통과했다. PR 23에 DEC-057·F-018로 옮기라고 했고, PR 22·23에 최신 main으로 rebase를 요청했다. 병합은 사용자 허락 대기.",
    "commits": [],
    "ids": []
+  },
+  {
+   "date": "2026-11-25",
+   "time": "06:00",
+   "session": "casefile-examples",
+   "kind": "feature",
+   "title": "서류 분석 예제용 가상 서류 5장",
+   "detail": "협업 변호사 실제 서면 중 내용증명 회신·민사 답변서의 양식과 쓰는 방식만 따르고 사실관계·당사자·금액은 새로 쓴 2건, 징계해고 통지서·렌탈료 지급명령·디자인 외주 메신저 대화 가상 사건 3건을 직접 썼다. 사람·회사는 ○○로 가렸고, 글을 그림으로 바꾸는 무료 스크립트로 서류 사진을 만들었다. 원본 자료는 저장소에 올리지 않았다.",
+   "commits": [],
+   "ids": [
+    "F-015",
+    "DEC-052"
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "time": "06:10",
+   "session": "casefile-examples",
+   "kind": "check",
+   "title": "실제 서류 분석 흐름으로 예제 실호출 5건 (사용자 허락)",
+   "detail": "관리자 모드 개발 서버에서 판독(Haiku) → 확인한 개요 합치기 → DeepSearch Pro Max(Opus 5.5 xhigh) 순서로 1건씩 돌렸다. 분석 문장 1,086~1,356자, 출력 약 25,000~30,000토큰, 판독 포함 215~262초(보고 기준). 인용 검증 통과 문단만 남기니 건마다 2~7문단이었다. 예시 생성이 곧 서류 분석 흐름 전체의 실호출 점검이 됐다.",
+   "commits": [],
+   "ids": [
+    "F-015",
+    "DEC-052"
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "time": "06:15",
+   "session": "casefile-examples",
+   "kind": "check",
+   "title": "실제 양식 2건을 사용자 계정 기록에 추가",
+   "detail": "사용자가 관리자 모드를 직접 켠 뒤, 배포 사이트 서류 분석 화면에서 사진 붙이기 → 동의 두 항목 → 판독 → 분석(Pro Max, 기록 남기기)으로 내용증명 회신·답변서 2건을 올렸다. 두 건 모두 '내 기록'에 남은 것을 확인했다. 배포 전이라 이 2건은 effort high로 답했다.",
+   "commits": [],
+   "ids": [
+    "F-015",
+    "DEC-039"
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "time": "06:27",
+   "session": "casefile-examples",
+   "kind": "feature",
+   "title": "서류 분석 화면에 '예제로 먼저 보기'와 예시 화면",
+   "detail": "/casefile에 예제 5건 목록, /casefile/examples/[id]에 서류 그림·읽은 내용(AI 고지)·당사자 관계도·질문과 결과 화면(사건 구조도·사실관계 흐름·쟁점별 근거)을 정적으로 그린다. 모델·DB 호출과 질문 횟수 차감이 없다. legal-reviewer 지적으로 판독 칸에 AI 고지를 붙이고, 성+○○ 꼴을 가리고, 검증 안 된 모델 인용이 든 생성 원본은 저장소에서 뺐다.",
+   "commits": [
+    "b4ac308"
+   ],
+   "ids": [
+    "F-015",
+    "DEC-052"
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "time": "06:27",
+   "session": "casefile-examples",
+   "kind": "decision",
+   "title": "Pro Max를 Opus 5.5 effort xhigh로",
+   "detail": "사용자 요청으로 effort high → xhigh. 실측에 맞춰 출력 한도 20,000/32,000토큰, 답변 시간 240/270초(분석 라우트 300초 안), 상한 $0.6/$1.2(DeepSearch는 일반의 2배 규칙, 가중치 400/800)로 바꾸고 테스트·PRD를 맞췄다.",
+   "commits": [
+    "b4ac308"
+   ],
+   "ids": [
+    "DEC-050",
+    "DEC-041"
+   ]
+  },
+  {
+   "date": "2026-11-25",
+   "time": "07:28",
+   "session": "casefile-examples",
+   "kind": "check",
+   "title": "PR 30 병합·배포 확인",
+   "detail": "PR 30이 병합됐고(병합 커밋 b778e71) 배포 사이트에서 예시 화면이 서류 그림·사건 정리와 함께 열리는 것을 확인했다. 판독이 당사자 자리·해지 주체를 가끔 뒤바꾸는 점과, 서비스 판독 경로의 성+○○ 가리기는 남은 일로 따로 세션을 열었다(보고 기준).",
+   "commits": [
+    "b778e71"
+   ],
+   "ids": [
+    "F-015"
+   ]
   }
  ],
  "decisions": [
@@ -7056,6 +7152,12 @@
    "session": "main",
    "text": "서류 PDF는 사진과 같이 동의 뒤 그대로 판독에 보낸다(문서는 글만 꺼내 가린 뒤).",
    "id": "DEC-052"
+  },
+  {
+   "date": "2026-11-25",
+   "session": "casefile-examples",
+   "text": "Pro Max 답변을 Opus 5.5 effort xhigh로 올리고 출력·시간·상한을 실측에 맞춰 늘린다(일반 $0.6, DeepSearch $1.2).",
+   "id": "DEC-050"
   }
  ],
  "unresolved": {
