@@ -14,7 +14,8 @@ export const FREE_PROMPT_VERSION = "free-2026-10-22";
 
 export const FREE_STEP_MESSAGES = {
   replay: "미리 분석해 둔 예시 답변을 불러오고 있어요",
-  search: "무료 모드: 법제처에서 관련 법령·판례를 찾고 있어요",
+  // 유료 답변(라이트·DeepSearch)도 같은 검색을 거치므로 '무료 모드' 표시를 붙이지 않는다 (2026-11-26)
+  search: "법제처에서 관련 법령·판례를 찾고 있어요",
 } as const;
 
 export const SEARCH_ONLY_NOTE =

@@ -26,13 +26,8 @@ export async function verifyDraft(
   }
   const { statutes, cases } = uniqueClaims([...sourceClaims, ...textClaims]);
   if (draft.answer.points.length > 0) {
-    // 진행 단계에는 근거로 가져온 자료의 식별자만 보낸다 (본문에서 뽑은 미확인 인용은 재조회 전이라 보내지 않는다)
-    const known = uniqueClaims(sourceClaims);
-    deps.onStep?.({
-      stage: "verify",
-      message: VERIFY_STEP_MESSAGE,
-      added: [...known.statutes, ...known.cases],
-    });
+    // 진행 단계에는 문구만 보낸다 — 출처 목록은 화면을 복잡하게 해서 싣지 않는다 (2026-11-26)
+    deps.onStep?.({ stage: "verify", message: VERIFY_STEP_MESSAGE });
   }
 
   const [statuteChecks, caseChecks] = await Promise.all([

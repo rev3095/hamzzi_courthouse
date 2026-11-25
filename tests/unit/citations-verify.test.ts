@@ -65,7 +65,8 @@ describe("F-005 AC2 인용 재조회", () => {
 
     expect(src.verifyStatutes).toHaveBeenCalledWith(["민법 제536조"]);
     expect(src.verifyCases).not.toHaveBeenCalled();
-    expect(steps).toEqual([expect.objectContaining({ stage: "verify", added: ["민법 제536조"] })]);
+    // 진행 표시에는 문구만 — 출처 목록은 싣지 않는다 (2026-11-26)
+    expect(steps).toEqual([{ stage: "verify", message: expect.any(String) }]);
     expect(out.result.answer.points[0].check).toBe("verified");
     expect(out.result.recheck).toEqual({
       ok: true,

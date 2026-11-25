@@ -186,11 +186,7 @@ export async function freeSearch(
     }),
     ...citing,
   ];
-  deps.onStep?.({
-    stage: "search",
-    message: FREE_STEP_MESSAGES.search,
-    added: [...articles.map((a) => a.id), ...cases.map((c) => `case:${c.caseNo}`)],
-  });
+  // 진행 표시는 검색을 시작할 때 한 번만 보낸다 — 끝날 때 같은 문구와 찾은 출처 목록을 또 보내면 화면이 복잡해진다 (2026-11-26)
   return { articles, cases, searches };
 }
 
