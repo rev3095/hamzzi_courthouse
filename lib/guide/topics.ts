@@ -159,12 +159,13 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "전문 에이전트와의 대화는 AI가 법제처 법령·판례를 먼저 찾아 상담하듯 정리하는 답변이에요. 분석이 끝난 질문마다 질문 한 번으로 세고(예시 질문 제외), 이름·연락처처럼 보이는 부분은 가려서 저장해요.",
     ],
     assistants: true,
-    links: [{ href: "/assistants", label: "비서 페이지에서 크게 보기" }],
+    links: [{ href: "/assistants", label: "전문 에이전트 페이지에서 크게 보기" }],
   },
   features: {
     label: "기능 안내",
     source: "DEC-036 · DEC-038 · DEC-039 · DEC-041 · DEC-042 · DEC-052 · DEC-053 · DEC-058",
     lines: [
+      "위쪽 메뉴(휴대폰은 아래 탭)는 상담 · 판례·법령 · 문서 작성 · 사건 진행 · 광장 다섯 가지예요. 소개·문의는 오른쪽 위 메뉴 아이콘에, 로그인과 내 세션은 프로필 아이콘에 있어요.",
       "질문창에서 쓸 수 있는 기능을 골라 보세요. 답변 모드, 여러 사정이 얽힌 사연을 위한 DeepSearch, 예시 답변, 절차 안내, 내 세션이 있어요.",
     ],
     links: [{ href: "/about/features", label: "기능 가이드 전체 보기" }],
@@ -262,15 +263,15 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     next: ["features-examples", "features-deep"],
   },
   "features-community": {
-    label: "커뮤니티와 씨앗은 뭐예요?",
+    label: "광장과 씨앗은 뭐예요?",
     source: "DEC-047 · lib/community/policy.ts SEEDS·COMMUNITY_NOTICE",
     lines: [
-      "커뮤니티는 법과 제도에 대한 의견, 가정해 보는 질문, 가벼운 이야기를 나누는 게시판이에요. 로그인하지 않아도 글과 댓글을 쓸 수 있어요.",
+      "광장(커뮤니티)은 법과 제도에 대한 의견, 가정해 보는 질문, 가벼운 이야기를 나누는 게시판이에요. 로그인하지 않아도 글과 댓글을 쓸 수 있어요.",
       "로그인하지 않고 쓸 때는 비밀번호를 정하고, 그 비밀번호로 수정하거나 지워요. Google로 로그인하고 쓰면 비밀번호 없이 그 계정으로 수정하고 지워요.",
       "글과 댓글은 이용자 의견이에요. AI가 쓰지 않고, 이름이나 연락처로 보이는 부분은 올릴 때 가려져요.",
       `로그인하고 쓰면 글 하나에 씨앗 ${L.seedPost}개, 댓글 하나에 ${L.seedComment}개가 쌓여요. 씨앗은 활동 기록이고, 돈이나 할인으로 바꾸지 않아요.`,
     ],
-    links: [{ href: "/community", label: "커뮤니티" }],
+    links: [{ href: "/community", label: "광장" }],
     next: ["features-history", "pricing-future"],
   },
   "features-history": {
@@ -414,10 +415,10 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
     label: "소장 같은 문서도 써 줘요?",
     source: "DEC-022 · DEC-023 · DEC-055",
     lines: [
-      "네. 소장·내용증명·지급명령 같은 문서를 햄찌법원이 무료로 대신 작성해 드려요. 결과 화면의 '바로 가기'에서 들어가면 질문한 사연으로 사실관계와 법적 근거·주장까지 AI가 채워요.",
+      "네. 소장·내용증명·지급명령 같은 문서를 햄찌법원이 무료로 대신 작성해 드려요. 위쪽 메뉴의 '문서 작성'(휴대폰은 아래 탭)에서 서식을 고르고, 결과 화면의 '바로 가기'에서 들어가면 질문한 사연으로 사실관계와 법적 근거·주장까지 AI가 채워요(고소장은 AI 초안 없이 직접 채워요).",
       "다 쓴 문서는 한글·워드·PDF로 내려받을 수 있어요. 이름·주소·금액은 화면에서 직접 적고 서버로 보내지 않아요. 내기 전에 내용을 한 번 더 읽어 봐 주세요.",
     ],
-    links: [{ href: "/documents/complaint", label: "소장 작성" }],
+    links: [{ href: "/documents", label: "문서 작성" }],
   },
   "roadmap-login": {
     label: "로그인은 어떻게 해요?",

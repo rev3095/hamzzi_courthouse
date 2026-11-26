@@ -116,7 +116,7 @@ export function GuideBot() {
         aria-expanded={open}
         aria-label={open ? "햄찌 안내 창 닫기" : "햄찌 안내 열기 (AI 캐릭터)"}
         title="햄찌에게 물어보기"
-        className={`fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-[52px] items-center justify-center rounded-full border-2 shadow-[0_14px_36px_-12px_rgba(26,34,51,.55)] transition-transform hover:scale-105 sm:right-6 sm:bottom-6 ${
+        className={`fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex size-[52px] items-center justify-center rounded-full border-2 shadow-[0_14px_36px_-12px_rgba(26,34,51,.55)] transition-transform hover:scale-105 sm:right-6 md:bottom-6 ${
           open ? "border-ink bg-ink text-white max-sm:hidden" : "border-honey-line bg-honey"
         }`}
       >
@@ -144,7 +144,7 @@ export function GuideBot() {
           aria-labelledby="hz-guide-title"
           tabIndex={-1}
           data-hza={agent ?? undefined}
-          className="border-line fixed inset-0 z-40 flex flex-col overflow-hidden bg-white outline-none sm:inset-auto sm:right-6 sm:bottom-[5.75rem] sm:h-[min(620px,calc(100dvh-8.5rem))] sm:w-[380px] sm:rounded-[20px] sm:border sm:shadow-[0_24px_60px_-24px_rgba(26,34,51,.6)]"
+          className="border-line fixed inset-0 z-40 flex flex-col overflow-hidden bg-white outline-none sm:inset-auto sm:right-6 sm:bottom-[8.75rem] sm:h-[min(620px,calc(100dvh-12rem))] md:bottom-[5.75rem] md:h-[min(620px,calc(100dvh-8.5rem))] sm:w-[380px] sm:rounded-[20px] sm:border sm:shadow-[0_24px_60px_-24px_rgba(26,34,51,.6)]"
         >
           {agent ? (
             <>
