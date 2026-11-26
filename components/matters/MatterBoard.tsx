@@ -107,6 +107,14 @@ export function MatterBoard({
         </div>
         <h1 className="font-display text-ink mt-1 truncate text-[24px] font-bold lg:text-[28px]">
           {title}
+          {data.titleAuto && data.auto && (
+            <span
+              className="text-label ml-2 align-middle font-sans text-[12px] font-semibold"
+              title="AI가 사건 자료를 읽고 지은 이름이에요"
+            >
+              AI 제목
+            </span>
+          )}
         </h1>
         <p className="text-muted mt-1 text-[13px]">
           자료 {data.docs.length} · 사실 {data.facts.length} · 당사자 {data.parties.length} · 쟁점{" "}

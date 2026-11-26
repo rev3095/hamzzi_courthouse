@@ -392,7 +392,7 @@ export async function autoNameMatter(
       20_000,
       { minOutputTokens: MATTER_AUTO_TOKENS.min },
     );
-    const out = screenAuto(JSON.parse(textOf(res)));
+    const out = screenAuto(JSON.parse(textOf(res)), maskedText);
     if (!out.title && !out.gist) return { ok: false, reason: "empty", costUsd: model.spentUsd() };
     return { ok: true, ...out, costUsd: model.spentUsd() };
   } catch (e) {

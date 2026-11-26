@@ -2,12 +2,18 @@
 // 저장된 사건 자료로 제목(이름을 비워 만든 사건만)·법 분야·한 줄 요약을 Haiku 1회로 만든다 — 화면을 위한 자동 생성은
 // 언제나 Haiku (사용자 절대 규칙 2026-11-27). 자료가 그대로면(지문 autoSig가 같으면) 모델을 부르지 않는다.
 // 모델에 보내는 글은 이름·연락처를 가린 문장뿐이고(maskForModel), 민감정보로 보이면 동의 화면이 없는 자동 경로라 부르지 않는다.
-// 하루 횟수(MATTER_AI_RATE)는 세지 않는다 — 자료가 바뀔 때만 부르고, 전체 예산·금액 상한은 그대로 받는다.
+// 하루 횟수는 다른 사건 AI 기능(MATTER_AI_RATE)과 따로 넉넉히 센다(MATTER_AUTO_RATE) — 자료가 바뀔 때만 부르고, 전체 예산·금액 상한은 그대로 받는다.
+// 모델이 실패했거나 쓸 결과가 없으면 그 자료 지문을 남겨 같은 자료로 다시 부르지 않는다.
 import { autoNameMatter } from "@/lib/ai/matter";
 import { MATTER_SUMMARY_WEIGHT } from "@/lib/ai/models";
 import { AI_NOTICE, ok } from "@/lib/api/respond";
 import { readJson, withRoute } from "@/lib/api/route";
-import { WRITE_RATE, assertRateLimit } from "@/lib/auth/rate-limit";
+import {
+  MATTER_AUTO_RATE,
+  WRITE_RATE,
+  assertRateLimit,
+  assertUserRate,
+} from "@/lib/auth/rate-limit";
 import { runMatterAi } from "@/lib/matters/ai-gate";
 import {
   autoSig,
@@ -44,6 +50,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   const sig = autoSig(m.data);
   if (current?.sig === sig) return reply(current, m.title, { used: false, reason: "unchanged" });
 
+  if (!user.admin) await assertUserRate(MATTER_AUTO_RATE, user.userId);
   const masked = maskForModel(composeAutoText(m.data), maskNamesOf(m.data));
   if (masked.sensitive.length > 0) {
     return reply(current, m.title, { used: false, reason: "sensitive" });
@@ -52,7 +59,14 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     rateChecked: true,
   });
   if (r.skipped) return reply(current, m.title, r.skipped);
-  if (!r.out.ok) return reply(current, m.title, { used: false, reason: r.out.reason });
+  if (!r.out.ok) {
+    await saveMatterAuto(user.userId, id, {
+      title: m.title,
+      data: { ...m.data, autoFailedSig: sig },
+      updatedAt: m.updatedAt,
+    });
+    return reply(current, m.title, { used: false, reason: r.out.reason });
+  }
 
   const auto: MatterAuto = {
     field: r.out.field,

@@ -10,7 +10,7 @@ import {
   emptyMatter,
   type MatterData,
 } from "@/lib/matters/model";
-import { screenAuto } from "@/lib/matters/policy";
+import { parseMatterData, screenAuto } from "@/lib/matters/policy";
 
 vi.mock("server-only", () => ({}));
 const store = vi.hoisted(() => ({
@@ -38,6 +38,7 @@ vi.mock("@/lib/ai/matter", () => ai);
 
 const { POST: auto } = await import("@/app/api/v1/matters/auto/route");
 const { POST: create } = await import("@/app/api/v1/matters/route");
+const { MATTER_AUTO_RATE } = await import("@/lib/auth/rate-limit");
 
 const ID = "11111111-2222-4333-8444-555555555555";
 const req = (body: unknown) =>
@@ -87,8 +88,8 @@ describe("DEC-070 자동 정리 경로", () => {
     expect(sent).not.toContain("김가상");
     expect(rate.tryAiQuota).toHaveBeenCalledWith(MATTER_SUMMARY_WEIGHT);
     expect(rate.settleAiQuota).toHaveBeenCalledWith(MATTER_SUMMARY_WEIGHT, 0.0007);
-    // 하루 횟수(MATTER_AI_RATE)는 세지 않는다
-    expect(rate.assertUserRate).not.toHaveBeenCalled();
+    // 하루 횟수는 다른 사건 AI 기능과 따로 센다
+    expect(rate.assertUserRate).toHaveBeenCalledWith(MATTER_AUTO_RATE, "u-1");
     const saved = store.saveMatterAuto.mock.calls[0];
     expect(saved[0]).toBe("u-1");
     expect(saved[2].title).toBe("전세 보증금 반환 요구");
@@ -164,6 +165,15 @@ describe("DEC-070 자동 정리 경로", () => {
     expect(store.createMatter.mock.calls[0][2].titleAuto).toBe(true);
   });
 
+  test("모델이 실패하면 그 자료 지문을 남겨 같은 자료로 다시 부르지 않는다", async () => {
+    ai.autoNameMatter.mockResolvedValue({ ok: false, reason: "model_failed", costUsd: 0.0005 });
+    await auto(req({ matterId: ID }), undefined);
+    const saved = store.saveMatterAuto.mock.calls[0][2];
+    expect(saved.data.autoFailedSig).toBe(autoSig(withFacts()));
+    expect(saved.data.auto).toBeUndefined();
+    expect(autoStale(saved.data)).toBe(false);
+  });
+
   test("사건 번호 꼴이 아니면 400", async () => {
     const res = await auto(req({ matterId: "../x" }), undefined);
     expect(res.status).toBe(400);
@@ -202,6 +212,33 @@ describe("DEC-070 자동 정리 거르기 (절대 규칙 1·2·4)", () => {
       field: "lease",
       gist: "임대인이 보증금 반환을 미루는 일",
     });
+  });
+
+  test("요약·제목의 숫자는 보낸 자료에 있을 때만", () => {
+    const src = "사실: 2026-10-01 보증금 반환을 미뤘다";
+    expect(
+      screenAuto(
+        { title: "보증금 반환", field: "lease", gist: "보증금 3,000만 원을 돌려받지 못한 일" },
+        src,
+      ).gist,
+    ).toBe("");
+    expect(
+      screenAuto(
+        { title: "보증금 반환", field: "lease", gist: "2026-10-01부터 보증금 반환이 미뤄진 일" },
+        src,
+      ).gist,
+    ).not.toBe("");
+  });
+
+  test("저장 때 브라우저가 보낸 자동 정리도 다시 거른다", () => {
+    const d = withFacts({
+      auto: { field: "lease", gist: "임차인이 반드시 이기는 사건", sig: "x", at: "t" },
+    });
+    expect(parseMatterData(d).auto).toBeUndefined();
+    const ok = withFacts({
+      auto: { field: "lease", gist: "보증금 반환이 미뤄진 일", sig: "x", at: "t" },
+    });
+    expect(parseMatterData(ok).auto?.gist).toBe("보증금 반환이 미뤄진 일");
   });
 
   test("지문은 글자 하나 고칠 때가 아니라 자료가 늘 때 바뀐다", () => {

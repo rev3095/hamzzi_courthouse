@@ -171,6 +171,8 @@ export type MatterData = {
   auto?: MatterAuto;
   /** 이름을 비워 만든 사건 — 자동 정리가 제목도 짓는다 (DEC-070) */
   titleAuto?: boolean;
+  /** 자동 정리가 실패한(모델 오류·금액 상한·쓸 결과 없음) 자료 지문 — 같은 자료로 다시 부르지 않는다 */
+  autoFailedSig?: string;
 };
 
 export const emptyMatter = (): MatterData => ({
@@ -235,7 +237,11 @@ export const hasAutoContent = (d: MatterData) =>
   d.docs.length > 0 || d.facts.length > 0 || d.summary.trim().length >= 10;
 
 /** 자동 정리를 (다시) 할 때 */
-export const autoStale = (d: MatterData) => hasAutoContent(d) && d.auto?.sig !== autoSig(d);
+export const autoStale = (d: MatterData) => {
+  if (!hasAutoContent(d)) return false;
+  const sig = autoSig(d);
+  return d.auto?.sig !== sig && d.autoFailedSig !== sig;
+};
 
 /** 자동 정리에 보낼 글. 서버가 이름·연락처를 가린 뒤 모델에 보낸다 */
 export function composeAutoText(d: MatterData, maxChars = 1_800): string {

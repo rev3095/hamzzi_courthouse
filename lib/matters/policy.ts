@@ -132,6 +132,7 @@ export const MatterDataZ = z.object({
     })
     .optional(),
   titleAuto: z.boolean().optional(),
+  autoFailedSig: z.string().max(40).optional(),
 });
 
 const invalid = (field: string, reason: string) =>
@@ -152,6 +153,8 @@ export function parseMatterData(v: unknown): MatterData {
     const path = r.error.issues[0]?.path.filter((p) => typeof p === "string").join(".") || "data";
     throw invalid(`data.${path}`, "format");
   }
+  // 브라우저가 보낸 자동 정리(DEC-070)도 서버의 거르기를 다시 거친다 — 쓸 수 없는 요약이면 정리를 버린다
+  if (r.data.auto && r.data.auto.gist && unusable(r.data.auto.gist)) delete r.data.auto;
   if (new TextEncoder().encode(JSON.stringify(r.data)).length > L.dataBytes) {
     throw invalid("data", "too_large");
   }
@@ -860,16 +863,29 @@ export const MATTER_AUTO_SCHEMA = {
 const AUTO_TITLE_MAX = 30;
 
 /** 쓸 수 없는 문장: 가림 표시([이름1] 등)·개인정보 꼴·단정·판정·유불리·검증 전 조문·사건번호 (절대 규칙 1·2·4) */
-const unusable = (s: string) =>
-  /\[[^\]]*\d\]/.test(s) ||
-  scanInput(s).findings.length > 0 ||
-  isAssertive(s) ||
-  isJudging(s) ||
-  LEANING.test(s) ||
-  hasCitation(s);
+function unusable(s: string): boolean {
+  return (
+    /\[[^\]]*\d\]/.test(s) ||
+    scanInput(s).findings.length > 0 ||
+    isAssertive(s) ||
+    isJudging(s) ||
+    LEANING.test(s) ||
+    hasCitation(s)
+  );
+}
 
-/** 모델 출력 거르기. 쓸 수 없는 제목·요약은 비우고, 분야가 목록 밖이면 기타 */
-export function screenAuto(raw: unknown): {
+/** 요약·제목의 숫자가 보낸 자료에 없으면 쓰지 않는다 (절대 규칙 3 — 모델이 숫자를 만들지 않게) */
+const numbersIn = (s: string) => s.normalize("NFKC").match(/\d+(?:[.,]\d+)*/g) ?? [];
+const numbersFrom = (s: string, source: string) => {
+  const src = source.normalize("NFKC");
+  return numbersIn(s).every((n) => src.includes(n));
+};
+
+/** 모델 출력 거르기. 쓸 수 없는 제목·요약은 비우고, 분야가 목록 밖이면 기타. source = 모델에 보낸 글 */
+export function screenAuto(
+  raw: unknown,
+  source?: string,
+): {
   title: string;
   field: (typeof MATTER_FIELDS)[number];
   gist: string;
@@ -879,8 +895,10 @@ export function screenAuto(raw: unknown): {
     typeof v === "string" ? v.normalize("NFKC").replace(/\s+/g, " ").trim().slice(0, max) : "";
   let title = tidy(r.title, AUTO_TITLE_MAX + 10).replace(/^["'“”‘’]+|["'“”‘’.]+$/g, "");
   if (title.length < 2 || title.length > AUTO_TITLE_MAX || unusable(title)) title = "";
+  if (source !== undefined && title && !numbersFrom(title, source)) title = "";
   let gist = tidy(r.gist, L.line);
   if (gist.length < 5 || unusable(gist)) gist = "";
+  if (source !== undefined && gist && !numbersFrom(gist, source)) gist = "";
   const field = (MATTER_FIELDS as readonly string[]).includes(r.field as string)
     ? (r.field as (typeof MATTER_FIELDS)[number])
     : "other";
