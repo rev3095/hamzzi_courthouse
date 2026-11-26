@@ -60,6 +60,8 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/inquiries/{id}/result` | 소유자(anon 포함) | 최신 결과 조회 | 8.3 |
 | GET `/me/quota` | anon·user | 오늘 남은 질문 수(비로그인 0~`ANON_QUESTION_LIMIT` · Google 로그인 0~10), 로그인 필요 여부, 관리자 모드 | DEC-010, DEC-024, DEC-035 |
 | GET `/me/inquiries` | user | 내 세션의 질문(남기기로 한 질문, 마스킹본). 마이페이지 '내 세션'은 이 목록과 `GET /matters`를 최근 순으로 합쳐 보인다 | DEC-039, DEC-056 |
+| PATCH `/me/inquiries/{id}` | user | 내 세션 이름 바꾸기 (`{ title: string \| null }`, 60자 이하, 가린 뒤 저장) | DEC-070 |
+| DELETE `/me/inquiries/{id}` | user | 내 세션에서 빼기 (기록에 남기기만 끄고 질문·결과는 그대로) | DEC-070 |
 | GET `/me/profile` | user | 마이페이지 프로필: Google 로그인 때 인증 서비스가 받아 둔 이름·프로필 사진 주소(`{ name, avatarUrl }`, 없으면 null). 이메일은 싣지 않는다. 사진 주소는 googleusercontent.com의 https만. 새로 저장하지 않고 `no-store` | DEC-056 |
 | GET `/auth/callback` (API 밖, `app/auth/callback`) | 공개 | Google 로그인에서 돌아오는 주소. Supabase 코드를 세션 쿠키로 바꾸고 `next`(사이트 안 경로만, `safeNextPath`)로 보낸다. 실패하면 `/me?login=failed` | DEC-035 |
 | POST `/admin/session` · DELETE `/admin/session` | 공개 | 관리자 모드 켜기(비밀번호)·끄기 | DEC-024 |
@@ -126,8 +128,12 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 로그인 사용자가 `save: true`로 보낸 질문만, 최근 것부터 200건(`SAVED_LIST_LIMIT`, 이전 50 — 화면이 한 페이지 10개씩 나눠 보인다, DEC-056 ③). 비로그인은 `401 UNAUTHENTICATED`.
 ```ts
 // 200
-{ id: string; maskedText: string; status: "draft"|"need_info"|"analyzed"|"failed"; createdAt: string; followup: boolean }[]
+{ id: string; maskedText: string; status: "draft"|"need_info"|"analyzed"|"failed"; createdAt: string; followup: boolean; title: string | null }[]
 ```
+`title`은 사용자가 바꾼 세션 이름(DEC-070, 마스킹본)이다. 열(마이그레이션 `20261126194918`)을 적용하기 전 DB에서는 `null`로 온다.
+
+### PATCH·DELETE `/me/inquiries/{id}` (DEC-070)
+로그인 사용자 본인이 남긴 질문만(없거나 남의 것·번호 꼴이 아니면 `404`), 비로그인 `401`, 쓰기 횟수 제한(`WRITE_RATE`). PATCH `{ title }` → `{ id, title }`: 빈 값·`null`은 이름 지우기, 60자 넘으면 `400`, 이름·연락처 꼴은 `scanInput`으로 가린 뒤 저장한다. DELETE → `{ id, removed: true }`: `saved`만 끈다 — 질문·결과는 지우지 않는다(로그인 사용자 하루 횟수는 오늘 분석 수로 세므로 지우면 되살아난다). 기록을 모두 지우는 길은 `DELETE /me/data`다. 사건 이름은 `PUT /matters/{id}` `{ title }`로 바꾸고, 그러면 `data.titleAuto`를 꺼서 자동 정리가 제목을 다시 짓지 않는다.
 POST `/inquiries` 본문의 `save?: boolean`(선택)이 참이고 요청자가 로그인 사용자일 때만 기록에 남긴다. 비로그인·관리자 모드 요청에서는 무시한다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["save"]`).
 로그인 사용자의 하루 한도는 DEC-035·055(하루 30회, `USER_QUESTION_LIMIT`)를 따른다.
 

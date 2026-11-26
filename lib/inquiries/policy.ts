@@ -375,3 +375,23 @@ export function parseAnalyzeRequest(raw: string): {
     throw new ApiError("VALIDATION_ERROR", { fields: ["assistant"] });
   return { category, tier, deep: b.deep === true, assistant };
 }
+
+/** 내 세션 이름 글자 수 상한 (DEC-070, DB check와 같다) */
+export const SESSION_TITLE_MAX = 60;
+
+/**
+ * 내 세션 이름 (PATCH /me/inquiries/{id}). 빈 값은 null(이름 지우기 — 가린 질문 문장으로 돌아간다).
+ * 이름·연락처 꼴은 저장 전에 가린다 (절대 규칙 4). 원문은 돌려주지도 남기지도 않는다.
+ */
+export function parseSessionTitle(v: unknown): string | null {
+  if (v === null) return null;
+  if (typeof v !== "string") {
+    throw new ApiError("VALIDATION_ERROR", { fields: ["title"], reason: "type" });
+  }
+  const t = v.normalize("NFKC").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  if (t.length > SESSION_TITLE_MAX) {
+    throw new ApiError("VALIDATION_ERROR", { fields: ["title"], reason: "too_long" });
+  }
+  return scanInput(t).maskedText.slice(0, SESSION_TITLE_MAX);
+}

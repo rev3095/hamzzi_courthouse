@@ -30,9 +30,15 @@ export const PUT = withRoute<Ctx>(async (req, ctx, scope) => {
   if (body.title === undefined && body.data === undefined) {
     throw new ApiError("VALIDATION_ERROR", { fields: ["data"], reason: "empty" });
   }
+  let data = body.data !== undefined ? parseMatterData(body.data) : undefined;
+  // 사용자가 이름을 바꾸면 자동 정리(DEC-070)가 더는 제목을 짓지 않는다
+  if (body.title !== undefined) {
+    const current = data ?? (await getMatter(user.userId, id)).data;
+    if (current.titleAuto) data = { ...current, titleAuto: false };
+  }
   const saved = await saveMatter(user.userId, id, {
     ...(body.title !== undefined && { title: parseTitle(body.title) }),
-    ...(body.data !== undefined && { data: parseMatterData(body.data) }),
+    ...(data !== undefined && { data }),
   });
   return noStore(ok(saved, scope.requestId));
 });

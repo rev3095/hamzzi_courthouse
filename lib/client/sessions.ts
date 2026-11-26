@@ -8,6 +8,8 @@ export type QuestionItem = {
   status: string;
   createdAt: string;
   followup: boolean;
+  /** 사용자가 바꾼 세션 이름 (DEC-070) */
+  title?: string | null;
 };
 
 export type SessionItem =
@@ -60,7 +62,7 @@ export type SessionKindFilter = "all" | SessionItem["kind"];
 
 /** 목록에 보이는 글: 질문은 가린 문장, 사건은 사건 이름 */
 export const sessionText = (item: SessionItem) =>
-  item.kind === "question" ? item.question.maskedText : item.matter.title;
+  item.kind === "question" ? item.question.title || item.question.maskedText : item.matter.title;
 
 const norm = (s: string) => s.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 

@@ -109,10 +109,9 @@ function Workspace() {
     if (!r.ok || !r.data.ai.used || !r.data.auto) return;
     const { auto, title } = r.data;
     setMatter((m) => (m && m.id === id ? { ...m, title, data: { ...m.data, auto } } : m));
-    // 저장을 기다리는 자료가 있으면 거기에도 넣는다. 없으면 화면 자료에 든 정리가 다음 저장 때 함께 간다
+    // 저장을 기다리는 자료가 있으면 거기에도 넣는다. 없으면 화면 자료에 든 정리가 다음 저장 때 함께 간다 (제목은 서버가 저장한다)
     if (pending.current?.id === id)
       pending.current = { id, data: { ...pending.current.data, auto } };
-    if (data.titleAuto) void saveMatter(id, { title });
   }, []);
 
   const flush = useCallback(async () => {

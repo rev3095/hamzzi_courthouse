@@ -457,34 +457,80 @@ export type SavedInquiry = {
   status: InquiryRow["status"];
   createdAt: string;
   followup: boolean;
+  /** 사용자가 바꾼 세션 이름 (DEC-070, 마스킹본). 없으면 null — 화면은 가린 질문 문장을 보인다 */
+  title: string | null;
 };
 
 /** 내 세션에 싣는 남긴 질문 수 (최근 것부터). 화면이 한 페이지 10개씩 나눠 보인다 (DEC-056 ③, 이전 50) */
 export const SAVED_LIST_LIMIT = 200;
 
+type SavedRow = {
+  id: string;
+  masked_text: string;
+  status: InquiryRow["status"];
+  created_at: string;
+  parent_inquiry_id: string | null;
+  session_title?: string | null;
+};
+
+/** 없는 열(마이그레이션 적용 전)을 고른 오류 — Postgres undefined_column */
+const missingColumn = (e: { code?: string } | null) => e?.code === "42703";
+
 /** 내 질문 기록 (DEC-039): 로그인 사용자가 남기기로 한 질문, 최근 것부터 SAVED_LIST_LIMIT건. 마스킹본만 돌려준다 */
 export async function listSavedInquiries(userId: string): Promise<SavedInquiry[]> {
-  const { data, error } = await createServiceClient()
-    .from("inquiries")
-    .select("id, masked_text, status, created_at, parent_inquiry_id")
-    .eq("user_id", userId)
-    .eq("saved", true)
-    .order("created_at", { ascending: false })
-    .limit(SAVED_LIST_LIMIT);
+  const query = (cols: string) =>
+    createServiceClient()
+      .from("inquiries")
+      .select(cols)
+      .eq("user_id", userId)
+      .eq("saved", true)
+      .order("created_at", { ascending: false })
+      .limit(SAVED_LIST_LIMIT)
+      .returns<SavedRow[]>();
+  const base = "id, masked_text, status, created_at, parent_inquiry_id";
+  let { data, error } = await query(`${base}, session_title`);
+  // 세션 이름 열(마이그레이션 20261126194918)을 적용하기 전 DB에서도 목록은 보이게 한다
+  if (missingColumn(error)) ({ data, error } = await query(base));
   if (error) throw new Error("inquiries 조회 실패");
-  return (
-    data as {
-      id: string;
-      masked_text: string;
-      status: InquiryRow["status"];
-      created_at: string;
-      parent_inquiry_id: string | null;
-    }[]
-  ).map((r) => ({
+  return (data ?? []).map((r) => ({
     id: r.id,
     maskedText: r.masked_text,
     status: r.status,
     createdAt: r.created_at,
     followup: r.parent_inquiry_id !== null,
+    title: r.session_title ?? null,
   }));
+}
+
+/** 내 세션 이름 바꾸기 (DEC-070). 본인이 남긴 질문만 — 없거나 남의 것이면 404 */
+export async function renameSavedInquiry(
+  userId: string,
+  id: string,
+  title: string | null,
+): Promise<void> {
+  const { data, error } = await createServiceClient()
+    .from("inquiries")
+    .update({ session_title: title })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .eq("saved", true)
+    .select("id");
+  if (error) throw new Error("inquiries 저장 실패");
+  if ((data ?? []).length === 0) throw new ApiError("NOT_FOUND");
+}
+
+/**
+ * 내 세션에서 빼기 (DEC-070). 질문·결과는 지우지 않고 '기록에 남기기'만 끈다 — 하루 질문 횟수는 오늘 분석 수로 세므로
+ * 행을 지우면 횟수가 되살아난다. 기록을 모두 지우는 길은 마이페이지 '내 기록 삭제'(DELETE /me/data)다.
+ */
+export async function unsaveInquiry(userId: string, id: string): Promise<void> {
+  const { data, error } = await createServiceClient()
+    .from("inquiries")
+    .update({ saved: false })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .eq("saved", true)
+    .select("id");
+  if (error) throw new Error("inquiries 저장 실패");
+  if ((data ?? []).length === 0) throw new ApiError("NOT_FOUND");
 }

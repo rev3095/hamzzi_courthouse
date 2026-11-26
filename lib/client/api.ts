@@ -90,10 +90,23 @@ export type SavedInquiry = {
   status: string;
   createdAt: string;
   followup: boolean;
+  /** 사용자가 바꾼 세션 이름 (DEC-070). 없으면 null */
+  title?: string | null;
 };
 
 /** 내 세션의 질문 (DEC-039·056, 로그인 필요) */
 export const getMyInquiries = () => call<SavedInquiry[]>("/api/v1/me/inquiries");
+
+/** 내 세션 이름 바꾸기 (DEC-070, 로그인 필요). null이면 이름을 지워 가린 질문 문장으로 돌아간다 */
+export const renameMyInquiry = (id: string, title: string | null) =>
+  call<{ id: string; title: string | null }>(`/api/v1/me/inquiries/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+
+/** 내 세션에서 빼기 (DEC-070, 로그인 필요). 질문·결과는 지우지 않는다 */
+export const removeMyInquiry = (id: string) =>
+  call<{ id: string; removed: true }>(`/api/v1/me/inquiries/${id}`, { method: "DELETE" });
 
 /** 마이페이지 프로필: Google 이름·사진 주소 (DEC-056, 로그인 필요). 이 화면 메모리에만 둔다 */
 export const getMyProfile = () =>
@@ -121,6 +134,9 @@ export function forgetQuestions() {
     // 이 기기에 둔 조회 이력(DEC-029)도 함께 지운다
     localStorage.removeItem("hz:recent");
     localStorage.removeItem("hz:pins");
+    // 비로그인 내 세션 목록(DEC-070)도 지운다
+    localStorage.removeItem("hz:sessions");
+    window.dispatchEvent(new Event("hz:sessions"));
   } catch {
     // 저장소를 못 쓰면 지울 것도 없다
   }
