@@ -26,6 +26,7 @@ import {
 import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
 import type { PiiFinding } from "@/lib/pii";
 import { PrimaryButton, SecondaryButton } from "../Modal";
+import { PhotoConsent, piiSummary } from "../ask/PhotoConsent";
 
 type Step =
   | { kind: "consent" }
@@ -38,15 +39,6 @@ type Step =
       notice: string | null;
       dropped: number;
     };
-
-const PII_LABEL: Record<string, string> = {
-  name: "이름",
-  phone: "전화번호",
-  rrn: "주민등록번호",
-  account: "계좌번호",
-  email: "이메일",
-  address: "주소",
-};
 
 export function CaseFileFlow({
   images,
@@ -219,57 +211,21 @@ function Consent({
   onAccept: () => void;
   onClose: () => void;
 }) {
-  const [send, setSend] = useState(false);
-  const [sensitive, setSensitive] = useState(false);
   return (
-    <>
-      <ul className="text-ink list-disc space-y-2 pl-5 text-[15px] leading-relaxed">
-        <li>
-          서류 {count}개를 AI 모델 제공자(Anthropic)에게 보내 읽어요. 사진과 PDF는 나와 상대방의
-          이름·주소 같은 개인정보가 가려지지 않은 채 그대로 가요.
-        </li>
-        <li>
-          한글·워드·파워포인트·엑셀·텍스트 문서는 글만 꺼내 이름·연락처·주소 같은 개인정보를 가린 뒤
-          보내요. 다만 모든 이름을 빠짐없이 가리지는 못할 수 있어요.
-        </li>
-        <li>
-          사진·파일은 읽는 데만 쓰고 햄찌법원 서버에 저장하지 않아요. 읽은 내용은 개인정보를 가린
-          사건 개요만 남겨요.
-        </li>
-        <li>
-          개인의 이름은 결과에 보이지 않고, 개인을 찾아보는 검색도 하지 않아요. 법인·사업자만 공개된
-          정보를 찾아볼 수 있어요.
-        </li>
-        <li>주민등록번호나 계좌번호가 보이는 부분은 가리고 찍으면 더 안전해요.</li>
-      </ul>
-      <label className="text-ink mt-4 flex min-h-11 items-center gap-2.5 text-[15px]">
-        <input
-          type="checkbox"
-          checked={send}
-          onChange={(e) => setSend(e.target.checked)}
-          className="size-5 shrink-0 accent-[var(--ink)]"
-        />
-        서류 사진·PDF·문서를 AI에게 보내 읽는 데 동의합니다 (필수)
-      </label>
-      <label className="text-ink flex min-h-11 items-center gap-2.5 text-[15px]">
-        <input
-          type="checkbox"
-          checked={sensitive}
-          onChange={(e) => setSensitive(e.target.checked)}
-          className="size-5 shrink-0 accent-[var(--ink)]"
-        />
-        서류에 든 건강·범죄경력 같은 민감정보 처리에 동의합니다 (필수)
-      </label>
-      <a href="/privacy" target="_blank" className="text-link text-[13px] underline">
-        자세히 보기 · 개인정보처리방침
-      </a>
-      <div className="mt-5 flex flex-col gap-2">
-        <PrimaryButton disabled={!send || !sensitive} onClick={onAccept}>
-          {auto ? "동의하고 바로 분석하기" : "동의하고 서류 읽기"}
-        </PrimaryButton>
-        <SecondaryButton onClick={onClose}>취소</SecondaryButton>
-      </div>
-    </>
+    <PhotoConsent
+      notes={[
+        `서류 ${count}개를 AI 모델 제공자(Anthropic)에게 보내 읽어요. 사진과 PDF는 나와 상대방의 이름·주소 같은 개인정보가 가려지지 않은 채 그대로 가요.`,
+        "한글·워드·파워포인트·엑셀·텍스트 문서는 글만 꺼내 이름·연락처·주소 같은 개인정보를 가린 뒤 보내요. 다만 모든 이름을 빠짐없이 가리지는 못할 수 있어요.",
+        "사진·파일은 읽는 데만 쓰고 햄찌법원 서버에 저장하지 않아요. 읽은 내용은 개인정보를 가린 사건 개요만 남겨요.",
+        "개인의 이름은 결과에 보이지 않고, 개인을 찾아보는 검색도 하지 않아요. 법인·사업자만 공개된 정보를 찾아볼 수 있어요.",
+        "주민등록번호나 계좌번호가 보이는 부분은 가리고 찍으면 더 안전해요.",
+      ]}
+      sendLabel="서류 사진·PDF·문서를 AI에게 보내 읽는 데 동의합니다 (필수)"
+      sensitiveLabel="서류에 든 건강·범죄경력 같은 민감정보 처리에 동의합니다 (필수)"
+      acceptLabel={auto ? "동의하고 바로 분석하기" : "동의하고 서류 읽기"}
+      onAccept={onAccept}
+      onClose={onClose}
+    />
   );
 }
 
@@ -332,10 +288,7 @@ function Review({
         </ul>
       )}
       {findings.length > 0 && (
-        <p className="text-muted mt-2 text-[13px]">
-          가린 개인정보:{" "}
-          {findings.map((f) => `${PII_LABEL[f.type] ?? f.type} ${f.count}`).join(" · ")}
-        </p>
+        <p className="text-muted mt-2 text-[13px]">가린 개인정보: {piiSummary(findings)}</p>
       )}
 
       {dropped > 0 && (

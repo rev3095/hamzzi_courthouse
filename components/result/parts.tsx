@@ -10,8 +10,21 @@ export function AiNotice({ notice = AI_NOTICE }: { notice?: string }) {
 }
 
 /** 사용자가 보낸 질문의 마스킹본. 이 기기에 없으면 표시하지 않는다 */
-export function QuestionQuote({ text }: { text: string | null }) {
+/** 질문 인용. clamp면 네 줄까지만 보이고 '전체 보기'로 펼친다 (긴 질문이 로딩 화면을 덮지 않게, DEC-067) */
+export function QuestionQuote({ text, clamp = false }: { text: string | null; clamp?: boolean }) {
   if (!text) return null;
+  if (clamp && [...text].length > 160) {
+    return (
+      <details className="rounded-card bg-soft text-ink group mt-4 px-4 py-3 text-[15px] leading-relaxed">
+        <summary className="cursor-pointer list-none">
+          <span className="line-clamp-4 group-open:line-clamp-none">“{text}”</span>
+          <span className="text-link mt-1 inline-block text-[13px] underline group-open:hidden">
+            전체 보기
+          </span>
+        </summary>
+      </details>
+    );
+  }
   return (
     <p className="rounded-card bg-soft text-ink mt-4 px-4 py-3 text-[15px] leading-relaxed">
       “{text}”

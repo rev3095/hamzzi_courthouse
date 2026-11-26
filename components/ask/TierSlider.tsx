@@ -4,7 +4,7 @@
 // 설명 문구는 답변 방식의 사실만 적는다. 정확도·유불리를 약속하지 않는다 (절대 규칙 2).
 // 화면에는 실제 모델 이름을 싣지 않는다 (2026-11-19 사용자 요청) — 모델은 lib/ai/models.ts TIERS에만 있다.
 import { useId } from "react";
-import { TIER_IDS, type TierId } from "@/lib/ai/models";
+import { LONG_QUESTION_CHARS, TIER_IDS, type TierId } from "@/lib/ai/models";
 import { useTier, writeTier } from "@/lib/client/tier";
 import { useQuota } from "../useQuota";
 
@@ -14,7 +14,11 @@ export const TIER_TEXT: Record<TierId, { name: string; hint: string }> = {
   max: { name: "Pro Max", hint: "기본 · 답하기 전에 더 오래 생각하는 모델" },
 };
 
-export function TierSlider() {
+/** 긴 질문 안내 (DEC-062·067): 이만큼 넘게 적으면 고른 모드와 상관없이 자세히 분석(DeepSearch)으로 답한다 */
+export const LONG_QUESTION_NOTE = `${LONG_QUESTION_CHARS}자가 넘는 질문은 고른 모드와 상관없이 자세히 분석(DeepSearch)으로 답해요 · 일반 질문보다 시간이 더 걸려요`;
+
+/** locked = 지금 적은 질문이 길어 자세히 분석으로 답한다 — 슬라이더를 잠그고 그 사실을 알린다 */
+export function TierSlider({ locked = false }: { locked?: boolean }) {
   const id = useId();
   const tier = useTier();
   const quota = useQuota();
@@ -31,7 +35,7 @@ export function TierSlider() {
       <label htmlFor={id} className="text-muted text-[13px] font-semibold">
         답변 모드
       </label>
-      <div className="w-[168px] shrink-0">
+      <div className={`w-[168px] shrink-0 ${locked ? "opacity-40" : ""}`}>
         <div className="relative h-7">
           <input
             id={id}
@@ -40,9 +44,10 @@ export function TierSlider() {
             max={TIER_IDS.length - 1}
             step={1}
             value={index}
+            disabled={locked}
             onChange={(e) => writeTier(TIER_IDS[Number(e.target.value)])}
             aria-valuetext={`${text.name} · ${text.hint}`}
-            className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+            className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
           />
           <div className="bg-line absolute top-1/2 right-3 left-3 h-1 -translate-y-1/2 rounded-full" />
           <div
@@ -71,8 +76,9 @@ export function TierSlider() {
               key={t}
               type="button"
               tabIndex={-1}
+              disabled={locked}
               onClick={() => writeTier(t)}
-              className={`min-h-6 px-0.5 text-[12px] ${
+              className={`min-h-8 px-0.5 text-[12px] ${
                 t === tier ? "text-ink font-bold" : "text-muted"
               }`}
             >
@@ -82,7 +88,11 @@ export function TierSlider() {
         </div>
       </div>
       <p className="text-muted min-w-0 flex-1 text-[13px] leading-snug" aria-live="polite">
-        {text.hint} · 데모에서는 어느 모드든 무료예요
+        {locked ? (
+          <span className="text-ink font-semibold">{LONG_QUESTION_NOTE}</span>
+        ) : (
+          <>{text.hint} · 데모에서는 어느 모드든 무료예요</>
+        )}
       </p>
     </div>
   );

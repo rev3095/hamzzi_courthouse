@@ -20,7 +20,7 @@ function renderLease(extra: Partial<Parameters<typeof ResultPanel>[0]> = {}) {
     <ResultPanel
       result={resultOf(lease.question)}
       question={lease.question}
-      followUp={<textarea aria-label="심층 질문하기" />}
+      followUp={<textarea aria-label="이어 묻기" />}
       {...extra}
     />,
   );
@@ -36,7 +36,7 @@ describe("F-014 결과 요약형 레이아웃", () => {
       "현재 위 내용을 기반으로 먼저 내용증명을 추천드립니다",
       "세부 내용",
       "내용증명 바로 가기",
-      "심층 질문하기",
+      "이어 묻기",
     ].map((t) => text.indexOf(t));
     for (const i of order) expect(i).toBeGreaterThanOrEqual(0);
     expect([...order].sort((a, b) => a - b)).toEqual(order);

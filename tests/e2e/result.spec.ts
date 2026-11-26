@@ -37,7 +37,7 @@ test("F-014 절차 타임라인: 호버·포커스로 팝업, Esc로 닫고 '이
   // 이 단계 질문하기 → 입력란에 문장만 넣는다 (보내지 않음)
   await notice.click();
   await pop.getByRole("button", { name: "이 단계 질문하기" }).click();
-  const box = page.getByRole("textbox", { name: "심층 질문하기" });
+  const box = page.getByRole("textbox", { name: "이어 묻기" });
   await expect(box).toHaveValue(/내용증명을 보내려면/);
   await expect(box).toBeFocused();
   expect(calls.create).toHaveLength(0);

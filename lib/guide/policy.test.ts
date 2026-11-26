@@ -1,4 +1,5 @@
 // 햄찌 안내 챗봇 고정 문안 검사 (DEC-030). 문안을 바꾸면 절대 규칙 2·3 위반과 끊긴 링크를 여기서 막는다.
+import { LONG_QUESTION_CHARS } from "@/lib/ai/models";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
@@ -140,6 +141,7 @@ describe("햄찌 안내 문안 (DEC-030)", () => {
       seedPost: SEEDS.post,
       seedComment: SEEDS.comment,
       casefileImages: CASEFILE_LIMITS.maxImages,
+      longQuestionChars: LONG_QUESTION_CHARS,
     });
     expect([EXAMPLE_RATE, SEARCH_RATE, LOOKUP_RATE].map((r) => r.windowSeconds)).toEqual([
       3600, 3600, 3600,

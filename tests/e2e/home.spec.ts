@@ -174,9 +174,7 @@ test("F-003 AC2 결과 없음은 판례 부재를 단정하지 않는다", async
 test("F-002 이어 묻기는 앞 질문 id를 함께 보낸다", async ({ page }) => {
   const calls = await mockApi(page);
   await page.goto(`/inquiries/${INQ}`);
-  await page
-    .getByRole("textbox", { name: "심층 질문하기" })
-    .fill("차용증이 없어도 받을 수 있나요?");
+  await page.getByRole("textbox", { name: "이어 묻기" }).fill("차용증이 없어도 받을 수 있나요?");
   await page.getByRole("button", { name: "정리 시작" }).click();
   await expect.poll(() => calls.create.length).toBe(1);
   expect(calls.create[0]).toEqual({
@@ -218,7 +216,7 @@ test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 4/5");
-  await expect(page.getByText("오늘 남은 질문 4/5 · 심층 질문도 1번으로 세요")).toBeVisible();
+  await expect(page.getByText("오늘 남은 질문 4/5 · 이어 묻기도 1번으로 세요")).toBeVisible();
   await page.getByRole("link", { name: "새 질문" }).click();
   await page.waitForURL("**/");
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 4/5");

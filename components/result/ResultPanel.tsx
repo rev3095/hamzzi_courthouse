@@ -2,7 +2,7 @@
 // 결과 패널 (S-04, F-003~F-006, F-014 데모 축소판 DEC-021). 답변 요약형 순서:
 // AI 고지 → 질문 → 판사 → 제목 → 답변 먼저(한눈에 보기 + 검증된 답변 문단, 2026-11-24) → 사실 요약(근거 개수·추천 첫 단계 난이도)
 // → 절차 타임라인(또는 유형 안내) → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·법령·판례·검증 탭·더 찾아본 과정)
-// → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·심층 질문하기) → 의견 → 법제처 출처.
+// → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·이어 묻기) → 의견 → 법제처 출처.
 // 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
 // 문서 작성은 DEC-055로 모두에게 열려 있어 '바로 가기'는 작성 화면(무료 AI 대리 작성)으로 간다.
 import { rememberSearch } from "../search/parts";
@@ -59,7 +59,7 @@ export function ResultPanel({
   footer?: React.ReactNode;
   /** 타임라인 단계의 "이 단계 질문하기" — 이어 묻기 입력란에 문장을 넣는다 */
   onAskStep?: (question: string) => void;
-  /** "심층 질문하기" — 이어 묻기 입력란으로 이동 */
+  /** "이어 묻기" — 이어 묻기 입력란으로 이동 */
   onDeepAsk?: () => void;
   /** 이 결과의 질문 번호 — 문서 작성 안내에 ?from=으로 넘겨 초안 도우미(DEC-023)가 쓴다 */
   inquiryId?: string;
@@ -424,7 +424,7 @@ function NextSteps({
           className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4 text-left"
         >
           <span>
-            <span className="block text-base font-bold">심층 질문하기</span>
+            <span className="block text-base font-bold">이어 묻기</span>
             <span className="text-muted mt-0.5 block text-[13px]">
               위 입력란에 이 사건을 더 물어보세요 · 질문 1번으로 세요
             </span>
