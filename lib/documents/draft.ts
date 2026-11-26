@@ -85,6 +85,12 @@ const PARTY_WORDS: Record<DocumentKind, { me: string; other: string }> = {
   "civil-mediation": { me: "신청인", other: "피신청인" },
   "financial-mediation": { me: "신청인", other: "피신청인" },
   "property-disclosure": { me: "채권자", other: "채무자" },
+  "defamation-complaint": { me: "고소인", other: "피고소인" },
+  "trade-fraud-complaint": { me: "고소인", other: "피고소인" },
+  "obscenity-complaint": { me: "고소인", other: "피고소인" },
+  answer: { me: "피고", other: "원고" },
+  "order-objection": { me: "채무자", other: "채권자" },
+  "decision-objection": { me: "피고", other: "원고" },
 };
 
 /** 원고·피고 / 보내는 사람·받는 사람 / 신청인·피신청인 / 채권자·채무자를 문장에서 부르는 말 */

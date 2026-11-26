@@ -27,7 +27,14 @@ export type DocumentKind =
   | "lease-mediation"
   | "civil-mediation"
   | "financial-mediation"
-  | "property-disclosure";
+  | "property-disclosure"
+  // 전문 에이전트 갈래 서식 (lib/documents/specs/assistant.ts)
+  | "defamation-complaint"
+  | "trade-fraud-complaint"
+  | "obscenity-complaint"
+  | "answer"
+  | "order-objection"
+  | "decision-objection";
 
 export type OfficialLink = { label: string; url: string };
 
