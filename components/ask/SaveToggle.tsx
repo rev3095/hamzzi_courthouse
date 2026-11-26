@@ -8,8 +8,8 @@ import { useQuota } from "../useQuota";
 export function SaveToggle() {
   const quota = useQuota();
   const save = useSave();
-  // 비로그인·관리자 모드 질문은 기록에 남지 않는다
-  if (!GOOGLE_LOGIN_ENABLED || !quota || quota.anonymous || quota.admin) return null;
+  // 비로그인 질문은 기록에 남지 않는다. 로그인한 본인이 관리자 모드로 한 질문은 본인 기록에 남으므로(2026-11-25 사용자 결정) 그때도 보인다
+  if (!GOOGLE_LOGIN_ENABLED || !quota || quota.anonymous) return null;
   return (
     <label className="text-ink mx-3 mt-1 flex min-h-11 items-center gap-2.5 text-[13px]">
       <input

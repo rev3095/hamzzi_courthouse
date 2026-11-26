@@ -34,6 +34,7 @@ import {
 } from "@/lib/client/api";
 import { sourceRef } from "@/components/result/labels";
 import { AttachButton, AttachTray } from "@/components/ask/AttachTray";
+import { SaveToggle } from "@/components/ask/SaveToggle";
 import { askErrorText, useAsk } from "@/components/ask/useAsk";
 import { useAttachments } from "@/components/ask/useAttachments";
 import { useMaterialsAsk } from "@/components/ask/useMaterialsAsk";
@@ -323,6 +324,8 @@ export function AssistantChat({
           </button>
         </div>
         {!compact && <AttachTray attach={attach} noun="자료" />}
+        {/* 기록 저장은 이 기기의 선택을 그대로 따르므로 대화 화면에서도 보이고 바꿀 수 있게 둔다 (DEC-039·067) */}
+        {!compact && <SaveToggle />}
         {!compact && attached && (
           <p className="hza-muted mt-2 text-[13px] leading-relaxed">
             보내기를 누르면 동의를 받은 뒤 AI가 붙인 자료를 읽고, 읽은 내용을 확인한 다음 질문해요.

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CommunityBoard } from "@/components/community/Community";
 
-export const metadata: Metadata = { title: "커뮤니티 · 햄찌법원" };
+export const metadata: Metadata = { title: "광장 · 햄찌법원" };
 
 export default function Page() {
   return (
