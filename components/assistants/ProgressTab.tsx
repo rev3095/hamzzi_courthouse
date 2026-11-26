@@ -19,6 +19,17 @@ import {
   type ProcedureStep,
   type TrackKey,
 } from "@/lib/procedure/steps";
+import {
+  PATH_KINDS,
+  PATH_KIND_LABEL,
+  PATH_LEAD,
+  PATH_SIDES,
+  PATH_SIDE_LABEL,
+  assistantPaths,
+  hasPaths,
+  type PathKind,
+  type PathSide,
+} from "@/lib/assistants/paths";
 import { loadThread } from "./AssistantChat";
 
 type AnyTrack = {
@@ -39,8 +50,14 @@ function tracksOf(a: Assistant): AnyTrack[] {
 }
 
 export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: string) => void }) {
-  const tracks = tracksOf(a);
-  const [at, setAt] = useState(0);
+  // 고소미·중고천국은 입장(하는 쪽 / 받은 쪽)과 형사·민사를 먼저 고른다 — 갈래마다 절차와 서식이 다르다 (lib/assistants/paths)
+  const branching = hasPaths(a.id);
+  const [side, setSide] = useState<PathSide>("claimant");
+  const [kind, setKind] = useState<PathKind>("criminal");
+  const tracks: AnyTrack[] = hasPaths(a.id) ? assistantPaths(a.id, side, kind) : tracksOf(a);
+  const [picked, setAt] = useState(0);
+  // 갈래를 바꾸면 그 갈래의 첫 분야부터 본다
+  const at = picked < tracks.length ? picked : 0;
   // 이 탭(브라우저)에서 이 에이전트와 나눈 마지막 질문 번호 — 서식 화면의 초안 도우미로 넘긴다. 없으면 설문만 쓴다
   const [inquiryId] = useState(() => loadThread(a.id).at(-1)?.id);
   const track = tracks[at];
@@ -51,9 +68,72 @@ export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: stri
   return (
     <section aria-label="진행 과정" className="mt-8">
       <p className="hza-muted max-w-[660px] text-[15px] leading-[1.75]">
-        분야를 고르고 단계에 커서를 올리거나 눌러 보세요. 준비할 것과 주의할 점, 서식 작성으로
-        이어져요. 사건마다 순서와 필요한 단계가 다를 수 있어요.
+        {branching ? "내 입장과 절차를 고른 뒤 " : "분야를 고르고 "}단계에 커서를 올리거나 눌러
+        보세요. 준비할 것과 주의할 점, 서식 작성으로 이어져요. 사건마다 순서와 필요한 단계가 다를 수
+        있어요.
       </p>
+
+      {branching && (
+        <div className="hza-card mt-5 px-5 py-5 sm:px-6" data-testid="path-picker">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <p className="hza-eyebrow" id={`hza-side-${a.id}`}>
+                내 입장
+              </p>
+              <div
+                role="radiogroup"
+                aria-labelledby={`hza-side-${a.id}`}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                {PATH_SIDES.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={side === v}
+                    onClick={() => {
+                      setSide(v);
+                      setAt(0);
+                    }}
+                    className="hza-pick"
+                  >
+                    {PATH_SIDE_LABEL[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="hza-eyebrow" id={`hza-kind-${a.id}`}>
+                절차
+              </p>
+              <div
+                role="radiogroup"
+                aria-labelledby={`hza-kind-${a.id}`}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                {PATH_KINDS.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={kind === v}
+                    onClick={() => {
+                      setKind(v);
+                      setAt(0);
+                    }}
+                    className="hza-pick"
+                  >
+                    {PATH_KIND_LABEL[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="hza-muted mt-4 text-[14px] leading-[1.75]" aria-live="polite">
+            {PATH_LEAD[kind][side]}
+          </p>
+        </div>
+      )}
 
       {tracks.length > 1 && (
         <div role="radiogroup" aria-label="분야 고르기" className="mt-5 flex flex-wrap gap-2">
