@@ -210,6 +210,38 @@ describe("F-005 AC2 최종 결과 조립", () => {
     expect(citations).toEqual([]);
     expect(stats.removed).toBe(0);
   });
+
+  test("DEC-070 답변 먼저: 모델 문단의 인용이 있다고 확인되면 법제처 링크를 붙이고, 없다고 확인되면 문단을 뺀다", () => {
+    const { result, citations, stats } = assembleResult({
+      draft: draft([
+        {
+          text: "민법 제750조에 따라 손해배상을 청구해 볼 수 있습니다.",
+          source: "model",
+          quote: "",
+        },
+        { text: "대법원 2099다99999 판결이 있습니다.", source: "model", quote: "" },
+        { text: "형법 제311조를 살펴보세요.", source: "model", quote: "" },
+      ]),
+      evidence: evidence(),
+      checks: checks(
+        ok("민법 제750조"),
+        { citation: "2099다99999", exists: false, note: "사건번호 없음" },
+        { citation: "형법 제311조", exists: null, note: "확인 필요" },
+      ),
+    });
+    expect(result.answer.points.map((p) => [p.text.slice(0, 7), p.check, p.confirmed])).toEqual([
+      [
+        "민법 제750",
+        "model",
+        [{ label: "민법 제750조", url: expect.stringMatching(/^https:\/\/www\.law\.go\.kr\//) }],
+      ],
+      ["형법 제311", "model", undefined],
+    ]);
+    // 검증 탭에는 있다고 확인된 인용만, 모델 문단은 DB 인용 행을 만들지 않는다
+    expect(result.recheck.items).toEqual([{ citation: "민법 제750조", exists: true }]);
+    expect(citations).toEqual([]);
+    expect(stats.removedBy.not_confirmed).toBe(1);
+  });
 });
 
 describe("legal-reviewer 지적 보강 (F-005 ③ 법령명 연결·추출 빈틈)", () => {

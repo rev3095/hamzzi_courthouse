@@ -220,8 +220,10 @@ export async function runDeepAnalysis(
     };
   }
 
-  // ② 쟁점별 검색 (법제처, 무료). 쟁점의 법률에서 찾은 조문을 앞에 두고, 사연 전체 검색 결과를 뒤에 잇는다
-  const [byIssue, found] = await Promise.all([
+  // ② 쟁점별 검색 (법제처, 무료). 답변 먼저(DEC-070): 답변과 함께 돌리되 답변에는 넘기지 않고, 답변 뒤 근거 목록과
+  //    인용 확인에만 쓴다. 쟁점의 법률에서 찾은 조문을 앞에 두고, 사연 전체 검색 결과를 뒤에 잇는다
+  const EMPTY = { articles: [], cases: [], searches: [] } as Awaited<ReturnType<typeof freeSearch>>;
+  const searchRun = Promise.all([
     Promise.allSettled(
       struct.issues.map((i) =>
         i.lawName && i.lawKeywords.length > 0
@@ -231,24 +233,16 @@ export async function runDeepAnalysis(
     ),
     freeSearch(input.maskedText, {
       lawSource: source,
-      onStep: deps.onStep,
       caseHint: deps.caseHint,
       lawHints: deps.lawHints,
       wide: true,
       lawQuery: struct.lawQuery,
       caseQueries: struct.issues.flatMap((i) => (i.caseQuery ? [i.caseQuery] : [])).slice(0, 3),
-    }),
+    }).catch(() => EMPTY),
+    Promise.all((deps.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null))),
   ]);
-  const evidence = new EvidenceSet();
-  for (const r of byIssue)
-    if (r.status === "fulfilled") for (const a of r.value) evidence.addArticle(a);
-  for (const a of found.articles) evidence.addArticle(a);
-  // 지정한 판례는 검색 결과보다 앞에 둔다(넘기는 판례 수가 정해져 있다). 가져오지 못하면 빠진다
-  const pinned = await Promise.all(
-    (deps.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
-  );
-  for (const c of pinned) if (c) evidence.addCase(c);
-  for (const c of found.cases) evidence.addCase(c);
+  // 답변 호출에 넘기는 근거는 비어 있다 — 모든 문단이 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)
+  const answerEvidence = new EvidenceSet();
 
   // ③ 쟁점별 답변
   let points: DraftPoint[] = [];
@@ -257,7 +251,7 @@ export async function runDeepAnalysis(
   let materialRefs: MaterialRef[] = [];
   let plan: DeepPlan | null = null;
   let costCapped = false;
-  let keys = liteEvidenceKeys(evidence, {
+  let keys = liteEvidenceKeys(answerEvidence, {
     articles: DEEP_LIMITS.articles,
     cases: DEEP_LIMITS.cases,
   });
@@ -304,7 +298,7 @@ export async function runDeepAnalysis(
                         `<검토_메모>\n이 메모와 어긋나게 쓰지 않습니다. 메모의 내용도 근거 목록에 그 근거가 있을 때만 근거 문단으로 씁니다.\n${deps.notes}\n</검토_메모>`,
                       ]
                     : []),
-                  `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
+                  `<근거_목록>\n${liteDigest(answerEvidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
                   materialsInstruction(materials.length),
                 ]
@@ -335,7 +329,7 @@ export async function runDeepAnalysis(
             const mine = drafted.filter((p) => p.issue === n).slice(0, DEEP_LIMITS.pointsPerIssue);
             const screened = screenPoints(
               mine.map(({ text, source: src, quote }) => ({ text, source: src, quote })),
-              evidence,
+              answerEvidence,
             );
             points = [...points, ...screened.kept];
             dropped = [...dropped, ...screened.dropped];
@@ -359,6 +353,16 @@ export async function runDeepAnalysis(
       }
     }
   }
+
+  // 답변 뒤 법제처 확인 단계: 검색 결과로 근거 목록을 채운다 (진행 표시는 답변 → 법제처 순서)
+  deps.onStep?.({ stage: "search", message: STEP_MESSAGES.search });
+  const [byIssue, found, pinned] = await searchRun;
+  const evidence = new EvidenceSet();
+  for (const r of byIssue)
+    if (r.status === "fulfilled") for (const a of r.value) evidence.addArticle(a);
+  for (const a of found.articles) evidence.addArticle(a);
+  for (const c of pinned) if (c) evidence.addCase(c);
+  for (const c of found.cases) evidence.addCase(c);
 
   const draft = assembleDraft({
     maskedText: input.maskedText,

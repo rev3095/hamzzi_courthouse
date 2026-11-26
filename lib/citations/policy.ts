@@ -95,6 +95,30 @@ export function claimsInText(
   return { claims, unresolved };
 }
 
+/** 확인된 인용의 법제처 원문 주소: 근거 목록에 있으면 그 주소, 조문이면 법제처 조문 주소, 판례는 근거 목록에 있을 때만 */
+export function urlForClaim(c: Claim, evidence: EvidenceSet): string | undefined {
+  const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
+  if (c.kind === "case") {
+    const hit = evidence
+      .list()
+      .find((i) => i.kind === "case" && norm(i.ref.caseNo) === norm(c.citation));
+    return hit && hit.kind === "case" ? hit.ref.sourceUrl : undefined;
+  }
+  const m = c.citation.match(/^(.+?)\s+(제\s*\d+\s*조(?:\s*의\s*\d+)?)/);
+  if (!m) return undefined;
+  const [, lawName, articleNo] = m;
+  const hit = evidence
+    .list()
+    .find(
+      (i) =>
+        i.kind === "statute" &&
+        norm(i.ref.lawName) === norm(lawName) &&
+        norm(i.ref.articleNo) === norm(articleNo),
+    );
+  if (hit && hit.kind === "statute") return hit.ref.sourceUrl;
+  return `https://www.law.go.kr/${encodeURIComponent("법령")}/${encodeURIComponent(lawName.trim())}/${encodeURIComponent(norm(articleNo))}`;
+}
+
 /** 재조회할 조문·사건번호를 종류별로 중복 없이 모은다 */
 export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: string[] } {
   const statutes = new Set<string>();
@@ -106,7 +130,14 @@ export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: stri
 // ── 결과 조립 ────────────────────────────────────────────────
 
 /** verified·quote_mismatch = 법제처 근거 문단, model = 법제처 근거 없이 모델이 쓴 문단 (DEC-055, 재조회 안 함) */
-export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" | "model" };
+export type CheckedPoint = DraftPoint & {
+  check: "verified" | "quote_mismatch" | "model";
+  /**
+   * 답변 먼저(DEC-070): 모델이 쓴 문단 본문의 조문·사건번호 가운데 법제처에서 실존이 확인된 것.
+   * 원문 구절 대조는 하지 않은 "있음 확인"이다. url은 법제처 원문 주소(알 때만)
+   */
+  confirmed?: { label: string; url?: string }[];
+};
 
 /** API.md 4.1 DemoAnalysisResult */
 export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
@@ -185,7 +216,23 @@ export function assembleResult(input: {
 
   for (const p of draft.answer.points) {
     if (p.source === MODEL_SOURCE) {
-      kept.push({ ...p, quote: "", check: "model" });
+      // 답변 먼저(DEC-070): 본문 인용을 법제처에서 확인한다. 없다고 확인된 인용이 있으면 문단을 빼고,
+      // 있다고 확인된 것은 원문 링크와 함께 붙이며, 조회 실패·판정 불가는 그대로 둔다
+      const inText = claimsInText(p.text, evidence).claims;
+      if (inText.some((c) => checks.get(c.citation)?.exists === false)) {
+        removedBy.not_confirmed += 1;
+        continue;
+      }
+      const confirmed = inText
+        .filter((c) => checks.get(c.citation)?.exists === true)
+        .map((c) => ({ label: c.citation, url: urlForClaim(c, evidence) }));
+      for (const c of confirmed) confirmedCitations.add(c.label);
+      kept.push({
+        ...p,
+        quote: "",
+        check: "model",
+        ...(confirmed.length > 0 && { confirmed }),
+      });
       continue;
     }
     const sourceClaim = claimForKey(p.source, evidence);

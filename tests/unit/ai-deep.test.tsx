@@ -91,14 +91,14 @@ const ANSWER = {
     {
       issue: 1,
       text: "임대인이 정해진 기간에 갱신거절 통지를 하지 않았다면 같은 조건으로 다시 임대차한 것으로 봅니다.",
-      source: "law:주택임대차보호법:제6조",
-      quote: "전 임대차와 동일한 조건으로 다시 임대차한 것으로 본다",
+      source: "model",
+      quote: "",
     },
     {
       issue: 2,
       text: "법원은 보증금 반환과 집을 돌려주는 일이 동시이행 관계에 있다고 보았습니다.",
-      source: "case:2020다12345",
-      quote: "목적물 반환 의무는 동시이행 관계에 있다",
+      source: "model",
+      quote: "",
     },
     { issue: 2, text: "근거에 없는 출처 문단", source: "law:없는법:제1조", quote: "없음" },
   ],
@@ -230,7 +230,13 @@ describe("DEC-041 사건 구조와 시각자료", () => {
   const result = {
     aiNotice: "AI 생성 · 무료 법률 상담",
     deep: map,
-    answer: { points: [kept[1], kept[0]].map((p) => ({ ...p, check: "verified" })) },
+    // 답변 먼저(DEC-070): 모델 문단에 법제처에서 있다고 확인된 인용이 붙는다
+    answer: {
+      points: [
+        { ...kept[1], check: "model", confirmed: [{ label: "2020다12345" }] },
+        { ...kept[0], check: "model", confirmed: [{ label: "주택임대차보호법 제6조" }] },
+      ],
+    },
     articles: [{ ...ART, used: true }],
     cases: [{ ...CASE, used: true }],
   } as unknown as DemoAnalysisResult;
@@ -245,7 +251,7 @@ describe("DEC-041 사건 구조와 시각자료", () => {
   });
 
   test("쟁점마다 쓴 근거 이름을 모은다", () => {
-    expect(issueSources(map, result)).toEqual([["주택임대차보호법 제6조"], ["대법원 2020다12345"]]);
+    expect(issueSources(map, result)).toEqual([["주택임대차보호법 제6조"], ["2020다12345"]]);
   });
 
   test("구조도·사실관계 흐름·쟁점별 근거·확인할 사실을 그리고, AI 고지를 붙인다. 유불리 표현은 없다", () => {

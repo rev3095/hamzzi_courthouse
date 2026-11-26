@@ -34,8 +34,12 @@ export function issueSources(map: DeepMap, result: Result): string[][] {
     const labels: string[] = [];
     for (const i of issue.points) {
       const p = result.answer.points[i];
-      // 모델이 쓴 문단(DEC-055)은 출처 칩·근거 수에 넣지 않는다 (사용자 결정: 따로 표시하지 않음)
-      if (!p || p.check === "model") continue;
+      if (!p) continue;
+      // 모델이 쓴 문단(DEC-055·070)은 법제처에서 있다고 확인된 인용만 칩으로 넣는다
+      if (p.check === "model") {
+        for (const c of p.confirmed ?? []) if (!labels.includes(c.label)) labels.push(c.label);
+        continue;
+      }
       const label = sourceRef(p.source, result as DemoAnalysisResult).label;
       if (!labels.includes(label)) labels.push(label);
     }

@@ -18,8 +18,11 @@ export async function verifyDraft(
   const sourceClaims: Claim[] = [];
   const textClaims: Claim[] = [];
   for (const p of draft.answer.points) {
-    // 모델이 직접 쓴 문단(DEC-055)은 재조회하지 않는다
-    if (p.source === MODEL_SOURCE) continue;
+    // 답변 먼저(DEC-070): 모델이 쓴 문단도 본문에 적힌 조문·사건번호를 법제처에서 실존 확인한다
+    if (p.source === MODEL_SOURCE) {
+      textClaims.push(...claimsInText(p.text, evidence).claims);
+      continue;
+    }
     const c = claimForKey(p.source, evidence);
     if (c) sourceClaims.push(c);
     textClaims.push(...claimsInText(p.text, evidence).claims);
