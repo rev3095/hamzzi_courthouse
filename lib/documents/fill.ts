@@ -2,6 +2,14 @@
 // 신청취지·청구취지·신청이유의 기본 문장은 법원 서식·기재례의 고정 문장에 사용자가 적은 값만 넣는다.
 // 숫자는 사용자가 적은 값(날짜·금액·이율)과 목록 번호뿐이다 — 이자·비용을 셈하지 않는다(독촉절차비용 합계는 사용자가 적은 두 값의 덧셈만).
 import type { DocumentKind } from "@/lib/procedure/steps";
+import {
+  answer,
+  decisionObjection,
+  defamationComplaint,
+  obscenityComplaint,
+  orderObjection,
+  tradeFraudComplaint,
+} from "./fill-assistant";
 import { compensationOrder, criminalComplaint } from "./fill-criminal";
 import { dismissalRemedy, dismissalReview, wageAdvance, wagePetition } from "./fill-labor";
 import {
@@ -48,6 +56,38 @@ export function fillBlocks(
       return { title: "지급명령 신청서", basename: "지급명령신청서", blocks: paymentOrder(v) };
     case "complaint":
       return { title: "소장", basename: "소장", blocks: complaint(v) };
+    case "defamation-complaint":
+      return {
+        title: "간이고소장 (모욕·명예훼손)",
+        basename: "간이고소장_모욕_명예훼손",
+        blocks: defamationComplaint(v),
+      };
+    case "trade-fraud-complaint":
+      return {
+        title: "고소장 (중고거래 사기)",
+        basename: "고소장_중고거래사기",
+        blocks: tradeFraudComplaint(v),
+      };
+    case "obscenity-complaint":
+      return {
+        title: "고소장 (통신매체이용음란)",
+        basename: "고소장_통신매체이용음란",
+        blocks: obscenityComplaint(v),
+      };
+    case "answer":
+      return { title: "답변서", basename: "답변서", blocks: answer(v) };
+    case "order-objection":
+      return {
+        title: "지급명령에 대한 이의신청서",
+        basename: "지급명령_이의신청서",
+        blocks: orderObjection(v),
+      };
+    case "decision-objection":
+      return {
+        title: "이행권고결정에 대한 이의신청서",
+        basename: "이행권고결정_이의신청서",
+        blocks: decisionObjection(v),
+      };
     case "criminal-complaint":
       return { title: "고소장 (사기)", basename: "고소장_사기", blocks: criminalComplaint(v) };
     case "compensation-order":
@@ -61,7 +101,11 @@ export function fillBlocks(
         blocks: wageAdvance(v),
       };
     case "dismissal-remedy":
-      return { title: "부당해고 구제신청서", basename: "부당해고구제신청서", blocks: dismissalRemedy(v) };
+      return {
+        title: "부당해고 구제신청서",
+        basename: "부당해고구제신청서",
+        blocks: dismissalRemedy(v),
+      };
     case "dismissal-review":
       return {
         title: "부당해고 구제 재심신청서",

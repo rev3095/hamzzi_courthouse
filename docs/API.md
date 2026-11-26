@@ -385,7 +385,7 @@ PRD의 법률 게이트는 F-010~F-012(`lawyer_verification`·`brief_posting`·`
 | 메서드 · 경로 | 인증 | 설명 | 게이트 키 | F-ID |
 |---|---|---|---|---|
 | GET `/procedures?caseType=` | user | 절차 단계·기간·난이도 라벨 | `procedure_guide` | F-014 |
-| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`·`wage-petition`·`wage-advance`·`dismissal-remedy`·`dismissal-review`·`lease-mediation`·`civil-mediation`·`financial-mediation`·`property-disclosure`) | anon·user | 단계별 공식 서식 14종(lib/documents/README.md 표) 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | — (DEC-055) | F-013 (DEC-022·025) |
+| POST `/documents/{kind}` (`demand-letter`·`lease-registration`·`payment-order`·`complaint`·`criminal-complaint`·`compensation-order`·`wage-petition`·`wage-advance`·`dismissal-remedy`·`dismissal-review`·`lease-mediation`·`civil-mediation`·`financial-mediation`·`property-disclosure`·`defamation-complaint`·`trade-fraud-complaint`·`obscenity-complaint`·`answer`·`order-objection`·`decision-objection`) | anon·user | 단계별 공식 서식 14종(lib/documents/README.md 표) 양식 채우기(템플릿, LLM 없음, 저장 안 함). 화면은 같은 `fillDocument`를 브라우저에서 실행하고 HWPX·DOCX·PDF도 브라우저에서 만들어 이 API를 쓰지 않는다 | — (DEC-055) | F-013 (DEC-022·025) |
 | POST `/documents/{kind}/draft` | 질문 소유자 | 초안 도우미(무료 AI 대리 작성): 질문 마스킹본으로 규칙 칸 + Haiku 사실관계·법적 근거 초안(1건 $0.0015, 저장 안 함) | — (DEC-055) | DEC-023·055 |
 | POST `/inquiries/{id}/agent/messages` | 소유자 | 방향 제안·동의/비동의 대화 | `consult_agent` | F-008 |
 | POST `/inquiries/{id}/summary` | 소유자 | 사건 요약서 생성 | `consult_agent` | F-008 AC2 |

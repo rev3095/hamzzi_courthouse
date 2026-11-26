@@ -12,6 +12,8 @@ import {
   allPaths,
   assistantPaths,
   hasPaths,
+  type PathKind,
+  type PathSide,
 } from "./paths";
 
 /** lib/procedure/policy.test.ts와 같은 숫자 규칙: 아라비아 숫자, 한글 수사 + 기간·금액 단위 */
@@ -83,6 +85,36 @@ describe("F-018 진행 과정 갈래 (입장 × 형사·민사)", () => {
     expect(cautions).not.toMatch(/결과가 정해지는 것은 아니에요/);
     expect(cautions).toMatch(/고소를 취소하거나 처벌을 원하지 않는다는 뜻/);
     expect(cautions).toMatch(/직접 연락하지 말고/);
+  });
+
+  test("갈래마다 쓸 수 있는 서식이 다르다 (고소당한 쪽 형사 갈래만 서식이 없다)", () => {
+    const formsOf = (id: "report" | "market", side: PathSide, kind: PathKind) =>
+      [
+        ...new Set(
+          assistantPaths(id, side, kind).flatMap((p) => [
+            ...p.steps.flatMap((s) => (s.document ? [s.document] : [])),
+            ...(p.forms ?? []).map((f) => f.kind),
+          ]),
+        ),
+      ].sort();
+    expect(formsOf("market", "claimant", "criminal")).toEqual(
+      ["compensation-order", "criminal-complaint", "trade-fraud-complaint"].sort(),
+    );
+    expect(formsOf("market", "claimant", "civil")).toEqual(
+      ["complaint", "demand-letter", "payment-order", "property-disclosure"].sort(),
+    );
+    expect(formsOf("report", "claimant", "criminal")).toEqual(
+      ["defamation-complaint", "obscenity-complaint"].sort(),
+    );
+    expect(formsOf("report", "claimant", "civil")).toEqual(
+      ["complaint", "demand-letter", "property-disclosure"].sort(),
+    );
+    for (const id of ["report", "market"] as const) {
+      expect(formsOf(id, "respondent", "civil")).toEqual(
+        ["answer", "decision-objection", "order-objection"].sort(),
+      );
+      expect(formsOf(id, "respondent", "criminal")).toEqual([]);
+    }
   });
 
   test("절대 규칙 3 숫자(기간·금액)를 넣지 않는다", () => {

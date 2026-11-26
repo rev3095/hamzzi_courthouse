@@ -6,7 +6,13 @@
 // 문안 검사는 paths.test.ts (숫자·단정·판정 표현, 공식 링크, 단계 구성).
 // 형사에는 원고·피고가 없어 화면 이름은 '고소·청구하는 쪽 / 고소·청구를 받은 쪽'으로 쓰고, 갈래마다 부르는 이름(고소인·피의자·원고·피고)을 따로 알려 준다.
 import { LIFE_TRACKS, type LifeTrackKey } from "@/lib/procedure/life-tracks";
-import { OFFICIAL, TRACKS, type ProcedureStep, type TrackKey } from "@/lib/procedure/steps";
+import {
+  OFFICIAL,
+  TRACKS,
+  type DocumentKind,
+  type ProcedureStep,
+  type TrackKey,
+} from "@/lib/procedure/steps";
 import type { AssistantId } from "./agents";
 
 export const PATH_SIDES = ["claimant", "respondent"] as const;
@@ -45,6 +51,8 @@ export type AssistantPath = {
   /** 먼저 살펴볼 단계 키 (규칙으로 고정) */
   recommended: string;
   note?: string;
+  /** 단계에 붙은 서식 말고 이 갈래에서 함께 쓸 수 있는 서식 */
+  forms?: { label: string; kind: DocumentKind }[];
 };
 
 /** 이 에이전트가 갈래 고르기를 쓰는지 (내집마련은 분야별 타임라인만 본다) */
@@ -188,6 +196,7 @@ function suedSteps(records: string[]): ProcedureStep[] {
         "지급명령이나 이행권고결정에 이의를 내면 소송 절차로 이어져요.",
       ],
       links: [OFFICIAL.ecfs],
+      document: "answer",
       question: "답변서나 지급명령 이의신청서는 어떻게 쓰고 어디에 내나요?",
     },
     {
@@ -229,15 +238,26 @@ function suedSteps(records: string[]): ProcedureStep[] {
 
 const CIVIL_ELSEWHERE = "손해배상은 민사 절차에서 따로 청구할 수 있어요.";
 
-function criminalOf(key: string, title?: string): AssistantPath {
+/** 고소·신고 단계에 붙일 서식 (분야마다 공식 양식이 다르다) */
+const COMPLAINT_FORM: Record<string, DocumentKind> = {
+  defamation: "defamation-complaint",
+  insult: "defamation-complaint",
+  fraud: "trade-fraud-complaint",
+};
+
+function criminalOf(key: string, title?: string, forms?: AssistantPath["forms"]): AssistantPath {
   const t = track(key);
-  const steps = t.steps.filter((s) => !isCivilStep(s));
+  const form = COMPLAINT_FORM[key];
+  const steps = t.steps
+    .filter((s) => !isCivilStep(s))
+    .map((s) => (form && s.key === "report" ? { ...s, document: form } : s));
   return {
     key: `${key}-criminal`,
     section: sectionOf("claimant", "criminal"),
     title: title ?? t.title,
     steps,
     recommended: steps.some((s) => s.key === t.recommended) ? t.recommended : steps[0].key,
+    ...(forms && { forms }),
     note:
       t.note && /민사|손해배상/.test(t.note)
         ? t.note
@@ -249,10 +269,9 @@ function criminalOf(key: string, title?: string): AssistantPath {
 
 const MONEY = (k: string) => step("money", k);
 
-/** 글·욕설 피해의 내용증명: 금액 요구 서식(demand-letter)과 내용이 달라 서식 연결은 두지 않는다 */
+/** 글·욕설 피해의 내용증명: 내용증명 서식(demand-letter)은 제목·사실·요구를 직접 적는 틀이라 그대로 쓴다 (예시는 lib/documents/examples.ts) */
 const harmNotice = (online: boolean): ProcedureStep => ({
   ...MONEY("notice"),
-  document: undefined,
   prepare: [
     "상대방 이름과 주소",
     online ? "요구하는 내용 (게시물 삭제, 사과, 손해배상)" : "요구하는 내용 (사과, 손해배상)",
@@ -282,6 +301,7 @@ const HARM_SUIT: ProcedureStep = {
     "절차가 복잡해 전문가 상담을 권해요.",
   ],
   links: [OFFICIAL.ecfs, OFFICIAL.klac],
+  document: "complaint",
   question: "욕설·명예훼손 피해로 손해배상 소송을 내려면 무엇을 준비해야 하나요?",
 };
 
@@ -330,6 +350,12 @@ const respondentPath = (
   title,
   steps,
   recommended: steps[0].key,
+  ...(kind === "civil" && {
+    forms: [
+      { label: "지급명령에 대한 이의신청서", kind: "order-objection" as const },
+      { label: "이행권고결정에 대한 이의신청서", kind: "decision-objection" as const },
+    ],
+  }),
   note:
     kind === "criminal"
       ? "이 안내는 절차의 순서를 알려 줄 뿐이에요. 조사에서 어떻게 말할지는 사건마다 달라 전문가 상담을 권해요."
@@ -342,7 +368,9 @@ const PATHS: Record<"report" | "market", Record<PathKind, Record<PathSide, Assis
       claimant: [
         criminalOf("defamation"),
         criminalOf("insult"),
-        criminalOf("sex_crime"),
+        criminalOf("sex_crime", undefined, [
+          { label: "통신매체이용음란 고소장", kind: "obscenity-complaint" },
+        ]),
         criminalOf("stalking"),
       ],
       respondent: [
@@ -375,7 +403,11 @@ const PATHS: Record<"report" | "market", Record<PathKind, Record<PathSide, Assis
   },
   market: {
     criminal: {
-      claimant: [criminalOf("fraud", "거래 사기 고소")],
+      claimant: [
+        criminalOf("fraud", "거래 사기 고소", [
+          { label: "간이고소장 (사기)", kind: "criminal-complaint" },
+        ]),
+      ],
       respondent: [
         respondentPath(
           "trade-accused",

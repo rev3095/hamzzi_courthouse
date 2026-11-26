@@ -39,6 +39,7 @@ type AnyTrack = {
   steps: ProcedureStep[];
   recommended: string;
   note?: string;
+  forms?: { label: string; kind: string }[];
 };
 
 function tracksOf(a: Assistant): AnyTrack[] {
@@ -62,7 +63,23 @@ export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: stri
   const [inquiryId] = useState(() => loadThread(a.id).at(-1)?.id);
   const track = tracks[at];
   if (!track) return null;
-  const withForm = track.steps.filter((s) => s.document);
+  // 서식: 단계에 붙은 것 + 이 갈래에서 함께 쓸 수 있는 것
+  const forms = [
+    ...track.steps
+      .filter((s) => s.document)
+      .map((s) => ({
+        key: s.key,
+        no: track.steps.indexOf(s) + 1,
+        label: `${s.label} 서식 쓰기`,
+        kind: s.document as string,
+      })),
+    ...(track.forms ?? []).map((f) => ({
+      key: f.kind,
+      no: 0,
+      label: `${f.label} 쓰기`,
+      kind: f.kind,
+    })),
+  ];
   const from = inquiryId ? `?from=${encodeURIComponent(inquiryId)}` : "";
 
   return (
@@ -173,26 +190,29 @@ export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: stri
       {/* 서식 작성: 공식 서식이 준비된 단계만 */}
       <div className="mt-8">
         <h3 className="hza-title text-[17px] font-bold">서식 작성</h3>
-        {withForm.length > 0 ? (
+        {forms.length > 0 ? (
           <>
             <p className="hza-muted mt-1.5 text-[14px] leading-[1.75]">
+              설문에 답하면 공식 양식의 순서대로 서식이 채워지고, 한글·워드·PDF로 내려받아요. 서식
+              화면에서 가상 예시 문서도 볼 수 있어요.{" "}
               {inquiryId
-                ? "설문에 답하면 서식 칸이 채워져요. 이 에이전트와 나눈 마지막 질문의 사연으로 초안을 채우는 AI 도우미도 쓸 수 있어요."
-                : "설문에 답하면 서식 칸이 채워져요. 대화 탭에서 먼저 질문하면 그 사연으로 초안을 채우는 AI 도우미도 쓸 수 있어요."}{" "}
-              완성한 서식은 한글·워드·PDF로 내려받아요.
+                ? "일부 서식은 이 에이전트와 나눈 마지막 질문의 사연으로 초안을 채우는 AI 도우미를 쓸 수 있어요(고소장은 직접 적어요)."
+                : "대화 탭에서 먼저 질문하면 일부 서식은 그 사연으로 초안을 채우는 AI 도우미를 쓸 수 있어요(고소장은 직접 적어요)."}
             </p>
             <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
-              {withForm.map((s) => (
-                <li key={s.key}>
+              {forms.map((f) => (
+                <li key={f.key}>
                   <Link
-                    href={`/documents/${s.document}${from}`}
+                    href={`/documents/${f.kind}${from}`}
                     className="hza-chip flex h-full w-full items-center justify-between gap-3"
                   >
                     <span className="font-semibold">
-                      <span className="hza-step-no mr-2.5" aria-hidden="true">
-                        {track.steps.indexOf(s) + 1}
-                      </span>
-                      {s.label} 서식 쓰기
+                      {f.no > 0 && (
+                        <span className="hza-step-no mr-2.5" aria-hidden="true">
+                          {f.no}
+                        </span>
+                      )}
+                      {f.label}
                     </span>
                     <span aria-hidden="true">→</span>
                   </Link>
