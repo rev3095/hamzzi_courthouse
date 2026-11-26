@@ -44,7 +44,7 @@ const TONES: Record<Tone, { fill: string; stroke: string; text: string; dash?: s
   dash: { fill: C.soft, stroke: C.line, text: C.ink, dash: "4 4" },
 };
 
-// 여백 원칙 (DEC-065): 상자 사이·상자 안을 넉넉히 둔다. 한 화면에 다 담으려고 줄이지 않고 ZoomPane에서 옮겨 본다
+// 여백 원칙 (DEC-066): 상자 사이·상자 안을 넉넉히 둔다. 한 화면에 다 담으려고 줄이지 않고 ZoomPane에서 옮겨 본다
 const PAD = 32;
 const GAP_X = 88;
 const GAP_Y = 22;

@@ -142,7 +142,7 @@ describe("F-015 AC1 동의 → AC3 확인", () => {
     expect(parties).toEqual(READING.parties);
   });
 
-  test("DEC-065 auto: 동의하면 읽은 내용으로 곧바로 분석을 보낸다 (동의 전에는 보내지 않는다)", async () => {
+  test("DEC-066 auto: 동의하면 읽은 내용으로 곧바로 분석을 보낸다 (동의 전에는 보내지 않는다)", async () => {
     const onAnalyze = vi.fn();
     render(
       <CaseFileFlow

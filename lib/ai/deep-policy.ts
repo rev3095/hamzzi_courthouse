@@ -234,7 +234,7 @@ export const DeepAnswerZ = z.object({
         z.object({ party: Str, side: Str, actions: z.array(Str), stance: Str.optional() }),
       ),
       prep: z.array(z.object({ item: Str, why: Str })),
-      // DEC-065: 예상 반론과 대응, 지금 작성할 문서
+      // DEC-066: 예상 반론과 대응, 지금 작성할 문서
       rebuttals: z
         .array(z.object({ issue: z.number().int(), by: Str, point: Str, reply: Str }))
         .optional(),
@@ -282,7 +282,7 @@ export const PLAN_LIMITS = {
 } as const;
 
 /**
- * 지금 내용으로 작성해 볼 문서 (DEC-065). 햄찌법원 문서 작성 화면(/documents/[kind])이 있는 서식만 고를 수 있다.
+ * 지금 내용으로 작성해 볼 문서 (DEC-066). 햄찌법원 문서 작성 화면(/documents/[kind])이 있는 서식만 고를 수 있다.
  * 이름은 고정 문안이다.
  */
 export const PLAN_DOCS = {
@@ -308,12 +308,12 @@ const planText = (raw: string, max: number, question: string): string | null => 
 
 export type DeepPlan = {
   kinds: CaseKind[];
-  /** stance = 그 당사자가 내세우는 입장 한 문장 (DEC-065) */
+  /** stance = 그 당사자가 내세우는 입장 한 문장 (DEC-066) */
   sides: { party: string; side: CaseSide; actions: string[]; stance?: string }[];
   prep: { item: string; why: string }[];
-  /** 쟁점마다 상대방이 내세울 수 있는 예상 반론과 대응 방향 (DEC-065). issue는 쟁점 번호(1부터) */
+  /** 쟁점마다 상대방이 내세울 수 있는 예상 반론과 대응 방향 (DEC-066). issue는 쟁점 번호(1부터) */
   rebuttals?: { issue: number; by: string; point: string; reply: string }[];
-  /** 지금 내용으로 작성해 볼 문서 (DEC-065) */
+  /** 지금 내용으로 작성해 볼 문서 (DEC-066) */
   docs?: { kind: PlanDocKind; why: string }[];
 };
 

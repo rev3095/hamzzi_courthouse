@@ -121,7 +121,7 @@ describe("DEC-062 사건 정리판 거르기", () => {
     expect(screenPlan(undefined, ["임차인"], q)).toBeNull();
   });
 
-  it("DEC-065 입장·예상 반론·작성할 문서: 구조의 당사자·쟁점 번호·정해진 서식만 남기고 판정 표현은 버린다", () => {
+  it("DEC-066 입장·예상 반론·작성할 문서: 구조의 당사자·쟁점 번호·정해진 서식만 남기고 판정 표현은 버린다", () => {
     const p = screenPlan(
       plan({
         sides: [
@@ -174,7 +174,7 @@ describe("DEC-062 사건 정리판 거르기", () => {
     expect(p?.docs).toEqual([{ kind: "demand-letter", why: "먼저 반환을 요구한 기록을 남긴다" }]);
   });
 
-  it("DEC-065 예전 정리판(반론·문서 없음)은 그 칸 없이 그대로 남는다", () => {
+  it("DEC-066 예전 정리판(반론·문서 없음)은 그 칸 없이 그대로 남는다", () => {
     const p = screenPlan(plan(), ["임차인", "임대인"], q);
     expect(p).not.toHaveProperty("rebuttals");
     expect(p).not.toHaveProperty("docs");

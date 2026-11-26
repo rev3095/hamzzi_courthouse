@@ -25,7 +25,7 @@ export function useCaseFileAsk(ask: {
   showLimit: () => void;
   /** 다른 흐름(자료 첨부 F-017)과 같은 사진을 쓸 때 넘긴다. 없으면 이 훅이 따로 갖는다 */
   attach?: Attachments;
-  /** 읽은 내용으로 곧바로 분석을 보낸다 (DEC-065, 홈 질문창) */
+  /** 읽은 내용으로 곧바로 분석을 보낸다 (DEC-066, 홈 질문창) */
   auto?: boolean;
 }) {
   const own = useAttachments();

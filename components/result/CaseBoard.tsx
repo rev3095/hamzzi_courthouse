@@ -148,7 +148,7 @@ function Lead({ children }: { children: React.ReactNode }) {
 
 // ── 개요: 한 장짜리 사건 구조도 ─────────────────────────────
 
-/** 지금 내용으로 작성해 볼 문서 (DEC-065) — 문서 작성 화면으로 잇는다. 초안 도우미가 이 질문의 사연으로 칸을 채운다 */
+/** 지금 내용으로 작성해 볼 문서 (DEC-066) — 문서 작성 화면으로 잇는다. 초안 도우미가 이 질문의 사연으로 칸을 채운다 */
 function PlanDocs({ map, inquiryId }: { map: DeepMap; inquiryId?: string }) {
   const docs = map.plan?.docs ?? [];
   if (docs.length === 0) return null;
@@ -565,7 +565,7 @@ function IssuesTab({ result, map, sources, file }: TabProps & { sources: string[
   );
 }
 
-/** 예상 반론과 대응 (DEC-065): 쟁점 → 상대방이 내세울 수 있는 반론 → 대비할 방향. 판정이 아니라 준비용이다 */
+/** 예상 반론과 대응 (DEC-066): 쟁점 → 상대방이 내세울 수 있는 반론 → 대비할 방향. 판정이 아니라 준비용이다 */
 function Rebuttals({ result, map, file }: TabProps) {
   const list = (map.plan?.rebuttals ?? []).filter((r) => map.issues[r.issue - 1]);
   if (list.length === 0) return null;
