@@ -1,59 +1,64 @@
 /*
  * 분야별 비서 스킨 (F-018, DEC-057). Figma에 없는 화면이라 사용자가 정한 색으로 만든다 (브랜드 토큰 밖 예외, PRD DEC-057).
- * 2026-11-26 사용자 요청으로 다시 잡았다: 색은 연하게(특히 고소미의 어두운 남색 바탕을 밝은 바탕으로), 세 비서는 같은 모양에
- * 색조만 다르게, 글줄·여백은 넉넉하게.
- * - 내집마련: 연한 하늘색
- * - 고소미: 연한 미색 바탕 · 차분한 남색 글자 · 금색 포인트 (어두운 바탕·깎은 모서리·글자 그라데이션은 쓰지 않는다)
- * - 중고천국: 연한 연두색 (두꺼운 테두리·어긋난 그림자·점무늬 바탕은 쓰지 않는다)
+ * 2026-11-26 사용자 요청: 세 비서의 색은 살리되 연하게, 포인트로만 입힌다.
+ *   바탕은 흰색에 가깝게 두고, 색은 머리 쪽 옅은 물듦·아이콘·고른 탭·버튼·말풍선 옆줄·단계 번호 같은 작은 자리에만 쓴다.
+ * - 내집마련: 하늘색
+ * - 고소미: 남색 + 금색 (어두운 바탕·깎은 모서리·글자 그라데이션은 쓰지 않는다)
+ * - 중고천국: 연두색 (두꺼운 테두리·어긋난 그림자·점무늬 바탕은 쓰지 않는다)
+ * 변수: tint = 옅게 물들이는 면, soft = 더 옅은 면, accent = 장식(선·테두리·점), strong = 흰 글자를 올리는 진한 면·링크.
  * 클래스는 hza- 접두어의 전역 CSS다 (CSS Modules는 이 저장소에서 쓰지 않는다 — CLAUDE.md 코드 구조).
- * 본문·보조 글자는 각 바탕에서 4.5:1 이상으로 골랐다 (색을 바꾸면 다시 계산한다).
+ * 본문·보조 글자는 각 바탕에서, 흰 글자는 strong 위에서 4.5:1 이상으로 골랐다 (색을 바꾸면 다시 계산한다).
  */
 
 [data-hza="home"] {
-  --hza-bg: #f5fafd;
+  --hza-bg: #f8fbfe;
+  --hza-tint: #dcedf9;
+  --hza-soft: #eef6fc;
   --hza-surface: #ffffff;
   --hza-ink: #23485f;
-  --hza-muted: #567085;
-  --hza-accent: #8cc3e6;
+  --hza-muted: #4f697e;
+  --hza-accent: #6bb4e0;
   --hza-strong: #2a6f9c;
   --hza-on-strong: #ffffff;
-  --hza-soft: #ebf5fb;
-  --hza-line: #d9eaf5;
+  --hza-line: #d3e6f3;
   --hza-link: #2a6f9c;
 }
 
 [data-hza="report"] {
-  --hza-bg: #f7f6f2;
+  --hza-bg: #f9f9fc;
+  --hza-tint: #e4e7f4;
+  --hza-soft: #f2f3f9;
   --hza-surface: #ffffff;
   --hza-ink: #2b3550;
-  --hza-muted: #646b7c;
-  --hza-accent: #d9c08a;
-  --hza-strong: #4a5a82;
+  --hza-muted: #5b6376;
+  --hza-accent: #c8aa6e;
+  --hza-strong: #3f4f80;
   --hza-on-strong: #ffffff;
-  --hza-soft: #f1eee6;
-  --hza-line: #e6e0d2;
+  --hza-line: #dfe2ee;
   --hza-link: #1b6f69;
-  /* 금색 글자 (작은 머리글·라벨) */
+  /* 금색 글자 (작은 머리글·라벨·아이콘) */
   --hza-accent-ink: #7d6126;
 }
 
 [data-hza="market"] {
-  --hza-bg: #f7fbf1;
+  --hza-bg: #f9fcf5;
+  --hza-tint: #e1f2c8;
+  --hza-soft: #eff7e3;
   --hza-surface: #ffffff;
   --hza-ink: #2d4420;
   --hza-muted: #5a7046;
-  --hza-accent: #a9d67a;
-  --hza-strong: #447a1f;
+  --hza-accent: #8cc84a;
+  --hza-strong: #3f7419;
   --hza-on-strong: #ffffff;
-  --hza-soft: #edf6df;
-  --hza-line: #dbeac6;
-  --hza-link: #447a1f;
+  --hza-line: #d6e8be;
+  --hza-link: #3f7419;
 }
 
 .hza-root {
-  --hza-radius: 16px;
+  --hza-radius: 18px;
   --hza-radius-s: 12px;
-  background: var(--hza-bg);
+  /* 머리 쪽만 옅게 물들이고 아래로 갈수록 바탕색으로 */
+  background: linear-gradient(180deg, var(--hza-tint) 0, var(--hza-bg) 300px) var(--hza-bg);
   color: var(--hza-ink);
 }
 
@@ -62,6 +67,21 @@
   background: var(--hza-surface);
   border: 1px solid var(--hza-line);
   border-radius: var(--hza-radius);
+  box-shadow: 0 14px 34px -28px color-mix(in srgb, var(--hza-strong) 55%, transparent);
+}
+
+/* 홈·목록의 비서 카드: 위쪽에 그 비서의 색 한 줄과 옅은 물듦 */
+.hza-root.hza-card {
+  background: linear-gradient(180deg, var(--hza-soft) 0, var(--hza-surface) 62%);
+  border-top: 3px solid var(--hza-accent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hza-root.hza-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px -24px color-mix(in srgb, var(--hza-strong) 60%, transparent);
 }
 
 .hza-muted {
@@ -81,9 +101,10 @@
   align-items: center;
   justify-content: center;
   color: var(--hza-accent-ink, var(--hza-strong));
-  background: var(--hza-soft);
-  border: 1px solid var(--hza-line);
+  background: var(--hza-surface);
+  border: 1.5px solid var(--hza-accent);
   border-radius: 999px;
+  box-shadow: 0 0 0 4px var(--hza-tint);
 }
 
 /* 작은 머리글 (한 화면에 몇 개만 쓴다) */
@@ -93,6 +114,21 @@
   color: var(--hza-accent-ink, var(--hza-strong));
 }
 
+/* 단계 번호 */
+.hza-step-no {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hza-accent-ink, var(--hza-strong));
+  background: var(--hza-tint);
+  border-radius: 999px;
+}
+
 /* 버튼 */
 .hza-btn {
   display: inline-flex;
@@ -100,15 +136,17 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 20px;
+  padding: 0 22px;
   font-weight: 700;
   background: var(--hza-strong);
   color: var(--hza-on-strong);
   border-radius: var(--hza-radius-s);
+  box-shadow: 0 8px 18px -12px var(--hza-strong);
 }
 
 .hza-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
+  box-shadow: none;
 }
 
 .hza-chip {
@@ -123,33 +161,72 @@
   background: var(--hza-surface);
   border: 1px solid var(--hza-line);
   border-radius: var(--hza-radius-s);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .hza-chip:hover {
-  border-color: var(--hza-strong);
+  background: var(--hza-soft);
+  border-color: var(--hza-accent);
 }
 
-/* 탭 */
+/* 화면 탭 (대화하기 | 미리 만든 질답 | 진행 과정): 한 줄 띠에 담고 고른 것만 색을 채운다 */
+.hza-tabs {
+  display: inline-flex;
+  max-width: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 5px;
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  border-radius: 999px;
+}
+
 .hza-tab {
-  min-height: 44px;
+  min-height: 42px;
+  flex-shrink: 0;
   padding: 0 18px;
   font-weight: 600;
   font-size: 15px;
+  white-space: nowrap;
   color: var(--hza-muted);
   border-radius: 999px;
 }
 
-.hza-tab[aria-selected="true"],
-.hza-tab[aria-checked="true"] {
+.hza-tab:hover {
   color: var(--hza-ink);
-  background: var(--hza-soft);
-  box-shadow: inset 0 0 0 1px var(--hza-line);
+}
+
+.hza-tab[aria-selected="true"] {
+  color: var(--hza-on-strong);
+  background: var(--hza-strong);
+}
+
+/* 고르기 (입장·분야): 고른 것은 옅은 색 면 + 색 테두리 */
+.hza-tab[aria-checked],
+.hza-pick {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--hza-muted);
+  background: var(--hza-surface);
+  border: 1px solid var(--hza-line);
+  border-radius: 999px;
+}
+
+.hza-tab[aria-checked="true"],
+.hza-pick[aria-checked="true"] {
+  color: var(--hza-ink);
+  background: var(--hza-tint);
+  border-color: var(--hza-accent);
 }
 
 /* 접는 묶음 (도움말·사례) */
 .hza-fold > summary {
   display: flex;
-  min-height: 52px;
+  min-height: 54px;
   cursor: pointer;
   list-style: none;
   align-items: center;
@@ -166,14 +243,22 @@
 
 .hza-fold > summary::after {
   content: "+";
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
-  font-size: 20px;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   font-weight: 400;
-  color: var(--hza-muted);
+  color: var(--hza-accent-ink, var(--hza-strong));
+  background: var(--hza-soft);
+  border-radius: 999px;
 }
 
 .hza-fold[open] > summary::after {
   content: "−";
+  background: var(--hza-tint);
 }
 
 .hza-fold + .hza-fold {
@@ -182,7 +267,7 @@
 
 /* 대화 */
 .hza-log {
-  background: var(--hza-surface);
+  background: var(--hza-soft);
 }
 
 .hza-me {
@@ -194,8 +279,8 @@
   line-height: 1.7;
   white-space: pre-wrap;
   color: var(--hza-ink);
-  background: var(--hza-soft);
-  border: 1px solid var(--hza-line);
+  background: var(--hza-tint);
+  border: 1px solid color-mix(in srgb, var(--hza-accent) 45%, transparent);
   border-radius: 16px 16px 4px 16px;
 }
 
@@ -206,8 +291,9 @@
   font-size: 15px;
   line-height: 1.8;
   color: var(--hza-ink);
-  background: var(--hza-bg);
+  background: var(--hza-surface);
   border: 1px solid var(--hza-line);
+  border-left: 3px solid var(--hza-accent);
   border-radius: 4px 16px 16px 16px;
 }
 
@@ -244,7 +330,7 @@
   text-underline-offset: 3px;
 }
 
-/* AI 고지: 연한 바탕에 진한 글자로 또렷하게 (절대 규칙 6) */
+/* AI 고지: 옅은 색 면에 진한 글자로 또렷하게 (절대 규칙 6) */
 .hza-notice {
   display: inline-block;
   margin-top: 10px;
@@ -252,8 +338,7 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--hza-ink);
-  background: var(--hza-soft);
-  border: 1px solid var(--hza-line);
+  background: var(--hza-tint);
   border-radius: 6px;
 }
 
@@ -277,8 +362,23 @@
 }
 
 .hza-input:focus {
-  border-color: var(--hza-strong);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hza-accent) 35%, transparent);
+  border-color: var(--hza-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hza-accent) 30%, transparent);
+}
+
+/* 사진·문서 붙이기 버튼 자리 */
+.hza-attach {
+  display: flex;
+  min-height: 56px;
+  align-self: stretch;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--hza-line);
+  border-radius: var(--hza-radius-s);
+}
+
+.hza-attach:hover {
+  border-color: var(--hza-accent);
 }
 
 /* 사례·세트 꼬리표 */
@@ -296,6 +396,93 @@
 .hza-case-kind[data-kind="fictional"] {
   color: var(--hza-muted);
   background: transparent;
+}
+
+/* 진행 과정: 한 줄 흐름 */
+.hza-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 8px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, var(--hza-soft) 0, var(--hza-surface) 100%);
+}
+
+.hza-flow > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hza-flow > li + li::before {
+  content: "→";
+  margin-right: 2px;
+  color: var(--hza-accent);
+}
+
+/* 진행 과정: 단계 표 */
+.hza-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.hza-table thead th {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hza-accent-ink, var(--hza-strong));
+  background: var(--hza-soft);
+}
+
+.hza-table tbody th,
+.hza-table tbody td {
+  padding: 20px;
+  vertical-align: top;
+  font-weight: 400;
+  border-top: 1px solid var(--hza-line);
+}
+
+.hza-table tbody th {
+  width: 30%;
+}
+
+.hza-table td ul {
+  list-style: disc;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.hza-table td li + li {
+  margin-top: 6px;
+}
+
+@media (max-width: 767px) {
+  .hza-table thead {
+    display: none;
+  }
+
+  .hza-table tbody tr,
+  .hza-table tbody th,
+  .hza-table tbody td {
+    display: block;
+    width: 100%;
+  }
+
+  .hza-table tbody td {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .hza-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hza-accent-ink, var(--hza-strong));
+  }
 }
 
 .hza-dots span {
@@ -329,5 +516,14 @@
 @media (prefers-reduced-motion: reduce) {
   .hza-dots span {
     animation: none;
+  }
+
+  .hza-root.hza-card,
+  .hza-chip {
+    transition: none;
+  }
+
+  .hza-root.hza-card:hover {
+    transform: none;
   }
 }

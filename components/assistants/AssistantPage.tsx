@@ -1,7 +1,7 @@
 "use client";
 // 분야별 비서 페이지 (F-018, DEC-057). 세 비서는 같은 배치·같은 대화 부품(AssistantChat)을 쓰고 색조만 다르다.
 // 화면 구성 (2026-11-26 사용자 요청 — 처음 본 사람이 바로 쓰게, 한눈에 들어오는 양만):
-//   머리(이름·한 줄 소개) → 탭(대화하기 | 미리 만든 질답) → 대화(첫 화면의 주된 행동) → 접어 둔 도움말 → 접어 둔 사례
+//   머리(이름·한 줄 소개) → 탭(대화하기 | 미리 만든 질답 | 진행 과정) → 대화(첫 화면의 주된 행동) → 접어 둔 도움말 → 접어 둔 사례
 // 도움말·사례는 처음에는 제목만 보이고 눌러서 펼친다. 모두 고정 문안이다 (모델 없음). 사례의 공개 판례는 /cases/{번호}에서 법제처 원문을 연다.
 // 아카이브의 '체험하기'는 대화 탭으로 돌아와 그 질문을 보낸다.
 import Link from "next/link";
@@ -20,6 +20,7 @@ import {
   type AssistantCase,
 } from "@/lib/assistants/cases";
 import { ArchiveTab } from "./ArchiveTab";
+import { ProgressTab } from "./ProgressTab";
 import { AssistantChat } from "./AssistantChat";
 import { AssistantEmblem } from "./AssistantIcon";
 import "./assistants.css";
@@ -34,7 +35,7 @@ export function AssistantRoute() {
 export function AssistantPage({ id }: { id: AssistantId }) {
   const a = ASSISTANTS[id];
   const [draft, setDraft] = useState("");
-  const [tab, setTab] = useState<"chat" | "archive">("chat");
+  const [tab, setTab] = useState<"chat" | "archive" | "progress">("chat");
   // 아카이브의 체험하기: 대화 탭으로 돌아와 그 질문을 보낸다 (key가 바뀔 때마다 한 번)
   const [autoSend, setAutoSend] = useState<{ text: string; key: number } | null>(null);
   const toInput = () =>
@@ -51,6 +52,16 @@ export function AssistantPage({ id }: { id: AssistantId }) {
   const put = (s: string) => {
     setDraft(s);
     document.getElementById(`hza-input-${id}-page`)?.focus({ preventScroll: true });
+    toInput();
+  };
+
+  // 진행 과정의 '이 단계 물어보기': 대화 탭으로 돌아와 그 단계 질문을 질문창에 넣는다 (보내지는 않는다)
+  const askStep = (q: string) => {
+    setTab("chat");
+    setDraft(q);
+    requestAnimationFrame(() =>
+      document.getElementById(`hza-input-${id}-page`)?.focus({ preventScroll: true }),
+    );
     toInput();
   };
 
@@ -79,7 +90,7 @@ export function AssistantPage({ id }: { id: AssistantId }) {
           </div>
         </header>
 
-        <div role="tablist" aria-label={`${a.name} 화면`} className="mt-8 flex gap-2">
+        <div role="tablist" aria-label={`${a.name} 화면`} className="hza-tabs mt-8">
           <button
             type="button"
             role="tab"
@@ -98,6 +109,15 @@ export function AssistantPage({ id }: { id: AssistantId }) {
           >
             미리 만든 질답
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "progress"}
+            onClick={() => setTab("progress")}
+            className="hza-tab"
+          >
+            진행 과정
+          </button>
         </div>
 
         <div hidden={tab !== "chat"}>
@@ -108,6 +128,7 @@ export function AssistantPage({ id }: { id: AssistantId }) {
           <Cases id={id} />
         </div>
         {tab === "archive" && <ArchiveTab assistant={id} onTry={tryQuestion} />}
+        {tab === "progress" && <ProgressTab a={a} onAsk={askStep} />}
       </div>
     </main>
   );
