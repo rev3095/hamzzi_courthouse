@@ -9,7 +9,10 @@ export type RecentItem = {
   sub: string;
   kind: string;
   at: number;
-  /** 보관함만 (DEC-072 ⓒ): 사용자가 붙인 폴더 이름·메모. 이 기기에만 두고 서버로 보내지 않는다 */
+  /**
+   * 보관함만 (DEC-072 ⓒ): 사용자가 붙인 폴더 이름·메모. 이 기기에만 두고 서버로 보내지 않는다
+   * (예외: 로그인 사용자가 '사건 노트로 보내기'를 직접 누르면 그 사건 노트로 저장된다, DEC-072 ⓓ)
+   */
   folder?: string;
   memo?: string;
 };

@@ -61,7 +61,10 @@ export default function PrivacyPage() {
           제목·주소·자료 종류와, 보관함은 법제처가 공개한 기관·날짜·번호로 만든 인용 표기, 그리고
           &lsquo;보관함 정리&rsquo;에서 직접 붙인 폴더 이름·메모만 이 브라우저의
           저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
-          &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
+          &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요. 로그인한 뒤
+          &lsquo;사건 노트로 보내기&rsquo;를 직접 누르면, 고른 자료의 제목·인용 표기·주소와 메모가
+          그 사건의 노트로 계정에 저장돼요(사건 진행 자료와 같은 규칙으로 연락처·계좌 같은 꼴은
+          가려요).
         </p>
         {googleLogin && (
           <p>

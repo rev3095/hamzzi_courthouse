@@ -1,6 +1,9 @@
 // DEC-072 ⓒ 보관함 정리: 폴더·메모는 이 기기(localStorage)에만, 내보내기는 담을 때 만든 인용 표기 그대로.
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+// 사건 노트로 보내기(DEC-072 ⓓ) 칸은 로그인 여부만 본다 — 여기서는 비로그인으로 두어 서버 호출이 없게 한다
+vi.mock("@/components/useQuota", () => ({ useQuota: () => ({ anonymous: true }) }));
 import { addPin, updatePin, type RecentItem } from "@/components/search/recent";
 import { exportShelf, folderNames, groupByFolder, NO_FOLDER } from "@/components/search/shelf";
 import { ShelfPage } from "@/components/search/ShelfPage";

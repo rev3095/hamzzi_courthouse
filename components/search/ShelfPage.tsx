@@ -15,6 +15,7 @@ import {
   type ExportFormat,
 } from "./shelf";
 import { SearchCredit } from "./parts";
+import { SendToMatter } from "./SendToMatter";
 
 const panel = "border-line rounded-[12px] border bg-white";
 const input =
@@ -261,6 +262,8 @@ export function ShelfPage() {
           </div>
           <aside className="grid h-fit gap-4 lg:sticky lg:top-[86px]">
             <Exporter items={shown} scope={view || "전체"} />
+            {/* 사건 진행 노트로 보내기 (DEC-072 ⓓ, 로그인) */}
+            <SendToMatter items={shown} scope={view || "전체"} />
           </aside>
         </div>
       )}
