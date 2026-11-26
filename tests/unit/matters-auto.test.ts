@@ -230,6 +230,22 @@ describe("DEC-070 자동 정리 거르기 (절대 규칙 1·2·4)", () => {
     ).not.toBe("");
   });
 
+  test("숫자는 낱말 단위로, 한글 수사도 자료에 있는 것만", () => {
+    const src = "사실: 2026-10-01 보증금 반환을 미뤘다";
+    expect(
+      screenAuto(
+        { title: "보증금 반환", field: "lease", gist: "보증금 반환이 10일 미뤄진 일" },
+        src,
+      ).gist,
+    ).toBe("");
+    expect(
+      screenAuto(
+        { title: "보증금 반환", field: "lease", gist: "보증금 반환이 두 달 미뤄진 일" },
+        src,
+      ).gist,
+    ).toBe("");
+  });
+
   test("저장 때 브라우저가 보낸 자동 정리도 다시 거른다", () => {
     const d = withFacts({
       auto: { field: "lease", gist: "임차인이 반드시 이기는 사건", sig: "x", at: "t" },

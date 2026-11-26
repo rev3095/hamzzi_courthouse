@@ -4,11 +4,12 @@
 // 처음 보는 사람도 왼쪽에서 오른쪽으로 따라가면 되게 하고, 내용 아래에 이전·다음 단계를 둔다 (2026-11-26 사용자 요청).
 // 정리 도구다: 머리의 숫자는 담긴 항목 수일 뿐 평가가 아니다 (절대 규칙 2).
 import { useRef, useState, type ReactNode } from "react";
-import type { MatterData, MatterParty } from "@/lib/matters/model";
+import { AI_NOTICE } from "@/lib/api/respond";
+import { NEW_MATTER_TITLE, type MatterData, type MatterParty } from "@/lib/matters/model";
 import { ResearchTab, type ResearchSeed } from "./ResearchTab";
 import { StructureMap } from "./StructureMap";
 import { DocsTab, FactsTab, IssuesTab, NotesTab, OverviewTab, type TabKey } from "./tabs";
-import { btnLine } from "./ui";
+import { AiTag, btnLine } from "./ui";
 import { pillTab } from "@/components/ui/styles";
 
 /** 진행 단계 묶음. 화면에 보이는 메뉴 글자는 여기 한 곳에서만 관리한다 */
@@ -107,12 +108,9 @@ export function MatterBoard({
         </div>
         <h1 className="font-display text-ink mt-1 truncate text-[24px] font-bold lg:text-[28px]">
           {title}
-          {data.titleAuto && data.auto && (
-            <span
-              className="text-label ml-2 align-middle font-sans text-[12px] font-semibold"
-              title="AI가 사건 자료를 읽고 지은 이름이에요"
-            >
-              AI 제목
+          {data.titleAuto && data.auto && title !== NEW_MATTER_TITLE && (
+            <span className="ml-2 align-middle font-sans">
+              <AiTag notice={AI_NOTICE} />
             </span>
           )}
         </h1>

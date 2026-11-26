@@ -48,13 +48,17 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   const current = m.data.auto ?? null;
   if (!hasAutoContent(m.data)) return reply(current, m.title, { used: false, reason: "empty" });
   const sig = autoSig(m.data);
-  if (current?.sig === sig) return reply(current, m.title, { used: false, reason: "unchanged" });
+  // 정리를 마쳤거나 실패한 자료와 같으면 다시 부르지 않는다
+  if (current?.sig === sig || m.data.autoFailedSig === sig) {
+    return reply(current, m.title, { used: false, reason: "unchanged" });
+  }
 
-  if (!user.admin) await assertUserRate(MATTER_AUTO_RATE, user.userId);
   const masked = maskForModel(composeAutoText(m.data), maskNamesOf(m.data));
   if (masked.sensitive.length > 0) {
     return reply(current, m.title, { used: false, reason: "sensitive" });
   }
+  // 하루 횟수는 모델을 실제로 부를 때만 센다
+  if (!user.admin) await assertUserRate(MATTER_AUTO_RATE, user.userId);
   const r = await runMatterAi(user, MATTER_SUMMARY_WEIGHT, () => autoNameMatter(masked.text), {
     rateChecked: true,
   });

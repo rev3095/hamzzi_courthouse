@@ -4,7 +4,7 @@
 // - 모델에 보내는 글(쟁점 정리·요약·기업 조사에 붙여 넣은 글)은 이름까지 가린 문장만 쓴다 (절대 규칙 4). 사진만 예외(DEC-052).
 // - 판정 항목이 없다. 단정 표현("반드시"·"무조건"·"100%")이 든 AI 문장은 뺀다 (절대 규칙 2).
 import { z } from "zod";
-import { isAssertive } from "@/lib/ai/policy";
+import { isAssertive, numberTokens } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import {
   AGENCY_MARK,
@@ -24,6 +24,7 @@ import {
   MATTER_LIMITS,
   MATTER_SIDES,
   NOTE_KINDS,
+  composeAutoText,
   emptyMatter,
   type MatterData,
   type MatterReading,
@@ -153,8 +154,9 @@ export function parseMatterData(v: unknown): MatterData {
     const path = r.error.issues[0]?.path.filter((p) => typeof p === "string").join(".") || "data";
     throw invalid(`data.${path}`, "format");
   }
-  // 브라우저가 보낸 자동 정리(DEC-070)도 서버의 거르기를 다시 거친다 — 쓸 수 없는 요약이면 정리를 버린다
-  if (r.data.auto && r.data.auto.gist && unusable(r.data.auto.gist)) delete r.data.auto;
+  // 브라우저가 보낸 자동 정리(DEC-070)도 서버의 거르기(쓸 수 없는 문장·자료에 없는 숫자)를 다시 거친다 — 걸리면 정리를 버린다
+  const gist = r.data.auto?.gist;
+  if (gist && (unusable(gist) || !numbersFrom(gist, composeAutoText(r.data)))) delete r.data.auto;
   if (new TextEncoder().encode(JSON.stringify(r.data)).length > L.dataBytes) {
     throw invalid("data", "too_large");
   }
@@ -874,12 +876,17 @@ function unusable(s: string): boolean {
   );
 }
 
-/** 요약·제목의 숫자가 보낸 자료에 없으면 쓰지 않는다 (절대 규칙 3 — 모델이 숫자를 만들지 않게) */
-const numbersIn = (s: string) => s.normalize("NFKC").match(/\d+(?:[.,]\d+)*/g) ?? [];
-const numbersFrom = (s: string, source: string) => {
-  const src = source.normalize("NFKC");
-  return numbersIn(s).every((n) => src.includes(n));
-};
+/**
+ * 요약·제목의 숫자가 보낸 자료에 없으면 쓰지 않는다 (절대 규칙 3 — 모델이 숫자를 만들지 않게).
+ * 숫자는 낱말 단위로 비교하고("2026-10-01"의 10이 "10일"을 허용하지 않게), 한글 수사("두 달")도 자료에 있는 것만.
+ */
+export function numbersFrom(s: string, source: string): boolean {
+  const src = numberTokens(source.replace(/\[[^\]]*\]/g, " "));
+  const digits = new Set(src.digits);
+  const words = new Set(src.words);
+  const t = numberTokens(s);
+  return t.digits.every((d) => digits.has(d)) && t.words.every((w) => words.has(w));
+}
 
 /** 모델 출력 거르기. 쓸 수 없는 제목·요약은 비우고, 분야가 목록 밖이면 기타. source = 모델에 보낸 글 */
 export function screenAuto(
