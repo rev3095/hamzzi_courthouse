@@ -24,6 +24,7 @@ import {
   withSensitiveConsent,
   writeNickname,
 } from "@/lib/client/community";
+import { PAGE_TITLE } from "@/components/ui/styles";
 import {
   BOARDS,
   COMMUNITY_NOTICE,
@@ -354,7 +355,7 @@ export function CommunityBoard() {
         <div className="flex items-center gap-3">
           <HamzziJudge size={56} />
           <div>
-            <h1 className="font-display text-ink text-[26px] font-bold">커뮤니티</h1>
+            <h1 className={PAGE_TITLE}>커뮤니티</h1>
             <p className="text-muted text-[14px]">
               법 이야기부터 잡담까지, 로그인 없이도 편하게 나눠요.
             </p>

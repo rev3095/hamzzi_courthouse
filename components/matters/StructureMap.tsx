@@ -19,7 +19,7 @@ import {
 import { ZoomPane } from "../result/ZoomPane";
 import { AiTag, ConfirmButton, Empty, Hover, SectionTitle, btn, btnLine, field, label } from "./ui";
 
-// 여백 원칙 (DEC-066): 상자 사이를 넉넉히 두고, 한 화면에 다 담으려고 줄이지 않는다 — ZoomPane에서 옮겨 본다
+// 여백 원칙 (DEC-068): 상자 사이를 넉넉히 두고, 한 화면에 다 담으려고 줄이지 않는다 — ZoomPane에서 옮겨 본다
 const W = 236;
 const H = 64;
 const GAP = 30;

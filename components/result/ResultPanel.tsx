@@ -21,7 +21,6 @@ import {
 } from "@/lib/procedure/policy";
 import { AI_PROCEDURE_NOTE } from "@/lib/procedure/labels";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
-import { ANON_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { HamzziBadge } from "../HamzziJudge";
 import { parseDeepMap } from "@/lib/ai/deep-policy";
 import { parseTiming } from "@/lib/ai/timing";
@@ -134,7 +133,7 @@ export function ResultPanel({
             inquiryId={inquiryId}
           />
           {plan.note && <p className="text-muted mt-4 text-[13px] leading-relaxed">{plan.note}</p>}
-          <div className="rounded-card border-honey-line bg-honey mt-6 px-5 py-4">
+          <div className="rounded-card border-line bg-cream mt-6 border px-5 py-4">
             <p className="font-display text-ink text-[17px] leading-snug font-bold">
               {recommendText(plan.recommended)}
             </p>
@@ -192,7 +191,7 @@ function AnswerFirst({ result }: { result: DemoAnalysisResult }) {
     .join(" ");
   return (
     <section aria-label="답변" className="mt-5">
-      <div className="rounded-card border-honey-line bg-honey border px-5 py-4">
+      <div className="rounded-card border-line bg-cream border px-5 py-4">
         <p className="text-label text-[13px] font-semibold">한눈에 보기</p>
         <p className="text-ink mt-1 text-[17px] leading-[1.75]">{summary}</p>
         <p className="text-muted mt-2 text-[12px]">
@@ -411,7 +410,7 @@ function NextSteps({
           <span>
             <span className="block text-base font-bold">내 상황으로 질문하기</span>
             <span className="text-muted mt-0.5 block text-[13px]">
-              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 하루 {ANON_QUESTION_LIMIT}번에 세요
+              홈에서 이 분야로 질문을 적어요 · 보낸 질문은 오늘 질문 횟수에 세요
             </span>
           </span>
           <span aria-hidden="true" className="text-xl">
@@ -599,7 +598,7 @@ export function researchKeywords(result: DemoAnalysisResult): string[] {
 function ResearchLinks({ result }: { result: DemoAnalysisResult }) {
   const keywords = researchKeywords(result);
   return (
-    <div className="border-honey-line bg-honey rounded-card mb-4 border px-5 py-4">
+    <div className="border-line bg-cream rounded-card mb-4 border px-5 py-4">
       <p className="text-ink text-[15px] font-bold">판례 더 찾아보기</p>
       <p className="text-muted mt-0.5 text-[13px] leading-relaxed">
         판례 리서치 화면에서 요지를 나란히 읽고, 해석례·헌재 결정례까지 넓혀 볼 수 있어요. 검색은

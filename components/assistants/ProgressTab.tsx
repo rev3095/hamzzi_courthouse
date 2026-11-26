@@ -19,6 +19,17 @@ import {
   type ProcedureStep,
   type TrackKey,
 } from "@/lib/procedure/steps";
+import {
+  PATH_KINDS,
+  PATH_KIND_LABEL,
+  PATH_LEAD,
+  PATH_SIDES,
+  PATH_SIDE_LABEL,
+  assistantPaths,
+  hasPaths,
+  type PathKind,
+  type PathSide,
+} from "@/lib/assistants/paths";
 import { loadThread } from "./AssistantChat";
 
 type AnyTrack = {
@@ -28,6 +39,7 @@ type AnyTrack = {
   steps: ProcedureStep[];
   recommended: string;
   note?: string;
+  forms?: { label: string; kind: string }[];
 };
 
 function tracksOf(a: Assistant): AnyTrack[] {
@@ -39,21 +51,106 @@ function tracksOf(a: Assistant): AnyTrack[] {
 }
 
 export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: string) => void }) {
-  const tracks = tracksOf(a);
-  const [at, setAt] = useState(0);
+  // 고소미·중고천국은 입장(하는 쪽 / 받은 쪽)과 형사·민사를 먼저 고른다 — 갈래마다 절차와 서식이 다르다 (lib/assistants/paths)
+  const branching = hasPaths(a.id);
+  const [side, setSide] = useState<PathSide>("claimant");
+  const [kind, setKind] = useState<PathKind>("criminal");
+  const tracks: AnyTrack[] = hasPaths(a.id) ? assistantPaths(a.id, side, kind) : tracksOf(a);
+  const [picked, setAt] = useState(0);
+  // 갈래를 바꾸면 그 갈래의 첫 분야부터 본다
+  const at = picked < tracks.length ? picked : 0;
   // 이 탭(브라우저)에서 이 에이전트와 나눈 마지막 질문 번호 — 서식 화면의 초안 도우미로 넘긴다. 없으면 설문만 쓴다
   const [inquiryId] = useState(() => loadThread(a.id).at(-1)?.id);
   const track = tracks[at];
   if (!track) return null;
-  const withForm = track.steps.filter((s) => s.document);
+  // 서식: 단계에 붙은 것 + 이 갈래에서 함께 쓸 수 있는 것
+  const forms = [
+    ...track.steps
+      .filter((s) => s.document)
+      .map((s) => ({
+        key: s.key,
+        no: track.steps.indexOf(s) + 1,
+        label: `${s.label} 서식 쓰기`,
+        kind: s.document as string,
+      })),
+    ...(track.forms ?? []).map((f) => ({
+      key: f.kind,
+      no: 0,
+      label: `${f.label} 쓰기`,
+      kind: f.kind,
+    })),
+  ];
   const from = inquiryId ? `?from=${encodeURIComponent(inquiryId)}` : "";
 
   return (
     <section aria-label="진행 과정" className="mt-8">
       <p className="hza-muted max-w-[660px] text-[15px] leading-[1.75]">
-        분야를 고르고 단계에 커서를 올리거나 눌러 보세요. 준비할 것과 주의할 점, 서식 작성으로
-        이어져요. 사건마다 순서와 필요한 단계가 다를 수 있어요.
+        {branching ? "내 입장과 절차를 고른 뒤 " : "분야를 고르고 "}단계에 커서를 올리거나 눌러
+        보세요. 준비할 것과 주의할 점, 서식 작성으로 이어져요. 사건마다 순서와 필요한 단계가 다를 수
+        있어요.
       </p>
+
+      {branching && (
+        <div className="hza-card mt-5 px-5 py-5 sm:px-6" data-testid="path-picker">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <p className="hza-eyebrow" id={`hza-side-${a.id}`}>
+                내 입장
+              </p>
+              <div
+                role="radiogroup"
+                aria-labelledby={`hza-side-${a.id}`}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                {PATH_SIDES.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={side === v}
+                    onClick={() => {
+                      setSide(v);
+                      setAt(0);
+                    }}
+                    className="hza-pick"
+                  >
+                    {PATH_SIDE_LABEL[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="hza-eyebrow" id={`hza-kind-${a.id}`}>
+                절차
+              </p>
+              <div
+                role="radiogroup"
+                aria-labelledby={`hza-kind-${a.id}`}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                {PATH_KINDS.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={kind === v}
+                    onClick={() => {
+                      setKind(v);
+                      setAt(0);
+                    }}
+                    className="hza-pick"
+                  >
+                    {PATH_KIND_LABEL[v]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="hza-muted mt-4 text-[14px] leading-[1.75]" aria-live="polite">
+            {PATH_LEAD[kind][side]}
+          </p>
+        </div>
+      )}
 
       {tracks.length > 1 && (
         <div role="radiogroup" aria-label="분야 고르기" className="mt-5 flex flex-wrap gap-2">
@@ -93,26 +190,29 @@ export function ProgressTab({ a, onAsk }: { a: Assistant; onAsk: (question: stri
       {/* 서식 작성: 공식 서식이 준비된 단계만 */}
       <div className="mt-8">
         <h3 className="hza-title text-[17px] font-bold">서식 작성</h3>
-        {withForm.length > 0 ? (
+        {forms.length > 0 ? (
           <>
             <p className="hza-muted mt-1.5 text-[14px] leading-[1.75]">
+              설문에 답하면 공식 양식의 순서대로 서식이 채워지고, 한글·워드·PDF로 내려받아요. 서식
+              화면에서 가상 예시 문서도 볼 수 있어요.{" "}
               {inquiryId
-                ? "설문에 답하면 서식 칸이 채워져요. 이 에이전트와 나눈 마지막 질문의 사연으로 초안을 채우는 AI 도우미도 쓸 수 있어요."
-                : "설문에 답하면 서식 칸이 채워져요. 대화 탭에서 먼저 질문하면 그 사연으로 초안을 채우는 AI 도우미도 쓸 수 있어요."}{" "}
-              완성한 서식은 한글·워드·PDF로 내려받아요.
+                ? "일부 서식은 이 에이전트와 나눈 마지막 질문의 사연으로 초안을 채우는 AI 도우미를 쓸 수 있어요(고소장은 직접 적어요)."
+                : "대화 탭에서 먼저 질문하면 일부 서식은 그 사연으로 초안을 채우는 AI 도우미를 쓸 수 있어요(고소장은 직접 적어요)."}
             </p>
             <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
-              {withForm.map((s) => (
-                <li key={s.key}>
+              {forms.map((f) => (
+                <li key={f.key}>
                   <Link
-                    href={`/documents/${s.document}${from}`}
+                    href={`/documents/${f.kind}${from}`}
                     className="hza-chip flex h-full w-full items-center justify-between gap-3"
                   >
                     <span className="font-semibold">
-                      <span className="hza-step-no mr-2.5" aria-hidden="true">
-                        {track.steps.indexOf(s) + 1}
-                      </span>
-                      {s.label} 서식 쓰기
+                      {f.no > 0 && (
+                        <span className="hza-step-no mr-2.5" aria-hidden="true">
+                          {f.no}
+                        </span>
+                      )}
+                      {f.label}
                     </span>
                     <span aria-hidden="true">→</span>
                   </Link>

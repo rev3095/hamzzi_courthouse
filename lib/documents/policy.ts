@@ -22,6 +22,7 @@ import {
   type Field,
 } from "./fields";
 import { fillBlocks, type Block } from "./fill";
+import { ASSISTANT_SPECS } from "./specs/assistant";
 import { CRIMINAL_SPECS } from "./specs/criminal";
 import { LABOR_SPECS } from "./specs/labor";
 import { MEDIATION_SPECS } from "./specs/mediation";
@@ -54,6 +55,14 @@ export const DOCUMENT_KINDS = [
   "civil-mediation",
   "financial-mediation",
   "property-disclosure",
+  "defamation-complaint",
+  "trade-fraud-complaint",
+  "obscenity-complaint",
+  "answer",
+  "order-objection",
+  "decision-objection",
+  "settlement",
+  "complaint-withdrawal",
 ] as const satisfies readonly DocumentKind[];
 
 export const isDocumentKind = (v: string): v is DocumentKind =>
@@ -61,6 +70,7 @@ export const isDocumentKind = (v: string): v is DocumentKind =>
 
 export const DOCUMENT_SPECS: Record<DocumentKind, DocumentSpec> = {
   ...CRIMINAL_SPECS,
+  ...ASSISTANT_SPECS,
   ...LABOR_SPECS,
   ...MEDIATION_SPECS,
   "demand-letter": {

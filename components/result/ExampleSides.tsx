@@ -8,6 +8,7 @@ import { AI_NOTICE } from "@/lib/api/respond";
 import type { ExampleGuide, ExampleSide } from "@/lib/demo/policy";
 import { CHECK_NOTICE, DRAFT_NOTICE } from "@/lib/documents/fields";
 import type { CategoryKey } from "@/lib/procedure/categories";
+import { PILL_TAB_ROW, pillTab } from "@/components/ui/styles";
 
 const OWNER = { self: "혼자 가능", expert: "전문가 권장" } as const;
 
@@ -25,7 +26,7 @@ export function ExampleSides({
   return (
     <div>
       {sides.length > 1 && (
-        <div role="tablist" aria-label="누구 쪽 답변인지" className="mb-4 flex flex-wrap gap-2">
+        <div role="tablist" aria-label="누구 쪽 답변인지" className={`mb-4 ${PILL_TAB_ROW}`}>
           {sides.map((s, i) => (
             <button
               key={s.key}
@@ -33,9 +34,7 @@ export function ExampleSides({
               role="tab"
               aria-selected={i === at}
               onClick={() => setAt(i)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold ${
-                i === at ? "border-ink bg-ink text-white" : "border-line text-ink bg-white"
-              }`}
+              className={pillTab(i === at)}
             >
               {s.label}
             </button>

@@ -234,7 +234,7 @@ export const DeepAnswerZ = z.object({
         z.object({ party: Str, side: Str, actions: z.array(Str), stance: Str.optional() }),
       ),
       prep: z.array(z.object({ item: Str, why: Str })),
-      // DEC-066: 예상 반론과 대응, 지금 작성할 문서
+      // DEC-068: 예상 반론과 대응, 지금 작성할 문서
       rebuttals: z
         .array(z.object({ issue: z.number().int(), by: Str, point: Str, reply: Str }))
         .optional(),
@@ -282,7 +282,7 @@ export const PLAN_LIMITS = {
 } as const;
 
 /**
- * 지금 내용으로 작성해 볼 문서 (DEC-066). 햄찌법원 문서 작성 화면(/documents/[kind])이 있는 서식만 고를 수 있다.
+ * 지금 내용으로 작성해 볼 문서 (DEC-068). 햄찌법원 문서 작성 화면(/documents/[kind])이 있는 서식만 고를 수 있다.
  * 이름은 고정 문안이다.
  */
 export const PLAN_DOCS = {
@@ -300,7 +300,7 @@ export type PlanDocKind = keyof typeof PLAN_DOCS;
 
 /** 정리판은 판정을 담지 않는다 (DEC-062): 유불리·승패·가능성·책임 크기 표현이 든 줄은 버린다 */
 const PLAN_JUDGMENT =
-  /유리|불리|승산|승소|패소|승패|우세|이길|이기[기는]|이긴다|질 수|질 것|진다|패할|기각|받아들여지|인정되(?:기 어렵|지 않)|가능성|확률|책임이\s*(?:크|작|더|많|적|있|없)/;
+  /유리|불리|승산|승소|패소|승패|우세|이길|이기[기는]|이긴다|질 수|질 것|진다|패할|기각|받아들여[지질진]|인정(?:되(?:기 어렵|지 않)|된다|될 것|받을 것)|성립(?:한다|하지 않|될 것|되지 않)|처벌받을 수|가능성|확률|책임이\s*(?:크|작|더|많|적|있|없)/;
 const planText = (raw: string, max: number, question: string): string | null => {
   const t = cleanText(raw, max, question);
   return t && !PLAN_JUDGMENT.test(t) ? t : null;
@@ -308,12 +308,12 @@ const planText = (raw: string, max: number, question: string): string | null => 
 
 export type DeepPlan = {
   kinds: CaseKind[];
-  /** stance = 그 당사자가 내세우는 입장 한 문장 (DEC-066) */
+  /** stance = 그 당사자가 내세우는 입장 한 문장 (DEC-068) */
   sides: { party: string; side: CaseSide; actions: string[]; stance?: string }[];
   prep: { item: string; why: string }[];
-  /** 쟁점마다 상대방이 내세울 수 있는 예상 반론과 대응 방향 (DEC-066). issue는 쟁점 번호(1부터) */
+  /** 쟁점마다 상대방이 내세울 수 있는 예상 반론과 대응 방향 (DEC-068). issue는 쟁점 번호(1부터) */
   rebuttals?: { issue: number; by: string; point: string; reply: string }[];
-  /** 지금 내용으로 작성해 볼 문서 (DEC-066) */
+  /** 지금 내용으로 작성해 볼 문서 (DEC-068) */
   docs?: { kind: PlanDocKind; why: string }[];
 };
 

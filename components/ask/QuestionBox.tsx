@@ -33,7 +33,7 @@ export function QuestionBox({
   busy: boolean;
   placeholder?: string;
   label?: string;
-  /** 보내기 버튼 글자 (홈은 "정리 시작", DEC-066) */
+  /** 보내기 버튼 글자 (홈은 "정리 시작", DEC-068) */
   submitLabel?: string;
   size?: "lg" | "md";
   /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "심층 질문하기") */

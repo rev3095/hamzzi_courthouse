@@ -6,12 +6,12 @@ import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
-import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
-import { limitCopy } from "../LimitNotice";
+import { dailyLimitLine, limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
 import { useCaseFileAsk } from "./useCaseFileAsk";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 const STEPS = [
   {
@@ -46,9 +46,7 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
 
   return (
     <div className="mx-auto w-full max-w-[820px] px-4 py-10 lg:py-14">
-      <h1 className="font-display text-ink text-[28px] leading-snug font-bold lg:text-[32px]">
-        서류 분석
-      </h1>
+      <h1 className={PAGE_TITLE}>서류 분석</h1>
       <p className="text-muted mt-2 text-[15px] leading-relaxed">
         받은 서류나 변호사에게 낸 자료의 사진을 올리면, 지금 상황을 다시 정리하고 쟁점과 진행 절차를
         법제처 법령·판례 근거와 함께 보여 드려요.
@@ -85,7 +83,7 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
         <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
           {blocked
             ? limitCopy(signedIn).body
-            : `서류 분석도 질문 1번으로 세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요.`}
+            : `서류 분석도 질문 1번으로 세요. ${dailyLimitLine(signedIn)}`}
         </p>
       )}
 

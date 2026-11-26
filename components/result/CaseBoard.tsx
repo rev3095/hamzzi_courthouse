@@ -19,6 +19,7 @@ import { Mindmap, MindmapCompact, issueSources } from "./DeepMapView";
 import { sourceRef } from "./labels";
 import { MaterialsView } from "./MaterialsView";
 import { VirtualDocument } from "./VirtualDocument";
+import { PILL_TAB_ROW, pillTab } from "@/components/ui/styles";
 
 export const BOARD_TABS = [
   { key: "overview", name: "개요" },
@@ -85,7 +86,7 @@ export function CaseBoard({
       <div
         role="tablist"
         aria-label="사건 정리 탭"
-        className="border-line flex flex-wrap gap-1 border-b px-3 py-2 sm:px-4"
+        className={`border-line border-b px-3 py-2 sm:px-4 ${PILL_TAB_ROW}`}
       >
         {BOARD_TABS.map((t) => (
           <button
@@ -96,9 +97,7 @@ export function CaseBoard({
             aria-selected={tab === t.key}
             aria-controls={`board-panel-${t.key}`}
             onClick={() => setTab(t.key)}
-            className={`min-h-10 rounded-full px-3.5 text-[14px] ${
-              tab === t.key ? "bg-ink font-semibold text-white" : "text-ink hover:bg-soft"
-            }`}
+            className={pillTab(tab === t.key)}
           >
             {t.name}
           </button>
@@ -148,7 +147,7 @@ function Lead({ children }: { children: React.ReactNode }) {
 
 // ── 개요: 한 장짜리 사건 구조도 ─────────────────────────────
 
-/** 지금 내용으로 작성해 볼 문서 (DEC-066) — 문서 작성 화면으로 잇는다. 초안 도우미가 이 질문의 사연으로 칸을 채운다 */
+/** 지금 내용으로 작성해 볼 문서 (DEC-068) — 문서 작성 화면으로 잇는다. 초안 도우미가 이 질문의 사연으로 칸을 채운다 */
 function PlanDocs({ map, inquiryId }: { map: DeepMap; inquiryId?: string }) {
   const docs = map.plan?.docs ?? [];
   if (docs.length === 0) return null;
@@ -565,7 +564,7 @@ function IssuesTab({ result, map, sources, file }: TabProps & { sources: string[
   );
 }
 
-/** 예상 반론과 대응 (DEC-066): 쟁점 → 상대방이 내세울 수 있는 반론 → 대비할 방향. 판정이 아니라 준비용이다 */
+/** 예상 반론과 대응 (DEC-068): 쟁점 → 상대방이 내세울 수 있는 반론 → 대비할 방향. 판정이 아니라 준비용이다 */
 function Rebuttals({ result, map, file }: TabProps) {
   const list = (map.plan?.rebuttals ?? []).filter((r) => map.issues[r.issue - 1]);
   if (list.length === 0) return null;

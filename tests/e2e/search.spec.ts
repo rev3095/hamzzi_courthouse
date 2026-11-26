@@ -62,8 +62,11 @@ test("판례 검색 → 상세 → 참조조문", async ({ page }) => {
   );
 
   await page.goto("/");
-  await page.getByRole("button", { name: /판례 아카이브/ }).click();
-  await page.getByRole("link", { name: /^검색/ }).click();
+  // 주 메뉴 '판례·법령' (DEC-067)
+  await page
+    .getByRole("navigation", { name: "주요 메뉴" })
+    .getByRole("link", { name: "판례·법령" })
+    .click();
   await page.getByRole("textbox", { name: "판례 검색어" }).fill("보증금 반환");
   await page.keyboard.press("Enter");
   // 검색어는 주소에 남지 않는다 (F-007)

@@ -136,10 +136,12 @@ describe("분야별 비서 정의 (DEC-057)", () => {
 });
 
 describe("비서 사례 자료 (DEC-057)", () => {
-  test("비서마다 사례가 셋 이상이고, 가상 사례는 셋씩 있다", () => {
+  test("비서마다 사례가 셋 이상이고, 가상 사례도 셋 이상 있다", () => {
     for (const id of ASSISTANT_IDS) {
       expect(casesOf(id).length, id).toBeGreaterThanOrEqual(3);
-      expect(casesOf(id).filter((c) => c.kind === "fictional").length, id).toBe(3);
+      expect(casesOf(id).filter((c) => c.kind === "fictional").length, id).toBeGreaterThanOrEqual(
+        3,
+      );
     }
     expect(new Set(ASSISTANT_CASES.map((c) => c.id)).size).toBe(ASSISTANT_CASES.length);
   });

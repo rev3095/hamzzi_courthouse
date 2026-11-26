@@ -44,7 +44,7 @@ export function issueSources(map: DeepMap, result: Result): string[][] {
 }
 
 const W = 760;
-// 여백 원칙 (DEC-066): 줄·상자 사이를 넉넉히 두고 ZoomPane에서 옮겨 본다
+// 여백 원칙 (DEC-068): 줄·상자 사이를 넉넉히 두고 ZoomPane에서 옮겨 본다
 const LINE = 19;
 
 /** 좁은 화면(md 미만) 사건 구조: 그림 대신 세로 목록 (2026-11-19 사용자 승인 — 가로 스크롤 없이) */

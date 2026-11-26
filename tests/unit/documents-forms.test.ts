@@ -3,14 +3,16 @@
 // 무료 로컬 검사만 (LLM 없음). 실명 대신 가상 이름을 쓴다.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PDFDocument } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
+import { DOCUMENT_EXAMPLES } from "@/lib/documents/examples";
 import { buildFile } from "@/lib/documents/export";
 import { documentXml, toDocx, xmlEscape } from "@/lib/documents/export/docx";
 import { headerXml, sectionXml, toHwpx } from "@/lib/documents/export/hwpx";
-import { wrapLine } from "@/lib/documents/export/pdf";
+import { pdfSafeText, wrapLine } from "@/lib/documents/export/pdf";
 import { crc32 } from "@/lib/documents/export/zip";
 import { formatDate, formatWon } from "@/lib/documents/fill";
 import {
@@ -25,6 +27,10 @@ import {
 import { shortcutOf } from "@/lib/procedure/policy";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { TRACKS } from "@/lib/procedure/steps";
+
+const PDF_TEST_FONTS = () => ({
+  regular: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Regular.ttf"))),
+});
 
 const FULL: Record<DocumentKind, Record<string, string>> = {
   "demand-letter": {
@@ -266,6 +272,15 @@ const FULL: Record<DocumentKind, Record<string, string>> = {
     court: "도토리지방법원",
     writtenOn: "2026-11-17",
   },
+  // 전문 에이전트 갈래 서식: 서식 화면의 가상 예시(lib/documents/examples.ts)를 그대로 넣어 본다
+  "defamation-complaint": DOCUMENT_EXAMPLES["defamation-complaint"]![0].values,
+  "trade-fraud-complaint": DOCUMENT_EXAMPLES["trade-fraud-complaint"]![0].values,
+  "obscenity-complaint": DOCUMENT_EXAMPLES["obscenity-complaint"]![0].values,
+  answer: DOCUMENT_EXAMPLES.answer![0].values,
+  "order-objection": DOCUMENT_EXAMPLES["order-objection"]![0].values,
+  "decision-objection": DOCUMENT_EXAMPLES["decision-objection"]![0].values,
+  settlement: DOCUMENT_EXAMPLES.settlement![0].values,
+  "complaint-withdrawal": DOCUMENT_EXAMPLES["complaint-withdrawal"]![0].values,
 };
 
 const digits = (s: string) =>
@@ -292,7 +307,9 @@ function strayNumbers(text: string, input: Record<string, string>): string[] {
         .replace(/제\d+(조|항|호)(의\d+)?/g, "")
         .replace(/\b\d+항/g, "")
         // 법령 서식 문구 그대로 (간이대지급금 ⑤ 칸)
-        .replace(/최종 3개월분|마지막 3개월분|최종 3년간/g, ""),
+        .replace(/최종 3개월분|마지막 3개월분|최종 3년간/g, "")
+        // 경찰 간이고소장(모욕·명예훼손) 체크리스트 문구 그대로
+        .replace(/1:1인 상황/g, ""),
     )
     .join("\n");
   return digits(structural).filter((d) => !allowed.has(d));
@@ -516,10 +533,7 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
   });
 
   test("PDF: 한글 글꼴을 넣은 A4 PDF, 제목만 메타데이터에 넣는다 (이름 없음)", async () => {
-    const fonts = {
-      regular: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Regular.ttf"))),
-      bold: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Bold.ttf"))),
-    };
+    const fonts = PDF_TEST_FONTS();
     const file = await buildFile(
       "pdf",
       doc.blocks,
@@ -534,6 +548,62 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
     expect(pdf.getTitle()).toBe("주택임차권등기명령 신청서");
     expect(pdf.getAuthor()).toBeUndefined();
   }, 20_000);
+
+  // 2026-11-26: '쓴 글자만 넣기'(subset)로 만든 PDF는 글자 추출은 되는데 화면에 그리면 한글이 대부분 빠졌다.
+  // PDF에 든 글꼴을 다시 꺼내, 문서에 쓴 모든 글자가 그 글꼴에 '그릴 수 있는 모양'으로 들어 있는지 본다.
+  test.each(DOCUMENT_KINDS)(
+    "PDF %s: 문서의 모든 글자가 넣은 글꼴에 모양으로 들어 있다",
+    async (kind) => {
+      const filled = fillDocument(kind, parseDocumentInput(kind, FULL[kind]));
+      const file = await buildFile(
+        "pdf",
+        filled.blocks,
+        { title: filled.title, basename: filled.basename },
+        async () => PDF_TEST_FONTS(),
+      );
+      const pdf = await PDFDocument.load(file.data);
+      // 가장 큰 스트림이 넣은 글꼴 파일이다
+      let fontBytes: Uint8Array | null = null;
+      for (const [, obj] of pdf.context.enumerateIndirectObjects()) {
+        if (!(obj instanceof PDFRawStream)) continue;
+        let bytes: Uint8Array;
+        try {
+          bytes = decodePDFRawStream(obj).decode();
+        } catch {
+          continue;
+        }
+        if (!fontBytes || bytes.length > fontBytes.length) fontBytes = bytes;
+      }
+      expect(fontBytes!.length).toBeGreaterThan(500_000);
+      const font = fontkit.create(fontBytes!) as unknown as {
+        hasGlyphForCodePoint(cp: number): boolean;
+        glyphForCodePoint(cp: number): { path: { commands: unknown[] } };
+      };
+      const has = (cp: number) => font.hasGlyphForCodePoint(cp);
+      const drawn = filled.blocks.map((b) => pdfSafeText(b.text, has)).join("");
+      const missing = [...new Set(drawn)].filter((ch) => {
+        if (/\s/.test(ch)) return false;
+        const cp = ch.codePointAt(0)!;
+        return !has(cp) || font.glyphForCodePoint(cp).path.commands.length === 0;
+      });
+      expect(missing, kind).toEqual([]);
+      expect(file.data.length).toBeLessThan(1_500_000);
+    },
+    30_000,
+  );
+
+  test("PDF: 글꼴에 없는 원문자는 빈칸이 되지 않게 괄호 숫자로 바꾼다", () => {
+    const none = () => false;
+    expect(pdfSafeText("① 피해를 당한 날짜 ⑧ 증거 ⑳", none)).toBe(
+      "(1) 피해를 당한 날짜 (8) 증거 (20)",
+    );
+    // 글꼴에 있으면 그대로 둔다
+    expect(pdfSafeText("① 날짜", () => true)).toBe("① 날짜");
+    expect(pdfSafeText("□ ■ 가나다", none)).toBe("□ ■ 가나다");
+    expect(pdfSafeText("2026. 1. 2. ∼ 2026. 3. 4. [✔]", none)).toBe(
+      "2026. 1. 2. ~ 2026. 3. 4. [V]",
+    );
+  });
 
   test("PDF 줄 나눔: 띄어쓰기에서 먼저, 안 되면 글자 단위", () => {
     const w = (s: string) => s.length;
@@ -741,7 +811,15 @@ describe("DEC-025 법률 검토 반영", () => {
   test("공식 문구 인용(officialNotice)은 등록한 상수와 정확히 같을 때만 쓴다", async () => {
     const { FALSE_ACCUSATION_PLEDGE } = await import("@/lib/documents/specs/criminal");
     const { WAGE_ADVANCE_NOTICE } = await import("@/lib/documents/specs/labor");
-    const allowed = new Set([FALSE_ACCUSATION_PLEDGE, WAGE_ADVANCE_NOTICE]);
+    const { ANSWER_NOTICE, ORDER_OBJECTION_NOTICE, DECISION_OBJECTION_NOTICE } =
+      await import("@/lib/documents/specs/assistant");
+    const allowed = new Set([
+      FALSE_ACCUSATION_PLEDGE,
+      WAGE_ADVANCE_NOTICE,
+      ANSWER_NOTICE,
+      ORDER_OBJECTION_NOTICE,
+      DECISION_OBJECTION_NOTICE,
+    ]);
     for (const kind of DOCUMENT_KINDS) {
       const n = DOCUMENT_SPECS[kind].officialNotice;
       if (n) {
@@ -755,5 +833,163 @@ describe("DEC-025 법률 검토 반영", () => {
     const { FACTS_FIELD } = await import("@/lib/documents/policy");
     expect(FACTS_FIELD["criminal-complaint"]).toBeUndefined();
     expect(DOCUMENT_SPECS["criminal-complaint"].draftFields).toBe("");
+  });
+});
+
+describe("전문 에이전트 갈래 서식 (공식 양식 기준, 2026-11-26)", () => {
+  const fill = (kind: DocumentKind, values: Record<string, string>) =>
+    fillDocument(kind, parseDocumentInput(kind, values)).text;
+
+  test("가상 예시는 모두 설문 검증을 통과하고 문서로 채워진다", () => {
+    for (const [kind, list] of Object.entries(DOCUMENT_EXAMPLES))
+      for (const ex of list) {
+        const text = fill(kind as DocumentKind, ex.values);
+        expect(text.length, `${kind} ${ex.title}`).toBeGreaterThan(50);
+        expect(text, ex.title).not.toMatch(/승소|패소|반드시|무조건|100%/);
+      }
+  });
+
+  test("고소장 3종에는 AI 초안 칸이 없고 진실확약을 체크해야 완성된다", async () => {
+    const { FACTS_FIELD } = await import("@/lib/documents/policy");
+    for (const kind of [
+      "defamation-complaint",
+      "trade-fraud-complaint",
+      "obscenity-complaint",
+    ] as const) {
+      expect(FACTS_FIELD[kind]).toBeUndefined();
+      expect(DOCUMENT_SPECS[kind].draftFields).toBe("");
+      expect(invalidFields(kind, ["pledge"], { pledge: "" })).toEqual(["pledge"]);
+      expect(fill(kind, FULL[kind])).toContain("형법 제156조 무고죄로 처벌받을 것임을 서약합니다.");
+    }
+  });
+
+  test("간이고소장(모욕·명예훼손): 서식의 선택지를 모두 보이고 고른 것만 표시한다", () => {
+    const text = fill("defamation-complaint", FULL["defamation-complaint"]);
+    expect(text).toContain("간 이 고 소 장 (모욕·명예훼손 등)");
+    expect(text).toContain("■ 게임챗팅");
+    expect(text).toContain("□ 인터넷");
+    expect(text).toContain("■ 고소인 외 여러 명이 위 내용을 듣거나 볼 수 있었습니다.");
+    // 체크리스트 질문은 서식 문구 그대로, 모름은 모름으로
+    expect(text).toContain(
+      "피고소인이 모욕(명예훼손)한 내용이 누가 들어도 고소인을 가리키는 말이었나요?  예 ■",
+    );
+    expect(text).toContain("이미지나 평가를 나쁘게 만들었나요?  예 □ / 아니오 □ / 모름 ■");
+    // 모르는 사실은 서약 아래 확정 진술이 되지 않는다: 민사소송 칸 기본값은 '모름'(둘 다 □), 사실 여부는 직접 고른다
+    expect(initialValues("defamation-complaint").civil).toBe("unknown");
+    expect(initialValues("defamation-complaint").truth).toBeUndefined();
+    expect(text).toContain("□ 사실입니다  □ 사실이 아닙니다.  □ 모릅니다.");
+    const unknownCivil = fill("defamation-complaint", {
+      ...FULL["defamation-complaint"],
+      civil: "unknown",
+    });
+    expect(unknownCivil).toContain(
+      "□ 현재 관련 사건에 대한 민사소송 중입니다.  □ 민사소송 중에 있지 않습니다.",
+    );
+  });
+
+  test("중고거래 사기 고소장: 고른 사실만 범죄사실에 놓고, 목적·고의 같은 평가 문장을 만들지 않는다", () => {
+    const text = fill("trade-fraud-complaint", FULL["trade-fraud-complaint"]);
+    expect(text).toContain("고소인은 피고소인을 사기죄로 고소하오니 처벌하여 주시기 바랍니다.");
+    expect(text).toContain(
+      "도토리장터에서 '중고 노트북' 판매 글을 보고 피고소인과 연락하였습니다.",
+    );
+    expect(text).toContain("계좌(다람은행 333-22-1111)로 금 850,000원을 보냈습니다.");
+    expect(text).toContain("그 뒤 피고소인은 물건을 보내지 않았습니다.");
+    expect(text).not.toMatch(/기망|편취|속여|속였|처음부터/);
+    // 연락이 끊긴 날을 비우면 그 문장을 만들지 않는다
+    const noDate = fill("trade-fraud-complaint", {
+      ...FULL["trade-fraud-complaint"],
+      lastContact: "",
+    });
+    expect(noDate).not.toContain("이후 피고소인과 연락이 되지 않습니다.");
+  });
+
+  test("통신매체이용음란 고소장: 죄명은 고소취지에만, 범죄사실은 받은 사실만", () => {
+    const text = fill("obscenity-complaint", FULL["obscenity-complaint"]);
+    expect(text).toContain(
+      "성폭력범죄의 처벌 등에 관한 특례법 위반(통신매체이용음란)죄로 고소하오니",
+    );
+    expect(text).toContain("고소인에게 다음과 같은 내용을 보냈습니다. (수단: 메신저)");
+    expect(text).not.toMatch(/목적으로|욕망|을\(를\)/);
+    // 전화·음성은 '보냈다'가 아니라 '말하였다'
+    expect(
+      fill("obscenity-complaint", { ...FULL["obscenity-complaint"], medium: "call" }),
+    ).toContain("다음과 같은 말을 하였습니다. (수단: 전화·음성 대화)");
+  });
+
+  test("답변서: 고른 답변에 따라 청구취지 답변이 달라진다", () => {
+    const base = FULL.answer;
+    const reject = fill("answer", base);
+    expect(reject).toContain("위 사건에 관하여 피고는 다음과 같이 답변합니다.");
+    expect(reject).toContain("원고의 청구를 기각한다.");
+    expect(reject).toContain("라는 판결을 구합니다.");
+    const partial = fill("answer", {
+      ...base,
+      stance: "partial",
+      aimDetail: "대금 가운데 배송비는 인정합니다.",
+    });
+    expect(partial).toContain("대금 가운데 배송비는 인정합니다.");
+    expect(partial).not.toContain("원고의 청구를 기각한다.");
+    // 일부 인정을 골랐는데 내용을 비우면 통과하지 못한다
+    expect(
+      invalidFields("answer", ["stance", "aimDetail"], { stance: "partial", aimDetail: "" }),
+    ).toEqual(["aimDetail"]);
+    expect(fill("answer", { ...base, stance: "accept" })).toContain("원고의 청구를 인정합니다.");
+  });
+
+  test("이의신청서 2종: 법원 양식의 기본 문장에 받은 날만 넣고, 기간 숫자를 본문에 만들지 않는다", () => {
+    const order = fill("order-objection", FULL["order-objection"]);
+    expect(order).toContain(
+      "위 독촉사건에 관하여 채무자는 2026. 11. 3. 지급명령정본을 송달받았으나 이에 불복하여 이의신청을 합니다.",
+    );
+    const decision = fill("decision-objection", FULL["decision-objection"]);
+    expect(decision).toContain(
+      "이 사건에 관하여 신청인은 2026. 11. 3. 이행권고결정을 송달받았으나, 이에 대하여 이의를 신청합니다.",
+    );
+    for (const t of [order, decision]) expect(t).not.toMatch(/2주|30일/);
+    // 기간은 공식 양식의 유의 사항을 출처와 함께 인용한다
+    expect(DOCUMENT_SPECS["order-objection"].officialNotice?.text).toMatch(/2주 이내/);
+    expect(DOCUMENT_SPECS["decision-objection"].officialNotice?.source).toMatch(/서식/);
+  });
+
+  test("합의서: 처벌 불원·이의 포기는 설문에서 받지 않고 빈 체크칸으로 나온다 (피해자가 손으로 표시)", () => {
+    const base = FULL.settlement;
+    const text = fill("settlement", base);
+    expect(DOCUMENT_SPECS.settlement.fields.map((f) => f.key)).not.toContain("wishes");
+    expect(text).toContain("□ 피해자는 가해자의 처벌을 원하지 않습니다.");
+    expect(text).toContain("□ 피해자는 차후로 이 사건으로 민·형사상의 이의를 제기하지 않겠습니다.");
+    expect(text).not.toContain("■");
+    expect(text).toContain("위 피해자  김햄찌  (인)");
+    expect(text).toContain("볍씨경찰서장 귀하");
+    expect(fill("settlement", { ...base, amount: "300000" })).toContain(
+      "주고받는 돈 : 금 300,000원",
+    );
+    // 피해자 주소는 몰라도 된다 (알아내게 하지 않는다)
+    expect(invalidFields("settlement", ["victimAddress"], { victimAddress: "" })).toEqual([]);
+    const tips = DOCUMENT_SPECS.settlement.tips.join(" ");
+    expect(tips).toMatch(/직접 연락하지 말고/);
+    expect(tips).toMatch(/손해배상을 청구하기 어려워질 수 있어요/);
+  });
+
+  test("고소취소장: 고소인이 서명하고, 다시 고소할 수 없다는 점을 화면 머리와 작성 요령이 알린다", async () => {
+    const text = fill("complaint-withdrawal", FULL["complaint-withdrawal"]);
+    expect(text).toContain(
+      "피고소인 이도토리에 대하여 모욕 혐의로 볍씨경찰서에 고소한 사실이 있습니다.",
+    );
+    expect(text).toContain("위 고소인은 피고소인에 대한 고소 내용 전체를 취소하고자 합니다.");
+    // 취소하는 까닭은 사용자가 적은 사유만 — 처벌 불원 같은 뜻을 덧붙이지 않는다
+    expect(text).not.toContain("처벌을 원하지 않으므로");
+    expect(invalidFields("complaint-withdrawal", ["complainantAddress"], {})).toEqual([]);
+    expect(DOCUMENT_SPECS["complaint-withdrawal"].intro).toMatch(/다시 고소할 수 없어요/);
+    expect(DOCUMENT_SPECS["complaint-withdrawal"].intro).toMatch(/대신 서명할 수 없어요/);
+    expect(text).toContain("위 고소인  김햄찌  (인)");
+    const tips = DOCUMENT_SPECS["complaint-withdrawal"].tips.join(" ");
+    expect(tips).toMatch(/다시 고소할 수 없어요/);
+    expect(tips).toMatch(/직접 연락하지 말고/);
+    for (const kind of ["settlement", "complaint-withdrawal"] as const)
+      expect(DOCUMENT_SPECS[kind].draftFields).toBe("");
+    const { FACTS_FIELD } = await import("@/lib/documents/policy");
+    expect(FACTS_FIELD.settlement).toBeUndefined();
+    expect(FACTS_FIELD["complaint-withdrawal"]).toBeUndefined();
   });
 });

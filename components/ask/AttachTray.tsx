@@ -141,7 +141,7 @@ export function AttachTray({ attach, noun = "서류" }: { attach: Attachments; n
 }
 
 /**
- * 자료 올리기 큰 버튼 (DEC-066): 홈 질문창 아래에 "전달받은 자료·작성 중인 자료를 바로 올려 주세요"를 글로 보인다.
+ * 자료 올리기 큰 버튼 (DEC-068): 홈 질문창 아래에 "전달받은 자료·작성 중인 자료를 바로 올려 주세요"를 글로 보인다.
  * 누르거나 파일을 끌어다 놓으면 붙는다. 붙인 줄은 질문창의 AttachTray가 보인다.
  */
 export function AttachDrop({ attach, disabled }: { attach: Attachments; disabled?: boolean }) {

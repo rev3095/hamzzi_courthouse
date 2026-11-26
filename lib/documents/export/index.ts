@@ -23,7 +23,7 @@ export const EXPORT_FORMATS: {
 export type BuiltFile = { data: Uint8Array; mime: string; filename: string };
 
 /** PDF 글꼴은 이 함수로 받는다 (브라우저: fetch, 테스트: 파일 읽기) */
-export type FontLoader = () => Promise<{ regular: Uint8Array; bold: Uint8Array }>;
+export type FontLoader = () => Promise<{ regular: Uint8Array }>;
 
 export async function buildFile(
   format: ExportFormat,
@@ -53,8 +53,8 @@ export const fetchFonts: FontLoader = async () => {
     if (!res.ok) throw new Error("font");
     return new Uint8Array(await res.arrayBuffer());
   };
-  const [regular, bold] = await Promise.all([get(PDF_FONT_URLS.regular), get(PDF_FONT_URLS.bold)]);
-  return { regular, bold };
+  // 글꼴은 Regular 하나만 받는다 (굵은 글자는 같은 글꼴로 겹쳐 그린다 — pdf.ts 머리말)
+  return { regular: await get(PDF_FONT_URLS.regular) };
 };
 
 /** 내려받기 (브라우저). 파일은 메모리에서 바로 내려받고 어디에도 남기지 않는다 */

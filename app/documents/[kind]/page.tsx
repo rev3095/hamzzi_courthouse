@@ -7,7 +7,14 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { DocumentStudio } from "@/components/documents/DocumentStudio";
-import { DOCUMENT_KINDS, DOCUMENT_SPECS, isDocumentKind } from "@/lib/documents/policy";
+import { EXAMPLE_NOTICE, examplesOf } from "@/lib/documents/examples";
+import {
+  DOCUMENT_KINDS,
+  DOCUMENT_SPECS,
+  fillDocument,
+  isDocumentKind,
+  parseDocumentInput,
+} from "@/lib/documents/policy";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { PROCEDURE_NOTICE } from "@/lib/procedure/steps";
 
@@ -35,7 +42,11 @@ export default async function DocumentPage({
             <Link href="/" className="text-link underline">
               홈
             </Link>{" "}
-            · 절차 안내 · {spec.stepLabel}
+            ·{" "}
+            <Link href="/documents" className="text-link underline">
+              문서 작성
+            </Link>{" "}
+            · {spec.stepLabel}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <DocTitle title={spec.title} />
@@ -48,6 +59,8 @@ export default async function DocumentPage({
           <Suspense fallback={null}>
             <StudioArea kind={kind} searchParams={searchParams} />
           </Suspense>
+
+          <Examples kind={kind} />
 
           <section aria-labelledby="tips-title" className="mt-8">
             <h2 id="tips-title" className="font-display text-ink text-[19px] font-bold">
@@ -109,6 +122,70 @@ export default async function DocumentPage({
         </article>
       </div>
     </main>
+  );
+}
+
+/**
+ * 예시로 보기: 가상 인물·가상 사건으로 채운 완성 문서 (lib/documents/examples.ts, 모델이 쓴 글이 아니다).
+ * 실제 채우기 함수에 예시 값을 넣어 만든다 — 설문에 답했을 때 나오는 문서와 같은 모양이다.
+ */
+function Examples({ kind }: { kind: DocumentKind }) {
+  const list = examplesOf(kind);
+  if (list.length === 0) return null;
+  return (
+    <section aria-labelledby="examples-title" className="mt-8">
+      <h2 id="examples-title" className="font-display text-ink text-[19px] font-bold">
+        예시로 보기
+      </h2>
+      <p className="text-muted mt-1 text-[13px] leading-relaxed">{EXAMPLE_NOTICE}</p>
+      <div className="mt-3 flex flex-col gap-2">
+        {list.map((ex) => {
+          const doc = fillDocument(kind, parseDocumentInput(kind, ex.values));
+          return (
+            <details key={ex.title} className="rounded-card border-line group border bg-white">
+              <summary className="text-ink flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
+                <span>
+                  <span className="bg-cream text-label mr-2 rounded-[6px] px-2 py-0.5 text-xs font-semibold">
+                    가상 예시
+                  </span>
+                  {ex.title}
+                </span>
+                <span aria-hidden="true" className="text-muted group-open:hidden">
+                  +
+                </span>
+                <span aria-hidden="true" className="text-muted hidden group-open:inline">
+                  −
+                </span>
+              </summary>
+              <div className="border-line bg-soft text-ink border-t px-4 py-4 text-[14px] leading-[1.8]">
+                {doc.blocks.map((b, i) =>
+                  b.kind === "blank" ? (
+                    <div key={i} className="h-3" />
+                  ) : (
+                    <p
+                      key={i}
+                      className={`break-words whitespace-pre-wrap ${
+                        b.kind === "title"
+                          ? "text-center text-[17px] font-bold"
+                          : b.kind === "heading"
+                            ? "mt-1 font-bold"
+                            : b.kind === "center"
+                              ? "text-center"
+                              : b.kind === "right"
+                                ? "text-right"
+                                : ""
+                      }`}
+                    >
+                      {b.text}
+                    </p>
+                  ),
+                )}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

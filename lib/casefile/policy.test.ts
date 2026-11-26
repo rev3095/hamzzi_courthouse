@@ -207,7 +207,7 @@ describe("F-015 AC3 질문 문장 합치기", () => {
     );
   });
 
-  test("질문을 비우면 상황 정리(양쪽 입장·대응·쟁점·반론·문서, DEC-066)를 묻고, 자리를 모르면 그 줄을 뺀다", () => {
+  test("질문을 비우면 상황 정리(양쪽 입장·대응·쟁점·반론·문서, DEC-068)를 묻고, 자리를 모르면 그 줄을 뺀다", () => {
     const text = composeCaseText({
       docTypes: [],
       summary: "개요",
@@ -404,6 +404,16 @@ describe("F-015 AC2 개인 이름이 새는 경로 막기 (절대 규칙 4)", ()
     expect(out.reading.summary).toContain("○○○에게");
     expect(out.reading.claims[1]).toBe("○○○ 씨와 ○○○ 씨에게 연락했습니다.");
     expect(out.findings.find((f) => f.type === "name")?.count).toBeGreaterThanOrEqual(5);
+
+    // 성과 가림 기호를 띄어 쓴 꼴(박 ㅇㅇ씨)도 개요에 성씨가 남지 않는다
+    const spaced = read({
+      summary:
+        "임차인은 임대인 박 ㅇㅇ씨에게 보증금을 돌려 달라고 했습니다. 중개인 최ㅇㅇ은 자리에 있었습니다.",
+    });
+    // 판독 글은 NFKC로 맞춰져 'ㅇ'이 'ᄋ'(U+110B)로 바뀐 뒤에 가린다
+    expect(spaced.reading.summary).toBe(
+      "임차인은 임대인 ○○○씨에게 보증금을 돌려 달라고 했습니다. 중개인 ○○○은 자리에 있었습니다.",
+    );
 
     // 상호·기관·지역의 ○○, 조문 자리는 그대로 둔다
     for (const plain of [

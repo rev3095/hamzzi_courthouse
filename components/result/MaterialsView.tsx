@@ -341,7 +341,7 @@ export function MaterialsView({
                 </p>
               )}
 
-              <div className="rounded-card border-honey-line bg-honey mt-3 px-4 py-3">
+              <div className="rounded-card border-line bg-cream mt-3 border px-4 py-3">
                 <h3 className="text-ink text-[14px] font-semibold">이렇게 챙겨 두세요</h3>
                 <ul className="text-ink mt-1 list-disc space-y-1 pl-5 text-[14px] leading-relaxed">
                   {tips.keep.map((t) => (
