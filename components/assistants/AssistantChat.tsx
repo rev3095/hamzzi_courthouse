@@ -55,7 +55,7 @@ const THREAD_KEY = (a: AssistantId) => `hz:as:${a}`;
 /** 이 기기에 남겨 두는 대화 수 (오래된 것부터 뺀다) */
 const KEEP_TURNS = 12;
 
-function loadThread(a: AssistantId): { id: string; question: string }[] {
+export function loadThread(a: AssistantId): { id: string; question: string }[] {
   try {
     const raw = sessionStorage.getItem(THREAD_KEY(a));
     const list = raw ? (JSON.parse(raw) as unknown) : [];

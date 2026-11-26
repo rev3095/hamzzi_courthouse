@@ -398,26 +398,9 @@
   background: transparent;
 }
 
-/* 진행 과정: 한 줄 흐름 */
-.hza-flow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 8px;
-  padding: 18px 20px;
-  background: linear-gradient(180deg, var(--hza-soft) 0, var(--hza-surface) 100%);
-}
-
-.hza-flow > li {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hza-flow > li + li::before {
-  content: "→";
-  margin-right: 2px;
-  color: var(--hza-accent);
+/* 진행 과정: 일반 답변과 같은 절차 타임라인 부품을 카드 안에 담는다 (부품의 위 여백만 없앤다) */
+.hza-timeline > section {
+  margin-top: 0;
 }
 
 /* 진행 과정: 단계 표 */
