@@ -4,6 +4,7 @@
 import { parseDeepMap, type DeepMap } from "@/lib/ai/deep-policy";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { sourceRef } from "./labels";
+import { ZoomPane } from "./ZoomPane";
 
 type Result = Pick<DemoAnalysisResult, "deep" | "answer" | "articles" | "cases" | "aiNotice">;
 
@@ -43,7 +44,8 @@ export function issueSources(map: DeepMap, result: Result): string[][] {
 }
 
 const W = 760;
-const LINE = 17;
+// 여백 원칙 (DEC-065): 줄·상자 사이를 넉넉히 두고 ZoomPane에서 옮겨 본다
+const LINE = 19;
 
 /** 좁은 화면(md 미만) 사건 구조: 그림 대신 세로 목록 (2026-11-19 사용자 승인 — 가로 스크롤 없이) */
 export function MindmapCompact({ map, sources }: { map: DeepMap; sources: string[][] }) {
@@ -111,7 +113,7 @@ export function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] })
   }));
   const leftBottom = map.unknowns.slice(0, 4).map((u) => ({ lines: wrapText(u, 15, 3) }));
   const hOf = (n: { lines: string[] }) => 20 + n.lines.length * LINE;
-  const GAP = 14;
+  const GAP = 26;
   const rightH = right.reduce((s, n) => s + n.h + GAP, -GAP);
   const leftH =
     leftTop.reduce((s, n) => s + hOf(n) + GAP, 0) +
@@ -157,100 +159,108 @@ export function Mindmap({ map, sources }: { map: DeepMap; sources: string[][] })
 
   return (
     <div className="hidden md:block">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        role="img"
-        aria-label={`사건 구조도: 당사자 ${map.parties.length}, 쟁점 ${map.issues.length}, 확인할 사실 ${map.unknowns.length}`}
-        className="h-auto w-full"
-      >
-        <g fill="none" strokeWidth="1.5">
-          {R.map((n, i) => (
-            <path key={`r${i}`} d={curve(cx + 62, cy, n.x, n.y + n.h / 2)} stroke="var(--gold)" />
-          ))}
-          {P.map((n, i) => (
-            <path
-              key={`p${i}`}
-              d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
-              stroke="var(--line)"
-            />
-          ))}
-          {U.map((n, i) => (
-            <path
-              key={`u${i}`}
-              d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
-              stroke="var(--line)"
-              strokeDasharray="4 4"
-            />
-          ))}
-        </g>
-
-        <circle cx={cx} cy={cy} r="62" fill="var(--ink)" />
-        <text x={cx} y={cy - 4} textAnchor="middle" className="fill-white text-[16px] font-bold">
-          이 사건
-        </text>
-        <text x={cx} y={cy + 16} textAnchor="middle" className="fill-white text-[11px]">
-          쟁점 {map.issues.length} · 근거 {new Set(sources.flat()).size}
-        </text>
-
-        {R.map((n, i) => (
-          <g key={`rb${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              rx="10"
-              fill="var(--cream)"
-              stroke="var(--gold-line)"
-            />
-            {text(n.title, n.x + 12, n.y + 24, "fill-[var(--ink)] text-[13px] font-semibold")}
-            {n.src.map((s, j) => (
-              <text
-                key={j}
-                x={n.x + 12}
-                y={n.y + 24 + n.title.length * LINE + 6 + j * 15}
-                className="fill-[var(--link)] text-[11px]"
-              >
-                {s}
-              </text>
+      <ZoomPane width={W} height={H} label="사건 구조도">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width={W}
+          height={H}
+          role="img"
+          aria-label={`사건 구조도: 당사자 ${map.parties.length}, 쟁점 ${map.issues.length}, 확인할 사실 ${map.unknowns.length}`}
+          className="block bg-white"
+        >
+          <g fill="none" strokeWidth="1.5">
+            {R.map((n, i) => (
+              <path key={`r${i}`} d={curve(cx + 62, cy, n.x, n.y + n.h / 2)} stroke="var(--gold)" />
+            ))}
+            {P.map((n, i) => (
+              <path
+                key={`p${i}`}
+                d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
+                stroke="var(--line)"
+              />
+            ))}
+            {U.map((n, i) => (
+              <path
+                key={`u${i}`}
+                d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
+                stroke="var(--line)"
+                strokeDasharray="4 4"
+              />
             ))}
           </g>
-        ))}
-        {P.map((n, i) => (
-          <g key={`pb${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              rx="10"
-              fill="white"
-              stroke="var(--line)"
-            />
-            {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[13px] font-semibold")}
-          </g>
-        ))}
-        {U.length > 0 && (
-          <text x={20} y={unknownLabelY} className="fill-[var(--muted)] text-[11px] font-semibold">
-            확인할 사실
+
+          <circle cx={cx} cy={cy} r="62" fill="var(--ink)" />
+          <text x={cx} y={cy - 4} textAnchor="middle" className="fill-white text-[16px] font-bold">
+            이 사건
           </text>
-        )}
-        {U.map((n, i) => (
-          <g key={`ub${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              rx="10"
-              fill="var(--soft)"
-              stroke="var(--line)"
-              strokeDasharray="4 4"
-            />
-            {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[12px]")}
-          </g>
-        ))}
-      </svg>
+          <text x={cx} y={cy + 16} textAnchor="middle" className="fill-white text-[11px]">
+            쟁점 {map.issues.length} · 근거 {new Set(sources.flat()).size}
+          </text>
+
+          {R.map((n, i) => (
+            <g key={`rb${i}`}>
+              <rect
+                x={n.x}
+                y={n.y}
+                width={n.w}
+                height={n.h}
+                rx="10"
+                fill="var(--cream)"
+                stroke="var(--gold-line)"
+              />
+              {text(n.title, n.x + 12, n.y + 24, "fill-[var(--ink)] text-[13px] font-semibold")}
+              {n.src.map((s, j) => (
+                <text
+                  key={j}
+                  x={n.x + 12}
+                  y={n.y + 24 + n.title.length * LINE + 6 + j * 15}
+                  className="fill-[var(--link)] text-[11px]"
+                >
+                  {s}
+                </text>
+              ))}
+            </g>
+          ))}
+          {P.map((n, i) => (
+            <g key={`pb${i}`}>
+              <rect
+                x={n.x}
+                y={n.y}
+                width={n.w}
+                height={n.h}
+                rx="10"
+                fill="white"
+                stroke="var(--line)"
+              />
+              {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[13px] font-semibold")}
+            </g>
+          ))}
+          {U.length > 0 && (
+            <text
+              x={20}
+              y={unknownLabelY}
+              className="fill-[var(--muted)] text-[11px] font-semibold"
+            >
+              확인할 사실
+            </text>
+          )}
+          {U.map((n, i) => (
+            <g key={`ub${i}`}>
+              <rect
+                x={n.x}
+                y={n.y}
+                width={n.w}
+                height={n.h}
+                rx="10"
+                fill="var(--soft)"
+                stroke="var(--line)"
+                strokeDasharray="4 4"
+              />
+              {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[12px]")}
+            </g>
+          ))}
+        </svg>
+      </ZoomPane>
     </div>
   );
 }

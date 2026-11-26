@@ -19,6 +19,7 @@ export function QuestionBox({
   busy,
   placeholder = "무슨 일이 있었는지 적어 주세요",
   label = "질문",
+  submitLabel = "물어보기",
   size = "lg",
   inputRef,
   askTools = false,
@@ -32,6 +33,8 @@ export function QuestionBox({
   busy: boolean;
   placeholder?: string;
   label?: string;
+  /** 보내기 버튼 글자 (홈은 "정리 시작", DEC-065) */
+  submitLabel?: string;
   size?: "lg" | "md";
   /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "심층 질문하기") */
   inputRef?: Ref<HTMLTextAreaElement>;
@@ -114,7 +117,9 @@ export function QuestionBox({
               <path d="M14.5 14.5L19 19" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           )}
-          <span className="sr-only lg:not-sr-only lg:text-[15px] lg:font-semibold">물어보기</span>
+          <span className="sr-only lg:not-sr-only lg:text-[15px] lg:font-semibold">
+            {submitLabel}
+          </span>
         </button>
       </div>
       {attach && <AttachTray attach={attach} noun={attachNoun} />}

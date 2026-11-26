@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api/errors";
 import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
 import {
   CASEFILE_LIMITS,
+  DEFAULT_CASE_QUESTION,
   composeCaseText,
   parseReadRequest,
   DOC_TYPES,
@@ -206,7 +207,7 @@ describe("F-015 AC3 질문 문장 합치기", () => {
     );
   });
 
-  test("질문을 비우면 쟁점·절차를 묻고, 자리를 모르면 그 줄을 뺀다", () => {
+  test("질문을 비우면 상황 정리(양쪽 입장·대응·쟁점·반론·문서, DEC-065)를 묻고, 자리를 모르면 그 줄을 뺀다", () => {
     const text = composeCaseText({
       docTypes: [],
       summary: "개요",
@@ -216,7 +217,8 @@ describe("F-015 AC3 질문 문장 합치기", () => {
     });
     expect(text).toContain("서류 종류: 적지 않음");
     expect(text).not.toContain("질문자의 자리");
-    expect(text).toContain("쟁점이 무엇이고 어떤 절차로");
+    expect(text).toContain(DEFAULT_CASE_QUESTION);
+    expect(DEFAULT_CASE_QUESTION).toMatch(/민사와 형사.*입장.*대응.*쟁점.*반론.*문서/);
   });
 
   test("가득 채운 사건 개요와 질문은 질문 한도(2,000자) 안에 들어간다", () => {

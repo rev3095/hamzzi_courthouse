@@ -87,7 +87,7 @@ test("DEC-028 카테고리를 고르면 안내·질문 틀이 나오고, 문장 
   expect(screen.getByRole("button", { name: /가족·이혼/ }).getAttribute("aria-pressed")).toBe(
     "true",
   );
-  const box = screen.getByLabelText("질문") as HTMLTextAreaElement;
+  const box = screen.getByLabelText("현재 상황") as HTMLTextAreaElement;
   expect(box.placeholder).toMatch(/양육비/);
   fireEvent.click(screen.getByRole("button", { name: "정해진 양육비를 받지 못하고 있어요." }));
   expect(box.value).toBe("정해진 양육비를 받지 못하고 있어요. ");
@@ -100,9 +100,9 @@ test("DEC-028 카테고리를 고르고 보낸 질문은 지금처럼 질문 생
   render(<Home />);
   openGuide();
   fireEvent.click(screen.getByRole("button", { name: /소비자·환불/ }));
-  const box = screen.getByLabelText("질문");
+  const box = screen.getByLabelText("현재 상황");
   fireEvent.change(box, { target: { value: "온라인으로 산 옷을 환불받고 싶어요" } });
-  fireEvent.click(screen.getByRole("button", { name: "물어보기" }));
+  fireEvent.click(screen.getByRole("button", { name: "정리 시작" }));
   await vi.waitFor(() => expect(push).toHaveBeenCalledWith(`/inquiries/${INQ}`));
   // 서버에는 질문 본문만 보낸다 (카테고리는 분석 요청에서 정해진 값으로만)
   expect(JSON.parse(String(posts()[0][1]?.body))).toEqual({

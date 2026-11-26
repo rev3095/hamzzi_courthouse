@@ -4,6 +4,7 @@
 // 재료는 결과에 이미 있는 값(사건 구조·검증을 통과한 문단·근거 이름)뿐이다 — 그림을 위해 모델을 부르지 않는다.
 import { useRef, useState } from "react";
 import { wrapText } from "./DeepMapView";
+import { ZoomPane } from "./ZoomPane";
 
 /** globals.css 토큰과 같은 값 (PNG로 내보낼 때 CSS 변수를 읽을 수 없어 값으로 둔다) */
 export const C = {
@@ -43,12 +44,16 @@ const TONES: Record<Tone, { fill: string; stroke: string; text: string; dash?: s
   dash: { fill: C.soft, stroke: C.line, text: C.ink, dash: "4 4" },
 };
 
-const PAD = 24;
-const GAP_X = 56;
-const GAP_Y = 12;
+// 여백 원칙 (DEC-065): 상자 사이·상자 안을 넉넉히 둔다. 한 화면에 다 담으려고 줄이지 않고 ZoomPane에서 옮겨 본다
+const PAD = 32;
+const GAP_X = 88;
+const GAP_Y = 22;
 const FS = 16;
-const LH = 22;
+const LH = 24;
 const SUB_FS = 13;
+/** 상자 안쪽 여백 */
+const IN = 14;
+const COL_W = 228;
 const HEAD = 84;
 const COL_HEAD = 30;
 
@@ -65,12 +70,12 @@ type Laid = BoardNode & {
 export function layoutBoard(columns: BoardColumn[]) {
   let x = PAD;
   const laid: Laid[][] = columns.map((col) => {
-    const w = col.width ?? 200;
-    const per = Math.max(6, Math.floor((w - 20) / FS));
+    const w = col.width ?? COL_W;
+    const per = Math.max(6, Math.floor((w - IN * 2) / FS));
     const nodes = col.nodes.map((n) => {
       const lines = wrapText(n.text, per, 4);
-      const subLines = n.sub ? wrapText(n.sub, Math.floor((w - 20) / SUB_FS), 2) : [];
-      const h = 16 + lines.length * LH + (subLines.length ? subLines.length * 17 + 4 : 0);
+      const subLines = n.sub ? wrapText(n.sub, Math.floor((w - IN * 2) / SUB_FS), 2) : [];
+      const h = IN * 2 - 4 + lines.length * LH + (subLines.length ? subLines.length * 18 + 6 : 0);
       return { ...n, x, y: 0, w, h, lines, subLines };
     });
     x += w + GAP_X;
@@ -123,14 +128,21 @@ export function BoardDiagram({
     return acc;
   }, []);
   return (
-    <figure className="mt-3">
+    <ZoomPane
+      width={width}
+      height={height}
+      label={label}
+      actions={<SaveImage svg={ref} fileName={fileName} />}
+    >
       <svg
         ref={ref}
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
         role="img"
         aria-label={label}
-        className="h-auto w-full"
+        className="block"
         fontFamily={FONT}
       >
         <rect width={width} height={height} rx="14" fill={C.white} stroke={C.line} />
@@ -230,9 +242,9 @@ export function BoardDiagram({
                 stroke={t.stroke}
                 strokeDasharray={t.dash}
               />
-              <text x={n.x + 10} y={n.y + 8 + LH - 4} fill={t.text} fontSize={FS} fontWeight="600">
+              <text x={n.x + IN} y={n.y + IN + LH - 8} fill={t.text} fontSize={FS} fontWeight="600">
                 {n.lines.map((l, j) => (
-                  <tspan key={j} x={n.x + 10} dy={j === 0 ? 0 : LH}>
+                  <tspan key={j} x={n.x + IN} dy={j === 0 ? 0 : LH}>
                     {l}
                   </tspan>
                 ))}
@@ -240,8 +252,8 @@ export function BoardDiagram({
               {n.subLines.map((l, j) => (
                 <text
                   key={j}
-                  x={n.x + 10}
-                  y={n.y + 8 + n.lines.length * LH + 8 + j * 17}
+                  x={n.x + IN}
+                  y={n.y + IN + n.lines.length * LH + 8 + j * 18}
                   fill={n.tone === "ink" ? C.goldLine : C.link}
                   fontSize={SUB_FS}
                 >
@@ -258,10 +270,7 @@ export function BoardDiagram({
           </text>
         )}
       </svg>
-      <figcaption className="mt-1.5 flex justify-end">
-        <SaveImage svg={ref} fileName={fileName} />
-      </figcaption>
-    </figure>
+    </ZoomPane>
   );
 }
 

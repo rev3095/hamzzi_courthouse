@@ -139,3 +139,55 @@ export function AttachTray({ attach, noun = "서류" }: { attach: Attachments; n
     </div>
   );
 }
+
+/**
+ * 자료 올리기 큰 버튼 (DEC-065): 홈 질문창 아래에 "전달받은 자료·작성 중인 자료를 바로 올려 주세요"를 글로 보인다.
+ * 누르거나 파일을 끌어다 놓으면 붙는다. 붙인 줄은 질문창의 AttachTray가 보인다.
+ */
+export function AttachDrop({ attach, disabled }: { attach: Attachments; disabled?: boolean }) {
+  const id = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const full = attach.items.length >= CASEFILE_LIMITS.maxImages;
+  return (
+    <div
+      onDragOver={(e) => {
+        if ([...e.dataTransfer.types].includes("Files")) e.preventDefault();
+      }}
+      onDrop={(e) => {
+        const files = [...e.dataTransfer.files];
+        if (files.length === 0) return;
+        e.preventDefault();
+        void attach.add(files);
+      }}
+    >
+      <input
+        ref={input}
+        id={id}
+        type="file"
+        accept={ATTACH_ACCEPT}
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => {
+          void attach.add(e.target.files ?? []);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        disabled={disabled || attach.busy || full}
+        className="rounded-card border-gold-line hover:border-gold flex w-full flex-col items-center gap-1 border-2 border-dashed bg-white px-5 py-5 text-center disabled:opacity-50"
+      >
+        <span className="text-ink text-[16px] font-bold">
+          전달받은 자료·작성 중인 자료를 바로 올려 주세요
+        </span>
+        <span className="text-muted text-[13px] leading-relaxed">
+          받은 소장·내용증명·고소장, 쓰고 있는 서면·답변서 — 올리면 동의를 받은 뒤 곧바로 읽고
+          구조도로 정리해요. 사진·PDF·한글·워드·파워포인트·엑셀·텍스트
+        </span>
+      </button>
+    </div>
+  );
+}

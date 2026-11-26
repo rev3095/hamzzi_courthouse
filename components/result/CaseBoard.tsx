@@ -8,6 +8,7 @@ import { useState } from "react";
 import {
   CASE_KINDS,
   CASE_SIDES,
+  PLAN_DOCS,
   parseDeepMap,
   type CaseSide,
   type DeepMap,
@@ -111,7 +112,14 @@ export function CaseBoard({
         className="px-3 py-4 sm:px-5"
       >
         {tab === "overview" && (
-          <OverviewTab result={result} map={map} sources={sources} kinds={kinds} file={file} />
+          <OverviewTab
+            result={result}
+            map={map}
+            sources={sources}
+            kinds={kinds}
+            file={file}
+            inquiryId={inquiryId}
+          />
         )}
         {tab === "docs" && <DocsTab result={result} map={map} file={file} />}
         {tab === "facts" && <FactsTab result={result} map={map} file={file} />}
@@ -140,13 +148,44 @@ function Lead({ children }: { children: React.ReactNode }) {
 
 // ── 개요: 한 장짜리 사건 구조도 ─────────────────────────────
 
+/** 지금 내용으로 작성해 볼 문서 (DEC-065) — 문서 작성 화면으로 잇는다. 초안 도우미가 이 질문의 사연으로 칸을 채운다 */
+function PlanDocs({ map, inquiryId }: { map: DeepMap; inquiryId?: string }) {
+  const docs = map.plan?.docs ?? [];
+  if (docs.length === 0) return null;
+  return (
+    <section aria-labelledby="plan-docs-title" className="mt-5">
+      <h3 id="plan-docs-title" className="text-ink text-[15px] font-bold">
+        지금 내용으로 작성해 볼 문서
+      </h3>
+      <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+        {docs.map((d) => (
+          <li key={d.kind}>
+            <Link
+              href={`/documents/${d.kind}${inquiryId ? `?from=${inquiryId}` : ""}`}
+              className="rounded-card border-gold-line bg-cream hover:border-gold block border px-4 py-3.5"
+            >
+              <span className="text-ink block text-[15px] font-bold">
+                {PLAN_DOCS[d.kind]} 작성하기 →
+              </span>
+              {d.why && (
+                <span className="text-muted mt-1 block text-[13px] leading-relaxed">{d.why}</span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function OverviewTab({
   result,
   map,
   sources,
   kinds,
   file,
-}: TabProps & { sources: string[][]; kinds: string[] }) {
+  inquiryId,
+}: TabProps & { sources: string[][]; kinds: string[]; inquiryId?: string }) {
   const evidence = new Set(sources.flat()).size;
   const columns: BoardColumn[] = [
     {
@@ -228,6 +267,7 @@ function OverviewTab({
           );
         })}
       </ul>
+      <PlanDocs map={map} inquiryId={inquiryId} />
     </>
   );
 }
@@ -379,9 +419,10 @@ function MapTab({
       </div>
       {sides.length > 0 && (
         <>
-          <h3 className="text-ink mt-5 text-[15px] font-bold">양쪽 당사자와 할 수 있는 대응</h3>
+          <h3 className="text-ink mt-6 text-[15px] font-bold">양쪽의 입장과 할 수 있는 대응</h3>
           <Lead>
-            누가 어느 자리에 서는지와 각자 할 수 있는 일이에요. 누가 옳은지 판단한 것이 아니에요.
+            누가 어느 자리에 서는지, 각자 어떤 입장이고 무엇을 할 수 있는지예요. 누가 옳은지 판단한
+            것이 아니에요.
           </Lead>
           <BoardDiagram
             title="당사자별 대응"
@@ -443,13 +484,18 @@ function MapTab({
             label={`당사자별 대응: 당사자 ${sides.length}`}
             fileName={file("sides")}
           />
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {sides.map((s) => (
-              <li key={s.party} className="rounded-card bg-soft px-4 py-3">
+              <li key={s.party} className="rounded-card bg-soft px-5 py-4">
                 <p className="text-ink text-[14px] font-semibold">
                   {s.party} <span className="text-muted font-normal">· {CASE_SIDES[s.side]}</span>
                 </p>
-                <ul className="mt-1 list-disc pl-5 text-[13px] leading-relaxed">
+                {s.stance && (
+                  <p className="text-ink mt-1.5 text-[13px] leading-relaxed">
+                    <span className="text-label font-semibold">입장</span> {s.stance}
+                  </p>
+                )}
+                <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[13px] leading-relaxed">
                   {s.actions.map((a) => (
                     <li key={a}>{a}</li>
                   ))}
@@ -514,6 +560,69 @@ function IssuesTab({ result, map, sources, file }: TabProps & { sources: string[
         label={`쟁점별 근거: 쟁점 ${map.issues.length}`}
         fileName={file("issues")}
       />
+      <Rebuttals result={result} map={map} file={file} />
+    </>
+  );
+}
+
+/** 예상 반론과 대응 (DEC-065): 쟁점 → 상대방이 내세울 수 있는 반론 → 대비할 방향. 판정이 아니라 준비용이다 */
+function Rebuttals({ result, map, file }: TabProps) {
+  const list = (map.plan?.rebuttals ?? []).filter((r) => map.issues[r.issue - 1]);
+  if (list.length === 0) return null;
+  const issues = [...new Set(list.map((r) => r.issue))].sort((a, b) => a - b);
+  return (
+    <>
+      <h3 className="text-ink mt-6 text-[15px] font-bold">예상 반론과 대응</h3>
+      <Lead>
+        다른 당사자가 내세울 수 있는 반론과 미리 준비할 방향이에요. 실제로 그렇게 주장한다는 뜻도,
+        어느 쪽이 맞다는 뜻도 아니에요. 자료에서 읽은 날짜·금액은 원본과 대조해 주세요.
+      </Lead>
+      <BoardDiagram
+        title="예상 반론과 대응"
+        columns={[
+          {
+            title: "쟁점",
+            width: 220,
+            nodes: issues.map((n) => ({
+              id: `q${n}`,
+              text: `${n}. ${map.issues[n - 1].title}`,
+              tone: "cream" as const,
+            })),
+          },
+          {
+            title: "예상 반론",
+            width: 300,
+            nodes: list.map((r, i) => ({ id: `b${i}`, text: r.point, sub: r.by, tone: "white" })),
+          },
+          {
+            title: "대응 방향",
+            width: 300,
+            nodes: list.map((r, i) => ({ id: `y${i}`, text: r.reply, tone: "gold" })),
+          },
+        ]}
+        links={[
+          ...list.map((r, i) => [`q${r.issue}`, `b${i}`] as [string, string]),
+          ...list.map((_, i) => [`b${i}`, `y${i}`] as [string, string]),
+        ]}
+        footer={TITLE_FOOT(result.aiNotice)}
+        label={`예상 반론과 대응 ${list.length}개`}
+        fileName={file("rebuttals")}
+      />
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        {list.map((r, i) => (
+          <li key={i} className="rounded-card bg-soft px-5 py-4">
+            <p className="text-muted text-[12px] font-semibold">
+              쟁점 {r.issue} · {r.by}
+            </p>
+            <p className="text-ink mt-1 text-[14px] leading-relaxed">
+              <span className="text-label font-semibold">예상 반론</span> {r.point}
+            </p>
+            <p className="text-ink mt-1.5 text-[14px] leading-relaxed">
+              <span className="text-label font-semibold">대응 방향</span> {r.reply}
+            </p>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

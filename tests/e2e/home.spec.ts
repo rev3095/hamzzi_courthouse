@@ -48,7 +48,7 @@ test("F-007 개인정보가 보이면 가린 문장을 확인한 뒤 분석한�
   await page
     .getByRole("textbox", { name: "질문" })
     .fill("010-1234-5678로 연락해도 받지 않아요. 빌려준 돈을 받을 수 있나요?");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("개인정보로 보이는 내용을 가렸어요");
   await expect(dialog).toContainText("전화번호 1");
@@ -92,7 +92,7 @@ test("F-007 AC2 민감정보는 동의해야 다시 보낸다", async ({ page })
   });
   await page.goto("/");
   await page.getByRole("textbox", { name: "질문" }).fill("치료 중인 병 때문에 해고됐어요");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("건강 정보");
   await expect(dialog.getByRole("button", { name: "동의하고 계속" })).toBeDisabled();
@@ -117,7 +117,7 @@ test("DEC-010 한도를 넘는 질문은 데모 한도 안내", async ({ page })
     page.getByText("데모에서는 하루에 질문을 5번까지 할 수 있어요", { exact: false }),
   ).toBeVisible();
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   await expect(page.getByRole("dialog")).toContainText("질문 5번을 모두 썼어요");
   await expect(page.getByRole("button", { name: "로그인" })).toHaveCount(0);
 });
@@ -138,7 +138,7 @@ test("F-006 AC2 법제처 연결 실패는 결과 없음과 구분하고 예시 
   await page
     .getByRole("textbox", { name: "질문" })
     .fill("층간소음 때문에 너무 힘들어요. 어떻게 해야 하나요?");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("앗, 서고 문이 잠깐 잠겼어요")).toBeVisible();
   await expect(page.getByText("지금은 예시 질문으로 체험할 수 있어요")).toBeVisible();
@@ -177,7 +177,7 @@ test("F-002 이어 묻기는 앞 질문 id를 함께 보낸다", async ({ page }
   await page
     .getByRole("textbox", { name: "심층 질문하기" })
     .fill("차용증이 없어도 받을 수 있나요?");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   await expect.poll(() => calls.create.length).toBe(1);
   expect(calls.create[0]).toEqual({
     text: "차용증이 없어도 받을 수 있나요?",
@@ -214,7 +214,7 @@ test("F-001 헤더 남은 질문은 분석 뒤와 화면을 옮긴 뒤에도 서
   await page.goto("/");
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 5/5");
   await page.getByRole("textbox", { name: "질문" }).fill("보증금을 못 받았어요");
-  await page.getByRole("button", { name: "물어보기" }).click();
+  await page.getByRole("button", { name: "정리 시작" }).click();
   await page.waitForURL(`**/inquiries/${INQ}`);
   await expect(page.getByText("햄찌 판사의 정리")).toBeVisible();
   await expect(page.getByTestId("quota")).toHaveText("오늘 남은 질문 4/5");

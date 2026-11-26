@@ -121,6 +121,65 @@ describe("DEC-062 사건 정리판 거르기", () => {
     expect(screenPlan(undefined, ["임차인"], q)).toBeNull();
   });
 
+  it("DEC-065 입장·예상 반론·작성할 문서: 구조의 당사자·쟁점 번호·정해진 서식만 남기고 판정 표현은 버린다", () => {
+    const p = screenPlan(
+      plan({
+        sides: [
+          {
+            party: "임차인",
+            side: "claimant",
+            stance: "계약이 끝났으니 보증금을 돌려받아야 한다는 입장",
+            actions: ["민사: 내용증명으로 반환을 요구한다"],
+          },
+          { party: "임대인", side: "respondent", stance: "임차인이 불리하다", actions: [] },
+        ],
+        rebuttals: [
+          {
+            issue: 1,
+            by: "임대인",
+            point: "새 세입자가 들어와야 줄 수 있다고 한다",
+            reply: "계약 종료 사실과 통지 기록을 모아 둔다",
+          },
+          { issue: 5, by: "임대인", point: "쟁점 번호가 범위를 벗어난 반론", reply: "대응" },
+          { issue: 1, by: "모르는 사람", point: "구조에 없는 당사자의 반론", reply: "대응" },
+          { issue: 2, by: "임대인", point: "임차인이 질 가능성이 높다고 한다", reply: "대응" },
+          { issue: 2, by: "임대인", point: "임차인의 청구는 기각될 것이라고 한다", reply: "대응" },
+          {
+            issue: 2,
+            by: "임대인",
+            point: "연체를 이유로 든다",
+            reply: "이 주장은 받아들여지기 어렵다",
+          },
+        ],
+        docs: [
+          { kind: "demand-letter", why: "먼저 반환을 요구한 기록을 남긴다" },
+          { kind: "demand-letter", why: "겹침" },
+          { kind: "없는-서식", why: "버림" },
+        ],
+      }),
+      ["임차인", "임대인"],
+      q,
+      2,
+    );
+    expect(p?.sides[0].stance).toBe("계약이 끝났으니 보증금을 돌려받아야 한다는 입장");
+    expect(p?.sides[1].stance).toBeUndefined();
+    expect(p?.rebuttals).toEqual([
+      {
+        issue: 1,
+        by: "임대인",
+        point: "새 세입자가 들어와야 줄 수 있다고 한다",
+        reply: "계약 종료 사실과 통지 기록을 모아 둔다",
+      },
+    ]);
+    expect(p?.docs).toEqual([{ kind: "demand-letter", why: "먼저 반환을 요구한 기록을 남긴다" }]);
+  });
+
+  it("DEC-065 예전 정리판(반론·문서 없음)은 그 칸 없이 그대로 남는다", () => {
+    const p = screenPlan(plan(), ["임차인", "임대인"], q);
+    expect(p).not.toHaveProperty("rebuttals");
+    expect(p).not.toHaveProperty("docs");
+  });
+
   it("예전 결과(정리판 없음)도 그대로 읽고, 모양이 틀린 정리판은 빼고 읽는다", () => {
     const base = {
       parties: [{ label: "임차인", role: "질문자" }],

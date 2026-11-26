@@ -16,14 +16,16 @@ import {
   type MatterParty,
   type MatterSide,
 } from "@/lib/matters/model";
+import { ZoomPane } from "../result/ZoomPane";
 import { AiTag, ConfirmButton, Empty, Hover, SectionTitle, btn, btnLine, field, label } from "./ui";
 
+// 여백 원칙 (DEC-065): 상자 사이를 넉넉히 두고, 한 화면에 다 담으려고 줄이지 않는다 — ZoomPane에서 옮겨 본다
 const W = 236;
-const H = 60;
-const GAP = 16;
-const TOP = 40;
-const COL: Record<MatterSide, number> = { claimant: 12, respondent: 372, other: 732 };
-const WIDTH = 980;
+const H = 64;
+const GAP = 30;
+const TOP = 52;
+const COL: Record<MatterSide, number> = { claimant: 28, respondent: 420, other: 812 };
+const WIDTH = 1076;
 
 const SHAPE: Record<MatterKind, string> = {
   business: "border-ink border-2 rounded-[4px]",
@@ -85,107 +87,125 @@ export function StructureMap({
           <Empty>아직 당사자가 없어요. 자료 탭에서 서류를 읽거나 아래에서 직접 더해 주세요.</Empty>
         </div>
       ) : (
-        <div className="border-line mt-3 overflow-x-auto rounded-[8px] border bg-white">
-          <div className="relative" style={{ width: WIDTH, height }} data-testid="structure-map">
-            {MATTER_SIDES.map((side) => (
-              <p
-                key={side}
-                className={`${label} absolute top-3`}
-                style={{ left: COL[side], width: W }}
-              >
-                {MATTER_SIDE_LABEL[side]}
-              </p>
-            ))}
-            <svg width={WIDTH} height={height} className="absolute inset-0" aria-hidden="true">
-              {data.relations.map((r) => {
-                const a = pos.get(r.from);
-                const b = pos.get(r.to);
-                if (!a || !b) return null;
-                const ay = a.y + H / 2;
-                const by = b.y + H / 2;
-                if (a.x === b.x) {
-                  // 같은 줄: 오른쪽으로 휘어 잇는다
-                  const x = a.x + W;
-                  const bend = 26 + (Math.abs(by - ay) / (H + GAP)) * 6;
+        <div>
+          <ZoomPane width={WIDTH} height={height} label="구조도">
+            <div
+              className="relative bg-white"
+              style={{ width: WIDTH, height }}
+              data-testid="structure-map"
+            >
+              {MATTER_SIDES.map((side) => (
+                <p
+                  key={side}
+                  className={`${label} absolute top-3`}
+                  style={{ left: COL[side], width: W }}
+                >
+                  {MATTER_SIDE_LABEL[side]}
+                </p>
+              ))}
+              <svg width={WIDTH} height={height} className="absolute inset-0" aria-hidden="true">
+                {data.relations.map((r) => {
+                  const a = pos.get(r.from);
+                  const b = pos.get(r.to);
+                  if (!a || !b) return null;
+                  const ay = a.y + H / 2;
+                  const by = b.y + H / 2;
+                  if (a.x === b.x) {
+                    // 같은 줄: 오른쪽으로 휘어 잇는다
+                    const x = a.x + W;
+                    const bend = 26 + (Math.abs(by - ay) / (H + GAP)) * 6;
+                    return (
+                      <g key={r.id}>
+                        <path
+                          d={`M${x},${ay} C${x + bend},${ay} ${x + bend},${by} ${x},${by}`}
+                          fill="none"
+                          stroke="#1a2233"
+                          strokeWidth="1.2"
+                        />
+                        <EdgeLabel
+                          x={x + bend - 2}
+                          y={(ay + by) / 2}
+                          text={r.label}
+                          anchor="start"
+                        />
+                      </g>
+                    );
+                  }
+                  const [l, r2] = a.x < b.x ? [a, b] : [b, a];
+                  const x1 = l.x + W;
+                  const x2 = r2.x;
+                  const y1 = l.y + H / 2;
+                  const y2 = r2.y + H / 2;
                   return (
                     <g key={r.id}>
-                      <path
-                        d={`M${x},${ay} C${x + bend},${ay} ${x + bend},${by} ${x},${by}`}
-                        fill="none"
-                        stroke="#1a2233"
-                        strokeWidth="1.2"
+                      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1a2233" strokeWidth="1.2" />
+                      <EdgeLabel
+                        x={(x1 + x2) / 2}
+                        y={(y1 + y2) / 2}
+                        text={r.label}
+                        anchor="middle"
                       />
-                      <EdgeLabel x={x + bend - 2} y={(ay + by) / 2} text={r.label} anchor="start" />
                     </g>
                   );
-                }
-                const [l, r2] = a.x < b.x ? [a, b] : [b, a];
-                const x1 = l.x + W;
-                const x2 = r2.x;
-                const y1 = l.y + H / 2;
-                const y2 = r2.y + H / 2;
+                })}
+              </svg>
+              {data.parties.map((p) => {
+                const at = pos.get(p.id);
+                if (!at) return null;
+                const links = data.relations.filter((r) => r.from === p.id || r.to === p.id);
                 return (
-                  <g key={r.id}>
-                    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1a2233" strokeWidth="1.2" />
-                    <EdgeLabel x={(x1 + x2) / 2} y={(y1 + y2) / 2} text={r.label} anchor="middle" />
-                  </g>
+                  <div
+                    key={p.id}
+                    className="absolute"
+                    style={{ left: at.x, top: at.y, width: W, height: H }}
+                  >
+                    <Hover
+                      plain
+                      className="size-full"
+                      align={p.side === "other" ? "right" : "left"}
+                      panel={
+                        <>
+                          <span className="block font-semibold">{p.name}</span>
+                          <span className="text-muted block">
+                            {MATTER_KIND_LABEL[p.kind]}
+                            {p.role ? ` · ${p.role}` : ""}
+                          </span>
+                          {p.note && <span className="mt-1 block">{p.note}</span>}
+                          {links.length > 0 && (
+                            <span className="mt-1 block">
+                              {links
+                                .map(
+                                  (r) => `${r.label}: ${nameOf(r.from === p.id ? r.to : r.from)}`,
+                                )
+                                .join(" / ")}
+                            </span>
+                          )}
+                        </>
+                      }
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSelected(p.id === selected ? null : p.id)}
+                        aria-pressed={p.id === selected}
+                        style={{ width: W, height: H }}
+                        className={`flex flex-col items-start justify-center px-3 text-left ${SHAPE[p.kind]} ${
+                          p.id === selected ? "bg-ink text-white" : "text-ink bg-white"
+                        }`}
+                      >
+                        <span className="w-full truncate text-[14px] font-semibold">{p.name}</span>
+                        <span
+                          className={`w-full truncate text-[12px] ${p.id === selected ? "text-white/70" : "text-muted"}`}
+                        >
+                          {p.role || MATTER_KIND_LABEL[p.kind]}
+                        </span>
+                      </button>
+                    </Hover>
+                  </div>
                 );
               })}
-            </svg>
-            {data.parties.map((p) => {
-              const at = pos.get(p.id);
-              if (!at) return null;
-              const links = data.relations.filter((r) => r.from === p.id || r.to === p.id);
-              return (
-                <div
-                  key={p.id}
-                  className="absolute"
-                  style={{ left: at.x, top: at.y, width: W, height: H }}
-                >
-                  <Hover
-                    plain
-                    className="size-full"
-                    align={p.side === "other" ? "right" : "left"}
-                    panel={
-                      <>
-                        <span className="block font-semibold">{p.name}</span>
-                        <span className="text-muted block">
-                          {MATTER_KIND_LABEL[p.kind]}
-                          {p.role ? ` · ${p.role}` : ""}
-                        </span>
-                        {p.note && <span className="mt-1 block">{p.note}</span>}
-                        {links.length > 0 && (
-                          <span className="mt-1 block">
-                            {links
-                              .map((r) => `${r.label}: ${nameOf(r.from === p.id ? r.to : r.from)}`)
-                              .join(" / ")}
-                          </span>
-                        )}
-                      </>
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setSelected(p.id === selected ? null : p.id)}
-                      aria-pressed={p.id === selected}
-                      style={{ width: W, height: H }}
-                      className={`flex flex-col items-start justify-center px-3 text-left ${SHAPE[p.kind]} ${
-                        p.id === selected ? "bg-ink text-white" : "text-ink bg-white"
-                      }`}
-                    >
-                      <span className="w-full truncate text-[14px] font-semibold">{p.name}</span>
-                      <span
-                        className={`w-full truncate text-[12px] ${p.id === selected ? "text-white/70" : "text-muted"}`}
-                      >
-                        {p.role || MATTER_KIND_LABEL[p.kind]}
-                      </span>
-                    </button>
-                  </Hover>
-                </div>
-              );
-            })}
-          </div>
-          <ul className="border-line text-muted flex flex-wrap gap-x-4 gap-y-1 border-t px-3 py-2 text-[12px]">
+            </div>
+          </ZoomPane>
+          <ul className="text-muted flex flex-wrap gap-x-4 gap-y-1 px-1 py-2 text-[12px]">
             <li>굵은 테두리 = 회사</li>
             <li>점선 = 기관</li>
             <li>둥근 테두리 = 개인</li>

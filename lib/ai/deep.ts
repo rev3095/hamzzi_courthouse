@@ -65,7 +65,7 @@ import { DEEP_ANSWER_SYSTEM, DEEP_PLAN_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prom
 
 export const DEEP_PROMPT_VERSION = "deep-2026-11-25b-title60";
 /** 긴 질문(DEC-062) 답변의 프롬프트 꼬리표. 정리판 지시문을 바꾸면 올린다 */
-export const LONG_PROMPT_TAG = "long-xhigh-plan-1";
+export const LONG_PROMPT_TAG = "long-xhigh-plan-3-rebuttals";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
 // 2026-11-19 첫 실호출에서 구조화가 실패해 일반 답변으로 내려갔다. 사실 8개·쟁점 4개·확인할 사실 5개를 한국어 JSON으로
 // 쓰면 1,000토큰을 넘을 수 있어(출력 한도 초과 = 실패) 한도를 2,000으로 늘렸다. Haiku 출력 2,000토큰 = $0.001
@@ -326,6 +326,7 @@ export async function runDeepAnalysis(
               parsed.data.plan,
               struct.parties.map((p) => p.label),
               userText,
+              struct.issues.length,
             );
           materialRefs = materialRefsOf(json, materials.length);
           // 1차 거르기는 일반 답변과 같은 규칙. 쟁점마다 따로 걸러 문단 수 한도를 쟁점 단위로 적용한다
