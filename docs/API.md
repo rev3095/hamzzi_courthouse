@@ -71,6 +71,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029 |
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
+| GET·POST `/laws` | 공개 | 현행 법령 이름 검색(부분 일치) | DEC-029 |
 | POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
 | POST `/materials/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 질문·검색에 붙인 자료 사진 판독 → 가린 자료 정리·검색어 후보 | F-017 AC1·AC2 |
 | POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
@@ -285,6 +286,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 ### GET·POST `/ordinances` · GET `/ordinances/{id}` · GET·POST `/admin-rules` (DEC-029 제안)
 - 자치법규 검색 → `{ items: [{ id, name, region, kind, effectiveFrom, promulgatedAt, sourceUrl }], outcome, searchScopeNote, notice }`, 상세 → `{ ...위 항목, articles: [{ articleNo, title, text }], notice }`. `id` = 법제처 자치법규일련번호.
 - 행정규칙 검색 → `{ items: [{ id, name, kind, agency, issuedAt, effectiveFrom, sourceUrl }], … }` — 현행만, 본문은 법제처 원문 링크로.
+- 법령 이름 검색 `/laws` → `{ items: [{ id, name, kind, agency, promulgatedAt, effectiveFrom, sourceUrl }], outcome, searchScopeNote, notice }` — 이름에 검색어가 든 현행 법령(법률·대통령령·총리령·부령). 정식 이름을 몰라도 낱말 일부("의료기기")로 찾는다. `id` = 법령일련번호(MST), `kind` = 법령구분명, 순서는 법제처 응답(가나다순) 그대로이고 관련도 순위를 매기지 않는다. 상세는 `/laws/{name}/{view}`. `limit` 기본 30·최대 100.
 - 검색어 규칙·상한은 `/cases`와 같다.
 
 ### POST `/casefiles/read` (F-015, DEC-052)

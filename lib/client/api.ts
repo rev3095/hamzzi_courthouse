@@ -314,6 +314,17 @@ export type AdminRuleRef = {
   sourceUrl: string;
 };
 
+/** 현행 법령 이름 검색 결과 (GET·POST /laws) */
+export type LawRef = {
+  id: string;
+  name: string;
+  kind: string | null;
+  agency: string | null;
+  promulgatedAt: string | null;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+};
+
 const post = <T>(path: string, body: unknown) =>
   call<T>(path, { method: "POST", body: JSON.stringify(body) });
 
@@ -329,6 +340,7 @@ export const getOrdinance = (id: string) =>
   call<OrdinanceView>(`/api/v1/ordinances/${encodeURIComponent(id)}`);
 export const searchAdminRules = (q: string) =>
   post<Listed<AdminRuleRef>>("/api/v1/admin-rules", { q });
+export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
 export const getStatuteAt = (id: string, asOf?: string) =>

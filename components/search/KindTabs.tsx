@@ -1,16 +1,17 @@
 "use client";
 // 검색 종류 탭 (/search·/research 공용, F-003·DEC-029). 2026-11-18 사용자 승인 시안 A:
-// 모바일은 주요 4개(판례·법령해석례·헌재 결정례·자치법규) + '더 보기'를 누르면 묶음별(재결례·해석례·위원회 결정문·
+// 모바일은 주요 5개(판례·법령·법령해석례·헌재 결정례·자치법규 — 법령은 2026-11-27 추가) + '더 보기'를 누르면 묶음별(재결례·해석례·위원회 결정문·
 // 법규·기타) 목록이 탭 아래에 펼쳐진다. 숨긴 종류를 고르면 '더 보기' 자리에 그 이름이 보인다.
 // 데스크톱(lg 이상)은 종류 탭 전체를 그대로 보인다. 색은 브랜드 토큰만 쓴다 (새 토큰 없음).
 import { useId, useState } from "react";
 import type { DecisionDomain } from "@/lib/client/api";
 
-export type SearchKind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
+export type SearchKind = "cases" | "laws" | DecisionDomain | "ordinances" | "admin_rules";
 
 /** 모바일에서 늘 보이는 종류 */
 export const PRIMARY_KINDS: SearchKind[] = [
   "cases",
+  "laws",
   "interpretation",
   "constitutional",
   "ordinances",
