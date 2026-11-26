@@ -1,9 +1,11 @@
 "use client";
-// 서류 분석 화면 /casefile (F-015, DEC-052): 서류 사진을 붙이고 궁금한 점을 적어 분석을 시작한다.
-// 홈 질문창과 같은 질문창·같은 흐름(useCaseFileAsk)이고, 여기서는 사진이 있어야 보낼 수 있다.
+// 사건 정리 화면 /casefile (주 메뉴 '사건' → 정리, DEC-070 ③ — 예전 '서류 분석' F-015·DEC-052): 상황을 적거나 서류 사진을 붙여
+// DeepSearch로 정리한다. 사진이 있으면 홈 질문창과 같은 흐름(useCaseFileAsk: 동의 → 읽기 → 확인)이고, 글만 있으면 곧바로
+// DeepSearch(deep)로 보낸다. 긴 글(LONG_QUESTION_CHARS 넘게)이면 결과에 7개 탭 사건 정리판(DEC-062)이 붙는다.
 // 승패·가능성은 보여 주지 않는다. 결과는 일반 질문과 같은 결과 화면(/inquiries/[id])에서 본다.
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
+import { LONG_QUESTION_CHARS } from "@/lib/ai/models";
 import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
 import { dailyLimitLine, limitCopy } from "../LimitNotice";
@@ -16,16 +18,16 @@ import { PAGE_TITLE } from "@/components/ui/styles";
 
 const STEPS = [
   {
-    title: "서류 사진 붙이기",
-    body: `내용증명·소장·고소장·계약서·문자 캡처 사진이나 PDF·한글·워드·파워포인트·엑셀·텍스트 문서를 ${CASEFILE_LIMITS.maxImages}개까지 붙여요.`,
+    title: "상황 적기 · 서류 붙이기",
+    body: `있었던 일을 적거나, 내용증명·소장·계약서·문자 캡처 사진이나 문서를 ${CASEFILE_LIMITS.maxImages}개까지 붙여요.`,
   },
   {
     title: "읽은 내용 확인",
-    body: "AI가 읽은 사건 개요를 개인정보를 가린 채 보여 드려요. 틀린 곳은 직접 고쳐요.",
+    body: "서류를 붙였으면 AI가 읽은 사건 개요를 개인정보를 가린 채 보여 드려요. 틀린 곳은 직접 고쳐요.",
   },
   {
-    title: "쟁점·근거·절차 보기",
-    body: "법제처 법령·판례를 찾아 쟁점별 근거와 진행 절차를 정리해요.",
+    title: "DeepSearch 사건 정리",
+    body: `법제처 법령·판례를 쟁점별로 찾아 정리해요. ${LONG_QUESTION_CHARS}자 넘게 적으면 사실관계·양쪽 입장·쟁점을 탭으로 나눈 사건 정리판도 함께 나와요.`,
   },
 ];
 
@@ -41,19 +43,25 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
 
   const submit = () => {
     setHint(null);
-    if (!caseFile.start(text))
-      setHint("먼저 서류 사진을 붙여 주세요. 왼쪽 사진 버튼을 누르거나 사진을 끌어다 놓으면 돼요.");
+    if (caseFile.start(text)) return;
+    // 사진 없이 글만: 곧바로 DeepSearch로 (민감정보 동의는 useAsk가 필요할 때 묻는다)
+    if (text.trim()) {
+      if (blocked) return showLimit();
+      void send(text, false, true);
+      return;
+    }
+    setHint("지금 상황을 적거나 서류 사진을 붙여 주세요.");
   };
 
   return (
     <div className="mx-auto w-full max-w-[820px] px-4 py-10 lg:py-14">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className={PAGE_TITLE}>서류 분석</h1>
+        <h1 className={PAGE_TITLE}>사건 정리</h1>
         <CaseSwitch current="organize" />
       </div>
       <p className="text-muted mt-2 text-[15px] leading-relaxed">
-        받은 서류나 변호사에게 낸 자료의 사진을 올리면, 지금 상황을 다시 정리하고 쟁점과 진행 절차를
-        법제처 법령·판례 근거와 함께 보여 드려요.
+        지금 상황을 적거나 받은 서류의 사진을 올리면, DeepSearch로 사실관계와 쟁점을 정리하고 법제처
+        법령·판례 근거와 함께 보여 드려요.
       </p>
 
       <ol className="mt-5 grid gap-2 sm:grid-cols-3">
@@ -72,8 +80,8 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
           onChange={setText}
           onSubmit={submit}
           busy={busy}
-          label="서류에 대해 궁금한 점"
-          placeholder="서류에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
+          label="지금 상황이나 서류에 대해 궁금한 점"
+          placeholder="있었던 일을 적거나 서류 사진을 붙여 주세요 (사진이 있으면 글은 비워도 돼요)"
           askTools
           attach={caseFile.attach}
         />
@@ -87,7 +95,7 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
         <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
           {blocked
             ? limitCopy(signedIn).body
-            : `서류 분석도 질문 1번으로 세요. ${dailyLimitLine(signedIn)}`}
+            : `사건 정리도 질문 1번으로 세요. ${dailyLimitLine(signedIn)}`}
         </p>
       )}
 

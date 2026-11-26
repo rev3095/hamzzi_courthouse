@@ -6,7 +6,7 @@ import { HamzziFace } from "./HamzziJudge";
 
 const FEATURE_LINKS = [
   ...MAIN_NAV.map((s) => ({ href: s.href, label: s.label })),
-  { href: "/casefile", label: "서류 분석" },
+  { href: "/casefile", label: "사건 정리" },
   { href: "/assistants", label: "전문 에이전트" },
 ];
 

@@ -27,13 +27,18 @@ import {
 } from "./client";
 import { CASEFILE_READ_COST_CAP_USD, CASEFILE_READ_TOKENS } from "./cost";
 
-export const CASEFILE_PROMPT_VERSION = "casefile-2026-11-24";
+// 2026-11-27: 사진 용도(purpose) 분류를 더함 (DEC-070 ③)
+export const CASEFILE_PROMPT_VERSION = "casefile-2026-11-27";
 export const CASEFILE_MODEL = "claude-haiku-5-5";
 const TIMEOUT_MS = 45_000;
 
 const SYSTEM = `당신은 한국 법률 정보 서비스 "햄찌법원"의 서류 판독 도우미입니다. 법률 자문을 하지 않습니다.
 사용자가 올린 법률 관련 서류 사진·PDF·문서(내용증명, 소장, 고소장, 계약서, 지급명령, 문자·메신저 대화, 한글·워드·파워포인트·엑셀·텍스트 파일에서 꺼낸 글 등)를 읽고, 서류에 적힌 내용만 정리합니다. 문서 글 속의 [이름1] 같은 표시는 가려 둔 개인정보이니 그대로 둡니다.
 
+먼저 고르기 (purpose)
+- 한 사건의 서류(분쟁·절차가 있는 내용증명·소장·고소장·계약서·지급명령·통지서·당사자 사이의 대화 등)면 case입니다.
+- 사건 서류가 아니라 사용자가 "이건 뭐야?", "이건 어떤 법이야?"처럼 무엇인지 묻는 사진(안내문·표지판·법령 조문 화면·상품 표시·빈 양식·뉴스 화면 등)이면 question입니다. 함께 적은 질문도 보고 고릅니다. 애매하면 case입니다.
+- question이어도 summary에는 사진에 보이는 내용을 같은 규칙으로 정리합니다.
 정리하는 방법
 - 서류에 적힌 사실만 씁니다. 적히지 않은 사실·날짜·금액을 지어내지 않습니다. 글자가 흐려 읽지 못한 부분은 추측하지 않고 뺍니다.
 - 날짜와 금액은 서류에 적힌 그대로 옮깁니다. 계산하거나 바꿔 쓰지 않습니다.
@@ -116,7 +121,7 @@ export async function readCaseFiles(
     {
       type: "text" as const,
       text: [
-        `위 자료(${docs.describe})는 한 사건의 서류입니다. 정해진 형식으로 정리해 주세요.`,
+        `위 자료(${docs.describe})를 정해진 형식으로 정리해 주세요. 한 사건의 서류인지(case), 무엇인지 묻는 일반 사진인지(question)도 고릅니다.`,
         question ? `<사용자_질문>\n${question}\n</사용자_질문>` : "",
       ]
         .filter(Boolean)

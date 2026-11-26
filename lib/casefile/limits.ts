@@ -139,7 +139,16 @@ export type CaseParty = {
   name: string;
 };
 
+/**
+ * 올린 사진의 용도 (DEC-070 ③, 2026-11-27 사용자 요청): 판독 호출(Haiku)이 함께 고른다.
+ * case = 한 사건의 서류 → 로그인이면 사건 진행으로, 아니면 사건 정리(DeepSearch)로. question = 무엇인지·어떤 법인지 묻는 일반 사진 → 일반 답변.
+ */
+export const READING_PURPOSES = ["case", "question"] as const;
+export type ReadingPurpose = (typeof READING_PURPOSES)[number];
+
 export type CaseReading = {
+  /** 없으면 사건 서류 (예전 결과·예제) */
+  purpose?: ReadingPurpose;
   docTypes: DocType[];
   /** 개인정보를 가린 사건 개요 */
   summary: string;
@@ -183,4 +192,16 @@ export function composeCaseText(input: {
   }
   lines.push(`질문: ${input.question.trim() || DEFAULT_CASE_QUESTION}`);
   return lines.join("\n");
+}
+
+/** 무엇인지 묻는 일반 사진(DEC-070 ③)의 기본 질문 */
+export const DEFAULT_PHOTO_QUESTION = "이 사진이 무엇인지, 관련된 법과 알아 둘 점을 알려 주세요.";
+
+/**
+ * 일반 사진(purpose: question)을 일반 질문 한 건의 문장으로. 사건 서류 꼴(서류 종류·요구)을 붙이지 않는다.
+ * 서버가 이 문장을 다시 가린 뒤 저장한다 (DEC-006). 모델을 쓰지 않는 단순 이어 붙이기다.
+ */
+export function composePhotoQuestion(question: string, summary: string): string {
+  const q = question.trim() || DEFAULT_PHOTO_QUESTION;
+  return `${q}\n사진에 보이는 내용: ${summary.trim()}`;
 }
