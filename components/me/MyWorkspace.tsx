@@ -17,6 +17,7 @@ import {
 import { MySessions } from "../MySessions";
 import { MySeeds } from "./MySeeds";
 import { useMySessions, useOpenSession } from "./useMySessions";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 export type Pane = "sessions" | "seeds" | "settings" | "records";
 
@@ -161,7 +162,7 @@ export function MyWorkspace({
 
         {pane === "sessions" && (
           <section aria-labelledby="me-history" className="max-w-[820px]">
-            <h1 id="me-history" className="font-display text-ink text-[26px] font-bold">
+            <h1 id="me-history" className={PAGE_TITLE}>
               내 세션
             </h1>
             <p className="text-muted mt-1.5 text-[13px] leading-relaxed">

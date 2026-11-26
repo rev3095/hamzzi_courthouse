@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AssistantCards } from "@/components/assistants/AssistantCards";
 import { AI_NOTICE } from "@/lib/api/respond";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 export const metadata: Metadata = { title: "전문 에이전트 · 햄찌법원" };
 
@@ -35,9 +36,7 @@ export default function AssistantsPage() {
     <main className="bg-bg flex flex-1 flex-col">
       {/* 화면 구성 (2026-11-26 사용자 요청): 처음에는 '누구에게 물어볼지' 세 장만 보인다. 설명은 아래에 접어 둔다 */}
       <div className="mx-auto w-full max-w-[1000px] px-4 py-12 lg:py-16">
-        <h1 className="font-display text-ink text-[32px] font-bold lg:text-[38px]">
-          전문 에이전트
-        </h1>
+        <h1 className={PAGE_TITLE}>전문 에이전트</h1>
         <p className="text-muted mt-3 max-w-[560px] text-[16px] leading-[1.75]">
           분야를 고르고 대화하듯 물어보세요. 법령·판례를 근거로 정리해 드려요.
         </p>

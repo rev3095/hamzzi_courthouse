@@ -6,17 +6,19 @@
  * - 고소미: 남색 + 금색 (어두운 바탕·깎은 모서리·글자 그라데이션은 쓰지 않는다)
  * - 중고천국: 연두색 (두꺼운 테두리·어긋난 그림자·점무늬 바탕은 쓰지 않는다)
  * 변수: tint = 옅게 물들이는 면, soft = 더 옅은 면, accent = 장식(선·테두리·점), strong = 흰 글자를 올리는 진한 면·링크.
+ * DEC-067(UI·UX 개정 PR 2): 본문 글자·보조 글자·바탕·카드 면은 사이트 브랜드 토큰(--ink·--muted·--bg·흰색)으로 맞추고,
+ *   비서 색은 물듦(tint·soft)·장식(accent)·버튼·링크(strong)·테두리(line)에만 남긴다. 모서리는 패널 16px·카드 12px.
  * 클래스는 hza- 접두어의 전역 CSS다 (CSS Modules는 이 저장소에서 쓰지 않는다 — CLAUDE.md 코드 구조).
- * 본문·보조 글자는 각 바탕에서, 흰 글자는 strong 위에서 4.5:1 이상으로 골랐다 (색을 바꾸면 다시 계산한다).
+ * 본문·보조 글자(브랜드 --ink·--muted)는 각 물듦 바탕에서, 흰 글자는 strong 위에서 4.5:1 이상이다 (색을 바꾸면 다시 계산한다).
  */
 
 [data-hza="home"] {
-  --hza-bg: #f8fbfe;
+  --hza-bg: var(--bg);
   --hza-tint: #dcedf9;
   --hza-soft: #eef6fc;
   --hza-surface: #ffffff;
-  --hza-ink: #23485f;
-  --hza-muted: #4f697e;
+  --hza-ink: var(--ink);
+  --hza-muted: var(--muted);
   --hza-accent: #6bb4e0;
   --hza-strong: #2a6f9c;
   --hza-on-strong: #ffffff;
@@ -25,12 +27,12 @@
 }
 
 [data-hza="report"] {
-  --hza-bg: #f9f9fc;
+  --hza-bg: var(--bg);
   --hza-tint: #e4e7f4;
   --hza-soft: #f2f3f9;
   --hza-surface: #ffffff;
-  --hza-ink: #2b3550;
-  --hza-muted: #5b6376;
+  --hza-ink: var(--ink);
+  --hza-muted: var(--muted);
   --hza-accent: #c8aa6e;
   --hza-strong: #3f4f80;
   --hza-on-strong: #ffffff;
@@ -41,12 +43,12 @@
 }
 
 [data-hza="market"] {
-  --hza-bg: #f9fcf5;
+  --hza-bg: var(--bg);
   --hza-tint: #e1f2c8;
   --hza-soft: #eff7e3;
   --hza-surface: #ffffff;
-  --hza-ink: #2d4420;
-  --hza-muted: #5a7046;
+  --hza-ink: var(--ink);
+  --hza-muted: var(--muted);
   --hza-accent: #8cc84a;
   --hza-strong: #3f7419;
   --hza-on-strong: #ffffff;
@@ -55,7 +57,7 @@
 }
 
 .hza-root {
-  --hza-radius: 18px;
+  --hza-radius: 16px;
   --hza-radius-s: 12px;
   /* 머리 쪽만 옅게 물들이고 아래로 갈수록 바탕색으로 */
   background: linear-gradient(180deg, var(--hza-tint) 0, var(--hza-bg) 300px) var(--hza-bg);
