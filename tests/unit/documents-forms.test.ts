@@ -3,7 +3,8 @@
 // 무료 로컬 검사만 (LLM 없음). 실명 대신 가상 이름을 쓴다.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PDFDocument } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, PDFRawStream, decodePDFRawStream } from "pdf-lib";
 import { describe, expect, test } from "vitest";
 import { isAssertive } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
@@ -11,7 +12,7 @@ import { DOCUMENT_EXAMPLES } from "@/lib/documents/examples";
 import { buildFile } from "@/lib/documents/export";
 import { documentXml, toDocx, xmlEscape } from "@/lib/documents/export/docx";
 import { headerXml, sectionXml, toHwpx } from "@/lib/documents/export/hwpx";
-import { wrapLine } from "@/lib/documents/export/pdf";
+import { pdfSafeText, wrapLine } from "@/lib/documents/export/pdf";
 import { crc32 } from "@/lib/documents/export/zip";
 import { formatDate, formatWon } from "@/lib/documents/fill";
 import {
@@ -26,6 +27,10 @@ import {
 import { shortcutOf } from "@/lib/procedure/policy";
 import type { DocumentKind } from "@/lib/procedure/steps";
 import { TRACKS } from "@/lib/procedure/steps";
+
+const PDF_TEST_FONTS = () => ({
+  regular: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Regular.ttf"))),
+});
 
 const FULL: Record<DocumentKind, Record<string, string>> = {
   "demand-letter": {
@@ -528,10 +533,7 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
   });
 
   test("PDF: 한글 글꼴을 넣은 A4 PDF, 제목만 메타데이터에 넣는다 (이름 없음)", async () => {
-    const fonts = {
-      regular: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Regular.ttf"))),
-      bold: new Uint8Array(readFileSync(join("public/fonts/NanumGothic-Bold.ttf"))),
-    };
+    const fonts = PDF_TEST_FONTS();
     const file = await buildFile(
       "pdf",
       doc.blocks,
@@ -546,6 +548,62 @@ describe("DEC-025 내보내기 (브라우저 안에서 만드는 파일)", () =>
     expect(pdf.getTitle()).toBe("주택임차권등기명령 신청서");
     expect(pdf.getAuthor()).toBeUndefined();
   }, 20_000);
+
+  // 2026-11-26: '쓴 글자만 넣기'(subset)로 만든 PDF는 글자 추출은 되는데 화면에 그리면 한글이 대부분 빠졌다.
+  // PDF에 든 글꼴을 다시 꺼내, 문서에 쓴 모든 글자가 그 글꼴에 '그릴 수 있는 모양'으로 들어 있는지 본다.
+  test.each(DOCUMENT_KINDS)(
+    "PDF %s: 문서의 모든 글자가 넣은 글꼴에 모양으로 들어 있다",
+    async (kind) => {
+      const filled = fillDocument(kind, parseDocumentInput(kind, FULL[kind]));
+      const file = await buildFile(
+        "pdf",
+        filled.blocks,
+        { title: filled.title, basename: filled.basename },
+        async () => PDF_TEST_FONTS(),
+      );
+      const pdf = await PDFDocument.load(file.data);
+      // 가장 큰 스트림이 넣은 글꼴 파일이다
+      let fontBytes: Uint8Array | null = null;
+      for (const [, obj] of pdf.context.enumerateIndirectObjects()) {
+        if (!(obj instanceof PDFRawStream)) continue;
+        let bytes: Uint8Array;
+        try {
+          bytes = decodePDFRawStream(obj).decode();
+        } catch {
+          continue;
+        }
+        if (!fontBytes || bytes.length > fontBytes.length) fontBytes = bytes;
+      }
+      expect(fontBytes!.length).toBeGreaterThan(500_000);
+      const font = fontkit.create(fontBytes!) as unknown as {
+        hasGlyphForCodePoint(cp: number): boolean;
+        glyphForCodePoint(cp: number): { path: { commands: unknown[] } };
+      };
+      const has = (cp: number) => font.hasGlyphForCodePoint(cp);
+      const drawn = filled.blocks.map((b) => pdfSafeText(b.text, has)).join("");
+      const missing = [...new Set(drawn)].filter((ch) => {
+        if (/\s/.test(ch)) return false;
+        const cp = ch.codePointAt(0)!;
+        return !has(cp) || font.glyphForCodePoint(cp).path.commands.length === 0;
+      });
+      expect(missing, kind).toEqual([]);
+      expect(file.data.length).toBeLessThan(1_500_000);
+    },
+    30_000,
+  );
+
+  test("PDF: 글꼴에 없는 원문자는 빈칸이 되지 않게 괄호 숫자로 바꾼다", () => {
+    const none = () => false;
+    expect(pdfSafeText("① 피해를 당한 날짜 ⑧ 증거 ⑳", none)).toBe(
+      "(1) 피해를 당한 날짜 (8) 증거 (20)",
+    );
+    // 글꼴에 있으면 그대로 둔다
+    expect(pdfSafeText("① 날짜", () => true)).toBe("① 날짜");
+    expect(pdfSafeText("□ ■ 가나다", none)).toBe("□ ■ 가나다");
+    expect(pdfSafeText("2026. 1. 2. ∼ 2026. 3. 4. [✔]", none)).toBe(
+      "2026. 1. 2. ~ 2026. 3. 4. [V]",
+    );
+  });
 
   test("PDF 줄 나눔: 띄어쓰기에서 먼저, 안 되면 글자 단위", () => {
     const w = (s: string) => s.length;
