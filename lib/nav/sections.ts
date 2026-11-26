@@ -17,24 +17,17 @@ export const MAIN_NAV: readonly NavSection[] = [
     key: "consult",
     href: "/",
     label: "상담",
-    prefixes: ["/inquiries", "/examples", "/assistants", "/casefile"],
+    prefixes: ["/inquiries", "/examples", "/assistants"],
   },
   {
     key: "archive",
     href: "/search",
     label: "판례·법령",
-    prefixes: [
-      "/search",
-      "/research",
-      "/cases",
-      "/laws",
-      "/statutes",
-      "/decisions",
-      "/ordinances",
-    ],
+    prefixes: ["/search", "/research", "/cases", "/laws", "/statutes", "/decisions", "/ordinances"],
   },
   { key: "documents", href: "/documents", label: "문서 작성", prefixes: ["/documents"] },
-  { key: "matters", href: "/matters", label: "사건 진행", prefixes: ["/matters"] },
+  // 사건 = 진행(/matters) · 정리(서류 분석 /casefile). 화면 위 전환(components/matters/CaseSwitch)으로 오간다 (2026-11-27)
+  { key: "matters", href: "/matters", label: "사건", prefixes: ["/matters", "/casefile"] },
   { key: "community", href: "/community", label: "광장", prefixes: ["/community"] },
 ];
 

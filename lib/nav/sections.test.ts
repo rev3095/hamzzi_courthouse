@@ -7,7 +7,7 @@ describe("주 메뉴 (DEC-067)", () => {
       "상담",
       "판례·법령",
       "문서 작성",
-      "사건 진행",
+      "사건",
       "광장",
     ]);
     const all = MAIN_NAV.flatMap((s) => s.prefixes);
@@ -17,7 +17,8 @@ describe("주 메뉴 (DEC-067)", () => {
   it("주소마다 현재 메뉴를 고른다", () => {
     expect(activeSection("/")).toBe("consult");
     expect(activeSection("/inquiries/abc")).toBe("consult");
-    expect(activeSection("/casefile")).toBe("consult");
+    expect(activeSection("/casefile")).toBe("matters");
+    expect(activeSection("/casefile/examples/x")).toBe("matters");
     expect(activeSection("/research")).toBe("archive");
     expect(activeSection("/cases/123")).toBe("archive");
     expect(activeSection("/decisions/prec/1")).toBe("archive");

@@ -18,6 +18,7 @@ import {
 import { openParam } from "@/lib/client/sessions";
 import type { MatterData, MatterSummary } from "@/lib/matters/model";
 import { useQuota } from "../useQuota";
+import { CaseSwitch } from "./CaseSwitch";
 import { MatterBoard } from "./MatterBoard";
 import { PresetWorkspace } from "./PresetWorkspace";
 import type { TabKey } from "./tabs";
@@ -32,9 +33,12 @@ export function MattersView() {
     <div className="flex-1">
       <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 pb-10 lg:pt-12">
         {quota === null ? (
-          <p className="text-muted text-sm" aria-live="polite">
-            불러오는 중…
-          </p>
+          // 로그인 여부를 받는 동안에도 제목과 진행·정리 전환은 먼저 보인다
+          <HomeHead>
+            <p className="text-muted mt-4 text-sm" aria-live="polite">
+              불러오는 중…
+            </p>
+          </HomeHead>
         ) : isSignedIn(quota) ? (
           <Workspace />
         ) : (
@@ -50,7 +54,10 @@ export function MattersView() {
 function HomeHead({ children }: { children?: ReactNode }) {
   return (
     <section aria-label="사건 진행">
-      <h1 className={PAGE_TITLE}>사건 진행</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className={PAGE_TITLE}>사건 진행</h1>
+        <CaseSwitch current="progress" />
+      </div>
       <p className={PAGE_LEAD}>
         서류를 올리면 사실관계·당사자·쟁점으로 나눠 담는 정리 도구예요. 판단은 하지 않아요.
       </p>
