@@ -11,6 +11,7 @@ import { isSignedIn } from "@/lib/client/api";
 import { rememberParties } from "@/lib/client/casefile";
 import { createMatter } from "@/lib/client/matters";
 import { matterHref } from "@/lib/client/sessions";
+import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
 import { matterFromReading } from "@/lib/matters/from-reading";
 import { currentQuota } from "../useQuota";
 import { useAttachments, type Attachments } from "../ask/useAttachments";
@@ -54,7 +55,7 @@ export function useCaseFileAsk(ask: {
   /** 읽은 사진의 용도로 갈 곳을 정한다. 맡았으면 true (DEC-070 ③) */
   const route = async (reading: CaseReading): Promise<boolean> => {
     if (reading.purpose === "question") {
-      const text = composePhotoQuestion(question ?? "", reading.summary);
+      const text = composePhotoQuestion(question ?? "", reading.summary, MAX_INPUT_CHARS);
       await ask.send(text, true, false, () => {
         attach.clear();
         close();

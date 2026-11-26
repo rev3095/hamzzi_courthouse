@@ -201,7 +201,9 @@ export const DEFAULT_PHOTO_QUESTION = "이 사진이 무엇인지, 관련된 법
  * 일반 사진(purpose: question)을 일반 질문 한 건의 문장으로. 사건 서류 꼴(서류 종류·요구)을 붙이지 않는다.
  * 서버가 이 문장을 다시 가린 뒤 저장한다 (DEC-006). 모델을 쓰지 않는 단순 이어 붙이기다.
  */
-export function composePhotoQuestion(question: string, summary: string): string {
+export function composePhotoQuestion(question: string, summary: string, maxChars = 2_000): string {
   const q = question.trim() || DEFAULT_PHOTO_QUESTION;
-  return `${q}\n사진에 보이는 내용: ${summary.trim()}`;
+  const head = `${q}\n사진에 보이는 내용: `;
+  // 질문 글자 수 한도를 넘지 않게 사진 내용을 줄인다
+  return head + summary.trim().slice(0, Math.max(0, maxChars - head.length));
 }

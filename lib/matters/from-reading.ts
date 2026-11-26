@@ -11,7 +11,7 @@ export function matterFromReading(reading: CaseReading, pages: number): MatterDa
   const kind = reading.docTypes[0] ?? "서류";
   return {
     ...emptyMatter(),
-    summary: cut(reading.summary, MATTER_LIMITS.line),
+    // 사건 요약 칸은 사용자가 직접 쓰는 칸이라 비워 두고, AI가 읽은 개요는 서류의 요지(AI 고지가 붙는 자료 탭)에만 둔다
     docs: [
       {
         id: docId,
