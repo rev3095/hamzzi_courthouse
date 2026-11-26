@@ -1,5 +1,6 @@
 // 브라우저에서 부르는 API 도우미 (docs/API.md 2·4.1절). 화면(app/, components/)은 이 모듈로만 서버를 부른다.
 // 입력 원문은 요청 본문으로만 보내고 저장하지 않는다. 브라우저에 남기는 것은 마스킹본뿐이다 (DEC-006).
+import type { SearchAnswerView } from "@/lib/search/answer/types";
 import type { MaterialReading } from "@/lib/materials/limits";
 import { readTier } from "./tier";
 import type { StepEvent } from "@/lib/ai/policy";
@@ -7,6 +8,8 @@ import type { QuickPreview } from "@/lib/ai/quick-policy";
 import type { ErrorCode, ErrorDetails } from "@/lib/api/errors";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import type { PiiFinding } from "@/lib/pii";
+import type { EasyLawView } from "@/lib/search/easy/types";
+import type { WorldSearchResult } from "@/lib/search/world/types";
 
 export type ClientError = {
   code: ErrorCode;
@@ -378,6 +381,15 @@ export const getOrdinance = (id: string) =>
 export const searchAdminRules = (q: string) =>
   post<Listed<AdminRuleRef>>("/api/v1/admin-rules", { q });
 export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
+/** 국내·해외 법령 통합 검색 (DEC-074). 모델 없음 — 각국 공식 사이트 검색 결과만 */
+export type WorldLawList = WorldSearchResult & {
+  notice: string;
+  outcome: "grounded" | "no_result_in_scope";
+};
+export const searchWorldLaws = (q: string) => post<WorldLawList>("/api/v1/world-laws", { q });
+/** 검색 '물어보기' AI 답 (DEC-076). 검색 결과 목록과 따로 부른다 — 실패해도 목록은 그대로 보인다 */
+export const getSearchAnswer = (q: string, mode: "search" | "research", focus: "cases" | "laws") =>
+  post<SearchAnswerView>("/api/v1/search-answer", { q, mode, focus });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
 /** 두 날짜 조문 비교 (DEC-075 ⓔ) */
@@ -422,6 +434,7 @@ export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 
 export type LawViews = {
+  easy: EasyLawView;
   articles: LawBase & {
     articles: { articleNo: string; title: string; text: string; effectiveFrom: string | null }[];
   };
@@ -435,6 +448,9 @@ export const getLawView = <K extends keyof LawViews>(lawName: string, view: K, m
   call<LawViews[K]>(
     `/api/v1/laws/${encodeURIComponent(lawName)}/${view}${mst ? `?${new URLSearchParams({ mst })}` : ""}`,
   );
+
+/** 법령 쉬운 설명 (DEC-074). 하루 질문 횟수에 들어가지 않는다 */
+export const getEasyLaw = (lawName: string) => getLawView(lawName, "easy");
 
 /** SSE 한 덩어리("event: …\ndata: …")를 읽는다. 형식이 다르면 null */
 export function parseSseBlock(block: string): { event: string; data: unknown } | null {

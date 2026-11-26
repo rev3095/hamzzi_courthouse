@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:leg="http://www.legislation.gov.uk/namespaces/legislation" xmlns:ukm="http://www.legislation.gov.uk/namespaces/metadata" xmlns:theme="http://www.legislation.gov.uk/namespaces/theme" xmlns:openSearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:parameters="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/">
+			<id>http://www.legislation.gov.uk/search/data.feed?type=primary+secondary&amp;title=medical%20devices</id>
+			<link rel="self" type="application/atom+xml" href="http://www.legislation.gov.uk/search/data.feed?type=primary+secondary&amp;title=medical%20devices"/>
+			
+			<link rel="alternate" type="text/csv" href="http://www.legislation.gov.uk/search/data.csv?type=primary+secondary&amp;title=medical%20devices"/>
+			<updated>2026-11-22T23:59:59Z</updated>
+			<title>Search Results</title>
+			<openSearch:Query role="request" leg:type="primary+secondary" leg:title="medical devices"> </openSearch:Query>
+			<openSearch:itemsPerPage>20</openSearch:itemsPerPage>
+			<openSearch:startIndex>1</openSearch:startIndex>
+			<leg:page>1</leg:page>
+			<leg:morePages>3</leg:morePages>
+			<entry>
+			<id>http://www.legislation.gov.uk/id/ukpga/2021/3</id>
+			<title>Medicines and Medical Devices Act 2021</title>
+			<link rel="self" href="http://www.legislation.gov.uk/id/ukpga/2021/3"/>
+			<link href="http://www.legislation.gov.uk/ukpga/2021/3/2024-03-21"/>
+			
+			<link rel="http://purl.org/dc/terms/tableOfContents" type="application/xml" href="http://www.legislation.gov.uk/ukpga/2021/3/contents" title="Table of Contents"/>
+			<author><name/></author>
+			<updated>2024-05-18T03:43:36Z</updated>
+			<published>2021-02-11T14:58:09.313283Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomPublicGeneralAct"/><ukm:Year Value="2021"/><ukm:Number Value="3"/><ukm:ISBN Value="9780105701040"/><ukm:CreationDate Date="2021-02-11"/>
+			
+			
+			
+			<summary>An Act to make provision about a Commissioner for Patient Safety in relation to human medicines and medical devices; confer power to amend or supplement the law relating to human medicines, veterinary medicines and medical devices; make provision about the enforcement of regulations, and the protection of health and safety, in relation to medical devices; and for connected purposes.</summary>
+		</entry><entry>
+			<id>http://www.legislation.gov.uk/id/uksi/2026/197</id>
+			<title>The Medical Devices (Fees Amendment) Regulations 2026</title>
+			<link rel="self" href="http://www.legislation.gov.uk/id/uksi/2026/197"/>
+			<link href="http://www.legislation.gov.uk/uksi/2026/197/made"/>
+			
+			<link rel="http://purl.org/dc/terms/tableOfContents" type="application/xml" href="http://www.legislation.gov.uk/uksi/2026/197/contents/made" title="Table of Contents"/>
+			<author><name/></author>
+			<updated>2026-03-31T23:10:00Z</updated>
+			<published>2026-03-03T12:43:09.967037Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomStatutoryInstrument"/><ukm:Year Value="2026"/><ukm:Number Value="197"/><ukm:ISBN Value="9780348280135"/><ukm:CreationDate Date="2026-02-25"/><ukm:Subject Value="MEDICAL DEVICES"/><ukm:Subject Value="FEES AND CHARGES"/>
+			<ukm:Supersedes URI="http://www.legislation.gov.uk/id/ukdsi/2026/9780348277739"><dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">The Medical Devices (Fees Amendment) Regulations 2026</dc:title><ukm:DocumentMainType Value="UnitedKingdomDraftStatutoryInstrument"/><ukm:Year Value="2026"/><ukm:ISBN Value="9780348277739"/></ukm:Supersedes>
+			
+			<category term="MEDICAL DEVICES"/><category term="FEES AND CHARGES"/>
+			<summary>These Regulations make amendments to the Medical Devices Regulations 2002 (“the 2002 Regulations”) and the Medical Devices (Northern Ireland Protocol) Regulations 2021 (“the 2021 Regulations”).</summary>
+		</entry><entry>
+			<id>http://www.legislation.gov.uk/id/uksi/2025/749</id>
+			<title>The Medical Devices and Blood Safety and Quality (Fees Amendment) Regulations 2025</title>
+			<link rel="self" href="http://www.legislation.gov.uk/id/uksi/2025/749"/>
+			<link href="http://www.legislation.gov.uk/uksi/2025/749/made"/>
+			
+			<link rel="http://purl.org/dc/terms/tableOfContents" type="application/xml" href="http://www.legislation.gov.uk/uksi/2025/749/contents/made" title="Table of Contents"/>
+			<author><name/></author>
+			<updated>2025-07-03T02:14:54Z</updated>
+			<published>2025-06-27T02:05:31.61725Z</published>
+			<ukm:DocumentMainType Value="UnitedKingdomStatutoryInstrument"/><ukm:Year Value="2025"/><ukm:Number Value="749"/><ukm:ISBN Value="9780348273182"/><ukm:CreationDate Date="2025-06-25"/><ukm:Subject Value="MEDICAL DEVICES"/><ukm:Subject Value="FEES AND CHARGES"/>
+			<ukm:Supersedes URI="http://www.legislation.gov.uk/id/ukdsi/2025/9780348270983"><dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">The Medical Devices and Blood Safety and Quality (Fees Amendment) Regulations 2025</dc:title><ukm:DocumentMainType Value="UnitedKingdomDraftStatutoryInstrument"/><ukm:Year Value="2025"/><ukm:ISBN Value="9780348270983"/></ukm:Supersedes>
+			
+			<category term="MEDICAL DEVICES"/><category term="FEES AND CHARGES"/>
+			<summary>These Regulations make amendments to the Medical Devices Regulations 2002 (“the 2002 Regulations”), the Blood Safety and Quality Regulations 2005 (“the 2005 Regulations”) and the Medical Devices (Northern Ireland Protocol) Regulations 2021 (“the 2021 Regulations”).</summary>
+		</entry></feed>

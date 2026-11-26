@@ -1,4 +1,4 @@
-// 법령 전문·판례 /laws/[name] E2E (DEC-029, API 가짜). 조문을 따라 내려가면 옆 판례 패널이 그 조문의 판례로 바뀐다.
+// 원문·판례 /laws/[name]?tab=articles E2E (DEC-029·072, API 가짜). 조문은 접힌 채로 보이고, 펼친 조문의 판례로 옆 패널이 바뀐다.
 import { expect, test } from "@playwright/test";
 import { SEARCH_NOTICE } from "../../lib/api/respond";
 import { mockApi } from "./mock-api";
@@ -11,7 +11,7 @@ const ARTICLES = Array.from({ length: 12 }, (_, i) => ({
   effectiveFrom: "2023-04-18",
 }));
 
-test("법령 전문을 내려 읽으면 보고 있는 조문의 판례로 패널이 바뀐다", async ({ page }) => {
+test("원문은 접힌 채로 보이고, 조문을 펼치면 그 조문의 판례로 패널이 바뀐다", async ({ page }) => {
   await mockApi(page);
   await page.route(/\/api\/v1\/laws\/[^/]+\/articles/, (route) =>
     route.fulfill({
@@ -51,14 +51,16 @@ test("법령 전문을 내려 읽으면 보고 있는 조문의 판례로 패널
     });
   });
 
-  await page.goto(`/laws/${encodeURIComponent(LAW)}`);
+  await page.goto(`/laws/${encodeURIComponent(LAW)}?tab=articles`);
   const panel = page.getByRole("complementary", { name: "지금 보는 조문의 판례" });
   await expect(panel.getByRole("link", { name: /제1조가 나오는 판례/ })).toBeVisible();
+  // 조문 본문은 누르기 전에는 보이지 않는다 (DEC-074)
+  await expect(page.getByText("제8조 본문 1번째 줄")).toHaveCount(0);
 
-  await page.locator('[data-article="제8조"]').scrollIntoViewIfNeeded();
-  await page.mouse.wheel(0, 400);
-  await expect(panel.getByRole("link", { name: /제(7|8|9)조가 나오는 판례/ })).toBeVisible();
-  // 빠르게 지나친 조문까지 모두 조회하지는 않는다
+  await page.getByRole("button", { name: /^제8조/ }).click();
+  await expect(page.getByText("제8조 본문 1번째 줄")).toBeVisible();
+  await expect(panel.getByRole("link", { name: /제8조가 나오는 판례/ })).toBeVisible();
+  // 펼치지 않은 조문까지 모두 조회하지는 않는다
   expect(asked.length).toBeLessThan(ARTICLES.length);
   await expect(page.getByText(SEARCH_NOTICE)).toBeVisible();
 

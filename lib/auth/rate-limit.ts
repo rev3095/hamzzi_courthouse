@@ -27,6 +27,32 @@ export const WRITE_RATE: RateRule = { bucket: "write", limit: 30, windowSeconds:
 export const EXAMPLE_RATE: RateRule = { bucket: "example", limit: 30, windowSeconds: 3600 };
 /** 문서 초안 도우미(DEC-023): 같은 네트워크 1시간 10회 (유료 호출이라 따로 센다) */
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
+/** 법령 쉬운 설명(DEC-074): 같은 네트워크 1시간 20회 (유료 호출일 수 있어 법령 조회와 따로 센다) */
+export const LAW_EASY_RATE: RateRule = { bucket: "law_easy", limit: 20, windowSeconds: 3600 };
+/** 검색 '물어보기' AI 답(DEC-076)을 새로 만드는 횟수: 같은 네트워크 1시간 30회. 저장해 둔 답을 다시 보는 것은 세지 않는다 */
+export const SEARCH_ANSWER_RATE: RateRule = {
+  bucket: "search_answer",
+  limit: 30,
+  windowSeconds: 3600,
+};
+/** 같은 네트워크가 같은 법령의 쉬운 설명을 모델로 만들 수 있는 하루(24시간 창) 횟수 (사용자 결정 2026-11-27) */
+export const LAW_EASY_DAILY_LIMIT = 20;
+/** 법령마다 따로 세는 하루 통. 통 이름에는 공개 법령 이름만 들어간다 */
+export const lawEasyDailyRule = (lawName: string): RateRule => ({
+  bucket: `law_easy_day:${lawName.normalize("NFKC").replace(/\s+/g, "")}`,
+  limit: LAW_EASY_DAILY_LIMIT,
+  windowSeconds: 86_400,
+});
+/** 하루 통을 한 번 센다. 넘었으면 false (오류로 막지 않고 모델 없는 정리로 돌린다) */
+export async function tryLawEasyDaily(lawName: string, headers: Headers): Promise<boolean> {
+  try {
+    await assertRateLimit(lawEasyDailyRule(lawName), headers);
+    return true;
+  } catch (e) {
+    if (e instanceof ApiError && e.code === "RATE_LIMITED") return false;
+    throw e;
+  }
+}
 /** 서류 판독(F-015, DEC-052): 같은 네트워크 1시간 10회 (유료 호출이고 질문 횟수는 분석 때 세므로 따로 막는다) */
 export const CASEFILE_RATE: RateRule = { bucket: "casefile", limit: 10, windowSeconds: 3600 };
 /** 법인·사업자 공개 정보 조회(F-015): 같은 네트워크 1시간 30회 (외부 공식 API 호출) */
@@ -34,15 +60,6 @@ export const BUSINESS_RATE: RateRule = { bucket: "business", limit: 30, windowSe
 
 /** 사건 진행(F-016, DEC-053)의 AI 기능: 로그인 사용자 한 사람이 하루(24시간 창) 30회 — 임시값 */
 export const MATTER_AI_RATE: RateRule = { bucket: "matter_ai", limit: 30, windowSeconds: 86_400 };
-/**
- * 로그인 사용자의 서류 판독 하루 횟수 (DEC-073 ③): 홈에서 올린 사건 서류는 판독 뒤 사건 진행으로 가 질문 횟수가 차감되지 않으므로
- * 판독 자체를 사용자별로 센다 — 하루 질문 한도(USER_QUESTION_LIMIT)와 같은 30회 (임시값)
- */
-export const CASEFILE_USER_RATE: RateRule = {
-  bucket: "casefile_user",
-  limit: 30,
-  windowSeconds: 86_400,
-};
 /** 사건 자동 정리(DEC-073, Haiku): 자료가 바뀔 때마다 불러도 된다는 사용자 결정이라 따로 넉넉히 — 로그인 사용자 하루 120회 (임시값) */
 export const MATTER_AUTO_RATE: RateRule = {
   bucket: "matter_auto",

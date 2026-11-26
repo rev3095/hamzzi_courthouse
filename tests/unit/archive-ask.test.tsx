@@ -150,7 +150,7 @@ describe("DEC-070 질문창 화면", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     render(<AskArchive focus={{ id: "700001", title: "대법원 2020다99999" }} />);
-    fireEvent.click(screen.getByRole("button", { name: /궁금한 점 바로 묻기/ }));
+    fireEvent.click(screen.getByRole("button", { name: /이 판례 물어보기/ }));
     expect(screen.getByText(/Light\(Haiku 5\.5\)로 고정/)).toBeTruthy();
     const box = screen.getByRole("checkbox", { name: /이 판례를 근거에 넣기/ }) as HTMLInputElement;
     expect(box.checked).toBe(true);

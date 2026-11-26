@@ -15,7 +15,7 @@ export const CASE_MODES: { mode: Mode; href: string; label: string; hint: string
     mode: "organize",
     href: "/casefile",
     label: "정리",
-    hint: "사건 정리 — 상황 글이나 서류 사진으로 DeepSearch 정리",
+    hint: "서류 분석 — 서류 사진으로 상황 정리",
   },
 ];
 

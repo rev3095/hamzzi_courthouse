@@ -185,8 +185,6 @@ function Workspace() {
     const r = await getMatter(id);
     if (!r.ok) return setError(matterErrorText(r.error.code, r.error.details?.reason));
     show(r.data, "overview");
-    // 홈에서 서류로 만든 새 사건(DEC-073 ③)처럼 아직 정리 전이면 연 김에 자동 정리한다
-    void autoOpen(r.data.id, r.data.data);
   }
 
   // 마이페이지 '내 세션'에서 고른 사건을 바로 연다 (/matters?open=<id>, DEC-056).

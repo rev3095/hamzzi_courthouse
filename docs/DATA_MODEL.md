@@ -274,6 +274,21 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 
 `public_briefs`는 `case_summaries`와 **별도 테이블**로 두고, 변호사 역할에는 `public_briefs`만 열린다. 상세 내용은 `disclosures`로 허용된 항목만 제공된다.
 
+### `generated_results` — 검색으로 만든 AI 결과 (DEC-076) **(데모)**
+판례·법령 검색 '물어보기' AI 답과 법령 쉬운 설명을 같은 검색어·같은 법령이면 다시 쓰고, 새 내용이 오면 덧붙인다. **요청자 정보 없음**(계정·세션·IP 해시를 담지 않는다). 사용자 결정(2026-11-27): 사이트를 이용하면 이 저장에 동의한 것으로 보고, 이용약관·개인정보처리방침·개발자 연락처 화면에 적는다.
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| id | uuid PK | |
+| kind | text | `search`(검색 화면 한눈에 답) · `research`(리서치 브리프) · `law_easy`(법령 쉬운 설명) |
+| key | text | `{focus}:{정규화한 검색어}`(서버가 `scanInput`으로 개인정보 꼴이 없음을 확인한 것만) 또는 공백 없는 법령 이름. 1~160자 |
+| payload | jsonb | 결과 (`SearchAnswer` 또는 쉬운 설명). 64KB 이하. 판례는 일련번호·사건번호·사건명·법원·선고일·주소만 — 전문 없음(DEC-007) |
+| prompt_version | text | 만든 지시문 판 |
+| hits | int | 다시 쓴 횟수 (`bump_generated_result`) |
+| created_at · updated_at | timestamptz | |
+
+`unique (kind, key)`, 인덱스 `(kind, updated_at desc)`. 서버 전용(RLS 켬, 정책 없음, service_role만 — 마이그레이션 `20261127120000_generated_results.sql`). 보유 기간 없음(개인정보가 아닌 공개 자료 정리 — 7절). 저장·읽기가 실패해도 검색·답은 그대로 간다.
+
 ## 6. 접근 권한 (RLS 요약)
 구현: 사용자 테이블은 **읽기 정책만** 두고 쓰기는 서버(service_role)가 한다. 관리자 판별은 `public.is_admin()`(profiles.role). `profiles`도 쓰기 권한을 회수해 role 자가 변경을 막는다. `gate_changes`·`audit_logs`는 트리거로 수정·삭제·TRUNCATE를 막고, 회원 삭제를 막지 않도록 `actor_id`에 외래키를 두지 않는다(탈퇴 후 가명 uuid로 남음). `feature_gates`는 7개 키를 `pending_review`로 시드한다. `expires_at`은 DEC-018 제안값(30일)으로 채운다(7절).
 
@@ -282,6 +297,7 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | court_cases, case_chunks, statutes | 읽기 | 읽기 | 읽기·쓰기(수집기 서비스 계정) |
 | inquiries, followup_questions, analysis_results | 본인 행 (비로그인은 같은 `anon_session_id`만, 서버 경유) | ✗ | 감사 기록 남기고 제한 열람 |
 | anon_sessions, anon_usage, rate_limit_hits | 서버 전용 | ✗ | 읽기 |
+| generated_results (DEC-076) | 서버 전용 (요청자 정보 없음) | ✗ | 서버 전용 |
 | matters | 서버 전용 (API가 로그인 계정의 행만 읽고 쓴다) | ✗ | ✗ (운영자도 내용을 열람하지 않는다) |
 | community_posts, community_comments, seed_ledger | 서버 전용 (공개 글은 API가 계정 ID·해시를 빼고 내보낸다) | ✗ | 관리자 모드 삭제 |
 | consents, deletion_requests | 본인 행 | ✗ | 처리용 읽기 |
@@ -304,6 +320,7 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 | `audit_logs`·`gate_changes` | 파기하지 않음 (append-only) | 보유 기간은 OQ-DM-03에 남김 |
 | `consents`·`deletion_requests` | 로그인 사용자용 — Google 로그인(DEC-035) 사용자 민감정보 동의·삭제 요청. 삭제 요청 처리는 운영자 수동 | OQ-DM-03 |
 | `matters` (사건 진행, DEC-053) | 사용자가 지울 때까지 | 사건 삭제·계정 삭제 시 함께 삭제. 백업 파기·보유 기한은 OQ-012 |
+| `generated_results` (DEC-076) | 기한 없음 — 요청자와 연결되지 않은 공개 자료 정리 | 새 내용이 오면 덧붙여 고친다. 지울 내용은 운영자가 문의를 받아 지운다 |
 
 - DB 함수 `purge_expired_records()`가 위 순서로 지우고 건수를 돌려주며 `audit_logs`에 `retention_purge`를 남긴다. Supabase **pg_cron** 작업 `hz-retention-purge`가 매일 03:17 UTC(12:17 KST)에 실행한다(무료 플랜 사용 가능).
 - 비로그인 **내 기록 삭제**: DB 함수 `delete_anon_data(세션, ip_hash)`가 그 세션의 질문(과 연쇄 데이터)을 지우고 `audit_logs`에 `anon_data_deleted`(행위·세션 ID·시각만 — IP 해시는 남기지 않음, `20261101034525_demo_audit_no_ip.sql`)를 남긴다. `anon_sessions.questions_used`와 `anon_usage`는 남겨 **질문 횟수가 되살아나지 않는다**(남용 방지). 이 행들도 위 보유 기간이 지나면 파기된다.

@@ -1,0 +1,38 @@
+{
+  "@odata.context": "http://api.prod.legislation.gov.au/v1/$metadata#Titles(id,name,makingDate,collection,status,isPrincipal)",
+  "@odata.count": 57,
+  "value": [
+    {
+      "id": "F2017L01114",
+      "name": "Therapeutic Goods Information (Medical Devices) Specification 2017",
+      "makingDate": "2017-08-29T00:00:00",
+      "collection": "LegislativeInstrument",
+      "isPrincipal": true,
+      "status": "InForce"
+    },
+    {
+      "id": "F2018L01280",
+      "name": "Medical Device Standards Order (Endotoxin Requirements for Medical Devices) 2018",
+      "makingDate": "2018-09-07T00:00:00",
+      "collection": "LegislativeInstrument",
+      "isPrincipal": true,
+      "status": "InForce"
+    },
+    {
+      "id": "C2013G00427",
+      "name": "Publication of Cancellation of Entries for Kinds of Medical Devices from the Australian Register of Therapeutic Goods – (업체 이름 생략)",
+      "makingDate": null,
+      "collection": "Gazette",
+      "isPrincipal": true,
+      "status": "InForce"
+    },
+    {
+      "id": "C2012G00072",
+      "name": "Publication of Cancellation of Entries for Kinds of Medical Devices from the Australian Register of Therapeutic Goods – (업체 이름 생략)",
+      "makingDate": null,
+      "collection": "Gazette",
+      "isPrincipal": true,
+      "status": "InForce"
+    }
+  ]
+}

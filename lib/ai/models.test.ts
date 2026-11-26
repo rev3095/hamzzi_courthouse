@@ -133,6 +133,26 @@ describe("DEC-036 끄는 스위치만 남긴다", () => {
   });
 });
 
+describe("DEC-074 법령 쉬운 설명 가중치", () => {
+  test("상한 $0.004 ÷ 단위 올림 = 3", async () => {
+    const { LAW_EASY_COST_CAP_USD } = await import("./cost");
+    const { LAW_EASY_WEIGHT } = await import("./models");
+    expect(LAW_EASY_WEIGHT).toBe(Math.ceil(LAW_EASY_COST_CAP_USD / BUDGET_UNIT_USD - 1e-9));
+    expect(LAW_EASY_WEIGHT).toBe(3);
+  });
+});
+
+describe("DEC-076 검색 물어보기 AI 답 가중치", () => {
+  test("상한 $0.003 ÷ 단위 올림 = 2", async () => {
+    const { SEARCH_ANSWER_COST_CAP_USD } = await import("./cost");
+    const { SEARCH_ANSWER_WEIGHT } = await import("./models");
+    expect(SEARCH_ANSWER_WEIGHT).toBe(
+      Math.ceil(SEARCH_ANSWER_COST_CAP_USD / BUDGET_UNIT_USD - 1e-9),
+    );
+    expect(SEARCH_ANSWER_WEIGHT).toBe(2);
+  });
+});
+
 describe("DEC-064 빠른 답 먼저 가중치", () => {
   test("요약 상한 $0.002 ÷ 단위 올림", async () => {
     const { QUICK_CAP_USD } = await import("./quick-policy");

@@ -1,5 +1,7 @@
 "use client";
-// 판례 아카이브 질문창 (DEC-070, 2026-11-27 사용자 결정): 검색·리서치·판례 상세에서 궁금한 점을 바로 묻는다.
+// 판례 아카이브 질문창 (DEC-070, 2026-11-27 사용자 결정): 판례 상세에서 이 판례에 대해 묻는다.
+// DEC-076(2026-11-27): 검색·리서치 화면에서는 '물어보기'가 곧 AI Light 답(components/search/SearchAnswer)이라 이 단추를 뺐다.
+// 판례 상세에만 남기고, 이름도 '궁금한 점 바로 묻기 · AI Light'에서 '이 판례 물어보기'로 바꿨다.
 // 검색 결과 자체는 지금처럼 AI 없이 법제처 자료만 보이고(SEARCH_NOTICE), 질문만 상담과 같은 길(POST /inquiries → 결과 화면)로 간다 —
 // 개인정보 가리기·민감정보 동의·하루 질문 횟수·비용 상한·인용 검증·AI 고지가 그대로 걸린다.
 // 답변 단계는 고르지 않는다: 화면도 서버도 Light(Haiku 5.5)로 고정한다. 보고 있던 판례가 있으면 그 판례를 근거에 넣을 수 있다
@@ -22,8 +24,7 @@ export function AskArchive({ focus = null }: { focus?: AskFocus | null }) {
         onClick={() => setOpen(true)}
         className="rounded-button border-gold bg-honey text-ink inline-flex min-h-11 items-center gap-2 border px-4 text-sm font-semibold"
       >
-        궁금한 점 바로 묻기
-        <span className="text-label text-[12px] font-normal">AI · Light</span>
+        {focus ? "이 판례 물어보기" : "물어보기"}
       </button>
       {/* 질문 보내기 흐름(라우터·남은 횟수)은 창을 열 때만 붙인다 */}
       {open && <AskPanel focus={focus} onClose={() => setOpen(false)} />}
