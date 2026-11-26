@@ -5,19 +5,21 @@
 // 예시 답변(/examples/[id])에서 "내 상황으로 질문하기"로 오면 주소의 ?category=로 그 분야가 골라져 있다.
 // 예시 질문은 저장된 분석 재생이라 횟수와 상관없이 언제든 볼 수 있다 (DEC-027). 서버도 같은 기준(lib/demo findExample)으로 판단한다.
 // 가이드 아래에는 분야별 비서 묶음(F-018, DEC-057)을 둔다 — 누르면 비서 페이지로 간다.
-// 질문창에 사진을 붙이면 "물어보기"가 먼저 쓰임을 묻는다: 자료로 첨부해 질문하기(F-017, DEC-058) 또는 서류 분석(F-015, DEC-052).
-// 어느 쪽이든 동의 → 읽기 → 확인 뒤 질문 1번으로 분석한다. DeepSearch 창에서 보낼 때 사진이 붙어 있으면 자료 첨부로 간다.
+// 상황 정리 먼저 (DEC-068): 질문창은 "현재 상황을 정리해 주세요"로 시작하고, 그 아래에 자료 올리기를 글로 보인다.
+// 자료(전달받은 서류·작성 중인 서면)를 올리면 곧바로 서류 분석(F-015, DEC-052) 창이 열려 동의 → 읽기 → 바로 분석으로 간다
+// (쓰임을 묻는 창 없음). 분석은 질문 1번으로 센다. DeepSearch 창에서 보낼 때 사진이 붙어 있으면 자료 첨부(F-017)로 간다.
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { AssistantCards } from "../assistants/AssistantCards";
+import { AttachDrop } from "../ask/AttachTray";
 import { DeepAsk } from "../ask/DeepAsk";
 import { dailyLimitLine, limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useAttachments } from "../ask/useAttachments";
-import { AttachChoice, useMaterialsAsk } from "../ask/useMaterialsAsk";
+import { useMaterialsAsk } from "../ask/useMaterialsAsk";
 import { useCaseFileAsk } from "../casefile/useCaseFileAsk";
 import { useQuota } from "../useQuota";
 import { HomeGuide, type GuideExample } from "./HomeGuide";
@@ -51,20 +53,28 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
 
   // 같은 사진 줄을 서류 분석과 자료 첨부가 함께 쓴다
   const attach = useAttachments();
-  const caseFile = useCaseFileAsk({ send, busy, error, blocked, showLimit, attach });
+  const caseFile = useCaseFileAsk({ send, busy, error, blocked, showLimit, attach, auto: true });
   const materials = useMaterialsAsk({ attach, send, busy, error, blocked, showLimit });
-  // 사진을 붙이고 보냈을 때 쓰임을 고르는 창 (적어 둔 글을 들고 있는다)
-  const [choosing, setChoosing] = useState<string | null>(null);
   const submit = (q: string) => {
-    // 사진이 붙어 있으면 먼저 쓰임을 고른다 (글은 비워도 된다)
-    if (attach.items.length > 0) {
-      if (blocked) showLimit();
-      else setChoosing(q);
-      return;
-    }
+    // 자료가 붙어 있으면 곧바로 서류 분석으로 간다 (글은 비워도 된다)
+    if (caseFile.start(q)) return;
     if (blocked && !isExample(q)) showLimit();
     else void send(q);
   };
+  // 자료를 올리면 곧바로 분석 창을 연다 (0개 → 1개 이상이 된 순간 한 번, DeepSearch 창이 열려 있으면 그쪽이 맡는다)
+  const count = attach.items.length;
+  const prevCount = useRef(0);
+  const textRef = useRef(text);
+  const startRef = useRef(caseFile.start);
+  useEffect(() => {
+    textRef.current = text;
+    startRef.current = caseFile.start;
+  });
+  useEffect(() => {
+    const was = prevCount.current;
+    prevCount.current = count;
+    if (was === 0 && count > 0 && !deepOpen) startRef.current(textRef.current);
+  }, [count, deepOpen]);
   const focusBox = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -121,15 +131,21 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
             )}
           </div>
         )}
+        <h2 className="font-display text-ink mb-2.5 text-center text-[24px] font-bold lg:text-[28px]">
+          현재 상황을 정리해 주세요
+        </h2>
         <QuestionBox
+          label="현재 상황"
+          submitLabel="정리 시작"
           value={text}
           onChange={setText}
           onSubmit={() => submit(text)}
           busy={busy}
           placeholder={
             attach.items.length > 0
-              ? "사진에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
-              : current?.placeholder
+              ? "자료에 덧붙일 상황이나 궁금한 점을 적어 주세요 (비워도 돼요)"
+              : (current?.placeholder ??
+                "무슨 일이 있었고 지금까지 어떻게 진행됐는지 순서대로 적어 주세요")
           }
           inputRef={inputRef}
           askTools
@@ -151,22 +167,9 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
             }}
           />
         )}
-        {choosing !== null && (
-          <AttachChoice
-            count={attach.items.length}
-            onClose={() => setChoosing(null)}
-            onMaterials={() => {
-              const q = choosing;
-              setChoosing(null);
-              materials.start(q);
-            }}
-            onCaseFile={() => {
-              const q = choosing;
-              setChoosing(null);
-              caseFile.start(q);
-            }}
-          />
-        )}
+        <div className="mt-3">
+          <AttachDrop attach={attach} disabled={busy} />
+        </div>
         {caseFile.flow}
         {materials.flow}
         {error ? (
@@ -180,9 +183,11 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
               : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${dailyLimitLine(signedIn)} 아래 가이드의 예시 답변은 횟수에 들어가지 않아요.`}
           </p>
         )}
-        <p className="mt-1 text-center text-[13px]">
+        <p className="text-muted mt-1 text-center text-[13px] leading-relaxed">
+          자세히 적거나 자료를 올리면 민사·형사로 나눈 양쪽 입장과 대응, 쟁점, 예상 반론, 작성할
+          문서를 구조도와 함께 보여 드려요.{" "}
           <Link href="/casefile" className="text-link underline-offset-2 hover:underline">
-            내용증명·소장 같은 서류 사진으로 분석하기 →
+            서류 분석 예시 보기 →
           </Link>
         </p>
       </div>

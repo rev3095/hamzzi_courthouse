@@ -160,6 +160,10 @@ export const MY_SIDE_LABEL: Record<MySide, string> = {
  * 확인한 사건 개요와 질문을 질문 한 건의 문장으로 합친다. 서버는 이 문장을 다시 가린 뒤 저장한다 (DEC-006).
  * 모델을 쓰지 않는 단순 이어 붙이기다.
  */
+/** 궁금한 점을 비워 두었을 때의 질문 (DEC-068): 상황 정리 → 양쪽 입장·대응·쟁점·예상 반론·작성할 문서 */
+export const DEFAULT_CASE_QUESTION =
+  "지금 상황을 정리해 주세요. 민사와 형사로 나누어 양쪽의 입장과 각자 할 수 있는 대응, 쟁점, 예상되는 반론, 지금 작성할 문서를 알고 싶어요.";
+
 export function composeCaseText(input: {
   docTypes: string[];
   summary: string;
@@ -177,8 +181,6 @@ export function composeCaseText(input: {
       `질문자의 자리: ${input.mySide === "claimant" ? "요구·청구하는 쪽" : "요구·청구를 받은 쪽"}`,
     );
   }
-  lines.push(
-    `질문: ${input.question.trim() || "지금 상황의 쟁점이 무엇이고 어떤 절차로 진행할 수 있는지 알고 싶어요."}`,
-  );
+  lines.push(`질문: ${input.question.trim() || DEFAULT_CASE_QUESTION}`);
   return lines.join("\n");
 }

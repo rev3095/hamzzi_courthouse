@@ -5,6 +5,7 @@
 // - 시각자료(사건 구조도 등)는 이 구조와 검증을 통과한 문단으로 코드가 그린다. 그림을 위해 모델을 더 부르지 않는다.
 import { z } from "zod";
 import { scanInput } from "@/lib/pii";
+import type { DocumentKind } from "@/lib/procedure/steps";
 import {
   MODEL_SOURCE,
   citationsIn,
@@ -229,8 +230,15 @@ export const DeepAnswerZ = z.object({
   plan: z
     .object({
       kinds: z.array(z.string()),
-      sides: z.array(z.object({ party: Str, side: Str, actions: z.array(Str) })),
+      sides: z.array(
+        z.object({ party: Str, side: Str, actions: z.array(Str), stance: Str.optional() }),
+      ),
       prep: z.array(z.object({ item: Str, why: Str })),
+      // DEC-068: 예상 반론과 대응, 지금 작성할 문서
+      rebuttals: z
+        .array(z.object({ issue: z.number().int(), by: Str, point: Str, reply: Str }))
+        .optional(),
+      docs: z.array(z.object({ kind: Str, why: Str })).optional(),
     })
     .optional(),
 });
@@ -264,10 +272,35 @@ export const CASE_SIDES = {
 } as const;
 export type CaseSide = keyof typeof CASE_SIDES;
 
-export const PLAN_LIMITS = { kinds: 3, sides: 4, actions: 3, prep: 8 } as const;
+export const PLAN_LIMITS = {
+  kinds: 3,
+  sides: 4,
+  actions: 4,
+  prep: 8,
+  rebuttals: 6,
+  docs: 3,
+} as const;
+
+/**
+ * 지금 내용으로 작성해 볼 문서 (DEC-068). 햄찌법원 문서 작성 화면(/documents/[kind])이 있는 서식만 고를 수 있다.
+ * 이름은 고정 문안이다.
+ */
+export const PLAN_DOCS = {
+  "demand-letter": "내용증명",
+  complaint: "소장",
+  "payment-order": "지급명령 신청서",
+  "criminal-complaint": "고소장",
+  "compensation-order": "배상명령 신청서",
+  "lease-registration": "임차권등기명령 신청서",
+  "wage-petition": "임금체불 진정서",
+  "dismissal-remedy": "부당해고 구제신청서",
+  "civil-mediation": "민사조정 신청서",
+} as const satisfies Partial<Record<DocumentKind, string>>;
+export type PlanDocKind = keyof typeof PLAN_DOCS;
 
 /** 정리판은 판정을 담지 않는다 (DEC-062): 유불리·승패·가능성·책임 크기 표현이 든 줄은 버린다 */
-const PLAN_JUDGMENT = /유리|불리|승산|승소|패소|이길|질 수|가능성|확률|책임이s*(?:크|작|더|많|적)/;
+const PLAN_JUDGMENT =
+  /유리|불리|승산|승소|패소|승패|우세|이길|이기[기는]|이긴다|질 수|질 것|진다|패할|기각|받아들여[지질진]|인정(?:되(?:기 어렵|지 않)|된다|될 것|받을 것)|성립(?:한다|하지 않|될 것|되지 않)|처벌받을 수|가능성|확률|책임이\s*(?:크|작|더|많|적|있|없)/;
 const planText = (raw: string, max: number, question: string): string | null => {
   const t = cleanText(raw, max, question);
   return t && !PLAN_JUDGMENT.test(t) ? t : null;
@@ -275,8 +308,13 @@ const planText = (raw: string, max: number, question: string): string | null => 
 
 export type DeepPlan = {
   kinds: CaseKind[];
-  sides: { party: string; side: CaseSide; actions: string[] }[];
+  /** stance = 그 당사자가 내세우는 입장 한 문장 (DEC-068) */
+  sides: { party: string; side: CaseSide; actions: string[]; stance?: string }[];
   prep: { item: string; why: string }[];
+  /** 쟁점마다 상대방이 내세울 수 있는 예상 반론과 대응 방향 (DEC-068). issue는 쟁점 번호(1부터) */
+  rebuttals?: { issue: number; by: string; point: string; reply: string }[];
+  /** 지금 내용으로 작성해 볼 문서 (DEC-068) */
+  docs?: { kind: PlanDocKind; why: string }[];
 };
 
 /** 답변 모델이 낸 정리판을 거른다. 당사자는 구조에서 뽑은 이름만, 숫자는 사용자가 적은 글에 있는 것만 */
@@ -284,6 +322,8 @@ export function screenPlan(
   raw: DeepPlanRaw | undefined,
   partyLabels: string[],
   question: string,
+  /** 쟁점 수. 주면 예상 반론의 쟁점 번호를 이 범위로 거른다 */
+  issueCount?: number,
 ): DeepPlan | null {
   if (!raw) return null;
   const kinds = [
@@ -299,7 +339,8 @@ export function screenPlan(
       .map((a) => planText(a, 90, question))
       .filter((a): a is string => !!a)
       .slice(0, PLAN_LIMITS.actions);
-    sides.push({ party, side: s.side as CaseSide, actions });
+    const stance = s.stance ? planText(s.stance, 110, question) : null;
+    sides.push({ party, side: s.side as CaseSide, actions, ...(stance && { stance }) });
     if (sides.length >= PLAN_LIMITS.sides) break;
   }
   const prep: DeepPlan["prep"] = [];
@@ -309,15 +350,42 @@ export function screenPlan(
     prep.push({ item, why: planText(p.why, 80, question) ?? "" });
     if (prep.length >= PLAN_LIMITS.prep) break;
   }
+  const rebuttals: NonNullable<DeepPlan["rebuttals"]> = [];
+  for (const r of raw.rebuttals ?? []) {
+    const by = squash(r.by);
+    if (!labels.has(by) || r.issue < 1 || (issueCount !== undefined && r.issue > issueCount))
+      continue;
+    const point = planText(r.point, 110, question);
+    const reply = planText(r.reply, 110, question);
+    if (!point || !reply || rebuttals.some((x) => x.point === point)) continue;
+    rebuttals.push({ issue: r.issue, by, point, reply });
+    if (rebuttals.length >= PLAN_LIMITS.rebuttals) break;
+  }
+  const docs: NonNullable<DeepPlan["docs"]> = [];
+  for (const d of raw.docs ?? []) {
+    if (!Object.hasOwn(PLAN_DOCS, d.kind) || docs.some((x) => x.kind === d.kind)) continue;
+    docs.push({ kind: d.kind as PlanDocKind, why: planText(d.why, 90, question) ?? "" });
+    if (docs.length >= PLAN_LIMITS.docs) break;
+  }
   if (kinds.length === 0 && sides.length === 0 && prep.length === 0) return null;
-  return { kinds, sides, prep };
+  return {
+    kinds,
+    sides,
+    prep,
+    ...(rebuttals.length > 0 && { rebuttals }),
+    ...(docs.length > 0 && { docs }),
+  };
 }
 
-export function planSchema(partyLabels: string[]) {
+export function planSchema(partyLabels: string[], issueCount?: number) {
+  const party =
+    partyLabels.length > 0
+      ? { type: "string", enum: partyLabels, description: "사건 구조의 당사자" }
+      : { type: "string", description: "사건 구조의 당사자" };
   return {
     type: "object",
     additionalProperties: false,
-    required: ["kinds", "sides", "prep"],
+    required: ["kinds", "sides", "prep", "rebuttals", "docs"],
     description: "사건 정리판. 판정(승패·유불리·책임 비율)은 쓰지 않는다",
     properties: {
       kinds: {
@@ -331,18 +399,20 @@ export function planSchema(partyLabels: string[]) {
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["party", "side", "actions"],
+          required: ["party", "side", "stance", "actions"],
           properties: {
-            party:
-              partyLabels.length > 0
-                ? { type: "string", enum: partyLabels, description: "사건 구조의 당사자" }
-                : { type: "string", description: "사건 구조의 당사자" },
+            party,
             side: { type: "string", enum: Object.keys(CASE_SIDES) },
+            stance: {
+              type: "string",
+              description:
+                "그 당사자가 이 사건에서 내세우는 입장 한 문장, 100자 이내. 조문·사건번호·숫자는 쓰지 않는다",
+            },
             actions: {
               type: "array",
               items: { type: "string" },
               description:
-                "그 당사자가 할 수 있는 대응 1~3개, 각 90자 이내. 조문·사건번호·숫자는 쓰지 않는다",
+                "그 당사자가 할 수 있는 대응 1~4개, 각 90자 이내. 민사와 형사가 함께 걸리면 '민사: …', '형사: …'로 나눠 쓴다. 조문·사건번호·숫자는 쓰지 않는다",
             },
           },
         },
@@ -360,6 +430,41 @@ export function planSchema(partyLabels: string[]) {
           },
         },
       },
+      rebuttals: {
+        type: "array",
+        description: "쟁점마다 상대방이 내세울 수 있는 예상 반론과 그에 대한 대응 방향 3~6개",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["issue", "by", "point", "reply"],
+          properties: {
+            issue: {
+              type: "integer",
+              ...(issueCount && { enum: Array.from({ length: issueCount }, (_, i) => i + 1) }),
+              description: "이 반론이 걸린 쟁점 번호",
+            },
+            by: { ...party, description: "이 반론을 내세울 당사자" },
+            point: { type: "string", description: "예상 반론 한 문장, 100자 이내" },
+            reply: {
+              type: "string",
+              description: "그 반론에 대비해 질문자가 준비·대응할 방향 한 문장, 100자 이내",
+            },
+          },
+        },
+      },
+      docs: {
+        type: "array",
+        description: "지금 내용으로 질문자가 작성해 볼 문서 1~3개. 맞는 서식이 없으면 빈 배열",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["kind", "why"],
+          properties: {
+            kind: { type: "string", enum: Object.keys(PLAN_DOCS) },
+            why: { type: "string", description: "이 문서를 지금 쓰는 까닭, 80자 이내" },
+          },
+        },
+      },
     },
   };
 }
@@ -372,7 +477,7 @@ export function deepAnswerSchema(keys: string[], issueCount: number, partyLabels
     additionalProperties: false,
     required: partyLabels ? ["points", "plan"] : ["points"],
     properties: {
-      ...(partyLabels && { plan: planSchema(partyLabels) }),
+      ...(partyLabels && { plan: planSchema(partyLabels, issueCount) }),
       points: {
         type: "array",
         items: {
@@ -446,9 +551,21 @@ const PlanZ = z.object({
       party: Str,
       side: z.enum(Object.keys(CASE_SIDES) as [CaseSide, ...CaseSide[]]),
       actions: z.array(Str),
+      stance: Str.optional(),
     }),
   ),
   prep: z.array(z.object({ item: Str, why: Str })),
+  rebuttals: z
+    .array(z.object({ issue: z.number().int().min(1), by: Str, point: Str, reply: Str }))
+    .optional(),
+  docs: z
+    .array(
+      z.object({
+        kind: z.enum(Object.keys(PLAN_DOCS) as [PlanDocKind, ...PlanDocKind[]]),
+        why: Str,
+      }),
+    )
+    .optional(),
 });
 
 /** 저장된 결과를 다시 읽을 때 형식 확인 (모양이 다르면 그림을 그리지 않는다) */

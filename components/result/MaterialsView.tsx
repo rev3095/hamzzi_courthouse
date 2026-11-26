@@ -6,11 +6,12 @@ import { parseMaterialsMap, type MaterialsMap } from "@/lib/materials/map";
 import { MATERIAL_COMMON_TIPS, MATERIAL_TIPS } from "@/lib/materials/tips";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import { wrapText } from "./DeepMapView";
+import { ZoomPane } from "./ZoomPane";
 
 type Result = Pick<DemoAnalysisResult, "materials" | "answer" | "mode"> & { aiNotice: string };
 
 const W = 760;
-const LINE = 17;
+const LINE = 19;
 
 const pointsText = (points: number[]) => points.map((p) => p + 1).join(" · ");
 
@@ -84,7 +85,7 @@ function MapWide({
     .slice(0, 4)
     .map((g) => ({ lines: wrapText(g, 15, 3) }));
   const hOf = (n: { lines: string[] }) => 20 + n.lines.length * LINE;
-  const GAP = 14;
+  const GAP = 26;
   const rightH = right.reduce((s, n) => s + n.h + GAP, -GAP);
   const leftH = (gaps.length ? 26 : 0) + gaps.reduce((s, n) => s + hOf(n) + GAP, -GAP);
   const H = Math.max(rightH, leftH, 180) + 60;
@@ -120,80 +121,84 @@ function MapWide({
 
   return (
     <div className="hidden md:block">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        role="img"
-        aria-label={`자료 지도: 자료 ${map.items.length}건, 답변에서 참고한 자료 ${linked}건, 확인하지 못한 것 ${gaps.length}개`}
-        className="h-auto w-full"
-      >
-        <g fill="none" strokeWidth="1.5">
-          {R.map((n, i) => (
-            <path
-              key={`r${i}`}
-              d={curve(cx + 62, cy, n.x, n.y + n.h / 2)}
-              stroke={map.items[i].points.length > 0 ? "var(--gold)" : "var(--line)"}
-              strokeDasharray={map.items[i].points.length > 0 ? undefined : "4 4"}
-            />
-          ))}
-          {G.map((n, i) => (
-            <path
-              key={`g${i}`}
-              d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
-              stroke="var(--line)"
-              strokeDasharray="4 4"
-            />
-          ))}
-        </g>
-        <circle cx={cx} cy={cy} r="62" fill="var(--ink)" />
-        <text x={cx} y={cy - 4} textAnchor="middle" className="fill-white text-[16px] font-bold">
-          내 자료
-        </text>
-        <text x={cx} y={cy + 16} textAnchor="middle" className="fill-white text-[11px]">
-          {map.items.length}건{linkable && ` · 참고 ${linked}건`}
-        </text>
-        {R.map((n, i) => (
-          <g key={`rb${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              rx="10"
-              fill="var(--cream)"
-              stroke="var(--gold-line)"
-            />
-            {text(n.title, n.x + 12, n.y + 24, "fill-[var(--ink)] text-[13px] font-semibold")}
-            {text(n.body, n.x + 12, n.y + 24 + LINE, "fill-[var(--ink)] text-[12px]")}
-            <text
-              x={n.x + 12}
-              y={n.y + 24 + (n.title.length + n.body.length) * LINE + 4}
-              className="fill-[var(--link)] text-[11px]"
-            >
-              {n.link}
-            </text>
+      <ZoomPane width={W} height={H} label="자료 지도">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width={W}
+          height={H}
+          role="img"
+          aria-label={`자료 지도: 자료 ${map.items.length}건, 답변에서 참고한 자료 ${linked}건, 확인하지 못한 것 ${gaps.length}개`}
+          className="block bg-white"
+        >
+          <g fill="none" strokeWidth="1.5">
+            {R.map((n, i) => (
+              <path
+                key={`r${i}`}
+                d={curve(cx + 62, cy, n.x, n.y + n.h / 2)}
+                stroke={map.items[i].points.length > 0 ? "var(--gold)" : "var(--line)"}
+                strokeDasharray={map.items[i].points.length > 0 ? undefined : "4 4"}
+              />
+            ))}
+            {G.map((n, i) => (
+              <path
+                key={`g${i}`}
+                d={curve(cx - 62, cy, n.x + n.w, n.y + n.h / 2)}
+                stroke="var(--line)"
+                strokeDasharray="4 4"
+              />
+            ))}
           </g>
-        ))}
-        {G.length > 0 && (
-          <text x={20} y={gapLabelY} className="fill-[var(--muted)] text-[11px] font-semibold">
-            확인하지 못한 것
+          <circle cx={cx} cy={cy} r="62" fill="var(--ink)" />
+          <text x={cx} y={cy - 4} textAnchor="middle" className="fill-white text-[16px] font-bold">
+            내 자료
           </text>
-        )}
-        {G.map((n, i) => (
-          <g key={`gb${i}`}>
-            <rect
-              x={n.x}
-              y={n.y}
-              width={n.w}
-              height={n.h}
-              rx="10"
-              fill="var(--soft)"
-              stroke="var(--line)"
-              strokeDasharray="4 4"
-            />
-            {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[12px]")}
-          </g>
-        ))}
-      </svg>
+          <text x={cx} y={cy + 16} textAnchor="middle" className="fill-white text-[11px]">
+            {map.items.length}건{linkable && ` · 참고 ${linked}건`}
+          </text>
+          {R.map((n, i) => (
+            <g key={`rb${i}`}>
+              <rect
+                x={n.x}
+                y={n.y}
+                width={n.w}
+                height={n.h}
+                rx="10"
+                fill="var(--cream)"
+                stroke="var(--gold-line)"
+              />
+              {text(n.title, n.x + 12, n.y + 24, "fill-[var(--ink)] text-[13px] font-semibold")}
+              {text(n.body, n.x + 12, n.y + 24 + LINE, "fill-[var(--ink)] text-[12px]")}
+              <text
+                x={n.x + 12}
+                y={n.y + 24 + (n.title.length + n.body.length) * LINE + 4}
+                className="fill-[var(--link)] text-[11px]"
+              >
+                {n.link}
+              </text>
+            </g>
+          ))}
+          {G.length > 0 && (
+            <text x={20} y={gapLabelY} className="fill-[var(--muted)] text-[11px] font-semibold">
+              확인하지 못한 것
+            </text>
+          )}
+          {G.map((n, i) => (
+            <g key={`gb${i}`}>
+              <rect
+                x={n.x}
+                y={n.y}
+                width={n.w}
+                height={n.h}
+                rx="10"
+                fill="var(--soft)"
+                stroke="var(--line)"
+                strokeDasharray="4 4"
+              />
+              {text(n.lines, n.x + 12, n.y + 23, "fill-[var(--ink)] text-[12px]")}
+            </g>
+          ))}
+        </svg>
+      </ZoomPane>
     </div>
   );
 }

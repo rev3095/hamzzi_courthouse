@@ -142,6 +142,34 @@ describe("F-015 AC1 동의 → AC3 확인", () => {
     expect(parties).toEqual(READING.parties);
   });
 
+  test("DEC-068 auto: 동의하면 읽은 내용으로 곧바로 분석을 보낸다 (동의 전에는 보내지 않는다)", async () => {
+    const onAnalyze = vi.fn();
+    render(
+      <CaseFileFlow
+        auto
+        images={[IMAGE]}
+        question=""
+        busy={false}
+        onAnalyze={onAnalyze}
+        onLimit={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const go = screen.getByRole("button", { name: "동의하고 바로 분석하기" });
+    expect(go).toHaveProperty("disabled", true);
+    expect(client.readCaseFiles).not.toHaveBeenCalled();
+    for (const box of screen.getAllByRole("checkbox")) fireEvent.click(box);
+    fireEvent.click(go);
+    await waitFor(() => expect(onAnalyze).toHaveBeenCalledTimes(1));
+    const [text, parties] = onAnalyze.mock.calls[0];
+    expect(text).toContain(`사건 개요: ${READING.summary}`);
+    // 궁금한 점을 비우면 상황 정리(양쪽 입장·대응·쟁점·반론·문서)를 묻는다
+    expect(text).toMatch(/질문: 지금 상황을 정리해 주세요.*예상되는 반론/);
+    expect(parties).toEqual(READING.parties);
+    // 보내기에 실패해도 고쳐서 다시 보낼 수 있게 확인 화면이 남는다
+    expect(screen.getByRole("button", { name: "이대로 분석하기" })).toBeTruthy();
+  });
+
   test("읽지 못하면 이유를 알리고 분석을 보내지 않는다", async () => {
     client.readCaseFiles.mockResolvedValue({
       ok: true,

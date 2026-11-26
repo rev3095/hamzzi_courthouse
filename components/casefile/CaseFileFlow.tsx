@@ -1,5 +1,6 @@
 "use client";
 // 서류 분석 창 (F-015, DEC-052): 동의 → 서류 읽기(Haiku 1회) → 읽은 내용 확인·수정 → 분석 보내기.
+// auto(DEC-068, 홈 질문창)면 읽은 내용으로 곧바로 분석을 보낸다 — 확인 화면은 보내는 동안과 실패했을 때만 보인다.
 // - 동의 전에는 사진을 서버로 보내지 않는다. 사진 전송 동의와 민감정보 처리 동의를 따로 받는다.
 // - 읽은 내용은 서버가 개인정보를 가린 것만 온다. 개인의 이름은 보이지 않고, 법인·사업자·기관 이름만 보인다.
 // - 사용자가 확인·수정한 사건 개요는 일반 질문과 같은 길(가리기 → 저장 → 검색 → 답변 → 인용 검증)로 간다.
@@ -52,10 +53,13 @@ export function CaseFileFlow({
   question,
   busy,
   error,
+  auto = false,
   onAnalyze,
   onLimit,
   onClose,
 }: {
+  /** 읽은 내용으로 곧바로 분석을 보낸다 (DEC-068) */
+  auto?: boolean;
   images: PreparedImage[];
   /** 질문창에 적어 둔 글 */
   question: string;
@@ -70,6 +74,8 @@ export function CaseFileFlow({
 }) {
   const panel = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>({ kind: "consent" });
+  // 읽자마자 분석을 보냈는지 (auto)
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     panel.current?.focus();
@@ -93,6 +99,19 @@ export function CaseFileFlow({
       const reason = r.data.ai.used ? "model_failed" : r.data.ai.reason;
       return setStep({ kind: "stopped", message: READ_UNAVAILABLE[reason] });
     }
+    if (auto && r.data.reading.summary.trim()) {
+      const text = composeCaseText({
+        docTypes: r.data.reading.docTypes,
+        summary: r.data.reading.summary,
+        claims: r.data.reading.claims,
+        mySide: "unknown",
+        question: question.slice(0, CASEFILE_LIMITS.questionChars),
+      });
+      if (text.length <= MAX_INPUT_CHARS) {
+        setSent(true);
+        onAnalyze(text, r.data.reading.parties);
+      }
+    }
     setStep({
       kind: "review",
       reading: r.data.reading,
@@ -104,12 +123,14 @@ export function CaseFileFlow({
 
   const title =
     step.kind === "consent"
-      ? "서류 사진을 읽기 전에 확인해 주세요"
+      ? "자료를 읽기 전에 확인해 주세요"
       : step.kind === "reading"
         ? "서류를 읽고 있어요"
         : step.kind === "stopped"
           ? "서류를 읽지 못했어요"
-          : "읽은 내용이 맞는지 확인해 주세요";
+          : sent && busy
+            ? "읽은 내용으로 바로 분석하고 있어요"
+            : "읽은 내용이 맞는지 확인해 주세요";
 
   return (
     <div className="bg-ink/50 fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4">
@@ -143,7 +164,12 @@ export function CaseFileFlow({
         </div>
         <div className="overflow-y-auto px-5 py-4">
           {step.kind === "consent" && (
-            <Consent count={images.length} onAccept={() => void read()} onClose={onClose} />
+            <Consent
+              count={images.length}
+              auto={auto}
+              onAccept={() => void read()}
+              onClose={onClose}
+            />
           )}
           {step.kind === "reading" && (
             <div className="flex flex-col items-center gap-4 py-10" role="status">
@@ -184,10 +210,12 @@ export function CaseFileFlow({
 
 function Consent({
   count,
+  auto,
   onAccept,
   onClose,
 }: {
   count: number;
+  auto: boolean;
   onAccept: () => void;
   onClose: () => void;
 }) {
@@ -237,7 +265,7 @@ function Consent({
       </a>
       <div className="mt-5 flex flex-col gap-2">
         <PrimaryButton disabled={!send || !sensitive} onClick={onAccept}>
-          동의하고 서류 읽기
+          {auto ? "동의하고 바로 분석하기" : "동의하고 서류 읽기"}
         </PrimaryButton>
         <SecondaryButton onClick={onClose}>취소</SecondaryButton>
       </div>

@@ -35,9 +35,9 @@ export default function Home() {
         <p className="font-accent text-gold mt-1 text-xl font-semibold italic">Hamzzi Court</p>
         <span aria-hidden="true" className="bg-gold mt-5 h-[3px] w-16" />
         <p className="font-display text-muted mt-5 max-w-[560px] text-lg leading-relaxed font-medium">
-          어려운 법률 용어 대신 일상 언어로.
+          지금 상황을 적거나 받은 자료를 올려 주세요.
           <br />
-          햄찌 판사가 법령과 판례를 근거로 정리해 드려요.
+          햄찌 판사가 법령과 판례를 근거로 양쪽 입장과 대응을 정리해 드려요.
         </p>
         <div className="mt-9 flex w-full flex-col items-center">
           <HomeAsk examples={examples} />
