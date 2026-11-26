@@ -30,6 +30,8 @@ export type Row = {
   date: string | null;
   refNo: string | null;
   sourceUrl: string | null;
+  /** 판례만: 법제처 사건종류명(없으면 사건번호 부호로 읽은 종류). 거르기 검색에서만 온다 */
+  caseType?: string | null;
 };
 
 export const DATE_WORD = {

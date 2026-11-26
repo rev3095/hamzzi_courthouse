@@ -52,6 +52,7 @@ import {
   parseOldNew,
   threeTier,
 } from "./explore";
+import { precPage, precSearchParams, type CaseFilter } from "./case-filter";
 import type {
   AdminRuleHit,
   AnnexRef,
@@ -110,6 +111,14 @@ export type LawExplorer = {
   searchOrdinances(query: string, limit?: number): Promise<OrdinanceHit[]>;
   getOrdinance(id: string): Promise<OrdinanceDetail | null>;
   searchAdminRules(query: string, limit?: number): Promise<AdminRuleHit[]>;
+  /**
+   * 판례 본문 검색 한 쪽 (개선안 A): 법원·선고 기간·정렬을 법제처가 걸러 주고 전체 건수를 함께 준다.
+   * 관련도 순위는 매기지 않는다
+   */
+  searchCasesPage(
+    query: string,
+    filter: CaseFilter,
+  ): Promise<{ total: number; items: (CaseHit & { caseType: string | null })[] }>;
   /** 이름에 검색어가 든 현행 법령 목록 (법제처 부분 일치, 가나다순 그대로) */
   searchLaws(query: string, limit?: number): Promise<LawHit[]>;
 };
@@ -376,6 +385,17 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
         client.searchAdminRule({ query, display: Math.min(limit * 2, 100), page: 1 }),
       );
       return adminRuleHits(xml).slice(0, limit);
+    },
+
+    async searchCasesPage(query, filter) {
+      const xml = await call("cases", () =>
+        client.fetchApi({
+          endpoint: "lawSearch.do",
+          target: "prec",
+          extraParams: precSearchParams(query, filter),
+        }),
+      );
+      return precPage(xml);
     },
 
     async searchLaws(query, limit = 30) {

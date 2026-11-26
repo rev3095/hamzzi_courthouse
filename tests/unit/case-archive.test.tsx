@@ -8,10 +8,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-const api = vi.hoisted(() => ({ searchCases: vi.fn(), getCaseDetail: vi.fn() }));
+const api = vi.hoisted(() => ({
+  searchCases: vi.fn(),
+  searchCasesPage: vi.fn(),
+  getCaseDetail: vi.fn(),
+}));
 vi.mock("@/lib/client/api", async (orig) => ({
   ...(await orig<typeof import("@/lib/client/api")>()),
   searchCases: api.searchCases,
+  searchCasesPage: api.searchCasesPage,
   getCaseDetail: api.getCaseDetail,
 }));
 
@@ -40,6 +45,11 @@ beforeEach(() => {
   sessionStorage.clear();
   search = new URLSearchParams();
   api.searchCases.mockResolvedValue(found);
+  // 리서치 판례 탭은 법제처 거르기 검색(개선안 A)을 쓴다
+  api.searchCasesPage.mockResolvedValue({
+    ok: true,
+    data: { ...found.data, totalCount: 1, page: 1, pageSize: 20 },
+  });
   api.getCaseDetail.mockReturnValue(new Promise(() => {}));
 });
 afterEach(() => {
@@ -83,7 +93,7 @@ describe("검색 ↔ 리서치 전환 (DEC-054)", () => {
     search = new URLSearchParams("from=search&kind=cases");
     render(<ResearchView />);
     expect(await screen.findByRole("button", { name: "보관함에서 빼기" })).toBeDefined();
-    expect(api.searchCases).toHaveBeenCalledWith("보증금 반환");
+    expect(api.searchCasesPage).toHaveBeenCalledWith("보증금 반환", {});
   });
 
   test("검색 화면은 리서치에서 넘어오면(?from=research) 건네 둔 검색어로 바로 찾는다", async () => {

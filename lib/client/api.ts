@@ -154,6 +154,8 @@ export type CaseRef = {
   court: string;
   decidedAt: string | null;
   sourceUrl: string;
+  /** 거르기 검색(개선안 A)에서만: 법제처 사건종류명, 없으면 사건번호 부호로 읽은 종류 */
+  caseType?: string | null;
 };
 export type CaseList = {
   items: CaseRef[];
@@ -186,6 +188,21 @@ export type StatuteView = {
 /** 검색어는 본문으로 보낸다 — 주소·접속 기록에 남지 않게 (F-007) */
 export const searchCases = (q: string) =>
   call<CaseList>("/api/v1/cases", { method: "POST", body: JSON.stringify({ q }) });
+
+/** 판례 거르기·쪽 넘기기 (개선안 A). 법원·선고 연도·정렬은 법제처가 걸러 준다 */
+export type CaseFilterInput = {
+  court?: string | null;
+  fromYear?: string | null;
+  toYear?: string | null;
+  sort?: "source" | "newest" | "oldest" | "name";
+  page?: number;
+};
+export type CasePage = CaseList & { totalCount: number; page: number; pageSize: number };
+export const searchCasesPage = (q: string, f: CaseFilterInput) =>
+  call<CasePage>("/api/v1/cases", {
+    method: "POST",
+    body: JSON.stringify({ q, ...f, page: f.page ?? 1, sort: f.sort ?? "source" }),
+  });
 export const getCaseDetail = (id: string) =>
   call<CaseDetailView>(`/api/v1/cases/${encodeURIComponent(id)}`);
 export const getStatute = (id: string, asOf?: string) =>

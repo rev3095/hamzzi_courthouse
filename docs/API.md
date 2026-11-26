@@ -249,7 +249,8 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 { items: CaseRef[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string; notice: string }
 ```
 - 같은 검색을 `POST /cases` `{ q, limit? }` 본문으로도 받는다. 화면은 POST를 쓴다 — 검색어가 주소·브라우저 기록·플랫폼 접속 기록에 남지 않게(F-007).
-- 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게). `court`·`caseType`·`from`·`to`·`cursor` 필터는 수집 DB 도입 후.
+- 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게).
+- **거르기·쪽 넘기기 (DEC-072 ⓐ)**: 본문(또는 쿼리)에 `court?: string`(정해 둔 법원 이름 — 대법원·특허법원·지역 고등·지방·가정·행정·회생법원과 줄임 "○○고법"·"○○지법", 서울 중앙·동부·남부·북부·서부지방법원, 뒤에 " ○○지원" — 개인정보 검사도 통과해야 한다, `isCourtName`), `fromYear?`·`toYear?: "YYYY"`(선고 연도, 1950~2099, 시작 ≤ 끝), `sort?: "source" | "newest" | "oldest" | "name"`(법제처 순서·선고일 내림·오름·사건명), `page?: 1~50` 중 하나라도 있으면 법제처 판례 **본문** 검색 한 쪽(20건)을 법제처가 거른 그대로 준다 → `{ …위 응답, items: (CaseRef & { caseType: string | null })[], totalCount, page, pageSize }`. `caseType`은 법제처 사건종류명, 없으면 사건번호 부호(다·도·두·므·후·헌 등 고정 표)로 읽은 종류다 — 판정이 아니다. 관련도 순위는 매기지 않는다. 법원 값은 법원 이름 꼴이면서 개인정보 검사(`scanInput`)를 통과해야 한다. 꼴이 틀리면 법제처로 보내지 않고 `400 VALIDATION_ERROR`(`details.field`). 안내 `searchScopeNote`는 본문 검색용 문구(`CASE_PAGE_NOTE`). 아무 값도 없으면 지금처럼 판례명+본문 검색(`limit`).
 - 검색어도 법제처로 보내므로 개인정보로 보이면 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "personal_info"`) (F-007).
 - `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
 - 개인정보 필드는 반환하지 않는다(F-003 AC1). 수집 DB를 쓰게 되면 `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외). 법제처 판례는 법원이 비실명 처리한 공개본이다.
