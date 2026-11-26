@@ -40,6 +40,7 @@ import {
 } from "./parts";
 import { usePins } from "./recent";
 import { canPin, isKind, isPinned, togglePin, type Kind, type Row } from "./rows";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "cases", label: "판례", placeholder: "예: 임대차 보증금 반환, 민법 750조, 2023다12345" },
@@ -311,7 +312,7 @@ export function SearchView() {
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
       <section className="rounded-panel border-line border bg-white px-[18px] py-[20px] lg:px-8 lg:py-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-ink text-[26px] font-bold">판례·법령 검색</h1>
+          <h1 className={PAGE_TITLE}>판례·법령 검색</h1>
           <ArchiveSwitch current="search" searched={state.kind === "done"} kind={tab} />
         </div>
         <div className="mt-4">

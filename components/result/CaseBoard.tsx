@@ -18,6 +18,7 @@ import { Mindmap, MindmapCompact, issueSources } from "./DeepMapView";
 import { sourceRef } from "./labels";
 import { MaterialsView } from "./MaterialsView";
 import { VirtualDocument } from "./VirtualDocument";
+import { PILL_TAB_ROW, pillTab } from "@/components/ui/styles";
 
 export const BOARD_TABS = [
   { key: "overview", name: "개요" },
@@ -84,7 +85,7 @@ export function CaseBoard({
       <div
         role="tablist"
         aria-label="사건 정리 탭"
-        className="border-line flex flex-wrap gap-1 border-b px-3 py-2 sm:px-4"
+        className={`border-line border-b px-3 py-2 sm:px-4 ${PILL_TAB_ROW}`}
       >
         {BOARD_TABS.map((t) => (
           <button
@@ -95,9 +96,7 @@ export function CaseBoard({
             aria-selected={tab === t.key}
             aria-controls={`board-panel-${t.key}`}
             onClick={() => setTab(t.key)}
-            className={`min-h-10 rounded-full px-3.5 text-[14px] ${
-              tab === t.key ? "bg-ink font-semibold text-white" : "text-ink hover:bg-soft"
-            }`}
+            className={pillTab(tab === t.key)}
           >
             {t.name}
           </button>

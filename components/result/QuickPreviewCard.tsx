@@ -8,7 +8,7 @@ export function QuickPreviewCard({ preview }: { preview: QuickPreview }) {
     <section
       aria-label="먼저 보는 요약"
       data-testid="quick-preview"
-      className="rounded-card border-honey-line bg-honey mt-5 border px-5 py-4"
+      className="rounded-card border-line bg-cream mt-5 border px-5 py-4"
     >
       <p className="text-label text-[13px] font-semibold">먼저 보는 요약</p>
       <p className="text-ink mt-1 text-[17px] leading-[1.75]">{preview.summary}</p>
