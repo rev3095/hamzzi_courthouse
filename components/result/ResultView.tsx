@@ -16,6 +16,7 @@ import {
   isQuotaBlocked,
   isUserDailyLimit,
   notifyQuotaChanged,
+  recallDeep,
   recallQuestion,
   type ClientError,
 } from "@/lib/client/api";
@@ -38,7 +39,7 @@ import { AiNotice, QuestionQuote, SourceCredit } from "./parts";
 
 type View =
   | { kind: "loading" }
-  | { kind: "analyzing"; steps: StepEvent[]; preview?: QuickPreview }
+  | { kind: "analyzing"; steps: StepEvent[]; preview?: QuickPreview; deep?: boolean }
   | { kind: "done"; result: DemoAnalysisResult; resultId: string }
   | { kind: "error"; error: ClientError };
 
@@ -87,7 +88,9 @@ export function ResultView({ id }: { id: string }) {
   const started = useRef(false);
 
   const analyze = useCallback(async () => {
-    setView({ kind: "analyzing", steps: [] });
+    // 긴 질문·DeepSearch면 로딩 화면이 시간이 더 걸린다고 따로 알린다 (DEC-067)
+    const deep = recallDeep(id);
+    setView({ kind: "analyzing", steps: [], deep });
     // 분석 잠금(DEC-065)으로 기다리다 다시 청할 때 처음으로 돌아온다
     for (;;) {
       const r = await analyzeStream(
@@ -116,7 +119,7 @@ export function ResultView({ id }: { id: string }) {
       if (r.error.code === "INVALID_STATE") {
         // 분석 잠금 (DEC-065): 다른 창·새로고침 전의 요청이 아직 분석 중이면 새로 시작하지 않고, 결과가 저장될 때까지 기다렸다가 읽는다
         if (r.error.details?.reason === "in_progress") {
-          setView({ kind: "analyzing", steps: [RESUME_STEP] });
+          setView({ kind: "analyzing", steps: [RESUME_STEP], deep });
           for (let i = 0; i < RESUME_POLLS; i++) {
             await new Promise((ok) => setTimeout(ok, RESUME_POLL_MS));
             if (!alive.current) return;
@@ -192,9 +195,14 @@ export function ResultView({ id }: { id: string }) {
           </Link>
         </p>
       )}
-      {view.kind === "loading" && <Analyzing question={question.text} steps={[]} />}
+      {view.kind === "loading" && <LoadingSaved question={question.text} />}
       {view.kind === "analyzing" && (
-        <Analyzing question={question.text} steps={view.steps} preview={view.preview} />
+        <Analyzing
+          question={question.text}
+          steps={view.steps}
+          preview={view.preview}
+          deep={view.deep}
+        />
       )}
       {view.kind === "done" &&
         (view.result.outcome === "no_result_in_scope" ? (
@@ -238,10 +246,13 @@ export function Analyzing({
   question,
   steps: all,
   preview,
+  deep = false,
 }: {
   question: string | null;
   steps: StepEvent[];
   preview?: QuickPreview;
+  /** 긴 질문·DeepSearch (일반 질문보다 오래 걸린다) */
+  deep?: boolean;
 }) {
   const steps = uniqueSteps(all);
   return (
@@ -250,14 +261,20 @@ export function Analyzing({
       aria-busy="true"
       className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8"
     >
-      <QuestionQuote text={question} />
-      {preview && <QuickPreviewCard preview={preview} />}
+      <QuestionQuote text={question} clamp />
+      {/* 진행 단계를 위에 두고 먼저 보는 요약은 그 아래에 끼운다 — 요약이 도착해도 단계 목록이 밀려 내려가지 않게 (DEC-067) */}
       <div className="mt-6 flex flex-col items-center text-center">
         <HamzziJudge size={104} interactive={false} mood="thinking" knocking />
         <p className="font-display text-ink mt-4 text-xl font-bold">
-          햄찌 판사가 판례 서고를 뒤지는 중이에요…
+          {deep
+            ? "쟁점을 나눠 자세히 찾아보는 중이에요…"
+            : "햄찌 판사가 판례 서고를 뒤지는 중이에요…"}
         </p>
-        <p className="text-muted mt-1 text-sm">잠시만 기다려 주세요</p>
+        <p className="text-muted mt-1 text-sm">
+          {deep
+            ? "자세히 분석은 일반 질문보다 시간이 더 걸려요. 이 화면을 열어 두면 끝나는 대로 바뀌어요."
+            : "잠시만 기다려 주세요"}
+        </p>
       </div>
       <ol className="mx-auto mt-6 flex max-w-[480px] flex-col gap-2">
         {steps.length === 0 && <StepRow n={1} message="분석을 시작하고 있어요" state="진행 중" />}
@@ -270,6 +287,21 @@ export function Analyzing({
           />
         ))}
       </ol>
+      {preview && <QuickPreviewCard preview={preview} />}
+    </section>
+  );
+}
+
+/** 저장된 결과를 불러오는 동안 (다시 연 결과는 분석을 새로 시작하지 않는다) */
+function LoadingSaved({ question }: { question: string | null }) {
+  return (
+    <section
+      aria-live="polite"
+      aria-busy="true"
+      className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8"
+    >
+      <QuestionQuote text={question} clamp />
+      <p className="text-muted mt-6 text-center text-[15px]">결과를 불러오는 중이에요…</p>
     </section>
   );
 }
@@ -517,7 +549,7 @@ function FollowUp({
   return (
     <section aria-labelledby="follow-title" className="mt-8">
       <h2 id="follow-title" className="font-display text-ink text-[19px] font-bold">
-        심층 질문하기
+        이어 묻기
       </h2>
       <p className="text-muted mt-1 text-[13px]">
         타임라인의 &lsquo;이 단계 질문하기&rsquo;를 누르면 질문 문장이 여기에 들어가요.
@@ -533,7 +565,7 @@ function FollowUp({
           }}
           busy={busy}
           size="md"
-          label="심층 질문하기"
+          label="이어 묻기"
           placeholder="이 사건에 대해 더 물어보세요"
           inputRef={inputRef}
           askTools
@@ -549,8 +581,8 @@ function FollowUp({
       ) : (
         <p className="text-muted mt-2 text-[13px]">
           {quota?.anonymous && quota.remaining !== null
-            ? `오늘 남은 질문 ${quota.remaining}/${quota.limit} · 심층 질문도 1번으로 세요`
-            : "심층 질문도 질문 1번으로 세요"}
+            ? `오늘 남은 질문 ${quota.remaining}/${quota.limit} · 이어 묻기도 1번으로 세요`
+            : "이어 묻기도 질문 1번으로 세요"}
         </p>
       )}
       {modals}

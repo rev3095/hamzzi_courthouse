@@ -8,6 +8,7 @@ import { useId, useState, type Ref } from "react";
 import { AttachButton, AttachTray } from "./AttachTray";
 import { imageFilesOf, type Attachments } from "./useAttachments";
 import { SaveToggle } from "./SaveToggle";
+import { LONG_QUESTION_CHARS } from "@/lib/ai/models";
 import { TierSlider } from "./TierSlider";
 
 export const MAX_QUESTION_CHARS = 50_000; // lib/inquiries/policy MAX_INPUT_CHARS와 같다 (브라우저 묶음에 서버 모듈을 끌어오지 않으려고 값만 옮김)
@@ -36,7 +37,7 @@ export function QuestionBox({
   /** 보내기 버튼 글자 (홈은 "정리 시작", DEC-068) */
   submitLabel?: string;
   size?: "lg" | "md";
-  /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "심층 질문하기") */
+  /** 바깥에서 입력란에 포커스를 줄 때 (결과 화면 "이어 묻기") */
   inputRef?: Ref<HTMLTextAreaElement>;
   /** AI 질문창이면 답변 모드 선택을 보인다 */
   askTools?: boolean;
@@ -127,7 +128,7 @@ export function QuestionBox({
       {askTools && (
         <div className="border-line mx-1 mt-1 flex flex-wrap items-center justify-between gap-x-3 border-t">
           <div className="min-w-0 flex-1">
-            <TierSlider />
+            <TierSlider locked={[...value.trim()].length > LONG_QUESTION_CHARS} />
           </div>
           {onDeep && (
             <button

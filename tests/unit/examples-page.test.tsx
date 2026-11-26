@@ -42,7 +42,7 @@ describe("DEC-028 예시 답변 즉시 보기", () => {
       // 질문 생성·분석·횟수·결과 조회 API를 하나도 부르지 않는다
       expect(fetchSpy).not.toHaveBeenCalled();
       // 심층 질문 입력란(이어 묻기 = 질문 1번) 대신 홈으로 가는 링크
-      expect(screen.queryByLabelText("심층 질문하기")).toBeNull();
+      expect(screen.queryByLabelText("이어 묻기")).toBeNull();
       const ask = screen.getByRole("link", { name: /내 상황으로 질문하기/ });
       expect(ask.getAttribute("href")).toMatch(/^\/\?category=[a-z_]+#ask$/);
       expect(document.body.textContent).not.toMatch(/승소 가능성|승률|확률|undefined/);
