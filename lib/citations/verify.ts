@@ -12,8 +12,15 @@ export const VERIFY_STEP_MESSAGE = "인용한 법령·판례를 법제처에 다
 export async function verifyDraft(
   draft: DemoDraft,
   evidence: EvidenceSet,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; screened?: number } = {},
+  deps: {
+    lawSource?: LawSource;
+    onStep?: (e: StepEvent) => void;
+    screened?: number;
+    /** 답변 모델이 본 근거 (DEC-071). 주면 본문 조문의 법령을 이것으로만 짐작한다 — 모델이 보지 못한 조문으로 정하지 않게 */
+    claimEvidence?: EvidenceSet;
+  } = {},
 ) {
+  const claimEvidence = deps.claimEvidence ?? evidence;
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   const sourceClaims: Claim[] = [];
   const textClaims: Claim[] = [];
@@ -26,7 +33,7 @@ export async function verifyDraft(
     }
     const c = claimForKey(p.source, evidence);
     if (c) sourceClaims.push(c);
-    textClaims.push(...claimsInText(p.text, evidence).claims);
+    textClaims.push(...claimsInText(p.text, claimEvidence).claims);
   }
   const { statutes, cases } = uniqueClaims([...sourceClaims, ...textClaims]);
   if (draft.answer.points.length > 0) {
@@ -41,5 +48,5 @@ export async function verifyDraft(
   const checks = new Map<string, CitationCheck>();
   for (const c of [...statuteChecks, ...caseChecks]) checks.set(c.citation, c);
 
-  return assembleResult({ draft, evidence, checks, screened: deps.screened });
+  return assembleResult({ draft, evidence, checks, screened: deps.screened, claimEvidence });
 }

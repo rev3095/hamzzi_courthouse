@@ -1,4 +1,4 @@
-// F-003 검색 종류 탭 시안 A (2026-11-18 사용자 승인): 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체.
+// F-003 검색 종류 탭 시안 A (2026-11-18 사용자 승인, 2026-11-27 법령 추가): 모바일은 주요 5개 + 묶음별 '더 보기', 데스크톱은 전체.
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
@@ -9,6 +9,7 @@ afterEach(cleanup);
 
 const KINDS: { kind: SearchKind; label: string }[] = [
   { kind: "cases", label: "판례" },
+  { kind: "laws", label: "법령" },
   ...DECISION_TABS.map((d) => ({ kind: d.domain as SearchKind, label: d.label })),
   { kind: "ordinances", label: "자치법규" },
   { kind: "admin_rules", label: "행정규칙" },
@@ -29,7 +30,7 @@ function Harness({ onChange }: { onChange: (k: SearchKind) => void }) {
   );
 }
 
-test("주요 4개를 뺀 모든 종류가 정확히 한 묶음에 들어간다 (새 종류는 법규·기타)", () => {
+test("주요 5개를 뺀 모든 종류가 정확히 한 묶음에 들어간다 (새 종류는 법규·기타)", () => {
   const groups = moreGroups(KINDS);
   const inGroups = groups.flatMap((g) => g.items.map((i) => i.kind));
   expect(new Set(inGroups).size).toBe(inGroups.length);

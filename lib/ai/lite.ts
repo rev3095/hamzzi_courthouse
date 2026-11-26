@@ -75,6 +75,8 @@ export const UNDERSTAND_MODEL = "claude-haiku-5-5";
 export type LiteAnalysisOutput = {
   draft: DemoDraft;
   evidence: EvidenceSet;
+  /** 답변 모델이 실제로 본 근거 (DEC-071 — 사용자가 고른 판례뿐). 본문 조문의 법령을 이것으로만 짐작한다 */
+  answerEvidence?: EvidenceSet;
   dropped: DropReason[];
   usage: Usage;
   model: string;
@@ -150,6 +152,11 @@ export async function runLiteAnalysis(
      * 분야별 비서 (DEC-057): 답변 지시문 뒤에 붙는 비서 지시문과, 그 요청에서 법제처로 다시 가져올 사례 판례 일련번호.
      * 판례는 근거 모음에 더해질 뿐 검증(verifyDraft)은 다른 근거와 같다. promptTag는 프롬프트 버전 뒤에 붙는다
      */
+    /**
+     * 판례 아카이브 질문창(DEC-070): 사용자가 보고 있던 판례의 법제처 일련번호. 비서 사례 판례와 같이 그 요청에서 다시 가져와
+     * 근거 모음 앞에 더할 뿐, 검증은 다른 근거와 같다. 가져오지 못하면 빠진다
+     */
+    focusCaseIds?: string[];
     assistant?: {
       persona: string;
       pinnedCaseIds: string[];
@@ -233,10 +240,18 @@ export async function runLiteAnalysis(
       }).catch(() => EMPTY);
   // 비서 사례 판례(DEC-057)도 이 요청에서 법제처로 다시 가져와 근거 목록에만 넣는다. 가져오지 못하면 빠진다
   const pinnedRun = Promise.all(
-    (deps.assistant?.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
+    (deps.assistant?.pinnedCaseIds ?? [])
+      .filter((id) => !(deps.focusCaseIds ?? []).includes(id))
+      .map((id) => source.getCase(id).catch(() => null)),
   );
-  // 답변 호출에 넘기는 근거는 비어 있다 — 모든 문단이 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)이다
+  // 판례 아카이브에서 사용자가 '이 판례를 근거에 넣기'로 고른 판례(DEC-070)는 질문의 대상이라 답변 전에 가져와
+  // 답변에 넘긴다 — 답변 먼저(DEC-071)의 유일한 예외. 그 요청에서 법제처로 다시 가져온 것만 쓰고(DEC-009), 못 가져오면 빠진다
+  const focused = await Promise.all(
+    [...new Set(deps.focusCaseIds ?? [])].map((id) => source.getCase(id).catch(() => null)),
+  );
+  // 답변 호출에 넘기는 근거는 사용자가 고른 판례뿐이다 — 그 밖의 문단은 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)이다
   const answerEvidence = new EvidenceSet();
+  for (const c of focused) if (c) answerEvidence.addCase(c);
   // 대화 한마디는 답변 호출 전에 끝낸다 — 두 호출이 같은 상한을 동시에 재지 않게
   const talkOut = talkRun ? await talkRun : null;
   if (talkOut?.res) usage = addUsage(usage, talkOut.res);
@@ -325,6 +340,7 @@ export async function runLiteAnalysis(
   const [found, pinned] = await Promise.all([searchRun, pinnedRun]);
   const evidence = new EvidenceSet();
   for (const a of found.articles) evidence.addArticle(a);
+  for (const c of focused) if (c) evidence.addCase(c);
   for (const c of pinned) if (c) evidence.addCase(c);
   for (const c of found.cases) evidence.addCase(c);
 
@@ -348,6 +364,7 @@ export async function runLiteAnalysis(
   return {
     draft,
     evidence,
+    answerEvidence,
     dropped,
     usage,
     model: tier.model,

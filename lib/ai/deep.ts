@@ -106,6 +106,8 @@ export async function runDeepAnalysis(
     lawHints?: { lawName: string; articleNos: string[] }[];
     /** 꼭 근거에 넣을 판례 일련번호 — 그 요청에서 법제처로 다시 가져온다 (전문 에이전트 아카이브 만들기, DEC-057) */
     pinnedCaseIds?: string[];
+    /** 판례 아카이브에서 사용자가 근거로 고른 판례(DEC-070) — 답변 전에 가져와 답변에 넘긴다 (답변 먼저 DEC-071의 예외) */
+    focusCaseIds?: string[];
     /** 답변이 어긋나지 않게 할 검토 메모 (아카이브 만들기 전용, 사용자 입력이 아니다) */
     notes?: string;
     /** 긴 질문(DEC-062): 고른 단계의 모델로 답하고 사건 정리판(종류·당사자 자리와 대응·준비 자료)을 함께 받는다 */
@@ -205,6 +207,7 @@ export async function runDeepAnalysis(
       caseHint: deps.caseHint,
       lawHints: deps.lawHints,
       deep: true,
+      ...(deps.focusCaseIds?.length && { focusCaseIds: deps.focusCaseIds }),
     });
     return {
       ...lite,
@@ -241,8 +244,12 @@ export async function runDeepAnalysis(
     }).catch(() => EMPTY),
     Promise.all((deps.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null))),
   ]);
-  // 답변 호출에 넘기는 근거는 비어 있다 — 모든 문단이 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)
+  // 답변 호출에 넘기는 근거는 사용자가 고른 판례뿐이다 — 그 밖의 문단은 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)
+  const focused = await Promise.all(
+    [...new Set(deps.focusCaseIds ?? [])].map((id) => source.getCase(id).catch(() => null)),
+  );
   const answerEvidence = new EvidenceSet();
+  for (const c of focused) if (c) answerEvidence.addCase(c);
 
   // ③ 쟁점별 답변
   let points: DraftPoint[] = [];
@@ -361,6 +368,7 @@ export async function runDeepAnalysis(
   for (const r of byIssue)
     if (r.status === "fulfilled") for (const a of r.value) evidence.addArticle(a);
   for (const a of found.articles) evidence.addArticle(a);
+  for (const c of focused) if (c) evidence.addCase(c);
   for (const c of pinned) if (c) evidence.addCase(c);
   for (const c of found.cases) evidence.addCase(c);
 
@@ -383,6 +391,7 @@ export async function runDeepAnalysis(
   return {
     draft,
     evidence,
+    answerEvidence,
     dropped,
     usage,
     model: tier.model,

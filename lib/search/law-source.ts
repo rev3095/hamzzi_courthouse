@@ -43,6 +43,7 @@ import {
   decisionDetail,
   decisionHit,
   decisionRows,
+  lawHits,
   lawNameByAbbreviation,
   lawVersion,
   ordinanceDetail,
@@ -62,6 +63,7 @@ import type {
   DecisionDetail,
   DecisionDomain,
   DecisionHit,
+  LawHit,
   LawVersion,
   OldNewCompare,
   OrdinanceDetail,
@@ -108,6 +110,8 @@ export type LawExplorer = {
   searchOrdinances(query: string, limit?: number): Promise<OrdinanceHit[]>;
   getOrdinance(id: string): Promise<OrdinanceDetail | null>;
   searchAdminRules(query: string, limit?: number): Promise<AdminRuleHit[]>;
+  /** 이름에 검색어가 든 현행 법령 목록 (법제처 부분 일치, 가나다순 그대로) */
+  searchLaws(query: string, limit?: number): Promise<LawHit[]>;
 };
 
 export type LawSourceOptions = {
@@ -372,6 +376,13 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
         client.searchAdminRule({ query, display: Math.min(limit * 2, 100), page: 1 }),
       );
       return adminRuleHits(xml).slice(0, limit);
+    },
+
+    async searchLaws(query, limit = 30) {
+      // 법령명 부분 일치 검색. 라이브러리가 공식 약칭("화관법")을 정식 이름으로 바꿔 보낸다.
+      // 짧은 낱말은 결과가 많아 100건(법제처 한 번 상한)을 받아 자른다 — 요청은 1회로 같다
+      const xml = await call("laws", () => client.searchLaw(query, undefined, 100));
+      return lawHits(xml).slice(0, limit);
     },
 
     async searchArticles(query, limit = 5) {

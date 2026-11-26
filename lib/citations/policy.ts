@@ -200,6 +200,8 @@ export function assembleResult(input: {
   checks: Map<string, CitationCheck>;
   /** P3 screenPoints에서 이미 빠진 문단 수 (실패율 집계용) */
   screened?: number;
+  /** 본문 조문의 법령을 짐작할 근거 (답변 모델이 본 근거, DEC-071). 없으면 evidence */
+  claimEvidence?: EvidenceSet;
 }): { result: DemoAnalysisResult; citations: CitationRow[]; stats: VerifyStats } {
   const { draft, evidence, checks } = input;
   const kept: CheckedPoint[] = [];
@@ -252,7 +254,7 @@ export function assembleResult(input: {
     // 2026-11-27 사용자 결정: 답변이 나오는 것이 먼저다. 근거 키로 잇지 못했거나 법제처 조회가 실패·판정 불가인 문단은
     // 빼지 않고 모델 인용 문단(DEC-055, 재조회·원문 대조 없음)으로 남긴다. 법제처가 "없다"고 확인한 인용이 든 문단만 뺀다
     const asModel = () => kept.push({ ...p, source: MODEL_SOURCE, quote: "", check: "model" });
-    const inText = claimsInText(p.text, evidence);
+    const inText = claimsInText(p.text, input.claimEvidence ?? evidence);
     const claimed = [...(sourceClaim ? [sourceClaim] : []), ...inText.claims];
     // 법제처가 "없다"고 확인한 인용이 하나라도 있으면 어느 경우든 뺀다
     if (claimed.some((c) => checks.get(c.citation)?.exists === false)) {
