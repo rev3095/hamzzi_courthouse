@@ -33,6 +33,7 @@ import {
 import { ArchiveSwitch } from "./ArchiveSwitch";
 import { KindTabs } from "./KindTabs";
 import { clearPins, usePins, useRecent } from "./recent";
+import { PAGE_TITLE } from "@/components/ui/styles";
 import {
   DATE_WORD,
   KIND_LIST,
@@ -403,6 +404,7 @@ export function ResearchView() {
   const [to, setTo] = useState("");
   const [sort, setSort] = useState<Sort>("source");
   const listRef = useRef<HTMLUListElement>(null);
+  const previewRef = useRef<HTMLElement>(null);
 
   const submit = async (kind: Kind = tab, value: string = text) => {
     const q = value.trim();
@@ -475,16 +477,13 @@ export function ResearchView() {
       <div className="mx-auto w-full max-w-[1320px] px-4 pt-8 lg:pt-12">
         <section
           aria-label="판례 리서치 검색"
-          className="rounded-panel bg-ink px-[18px] py-[22px] text-white lg:px-8 lg:py-8"
+          className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8"
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-honey text-xs font-bold tracking-[0.14em]">CASE RESEARCH</p>
-              <h1 className="font-display mt-1 text-[26px] font-bold">판례 리서치</h1>
-            </div>
-            <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} dark />
+            <h1 className={PAGE_TITLE}>판례 리서치</h1>
+            <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} />
           </div>
-          <p className="mt-1 text-sm text-white/75">
+          <p className="text-muted mt-2 text-sm">
             법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문
             횟수와 따로 세요.
           </p>
@@ -505,12 +504,12 @@ export function ResearchView() {
               onChange={(e) => setText(e.target.value)}
               maxLength={100}
               placeholder="예: 임대차 보증금 반환 · 민법 750조 · 2023다12345"
-              className="text-ink focus:border-gold min-h-12 w-full rounded-[8px] border border-transparent bg-white px-4 text-[15px] outline-none"
+              className="text-ink border-line focus:border-ink rounded-button min-h-12 w-full border bg-white px-4 text-[15px] outline-none"
             />
             <button
               type="submit"
               disabled={state.kind === "loading"}
-              className="bg-gold min-h-12 shrink-0 rounded-[8px] px-6 text-[15px] font-bold text-white disabled:opacity-60"
+              className="bg-ink rounded-button min-h-12 shrink-0 px-6 text-[15px] font-bold text-white disabled:opacity-60"
             >
               검색
             </button>
@@ -521,7 +520,6 @@ export function ResearchView() {
               kinds={KINDS}
               value={tab}
               label="자료 종류"
-              variant="dark"
               onChange={(k) => {
                 setTab(k);
                 if (text.trim() && state.kind !== "idle") void submit(k);
@@ -657,7 +655,18 @@ export function ResearchView() {
                       type="button"
                       data-row
                       aria-current={on || undefined}
-                      onClick={() => setSelected(`${r.kind}:${r.id}`)}
+                      onClick={() => {
+                        setSelected(`${r.kind}:${r.id}`);
+                        // 좁은 화면(lg 미만)은 미리보기가 목록 맨 아래에 있어 보이지 않는다 (DEC-067):
+                        // 상세 화면이 있으면 그리로 가고, 없으면 미리보기로 내려간다
+                        if (window.matchMedia?.("(max-width: 1023.98px)").matches) {
+                          if (r.href) router.push(r.href);
+                          else
+                            requestAnimationFrame(() =>
+                              previewRef.current?.scrollIntoView({ block: "start" }),
+                            );
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "ArrowDown") {
                           e.preventDefault();
@@ -688,7 +697,11 @@ export function ResearchView() {
           )}
         </section>
 
-        <aside className={`${panel} h-fit p-5 lg:sticky lg:top-[86px]`}>
+        <aside
+          ref={previewRef}
+          aria-label="미리보기"
+          className={`${panel} h-fit scroll-mt-20 p-5 lg:sticky lg:top-[86px]`}
+        >
           {current ? (
             <Preview row={current} terms={terms} />
           ) : (
