@@ -260,7 +260,8 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 { items: CaseRef[]; outcome: "grounded" | "no_result_in_scope"; searchScopeNote: string; notice: string }
 ```
 - 같은 검색을 `POST /cases` `{ q, limit? }` 본문으로도 받는다. 화면은 POST를 쓴다 — 검색어가 주소·브라우저 기록·플랫폼 접속 기록에 남지 않게(F-007).
-- 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게). `court`·`caseType`·`from`·`to`·`cursor` 필터는 수집 DB 도입 후.
+- 데모(DEC-009, DEC-017): 법제처 실시간 판례 검색(판례명+본문). 결과는 저장하지 않는다. 관련도 점수는 내지 않는다(PRD 8.3 — 승소 가능성처럼 보이지 않게).
+- **거르기·쪽 넘기기 (DEC-075 ⓐ)**: 본문(또는 쿼리)에 `court?: string`(정해 둔 법원 이름 — 대법원·특허법원·지역 고등·지방·가정·행정·회생법원과 줄임 "○○고법"·"○○지법", 서울 중앙·동부·남부·북부·서부지방법원, 뒤에 " ○○지원" — 개인정보 검사도 통과해야 한다, `isCourtName`), `fromYear?`·`toYear?: "YYYY"`(선고 연도, 1950~2099, 시작 ≤ 끝), `sort?: "source" | "newest" | "oldest" | "name"`(법제처 순서·선고일 내림·오름·사건명), `page?: 1~50` 중 하나라도 있으면 법제처 판례 **본문** 검색 한 쪽(20건)을 법제처가 거른 그대로 준다 → `{ …위 응답, items: (CaseRef & { caseType: string | null })[], totalCount, page, pageSize }`. `caseType`은 법제처 사건종류명, 없으면 사건번호 부호(다·도·두·므·후·헌 등 고정 표)로 읽은 종류다 — 판정이 아니다. 관련도 순위는 매기지 않는다. 법원 값은 법원 이름 꼴이면서 개인정보 검사(`scanInput`)를 통과해야 한다. 꼴이 틀리면 법제처로 보내지 않고 `400 VALIDATION_ERROR`(`details.field`). 안내 `searchScopeNote`는 본문 검색용 문구(`CASE_PAGE_NOTE`). 아무 값도 없으면 지금처럼 판례명+본문 검색(`limit`).
 - 검색어도 법제처로 보내므로 개인정보로 보이면 보내지 않고 `400 VALIDATION_ERROR`(`details.reason: "personal_info"`) (F-007).
 - `notice` = `SEARCH_NOTICE` ("법제처 검색 결과 · AI 생성 아님"). AI가 만든 내용이 없어 `aiNotice` 대신 쓴다.
 - 개인정보 필드는 반환하지 않는다(F-003 AC1). 수집 DB를 쓰게 되면 `deid_check='passed'` 판례만 반환한다(`pending`·`flagged` 제외). 법제처 판례는 법원이 비실명 처리한 공개본이다.
@@ -271,11 +272,17 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - `id` = 법제처 판례일련번호(숫자). 전문은 주지 않는다(DEC-007, OQ-DM-05): 판시사항·판결요지, 둘 다 없을 때만 개인정보를 가린 본문 일부.
 - `citedStatutes`는 참조조문 원문에 적힌 "법령명 제N조"만 뽑는다. 같은 쉼표 목록에서 법령명 없이 이어지는 조문만 앞 법령명을 잇는다. "구 법령"·괄호 설명·"부칙"이 끼면 현행 조문과 다를 수 있어 `id: null`(링크 없음)로 원문 그대로 준다. `id`는 `/statutes/{id}` 형식이며 화면은 `?asOf=선고일`로 연다. 상세 1시간 120회(`details.reason: "lookup_hourly"`).
 
+- **참조판례·판결유형 (DEC-075 ⓑ)**: `citedCases: { label: string; caseNo: string }[]` — 법제처 참조판례 원문에서 사건번호가 든 토막만(공보 표기 괄호를 떼고, 자기 자신·중복 제외, 최대 12개). `decisionType: string | null` — 법제처 판결유형("판결"·"결정"). 화면은 참조판례를 누를 때만 그 사건번호로 `/cases`를 한 번 찾고, 인용 표기(기본·짧게·사건명 포함)는 이 값들을 잇기만 한다(`caseCitation`, lib/search/case-refs.ts).
+
 ### GET `/statutes/{id}?asOf=YYYY-MM-DD`
 `200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, asOf?, versionAtDate?: StatuteRef | null, asOfNote?, notice }` — `id` = `법령명:제N조(의M)` (법령명 띄어쓰기 없음, URL 인코딩). 없으면 `404`.
 - `isCurrent` = 시행일이 오늘(한국 시각) 이전.
 - **그 날짜의 조문 (DEC-029 제안)**: `asOf`가 현행 시행일보다 앞선 과거 날짜면 법제처 연혁에서 그날 시행 중이던 버전의 같은 번호 조문을 가져와 `atDate: { lawName, articleNo, articleTitle, body, effectiveFrom, version: LawVersion, sameAsCurrent, diff: [{ type: "same"|"removed"|"added", text }] }`로 준다(`LawVersion` = `{ mst, lawName, effectiveFrom, promulgatedAt, promulgationNo, revisionType }`, `diff`는 그날 조문 → 현행 조문 줄 단위 비교). 그날 시행 버전이 없거나(제정 전·폐지 후) 같은 번호 조문이 없거나 법제처 조회에 실패하면 만들지 않고 `atDate: null` + `asOfNote`. 조문 번호가 바뀐 경우는 따라가지 않는다.
 - `asOf`가 시행일 이후이고 오늘 이전이며 조문이 지금 시행 중이면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 그 밖(시행일 이전·미래 날짜·시행 전 조문)은 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote` (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
+
+### GET `/statutes/{id}/compare?from=YYYY-MM-DD&to=YYYY-MM-DD` · GET `/statutes/{id}/history` (DEC-075 ⓔ)
+- 비교 → `{ lawName, articleNo, from: Side, to: Side, diff: DiffPart[] | null, same: boolean | null, sameVersion: boolean, notice }`. `Side` = 찾았으면 `{ date, found: true, lawName, articleNo, articleTitle, body, version: LawVersion }`, 아니면 `{ date, found: false, note, version: LawVersion | null }`(제정 전·폐지 뒤·조문 없음·불러오지 못함 안내 — 내용을 만들지 않는다). 두 날짜에 시행 중이던 버전을 법제처 연혁에서 찾아 같은 번호 조문을 가져오고, 둘 다 있으면 줄 단위 비교(`diffLines`, from → to)를 싣는다. 날짜 꼴이 틀리거나 `from ≥ to`면 법제처 전에 `400 VALIDATION_ERROR`(`details.field`). 상한은 `LOOKUP_RATE`.
+- 개정 이력 → `{ lawName, articleNo, items: { mst, promulgatedAt, effectiveFrom, revisionType, changeReason }[], notice }` — 법제처 조문 개정 이력(`lsJoHstInf`)의 법령일련번호·공포일·조문 시행일(없으면 법령 시행일)·제개정구분명·변경사유를 그대로, 시행일 내림차순. 법령을 찾지 못하면 `404`. 개정의 영향·중요도는 판단하지 않는다.
 
 ### GET `/statutes/{id}/cases` (DEC-029 제안)
 `200 { items: CaseRef[], outcome, searchScopeNote, notice }` — 판결 본문에 "법령명 제N조"가 나오는 판례(법제처 본문 검색, 최대 6건). 관련도 점수 없음, 느슨한 대체 검색 없음. 상세 상한(`lookup_hourly`)에 함께 센다.

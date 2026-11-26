@@ -27,6 +27,8 @@ import {
   searchErrorText,
 } from "./parts";
 import { AskArchive } from "./AskArchive";
+import { CaseActions, CitedCases, SameStatuteCases } from "./CaseExtras";
+import { StatuteTime } from "./StatuteTime";
 import { useRecordRecent } from "./recent";
 
 const noSubscribe = () => () => {};
@@ -212,6 +214,8 @@ export function CaseRoute() {
           판시사항·요지가 없어 개인정보를 가린 본문 일부를 보여 드려요
         </p>
       )}
+      {/* 보관함 담기 · 인용 표기 형식 (DEC-075 ⓑ) */}
+      <CaseActions c={c} />
       <TermsLegend terms={terms} />
       <Sections sections={c.sections} terms={terms} />
       {c.citedStatutes.length > 0 && (
@@ -241,6 +245,9 @@ export function CaseRoute() {
           </ul>
         </section>
       )}
+      {/* 참조판례 · 같은 조문이 나오는 판례 (DEC-075 ⓑ): 누를 때만 법제처에 묻는다 */}
+      <CitedCases items={c.citedCases ?? []} />
+      <SameStatuteCases selfId={c.id} statutes={c.citedStatutes} />
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <OriginalLink url={c.sourceUrl} label="법제처에서 판결 원문 보기 →" />
         {/* 질문창 (DEC-070): 이 판례를 근거에 넣어 Light로 묻는다 */}
@@ -515,6 +522,9 @@ export function StatuteRoute() {
           )}
         </section>
       )}
+
+      {/* 두 날짜 비교·조문 개정 이력 (DEC-075 ⓔ) */}
+      <StatuteTime id={s.id} initialFrom={s.asOf ?? undefined} />
 
       <section className="mt-8" aria-label="법령 도구">
         <H2>{s.lawName} 더 살펴보기</H2>

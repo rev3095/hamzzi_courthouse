@@ -1,4 +1,5 @@
 // 판례 리서치 /research (DEC-029, F-003): 검색 → 목록 → 옆 미리보기 → 보관함. 검색 API는 목으로 바꾼다.
+// 개선안 A: 판례 탭은 법원·연도·정렬을 법제처에서 다시 찾고(searchCasesPage), 전체 건수·더 보기·사건 종류 칩을 보인다.
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -9,10 +10,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
 }));
 
-const api = vi.hoisted(() => ({ searchCases: vi.fn(), getCaseDetail: vi.fn() }));
+const api = vi.hoisted(() => ({
+  searchCases: vi.fn(),
+  searchCasesPage: vi.fn(),
+  getCaseDetail: vi.fn(),
+}));
 vi.mock("@/lib/client/api", async (orig) => ({
   ...(await orig<typeof import("@/lib/client/api")>()),
   searchCases: api.searchCases,
+  searchCasesPage: api.searchCasesPage,
   getCaseDetail: api.getCaseDetail,
 }));
 
@@ -20,13 +26,21 @@ const { ResearchView, citationLine, refine } = await import("@/components/search
 type Row = import("@/components/search/ResearchView").Row;
 
 const NOTICE = "법제처 검색 결과 · AI 생성 아님";
-const item = (id: string, caseName: string, court: string, decidedAt: string, caseNo: string) => ({
+const item = (
+  id: string,
+  caseName: string,
+  court: string,
+  decidedAt: string,
+  caseNo: string,
+  caseType: string | null = null,
+) => ({
   id,
   caseName,
   court,
   decidedAt,
   caseNo,
   sourceUrl: `https://www.law.go.kr/LSW/precInfoP.do?precSeq=${id}`,
+  caseType,
 });
 const LIST = {
   ok: true,
@@ -40,6 +54,10 @@ const LIST = {
     notice: NOTICE,
   },
 };
+const PAGE = (total: number, page: number, items = LIST.data.items) => ({
+  ok: true,
+  data: { ...LIST.data, items, totalCount: total, page, pageSize: 20 },
+});
 const detail = (text: string) => ({
   ok: true,
   data: {
@@ -54,6 +72,12 @@ beforeEach(() => {
   localStorage.clear();
   search = new URLSearchParams();
   api.searchCases.mockResolvedValue(LIST);
+  api.searchCasesPage.mockResolvedValue(
+    PAGE(2, 1, [
+      item("1", "임대차보증금반환", "대법원", "2021-03-11", "가상다1", "민사"),
+      item("2", "보증금반환청구", "서울고등법원", "2019-05-02", "가상나2", "민사"),
+    ]),
+  );
   api.getCaseDetail.mockImplementation(async (id: string) =>
     detail(id === "1" ? "임대차가 끝난 뒤 보증금 반환 의무" : "두 번째 판례의 판시사항"),
   );
@@ -69,7 +93,7 @@ const searchFor = async (q: string) => {
 describe("판례 리서치 화면", () => {
   test("검색하면 목록과 첫 자료의 요지 미리보기를 함께 보이고, 검색어를 하이라이트한다", async () => {
     render(<ResearchView />);
-    expect((await searchFor("보증금 반환")).textContent).toBe("2건");
+    expect((await searchFor("보증금 반환")).textContent).toBe("전체 2건 중 2건");
     const preview = await screen.findByRole("article", { name: "미리보기" });
     expect(await within(preview).findByText("판시사항")).toBeDefined();
     expect(within(preview).getByRole("link", { name: "전체 보기" }).getAttribute("href")).toBe(
@@ -86,13 +110,54 @@ describe("판례 리서치 화면", () => {
     expect(sessionStorage.getItem("hz:sq")).toBe("보증금 반환");
   });
 
-  test("목록을 누르면 미리보기가 바뀌고, 법원으로 거르면 건수가 줄어든다", async () => {
+  test("목록을 누르면 미리보기가 바뀌고, 법원·연도·정렬은 법제처에서 다시 찾는다", async () => {
     render(<ResearchView />);
     await searchFor("보증금");
+    expect(api.searchCasesPage).toHaveBeenLastCalledWith("보증금", {
+      court: null,
+      fromYear: null,
+      toYear: null,
+      sort: "source",
+    });
     fireEvent.click(screen.getByRole("button", { name: /보증금반환청구/ }));
     expect(await screen.findByText("두 번째 판례의 판시사항")).toBeDefined();
-    fireEvent.click(screen.getByRole("checkbox", { name: /서울고등법원/ }));
-    expect(screen.getByTestId("research-count").textContent).toBe("1/2건");
+    fireEvent.change(screen.getByLabelText("법원"), { target: { value: "서울고등법원" } });
+    fireEvent.change(screen.getByLabelText("시작 연도"), { target: { value: "2015" } });
+    fireEvent.change(screen.getByLabelText("정렬"), { target: { value: "newest" } });
+    fireEvent.click(screen.getByRole("button", { name: "법제처에서 다시 찾기" }));
+    await vi.waitFor(() =>
+      expect(api.searchCasesPage).toHaveBeenLastCalledWith("보증금", {
+        court: "서울고등법원",
+        fromYear: "2015",
+        toYear: null,
+        sort: "newest",
+      }),
+    );
+  });
+
+  test("사건 종류 칩은 불러온 목록 안에서 거르고, 더 보기는 다음 쪽을 이어 붙인다", async () => {
+    api.searchCasesPage.mockResolvedValueOnce(
+      PAGE(41, 1, [
+        item("1", "임대차보증금반환", "대법원", "2021-03-11", "가상다1", "민사"),
+        item("3", "사기", "대법원", "2020-01-02", "가상도3", "형사"),
+      ]),
+    );
+    render(<ResearchView />);
+    expect((await searchFor("보증금")).textContent).toBe("전체 41건 중 2건");
+    fireEvent.click(screen.getByRole("button", { name: /형사/ }));
+    expect(screen.getByTestId("research-count").textContent).toBe("전체 41건 중 1/2건");
+    fireEvent.click(screen.getByRole("button", { name: /형사/ }));
+    api.searchCasesPage.mockResolvedValueOnce(
+      PAGE(41, 2, [item("4", "보증금", "수원지방법원", "2018-02-03", "가상가4", "민사")]),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "더 보기" }));
+    await vi.waitFor(() =>
+      expect(screen.getByTestId("research-count").textContent).toBe("전체 41건 중 3건"),
+    );
+    expect(api.searchCasesPage).toHaveBeenLastCalledWith(
+      "보증금",
+      expect.objectContaining({ page: 2 }),
+    );
   });
 
   test("보관함에 담으면 이 기기에만 저장하고 인용 표기를 보여 준다", async () => {
@@ -122,8 +187,8 @@ describe("판례 리서치 화면", () => {
     sessionStorage.setItem("hz:sq", "임대차보증금");
     search = new URLSearchParams("from=result");
     render(<ResearchView />);
-    expect((await screen.findByTestId("research-count")).textContent).toBe("2건");
-    expect(api.searchCases).toHaveBeenCalledWith("임대차보증금");
+    expect((await screen.findByTestId("research-count")).textContent).toBe("전체 2건 중 2건");
+    expect(api.searchCasesPage).toHaveBeenCalledWith("임대차보증금", {});
   });
 });
 
