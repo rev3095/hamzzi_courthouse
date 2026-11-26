@@ -192,7 +192,7 @@ describe("DEC-074 미리 만든 쉬운 설명", () => {
     // 근거 조문이 없어진 핵심 내용은 빠지고, 남는 것이 없으면 저장본을 쓰지 않는다
     expect(findEasyLaw(LAW, [], { data })).toBeNull();
     expect(findEasyLaw("약사법", ARTICLES, { data })).toBeNull();
-    // 저장소의 기본 자료는 아직 비어 있다
-    expect(findEasyLaw(LAW, ARTICLES)).toBeNull();
+    // 저장소의 기본 자료에 없는 법령
+    expect(findEasyLaw("민법", ARTICLES)).toBeNull();
   });
 });

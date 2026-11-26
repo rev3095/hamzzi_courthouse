@@ -14,6 +14,7 @@ import {
   assertRateLimit,
   settleAiQuota,
   tryAiQuota,
+  tryLawEasyDaily,
 } from "@/lib/auth/rate-limit";
 import { findEasyLaw } from "@/lib/search/easy/data";
 import {
@@ -112,6 +113,9 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
     if (!easy) {
       if (articles.length === 0) ai = { used: false, reason: "no_articles" };
       else if (aiMode() === "free") ai = { used: false, reason: "free_mode" };
+      // 같은 네트워크·같은 법령은 하루 LAW_EASY_DAILY_LIMIT번까지만 모델로 만든다 — 넘으면 모델 없는 정리
+      else if (!(await tryLawEasyDaily(law.lawName, req.headers)))
+        ai = { used: false, reason: "daily_limit" };
       else if (!(await tryAiQuota(LAW_EASY_WEIGHT))) ai = { used: false, reason: "budget" };
       else {
         // 실제로 쓴 금액만 예산에 남긴다 (DEC-040). 예외가 나도 잡아 둔 금액은 돌려준다

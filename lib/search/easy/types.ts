@@ -52,7 +52,7 @@ export const EASY_LIMITS = {
 
 /** AI를 쓰지 않은 이유 */
 export type EasyAiReason =
-  "free_mode" | "budget" | "cost_cap" | "model_failed" | "empty" | "no_articles";
+  "free_mode" | "budget" | "daily_limit" | "cost_cap" | "model_failed" | "empty" | "no_articles";
 export type EasyAiState = { used: true } | { used: false; reason: EasyAiReason };
 
 /** 실제 판례 한 줄 (법제처 검색 결과 — 모델이 만들지 않는다) */

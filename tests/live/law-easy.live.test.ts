@@ -1,5 +1,5 @@
 // 법령 쉬운 설명 미리 만들기 (DEC-074). **과금된다** — 법령마다 Haiku 1회.
-// 예상 금액: 법령 7개 × 1건 상한 $0.004 = 최대 $0.028 (실제는 입력 길이에 따라 그보다 적다). 서비스 기간·주간 예산 밖에서 과금된다.
+// 예상 금액: 법령 수(목록의 국내 법령 + 추가분, 10개 안팎) × 1건 상한 $0.004 = 최대 약 $0.04 (실제는 입력 길이에 따라 그보다 적다). 서비스 기간·주간 예산 밖에서 과금된다.
 // 실행(사용자 허락 뒤, 1회만): ALLOW_PAID_API=1 LAW_EASY_GEN=1 pnpm exec vitest run --config vitest.live.config.ts tests/live/law-easy.live.test.ts
 //   LAW_EASY_ONLY=의료기기법,약사법  특정 법령만 · LAW_EASY_REDO=1  이미 있는 법령도 다시
 // 결과는 lib/search/easy/data.json에 법령 하나씩 바로 쓴다(중간에 멈춰도 만든 것은 남는다).
@@ -10,13 +10,14 @@ import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import { LAW_EASY_COST_CAP_USD } from "@/lib/ai/cost";
 import type { EasyData } from "@/lib/search/easy/data";
+import { catalogByCountry } from "@/lib/search/world/catalog";
 
 vi.mock("server-only", () => ({}));
 const { explainLaw, LAW_EASY_PROMPT_VERSION } = await import("@/lib/ai/law-easy");
 const { createLawSource } = await import("@/lib/search/law-source");
 
-/** 미리 만들어 둘 법령 (정식 이름) */
-export const EASY_LAWS = [
+/** 목록에 없어도 미리 만들어 둘 법령 (정식 이름) */
+const EXTRA_LAWS = [
   "의료기기법",
   "의료기기법 시행령",
   "의료기기법 시행규칙",
@@ -25,6 +26,15 @@ export const EASY_LAWS = [
   "의료기기산업 육성 및 혁신의료기기 지원법",
   "약사법",
 ] as const;
+/** 미리 만들 법령: 법령 탭 '의료기기 법령 한눈에'에 보이는 국내 법령 전부 + 위 목록 */
+export const EASY_LAWS = [
+  ...new Set([
+    ...catalogByCountry()
+      .filter((g) => g.country === "kr")
+      .flatMap((g) => g.items.map((h) => h.title)),
+    ...EXTRA_LAWS,
+  ]),
+];
 
 const RUN =
   process.env.ALLOW_PAID_API === "1" &&

@@ -29,6 +29,24 @@ export const EXAMPLE_RATE: RateRule = { bucket: "example", limit: 30, windowSeco
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
 /** 법령 쉬운 설명(DEC-074): 같은 네트워크 1시간 20회 (유료 호출일 수 있어 법령 조회와 따로 센다) */
 export const LAW_EASY_RATE: RateRule = { bucket: "law_easy", limit: 20, windowSeconds: 3600 };
+/** 같은 네트워크가 같은 법령의 쉬운 설명을 모델로 만들 수 있는 하루(24시간 창) 횟수 (사용자 결정 2026-11-27) */
+export const LAW_EASY_DAILY_LIMIT = 20;
+/** 법령마다 따로 세는 하루 통. 통 이름에는 공개 법령 이름만 들어간다 */
+export const lawEasyDailyRule = (lawName: string): RateRule => ({
+  bucket: `law_easy_day:${lawName.normalize("NFKC").replace(/\s+/g, "")}`,
+  limit: LAW_EASY_DAILY_LIMIT,
+  windowSeconds: 86_400,
+});
+/** 하루 통을 한 번 센다. 넘었으면 false (오류로 막지 않고 모델 없는 정리로 돌린다) */
+export async function tryLawEasyDaily(lawName: string, headers: Headers): Promise<boolean> {
+  try {
+    await assertRateLimit(lawEasyDailyRule(lawName), headers);
+    return true;
+  } catch (e) {
+    if (e instanceof ApiError && e.code === "RATE_LIMITED") return false;
+    throw e;
+  }
+}
 /** 서류 판독(F-015, DEC-052): 같은 네트워크 1시간 10회 (유료 호출이고 질문 횟수는 분석 때 세므로 따로 막는다) */
 export const CASEFILE_RATE: RateRule = { bucket: "casefile", limit: 10, windowSeconds: 3600 };
 /** 법인·사업자 공개 정보 조회(F-015): 같은 네트워크 1시간 30회 (외부 공식 API 호출) */

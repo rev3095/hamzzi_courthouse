@@ -13,6 +13,7 @@ const rate = vi.hoisted(() => ({
   assertRateLimit: vi.fn(),
   tryAiQuota: vi.fn(),
   settleAiQuota: vi.fn(),
+  tryLawEasyDaily: vi.fn(async () => true),
 }));
 vi.mock("@/lib/auth/rate-limit", async (orig) => ({
   ...(await orig<typeof import("@/lib/auth/rate-limit")>()),
@@ -166,6 +167,16 @@ describe("DEC-074 GET /laws/{name}/easy", () => {
     // 실패 응답은 붙잡아 두지 않는다
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(ai.explainLaw.mock.calls[0][0]).toMatchObject({ needVirtual: false });
+  });
+
+  test("같은 법령 하루 한도를 넘으면 모델·예산 없이 조문 제목 정리로 돌린다", async () => {
+    rate.tryLawEasyDaily.mockResolvedValueOnce(false);
+    const res = await call();
+    expect(res.status).toBe(200);
+    const { data } = (await res.json()) as Body;
+    expect(data.ai).toEqual({ used: false, reason: "daily_limit" });
+    expect(ai.explainLaw).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
   });
 
   test("모델 호출이 예외로 끝나도 잡아 둔 예산은 정산한다", async () => {
