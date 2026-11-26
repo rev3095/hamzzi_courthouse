@@ -205,6 +205,8 @@ type DemoAnalysisResult = {
                     sides: { party: string; side: "claimant"|"respondent"|"complainant"|"accused"|"agency"|"third"; actions: string[] }[]; // 당사자 자리와 할 수 있는 대응 (판정 아님)
                     prep: { item: string; why: string }[] } };    // 준비할 자료. 숫자는 사용자가 적은 것만, 조문·사건번호·단정 표현 없음
   timing?: { totalMs: number; previewMs?: number; stages: { stage: "prepare"|"intent"|"search"|"agent"|"answer"|"verify"|"finish"; ms: number }[] }; // DEC-063 단계별 분석 시간(잰 값)
+  kind?: "general"; // DEC-069 법·제도가 궁금한 일반 질문. 화면은 타임라인·절차 없이 답변·근거·참고 자료만
+  references?: { title: string; url: string; note: string }[]; // DEC-069 일반 질문의 법제처 밖 참고 자료 링크(웹 검색 도구 결과 주소만, 인용 아님)
   document?: { kind: string; formTitle: string; title: string; sections: { heading: string; body: string }[] }; // DEC-062 가상 문서: 예시 질문(가상 사연) 결과에만
   assistant?: "home" | "report" | "market";        // DEC-057: 전문 에이전트 대화에서 받은 답변이면 그 에이전트
   assistantTalk?: { reply: string; asks: string[] }; // DEC-057: 에이전트 대화 한마디(Haiku). 숫자·법령·판례·판정 표현이 없게 거른 것만

@@ -1,5 +1,5 @@
 // @vitest-environment node
-// 가상 사건 프리셋 채우기 (사용자 요청 2026-11-25, DEC-061). **유료** — 사건마다 Opus 5.5(effort xhigh) 1회 + 쟁점 정리
+// 가상 사건 프리셋 채우기 (사용자 요청 2026-11-25, DEC-061). **유료** — 사건마다 Opus 5.5(effort medium, 2026-11-27부터) 1회 + 쟁점 정리
 // (기존 DeepSearch 경로 + 인용 검증, Pro Max) 1회. ALLOW_PAID_API=1 PRESET_FILL=1일 때만 돈다. 결과 파일이 있으면 건너뛴다.
 //
 // 입력: evals/matter-presets/source/<id>.json ([가상] 사건 자료, 사람 이름 없이 역할·가상 상호만)
@@ -257,12 +257,12 @@ describe.skipIf(!run)("가상 사건 프리셋 채우기 (유료, DEC-061)", () 
       const now = new Date().toISOString();
       let data = parseMatterData(src.data);
 
-      // ① 빈 항목 채우기 — Opus 5.5 effort xhigh 1회
+      // ① 빈 항목 채우기 — Opus 5.5 effort medium 1회 (2026-11-27: xhigh 사용 금지)
       const res = await client.messages.create({
         model: "claude-opus-5-5",
         max_tokens: 32_000,
         thinking: { type: "adaptive" },
-        output_config: { effort: "xhigh", format: { type: "json_schema", schema: SCHEMA } },
+        output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
         system: SYSTEM,
         messages: [
           {

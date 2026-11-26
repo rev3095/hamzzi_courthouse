@@ -139,6 +139,8 @@ export const UnderstandZ = z.object({
     .catch(null),
   lawQuery: z.string(),
   caseQueries: z.array(z.string()),
+  // 2026-11-27: 사건(사용자에게 일어난 일)인지, 법·제도 자체가 궁금한 일반 질문인지. 형식이 어긋나면 사건으로 본다
+  kind: z.enum(["case", "general"]).catch("case"),
 });
 export type Understanding = z.infer<typeof UnderstandZ>;
 
@@ -194,8 +196,14 @@ export const UNDERSTAND_SCHEMA = {
       description:
         "판례 검색어. 판결문에 쓰이는 법률 용어 조합, 각각 낱말 두세 개 (예: 모욕죄 공연성)",
     },
+    kind: {
+      type: "string",
+      enum: ["case", "general"],
+      description:
+        "case = 사용자에게 실제로 일어난 일(분쟁·피해·받은 서류)을 묻는 질문. general = 사건 없이 법·제도·용어 자체가 궁금한 질문(예: 상속세는 어떻게 매겨져요, 이 법이 뭐예요)",
+    },
   },
-  required: ["section", "others", "channel", "newLabel", "lawQuery", "caseQueries"],
+  required: ["section", "others", "channel", "newLabel", "lawQuery", "caseQueries", "kind"],
   additionalProperties: false,
 } as const;
 
@@ -218,6 +226,8 @@ export function screenUnderstanding(
   newLabel: { title: string; keywords: string[] } | null;
   lawQuery: string | null;
   caseQueries: string[];
+  /** 사건 질문인지 법·제도가 궁금한 일반 질문인지 (2026-11-27) */
+  kind: "case" | "general";
 } {
   const clean = (s: string, max: number) => {
     const t = s
@@ -262,6 +272,7 @@ export function screenUnderstanding(
     newLabel,
     lawQuery: lawQuery && lawQuery.length >= 5 ? lawQuery : null,
     caseQueries,
+    kind: u.kind,
   };
 }
 

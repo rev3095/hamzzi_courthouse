@@ -23,35 +23,35 @@ describe("DEC-036 단계 고르기", () => {
     expect(TIERS.max.model).toBe("claude-opus-5-5");
   });
 
-  test("DEC-050 단계를 보내지 않으면 Pro Max, 정해진 세 값만 단계로 인정한다", () => {
-    expect(DEFAULT_TIER).toBe("max");
-    expect(tierOf(null).id).toBe("max");
-    expect(tierOf(undefined).model).toBe("claude-opus-5-5");
+  test("단계를 보내지 않으면 Pro(Sonnet 5.5, 2026-11-27 — 이전 Pro Max), 정해진 세 값만 단계로 인정한다", () => {
+    expect(DEFAULT_TIER).toBe("pro");
+    expect(tierOf(null).id).toBe("pro");
+    expect(tierOf(undefined).model).toBe("claude-sonnet-5-5");
     expect(tierOf("max").id).toBe("max");
     for (const v of ["opus", "MAX", "", null, 1, "claude-opus-5-5", "__proto__"]) {
       expect(isTierId(v)).toBe(false);
     }
   });
 
-  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 adaptive + effort xhigh", () => {
+  test("생각 설정: Haiku disabled, Sonnet between_tools, Opus는 끌 수 없어 adaptive + effort medium (xhigh 금지, 2026-11-27)", () => {
     expect(TIERS.light.thinking).toEqual({ type: "disabled" });
     expect(TIERS.pro.thinking).toEqual({ type: "between_tools" });
     expect(TIERS.max.thinking).toEqual({ type: "adaptive" });
     expect([TIERS.light.effort, TIERS.pro.effort, TIERS.max.effort]).toEqual([
       "low",
       "low",
-      "xhigh",
+      "medium",
     ]);
   });
 });
 
 describe("DEC-036 질문 1건 상한", () => {
-  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.6을 넘지 않는다 (DEC-050, 2026-11-25 Opus xhigh)", () => {
+  test("모든 단계의 모델이 단가표에 있고, 상한은 $0.3을 넘지 않는다 (2026-11-27 Opus medium)", () => {
     for (const id of TIER_IDS) {
       expect(PRICES[TIERS[id].model]).toBeDefined();
-      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.6);
+      expect(TIERS[id].capUsd).toBeLessThanOrEqual(0.3);
     }
-    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.6]);
+    expect([TIERS.light.capUsd, TIERS.pro.capUsd, TIERS.max.capUsd]).toEqual([0.002, 0.03, 0.3]);
   });
 
   test("입력 약 9,000토큰이면 상한 안에서 그 단계의 출력 한도를 다 낼 수 있다", () => {
@@ -70,7 +70,6 @@ describe("DEC-036 질문 1건 상한", () => {
   });
 
   test("상한을 넘을 입력은 계획 단계에서 막힌다 (Sonnet 20,000토큰 · Opus 120,000토큰)", () => {
-    // Opus xhigh(상한 $0.6)는 장문 구간(100,000토큰) 전에는 금액으로 막히지 않아 장문 구간에서 막힌다
     for (const [id, inputTokens, reason] of [
       ["pro", 20_000, "budget"],
       ["max", 120_000, "long_prompt"],

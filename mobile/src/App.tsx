@@ -152,7 +152,7 @@ function Home({
 }) {
   const live = ctx.net === "live";
   const [mode, setMode] = useState<"ai" | "rule">("ai");
-  const [tier, setTier] = useState<Tier>("max");
+  const [tier, setTier] = useState<Tier>("pro");
   const [deep, setDeep] = useState(false);
   const [group, setGroup] = useState(CATEGORY_GROUPS[0].key);
   const [category, setCategory] = useState<CategoryKey | null>(null);

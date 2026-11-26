@@ -8,7 +8,7 @@ import {
   type DeepPlanRaw,
   type DeepStructRaw,
 } from "./deep-policy";
-import { BUDGET_UNIT_USD, LONG_DEEP, LONG_QUESTION_CHARS, TIERS, isLongQuestion } from "./models";
+import { BUDGET_UNIT_USD, longDeepOf, LONG_QUESTION_CHARS, TIERS, isLongQuestion } from "./models";
 
 const raw = (what: string, when = ""): DeepStructRaw => ({
   parties: [{ label: "임차인", role: "질문자" }],
@@ -239,9 +239,14 @@ describe("DEC-062 긴 질문 기준", () => {
     expect(isLongQuestion(`  ${"가".repeat(100)}  `)).toBe(false);
   });
 
-  it("긴 질문은 Opus 5.5 xhigh, 가중치는 상한 ÷ 단위 올림", () => {
-    expect(TIERS[LONG_DEEP.tier].model).toBe("claude-opus-5-5");
-    expect(LONG_DEEP.effort).toBe("xhigh");
-    expect(LONG_DEEP.weight).toBe(Math.ceil(LONG_DEEP.capUsd / BUDGET_UNIT_USD - 1e-9));
+  it("긴 질문은 고른 단계의 모델·effort로(xhigh 없음), 가중치는 상한 ÷ 단위 올림 (2026-11-27)", () => {
+    for (const id of ["light", "pro", "max"] as const) {
+      const l = longDeepOf(id);
+      expect(l.tier).toBe(id);
+      expect(l.effort).toBe(TIERS[id].effort);
+      expect(l.effort).not.toBe("xhigh");
+      expect(l.weight).toBe(Math.ceil(l.capUsd / BUDGET_UNIT_USD - 1e-9));
+    }
+    expect(longDeepOf(null).tier).toBe("pro");
   });
 });

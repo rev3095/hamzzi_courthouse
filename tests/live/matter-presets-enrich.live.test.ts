@@ -37,7 +37,8 @@ const OPUS = { in: 5 / 1e6, out: 25 / 1e6 };
 /** 쟁점 하나를 채우는 DeepSearch 상한 + 여유 — 시작 전 남은 예산을 본다 */
 const ISSUE_MAX_USD = 2.2;
 /** Opus 생각 단계 — 기본 medium (2026-11-25 사용자 요청으로 xhigh에서 바꿈) */
-const EFFORT = (process.env.PRESET_EFFORT ?? "medium") as "medium" | "high" | "xhigh";
+// 2026-11-27 사용자 결정: xhigh 사용 금지
+const EFFORT: "medium" | "high" = process.env.PRESET_EFFORT === "high" ? "high" : "medium";
 const DOCS_MAX_USD = 1.5;
 
 const DOC_SYSTEM = `당신은 한국 법률 사건 정리 도구 "사건 분석"의 예시 사건에 들어갈 가상 서류를 쓰는 작가다. 사건은 모두 지어낸 가상 사건이다.
@@ -152,12 +153,12 @@ describe.skipIf(!RUN)("가상 사건 프리셋 보강 (DEC-061)", () => {
           ).maskedText;
           const org = await organizeIssues(text, {
             tier: "max",
-            // 생각 단계는 PRESET_EFFORT(기본 medium, 사용자 요청 2026-11-25). xhigh는 생각이 길어 출력 한도·상한을 넓힌다
+            // 생각 단계는 PRESET_EFFORT(medium 또는 high, 기본 medium). xhigh는 쓰지 않는다 (2026-11-27)
             run: (input, o) =>
               runDeepAnalysis(input, {
                 ...o,
                 effort: EFFORT,
-                answerMaxTokens: EFFORT === "xhigh" ? 40_000 : 16_000,
+                answerMaxTokens: 16_000,
                 costCapUsd: 2,
               }),
           });

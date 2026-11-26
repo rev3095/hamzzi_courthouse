@@ -78,7 +78,7 @@ writeFileSync(
     {
       generatedAt: new Date().toISOString().slice(0, 10),
       source:
-        "서류 분석 예시: 직접 쓴 가상 서류 그림 → 서류 판독(Haiku 비전) → DeepSearch(Pro Max = Opus 5.5 effort xhigh), 인용 검증 통과 문단만",
+        "서류 분석 예시: 직접 쓴 가상 서류 그림 → 서류 판독(Haiku 비전) → DeepSearch(Pro Max = Opus 5.5, 만들 때 effort xhigh — 2026-11-27부터 xhigh는 쓰지 않는다), 인용 검증 통과 문단만",
       examples,
     },
     null,

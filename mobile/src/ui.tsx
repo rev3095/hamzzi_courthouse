@@ -202,7 +202,7 @@ export function AnswerView({ result, online }: { result: DemoAnalysisResult; onl
           </ul>
           {result.recheck.removed > 0 && (
             <p className="muted small">
-              근거를 확인하지 못한 문단 {result.recheck.removed}개는 싣지 않았어요.
+              없는 인용이 확인됐거나 검사에서 걸린 문단 {result.recheck.removed}개는 싣지 않았어요.
             </p>
           )}
           <p className="muted small">{result.searchScopeNote}</p>

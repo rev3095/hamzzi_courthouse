@@ -1,5 +1,5 @@
 // 분야별 비서의 대화 한마디 (F-018, DEC-057). 순수 규칙 — 지시문·출력 형식·거르기.
-// 대화는 Haiku가 맡고(짧은 공감·정리와 더 알려 줄 사실 묻기), 법령·판례 근거 답변은 Pro Max(지금 Opus 5.5 effort high)가 따로 쓴다.
+// 대화는 Haiku가 맡고(짧은 공감·정리와 더 알려 줄 사실 묻기), 법령·판례 근거 답변은 ASSISTANT_ANSWER_TIER(Pro = Sonnet 5.5, DEC-069)가 따로 쓴다.
 // 대화 한마디에는 근거가 없으므로 법령·조문·판례·사건번호·숫자·결과 판단을 담지 못하게 하고, 담겼으면 그 문장을 버린다.
 import { z } from "zod";
 import { isAssertive } from "@/lib/ai/policy";

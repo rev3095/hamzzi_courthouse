@@ -517,7 +517,7 @@ function SearchOnly({ result }: { result: DemoAnalysisResult }) {
   );
 }
 
-/** 비서 답변 모드는 고정이다 (DEC-057 ⑧): 근거 답변 Pro Max, 대화 한마디는 가벼운 모델. 화면에는 모델 이름을 싣지 않는다 */
+/** 비서 답변 모드는 고정이다 (DEC-057 ⑧): 근거 답변은 ASSISTANT_ANSWER_TIER(Pro), 대화 한마디는 가벼운 모델. 화면에는 모델 이름을 싣지 않는다 */
 function TierFixed() {
   return (
     <>

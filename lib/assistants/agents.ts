@@ -6,9 +6,10 @@ import type { SectionLabel } from "@/lib/procedure/sections";
 
 /**
  * 비서 답변 모델 (사용자 결정 2026-11-25): 대화 한마디는 Haiku(lib/assistants/talk), 법령·판례 근거 답변은
- * Pro Max 단계(지금 Opus 5.5 effort high, DEC-050). 홈 질문창의 답변 모드 선택은 비서 대화에 쓰지 않는다
+ * ASSISTANT_ANSWER_TIER 단계(2026-11-27부터 Pro = Sonnet 5.5, DEC-069). 홈 질문창의 답변 모드 선택은 비서 대화에 쓰지 않는다
  */
-export const ASSISTANT_ANSWER_TIER = "max" as const;
+// 2026-11-27 사용자 결정: 메인 답변은 Sonnet 5.5(Pro) — 이전 Pro Max(DEC-057)
+export const ASSISTANT_ANSWER_TIER = "pro" as const;
 
 export const ASSISTANT_IDS = ["home", "report", "market"] as const;
 export type AssistantId = (typeof ASSISTANT_IDS)[number];

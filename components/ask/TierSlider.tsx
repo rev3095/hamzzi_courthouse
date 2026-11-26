@@ -10,8 +10,8 @@ import { useQuota } from "../useQuota";
 
 export const TIER_TEXT: Record<TierId, { name: string; hint: string }> = {
   light: { name: "Light", hint: "가장 빠른 모델" },
-  pro: { name: "Pro", hint: "빠르기와 깊이의 중간 모델" },
-  max: { name: "Pro Max", hint: "기본 · 답하기 전에 더 오래 생각하는 모델" },
+  pro: { name: "Pro", hint: "기본 · 빠르기와 깊이의 중간 모델" },
+  max: { name: "Pro Max", hint: "답하기 전에 더 오래 생각하는 모델" },
 };
 
 /** 긴 질문 안내 (DEC-062·067): 이만큼 넘게 적으면 고른 모드와 상관없이 자세히 분석(DeepSearch)으로 답한다 */

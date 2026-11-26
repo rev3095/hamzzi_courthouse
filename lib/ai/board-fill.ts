@@ -1,5 +1,5 @@
 // 예시 답변의 빈 칸 채우기 (DEC-062). 생성은 tests/live/board-fill.live.test.ts(유료)만 부른다 — 서비스 요청 경로에서 쓰지 않는다.
-// 이미 검증된 답변은 다시 만들지 않는다. 쪽(원고·피고 등) 답변마다 Opus 5.5 effort xhigh 1회로 빠진 칸만 채운다:
+// 이미 검증된 답변은 다시 만들지 않는다. 쪽(원고·피고 등) 답변마다 Opus 5.5 effort medium 1회(2026-11-27부터, 이전 xhigh)로 빠진 칸만 채운다:
 //   ① 사건 정리판(절차 종류·당사자 자리와 대응·준비 자료) — 모든 쪽
 //   ② 답변 문단이 하나도 남지 않은 쟁점의 문단 — 그런 쟁점이 있을 때만 (출처 model, DEC-055)
 //   ③ 가상 문서 — 문서 초안이 없는 쪽만
@@ -15,7 +15,6 @@ import {
 import { scanInput } from "@/lib/pii";
 import { callModel, createModelClient, textOf, withCostCap, type ModelClient } from "./client";
 import { planSchema, screenPlan, type DeepMap, type DeepPlan } from "./deep-policy";
-import { LONG_DEEP } from "./models";
 import { isAssertive, numberTokens } from "./policy";
 import { DEEP_PLAN_SYSTEM } from "./prompts";
 
@@ -112,7 +111,8 @@ export async function fillBoard(
       max_tokens: TOKENS.max,
       thinking: { type: "adaptive" },
       system: [{ type: "text", text: SYSTEM }],
-      output_config: { effort: LONG_DEEP.effort, format: { type: "json_schema", schema } },
+      // 2026-11-27 사용자 결정: xhigh를 쓰지 않는다 — medium
+      output_config: { effort: "medium", format: { type: "json_schema", schema } },
       messages: [
         {
           role: "user",

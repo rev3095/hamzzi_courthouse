@@ -72,6 +72,7 @@ export function ResultPanel({
   const usedCases = result.cases.filter((c) => c.used).length;
   const plan = procedurePlan(result, question, category);
   const board = parseDeepMap(result.deep) !== null;
+  const general = result.kind === "general";
 
   return (
     <article className="rounded-panel border-line border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
@@ -109,58 +110,101 @@ export function ResultPanel({
 
       {parties}
 
-      {/* 100자를 넘는 질문(자동 DeepSearch)은 7개 탭 사건 정리, 그 밖은 한 장 요약 그림 (DEC-062). 첨부 자료는 정리의 자료 탭에 있다 */}
-      {board ? (
-        <CaseBoard result={result} inquiryId={inquiryId} />
+      {/* 일반 법률 질문(2026-11-27)은 사건 정리·요약 그림·절차 타임라인 없이 답변과 근거·참고 자료만 보인다 */}
+      {general ? (
+        <References items={result.references ?? []} />
       ) : (
         <>
-          {result.materials && <MaterialsView result={result} />}
-          <QuickSheet result={result} />
+          {/* 100자를 넘는 질문(자동 DeepSearch)은 7개 탭 사건 정리, 그 밖은 한 장 요약 그림 (DEC-062). 첨부 자료는 정리의 자료 탭에 있다 */}
+          {board ? (
+            <CaseBoard result={result} inquiryId={inquiryId} />
+          ) : (
+            <>
+              {result.materials && <MaterialsView result={result} />}
+              <QuickSheet result={result} />
+            </>
+          )}
+
+          {hasTimeline(plan) ? (
+            <>
+              <ProcedureTimeline
+                section={plan.section}
+                title={plan.title}
+                steps={plan.steps}
+                recommendedKey={plan.recommended.key}
+                onAskStep={onAskStep}
+                inquiryId={inquiryId}
+              />
+              {plan.note && (
+                <p className="text-muted mt-4 text-[13px] leading-relaxed">{plan.note}</p>
+              )}
+              <div className="rounded-card border-line bg-cream mt-6 border px-5 py-4">
+                <p className="font-display text-ink text-[17px] leading-snug font-bold">
+                  {recommendText(plan.recommended)}
+                </p>
+                <p className="text-label mt-1 text-[13px] font-semibold">
+                  추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
+                </p>
+                <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
+                <p className="text-muted mt-1 text-[13px]">
+                  {plan.byAi
+                    ? `${result.aiNotice} · ${AI_PROCEDURE_NOTE}`
+                    : `${PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.`}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <TypeNotice plan={plan} />
+              {(result as { section?: unknown }).section === "none" && <CommunityHint />}
+            </>
+          )}
         </>
       )}
 
-      {hasTimeline(plan) ? (
-        <>
-          <ProcedureTimeline
-            section={plan.section}
-            title={plan.title}
-            steps={plan.steps}
-            recommendedKey={plan.recommended.key}
-            onAskStep={onAskStep}
-            inquiryId={inquiryId}
-          />
-          {plan.note && <p className="text-muted mt-4 text-[13px] leading-relaxed">{plan.note}</p>}
-          <div className="rounded-card border-line bg-cream mt-6 border px-5 py-4">
-            <p className="font-display text-ink text-[17px] leading-snug font-bold">
-              {recommendText(plan.recommended)}
-            </p>
-            <p className="text-label mt-1 text-[13px] font-semibold">
-              추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
-            </p>
-            <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
-            <p className="text-muted mt-1 text-[13px]">
-              {plan.byAi
-                ? `${result.aiNotice} · ${AI_PROCEDURE_NOTE}`
-                : `${PROCEDURE_NOTICE} · 규칙에 따라 고른 안내이며 사건 결과를 판단한 것이 아니에요.`}
-            </p>
-          </div>
-        </>
-      ) : (
-        <>
-          <TypeNotice plan={plan} />
-          {(result as { section?: unknown }).section === "none" && <CommunityHint />}
-        </>
-      )}
-
-      <RelatedSections result={result} />
+      {!general && <RelatedSections result={result} />}
 
       <Details result={result} />
 
       <div id="deep-question">{followUp}</div>
-      <NextSteps plan={plan} inquiryId={inquiryId} askHref={askHref} />
+      {!general && <NextSteps plan={plan} inquiryId={inquiryId} askHref={askHref} />}
       {footer}
       <SourceCredit note={result.searchScopeNote} />
     </article>
+  );
+}
+
+/**
+ * 일반 질문의 참고 자료 (2026-11-27): 법제처 밖 공개 자료 링크. 웹 검색 도구가 실제로 가져온 주소만이고,
+ * 법령·판례 인용이 아니라 더 읽어 볼 자료다. 없으면 아무것도 보이지 않는다
+ */
+function References({ items }: { items: { title: string; url: string; note: string }[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section
+      aria-label="참고 자료"
+      className="rounded-card border-line mt-6 border bg-white px-5 py-4"
+    >
+      <h2 className="text-ink text-[15px] font-bold">더 읽어 볼 자료</h2>
+      <p className="text-muted mt-1 text-[13px]">
+        법제처 밖 공개 자료예요. 답변의 근거(법령·판례)는 아래 세부 내용과 출처에 있어요.
+      </p>
+      <ul className="mt-3 space-y-2">
+        {items.map((r) => (
+          <li key={r.url}>
+            <a
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-link text-sm font-semibold underline"
+            >
+              {r.title}
+            </a>
+            {r.note && <p className="text-muted text-[13px] leading-relaxed">{r.note}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -704,7 +748,8 @@ function VerifyTab({ result }: { result: DemoAnalysisResult }) {
       </ul>
       {recheck.removed > 0 && (
         <p className="text-muted mt-3 text-sm">
-          실제로 있는지 확인되지 않은 인용이 들어간 문단 {recheck.removed}개는 답변에서 뺐어요.
+          법제처에 없다고 확인된 인용이 들어갔거나 1차 검사에서 걸린 문단 {recheck.removed}개는
+          답변에서 뺐어요.
         </p>
       )}
     </div>
