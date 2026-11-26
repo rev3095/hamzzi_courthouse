@@ -66,6 +66,8 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
   // 결과 없음에서 '다시 적어 보기'로 오면 쓰던 질문을 질문창에 되돌린다 (DEC-067)
   useEffect(() => {
     const draft = takeDraft();
+    // 이 탭 저장소는 화면을 그린 뒤에만 읽을 수 있다 (서버 렌더와 맞추려고 처음에는 빈 질문창으로 그린다)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (draft) setText((t) => t || draft);
   }, []);
   const prevCount = useRef(0);
