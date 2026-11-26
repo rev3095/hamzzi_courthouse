@@ -28,6 +28,8 @@ export const DOCUMENT_GROUPS: readonly DocumentGroup[] = [
       "defamation-complaint",
       "obscenity-complaint",
       "compensation-order",
+      "settlement",
+      "complaint-withdrawal",
     ],
   },
   {

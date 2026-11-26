@@ -87,7 +87,7 @@ describe("F-018 진행 과정 갈래 (입장 × 형사·민사)", () => {
     expect(cautions).toMatch(/직접 연락하지 말고/);
   });
 
-  test("갈래마다 쓸 수 있는 서식이 다르다 (고소당한 쪽 형사 갈래만 서식이 없다)", () => {
+  test("갈래마다 쓸 수 있는 서식이 다르다", () => {
     const formsOf = (id: "report" | "market", side: PathSide, kind: PathKind) =>
       [
         ...new Set(
@@ -113,7 +113,7 @@ describe("F-018 진행 과정 갈래 (입장 × 형사·민사)", () => {
       expect(formsOf(id, "respondent", "civil")).toEqual(
         ["answer", "decision-objection", "order-objection"].sort(),
       );
-      expect(formsOf(id, "respondent", "criminal")).toEqual([]);
+      expect(formsOf(id, "respondent", "criminal")).toEqual(["complaint-withdrawal", "settlement"]);
     }
   });
 

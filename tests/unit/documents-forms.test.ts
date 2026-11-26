@@ -274,6 +274,8 @@ const FULL: Record<DocumentKind, Record<string, string>> = {
   answer: DOCUMENT_EXAMPLES.answer![0].values,
   "order-objection": DOCUMENT_EXAMPLES["order-objection"]![0].values,
   "decision-objection": DOCUMENT_EXAMPLES["decision-objection"]![0].values,
+  settlement: DOCUMENT_EXAMPLES.settlement![0].values,
+  "complaint-withdrawal": DOCUMENT_EXAMPLES["complaint-withdrawal"]![0].values,
 };
 
 const digits = (s: string) =>
@@ -890,5 +892,46 @@ describe("전문 에이전트 갈래 서식 (공식 양식 기준, 2026-11-26)",
     // 기간은 공식 양식의 유의 사항을 출처와 함께 인용한다
     expect(DOCUMENT_SPECS["order-objection"].officialNotice?.text).toMatch(/2주 이내/);
     expect(DOCUMENT_SPECS["decision-objection"].officialNotice?.source).toMatch(/서식/);
+  });
+
+  test("합의서: 처벌 불원·이의 포기는 설문에서 받지 않고 빈 체크칸으로 나온다 (피해자가 손으로 표시)", () => {
+    const base = FULL.settlement;
+    const text = fill("settlement", base);
+    expect(DOCUMENT_SPECS.settlement.fields.map((f) => f.key)).not.toContain("wishes");
+    expect(text).toContain("□ 피해자는 가해자의 처벌을 원하지 않습니다.");
+    expect(text).toContain("□ 피해자는 차후로 이 사건으로 민·형사상의 이의를 제기하지 않겠습니다.");
+    expect(text).not.toContain("■");
+    expect(text).toContain("위 피해자  김햄찌  (인)");
+    expect(text).toContain("볍씨경찰서장 귀하");
+    expect(fill("settlement", { ...base, amount: "300000" })).toContain(
+      "주고받는 돈 : 금 300,000원",
+    );
+    // 피해자 주소는 몰라도 된다 (알아내게 하지 않는다)
+    expect(invalidFields("settlement", ["victimAddress"], { victimAddress: "" })).toEqual([]);
+    const tips = DOCUMENT_SPECS.settlement.tips.join(" ");
+    expect(tips).toMatch(/직접 연락하지 말고/);
+    expect(tips).toMatch(/손해배상을 청구하기 어려워질 수 있어요/);
+  });
+
+  test("고소취소장: 고소인이 서명하고, 다시 고소할 수 없다는 점을 화면 머리와 작성 요령이 알린다", async () => {
+    const text = fill("complaint-withdrawal", FULL["complaint-withdrawal"]);
+    expect(text).toContain(
+      "피고소인 이도토리에 대하여 모욕 혐의로 볍씨경찰서에 고소한 사실이 있습니다.",
+    );
+    expect(text).toContain("위 고소인은 피고소인에 대한 고소 내용 전체를 취소하고자 합니다.");
+    // 취소하는 까닭은 사용자가 적은 사유만 — 처벌 불원 같은 뜻을 덧붙이지 않는다
+    expect(text).not.toContain("처벌을 원하지 않으므로");
+    expect(invalidFields("complaint-withdrawal", ["complainantAddress"], {})).toEqual([]);
+    expect(DOCUMENT_SPECS["complaint-withdrawal"].intro).toMatch(/다시 고소할 수 없어요/);
+    expect(DOCUMENT_SPECS["complaint-withdrawal"].intro).toMatch(/대신 서명할 수 없어요/);
+    expect(text).toContain("위 고소인  김햄찌  (인)");
+    const tips = DOCUMENT_SPECS["complaint-withdrawal"].tips.join(" ");
+    expect(tips).toMatch(/다시 고소할 수 없어요/);
+    expect(tips).toMatch(/직접 연락하지 말고/);
+    for (const kind of ["settlement", "complaint-withdrawal"] as const)
+      expect(DOCUMENT_SPECS[kind].draftFields).toBe("");
+    const { FACTS_FIELD } = await import("@/lib/documents/policy");
+    expect(FACTS_FIELD.settlement).toBeUndefined();
+    expect(FACTS_FIELD["complaint-withdrawal"]).toBeUndefined();
   });
 });
