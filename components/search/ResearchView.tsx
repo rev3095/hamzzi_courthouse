@@ -659,7 +659,7 @@ export function ResearchView() {
                         setSelected(`${r.kind}:${r.id}`);
                         // 좁은 화면(lg 미만)은 미리보기가 목록 맨 아래에 있어 보이지 않는다 (DEC-067):
                         // 상세 화면이 있으면 그리로 가고, 없으면 미리보기로 내려간다
-                        if (window.matchMedia("(max-width: 1023.98px)").matches) {
+                        if (window.matchMedia?.("(max-width: 1023.98px)").matches) {
                           if (r.href) router.push(r.href);
                           else
                             requestAnimationFrame(() =>
