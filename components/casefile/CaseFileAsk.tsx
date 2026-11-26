@@ -10,6 +10,7 @@ import { dailyLimitLine, limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
+import { CaseSwitch } from "../matters/CaseSwitch";
 import { useCaseFileAsk } from "./useCaseFileAsk";
 import { PAGE_TITLE } from "@/components/ui/styles";
 
@@ -46,7 +47,10 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
 
   return (
     <div className="mx-auto w-full max-w-[820px] px-4 py-10 lg:py-14">
-      <h1 className={PAGE_TITLE}>서류 분석</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className={PAGE_TITLE}>서류 분석</h1>
+        <CaseSwitch current="organize" />
+      </div>
       <p className="text-muted mt-2 text-[15px] leading-relaxed">
         받은 서류나 변호사에게 낸 자료의 사진을 올리면, 지금 상황을 다시 정리하고 쟁점과 진행 절차를
         법제처 법령·판례 근거와 함께 보여 드려요.
