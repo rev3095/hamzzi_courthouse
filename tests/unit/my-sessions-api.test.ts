@@ -133,6 +133,19 @@ describe("DEC-070 내 세션 이름·빼기", () => {
     expect(matters.saveMatter.mock.calls[1][2].data.titleAuto).toBe(false);
   });
 
+  test("이름만 바꾸다 두 번 다 다른 저장과 겹치면 409로 거절한다(자동 제목을 켜 둔 채 이름만 바꾸지 않음)", async () => {
+    matters.saveMatter.mockResolvedValue(null);
+    const res = await one.PUT(
+      new Request(`http://localhost/api/v1/matters/${ID}`, {
+        method: "PUT",
+        body: JSON.stringify({ title: "새 이름" }),
+      }),
+      ctx(ID),
+    );
+    expect(res.status).toBe(409);
+    expect(matters.saveMatter).toHaveBeenCalledTimes(2);
+  });
+
   test("parseSessionTitle", () => {
     expect(parseSessionTitle(null)).toBeNull();
     expect(parseSessionTitle(" 전세  보증금 ")).toBe("전세 보증금");

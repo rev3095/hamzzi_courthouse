@@ -49,6 +49,10 @@ export const PUT = withRoute<Ctx>(async (req, ctx, scope) => {
       current = await getMatter(user.userId, id);
       if (!current.data.titleAuto) break;
     }
+    // 두 번 다 다른 저장과 겹쳤으면 자동 제목을 켜 둔 채 이름만 바꾸지 않고 거절한다 — 화면이 다시 시도한다
+    if (current.data.titleAuto) {
+      throw new ApiError("INVALID_STATE", { fields: ["title"], reason: "busy" });
+    }
   }
   const saved = await saveMatter(user.userId, id, {
     ...(title !== undefined && { title }),
