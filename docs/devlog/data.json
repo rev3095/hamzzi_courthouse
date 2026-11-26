@@ -248,6 +248,19 @@
    "purpose": "서류 분석(F-015) 예제 프리셋을 실제 서류 분석과 같은 길로 실호출해 만들고(실제 서면 양식 2건·600자 넘는 가상 사건 3건), 실제 양식 2건은 사용자 계정 기록에도 남긴다. 도중에 Pro Max를 Opus 5.5 effort xhigh로 바꾸라는 요청이 더해졌다.",
    "transcripts": [],
    "requests": 4
+  },
+  {
+   "key": "casefile-surname",
+   "parent": "casefile-examples",
+   "title": "서류 판독에서 '성+○○' 꼴 이름 가리기",
+   "tool": "Claude Desktop",
+   "prs": [
+    40
+   ],
+   "period": "2026-11-25 ~ 2026-11-26",
+   "purpose": "서류 분석 예제를 만들다 legal-reviewer가 찾은 빈틈: 서비스 판독 거르기(screenReading)가 '박○○'처럼 이미 일부 가린 이름을 그대로 내보냈다. 사건 개요·요구·당사자에 들어가기 전에 ○○○로 가린다.",
+   "transcripts": [],
+   "requests": 2
   }
  ],
  "entries": [
@@ -6579,6 +6592,36 @@
    ],
    "ids": [
     "F-015"
+   ]
+  },
+  {
+   "date": "2026-11-26",
+   "time": "06:19",
+   "session": "casefile-surname",
+   "kind": "fix",
+   "title": "서류 판독에서 성+○○ 꼴 이름 가리기",
+   "detail": "판독 거르기가 '박○○'·'김OO'·'홍*동'처럼 성 한 글자와 가림 표시가 붙은 꼴을 사건 개요·요구·당사자 이름에 넣기 전에 ○○○로 바꾼다. 상호 표지가 붙은 이름과 '○○시'·'○○지방법원'은 그대로 둔다. 전체 단위 테스트 2,031개 통과, legal-reviewer 재검토에서 확인된 위반 없음(보고 기준).",
+   "commits": [
+    "a20d791"
+   ],
+   "ids": [
+    "F-015",
+    "DEC-052"
+   ]
+  },
+  {
+   "date": "2026-11-26",
+   "time": "06:34",
+   "session": "casefile-surname",
+   "kind": "check",
+   "title": "PR 40 병합",
+   "detail": "CI(web·collector) 통과를 확인하고 사용자 지시로 병합했다(병합 커밋 be58667).",
+   "commits": [
+    "be58667"
+   ],
+   "ids": [
+    "F-015",
+    "DEC-052"
    ]
   }
  ],

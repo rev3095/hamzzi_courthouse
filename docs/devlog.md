@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-25 동안 세션 18개가 남긴 작업 기록 524건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-26 동안 세션 19개가 남긴 작업 기록 526건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -42,6 +42,8 @@
     VS Code 세션의 서류 분석·사건 진행을 이어받아 legal-reviewer 재검토 위반 2건과 판독 개선, 쟁점 정리 실호출, 법무 검토 항목을 마무리하는 하위 세션.
   - **서류 분석 예제 프리셋 5건·Pro Max xhigh** — Claude Desktop · 2026-11-25 · 기록 6건 · PR 30  
     서류 분석(F-015) 예제 프리셋을 실제 서류 분석과 같은 길로 실호출해 만들고(실제 서면 양식 2건·600자 넘는 가상 사건 3건), 실제 양식 2건은 사용자 계정 기록에도 남긴다. 도중에 Pro Max를 Opus 5.5 effort xhigh로 바꾸라는 요청이 더해졌다.
+    - **서류 판독에서 '성+○○' 꼴 이름 가리기** — Claude Desktop · 2026-11-25 ~ 2026-11-26 · 기록 2건 · PR 40  
+      서류 분석 예제를 만들다 legal-reviewer가 찾은 빈틈: 서비스 판독 거르기(screenReading)가 '박○○'처럼 이미 일부 가린 이름을 그대로 내보냈다. 사건 개요·요구·당사자에 들어가기 전에 ○○○로 가린다.
 - **VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티)** — VS Code · 2026-11-18 ~ 2026-11-20 · 기록 71건  
   VS Code에서 시작해 lexdiff 기능 범위의 판례·법령 탐색을 독자 구현하고, 문서 작성 검증, 답변 단계 선택, DeepSearch, 예시 답변 확대, 질문 해석 라벨링까지 이어 간 개발 세션.
 - **서류 이미지 분석·사건 진행 (VS Code)** — VS Code (Claude Code) · 2026-11-24 · 기록 11건  
@@ -50,6 +52,19 @@
 ---
 
 ## 날짜별 기록
+
+### 2026-11-26 (목)
+
+#### 메인 개발 (Legal tech 플랫폼 개발 계획)
+
+
+##### ↳ 서류 분석 예제 프리셋 5건·Pro Max xhigh
+
+
+###### ↳ ↳ 서류 판독에서 '성+○○' 꼴 이름 가리기
+
+- `06:19` **[수정] 서류 판독에서 성+○○ 꼴 이름 가리기** — 판독 거르기가 '박○○'·'김OO'·'홍*동'처럼 성 한 글자와 가림 표시가 붙은 꼴을 사건 개요·요구·당사자 이름에 넣기 전에 ○○○로 바꾼다. 상호 표지가 붙은 이름과 '○○시'·'○○지방법원'은 그대로 둔다. 전체 단위 테스트 2,031개 통과, legal-reviewer 재검토에서 확인된 위반 없음(보고 기준). ([`a20d791`](https://github.com/rev3095/hamzzi_courthouse/commit/a20d791), F-015, DEC-052)
+- `06:34` **[확인] PR 40 병합** — CI(web·collector) 통과를 확인하고 사용자 지시로 병합했다(병합 커밋 be58667). ([`be58667`](https://github.com/rev3095/hamzzi_courthouse/commit/be58667), F-015, DEC-052)
 
 ### 2026-11-25 (수)
 
@@ -944,6 +959,7 @@
 | DEC-061 | 사건 분석 가상 사건 프리셋 (2026-11-25 사용자 요청) |
 | DEC-062 | 긴 질문 자동 DeepSearch · 7개 탭 사건 정리 · 가상 문서 (2026-11-25 사용자 요청·결정) |
 | DEC-063 | 답변 속도 측정·보고서 (2026-11-25 사용자 요청) |
+| DEC-064 | 빠른 답 먼저 (2026-11-26 사용자 요청·승인) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -1103,10 +1119,18 @@
 
 ## 커밋 색인
 
-<details><summary>main 커밋 236개 (병합 제외)</summary>
+<details><summary>main 커밋 244개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`05eefb5`](https://github.com/rev3095/hamzzi_courthouse/commit/05eefb5) | 2026-11-26 15:40 | feat: F-018 전문 에이전트 '진행 과정'을 일반 답변과 같은 마일스톤 타임라인으로 (F-014, DEC-057) |
+| [`b73f895`](https://github.com/rev3095/hamzzi_courthouse/commit/b73f895) | 2026-11-26 14:16 | feat: F-018 전문 에이전트에 포인트 색·사진 첨부·'진행 과정' 탭 (DEC-057, F-014·F-017 재사용) |
+| [`004ee2d`](https://github.com/rev3095/hamzzi_courthouse/commit/004ee2d) | 2026-11-26 06:24 | style: F-018 전문 에이전트 화면을 연한 색·넉넉한 여백·접는 구성으로 (DEC-057) |
+| [`da20c19`](https://github.com/rev3095/hamzzi_courthouse/commit/da20c19) | 2026-11-26 06:24 | style: F-016 사건 진행 화면을 묶음 패널·두 화면 동선으로 간결하게 (DEC-053·054·061) |
+| [`a20d791`](https://github.com/rev3095/hamzzi_courthouse/commit/a20d791) | 2026-11-26 06:19 | fix: F-015 AC2 서류 판독에서 성 한 글자 + ○○ 꼴(박○○·김OO·홍*동)을 ○○○로 가림 (절대 규칙 4) |
+| [`8aa0527`](https://github.com/rev3095/hamzzi_courthouse/commit/8aa0527) | 2026-11-26 06:17 | F-003 분석 진행 표시 정리 — 출처 목록 빼고 같은 단계 한 번만 |
+| [`ac2539e`](https://github.com/rev3095/hamzzi_courthouse/commit/ac2539e) | 2026-11-26 06:17 | feat: F-005 DEC-064 빠른 답 먼저 — 유료 분석 중 Haiku 요약을 로딩 화면에 먼저 |
+| [`68837eb`](https://github.com/rev3095/hamzzi_courthouse/commit/68837eb) | 2026-11-26 06:14 | docs: devlog에 서류 분석 예제 프리셋 5건·Pro Max xhigh·PR 30 병합 반영 (세션 18개, 기록 524건) |
 | [`8ef43c4`](https://github.com/rev3095/hamzzi_courthouse/commit/8ef43c4) | 2026-11-26 06:03 | docs: CLAUDE.md 환경 주의에 worktree 절대 경로·HZ_ENV_FILE·병합 순서·스트리밍·유료 실행 멈추기 함정 추가 |
 | [`1781b86`](https://github.com/rev3095/hamzzi_courthouse/commit/1781b86) | 2026-11-26 06:01 | docs: CLAUDE.md에 DEC-062(긴 질문 자동 DeepSearch·7개 탭)·DEC-063(단계별 분석 시간) 반영, 끝난 기간 예산 표시 |
 | [`528cd81`](https://github.com/rev3095/hamzzi_courthouse/commit/528cd81) | 2026-11-26 06:01 | docs: CLAUDE.md 줄이기 — 기능별 긴 규칙을 모듈 README로 옮기고 미리 만든 AI 데이터·프리셋 거르기 설명 추가 |
@@ -1377,10 +1401,10 @@
 - [05. 햄찌법원 브랜드 가이드 v0.1](05_브랜드_가이드.md) — `docs/05_브랜드_가이드.md` · 수정 2026-10-19
 - [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-24
 - [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-20
-- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-25
+- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-26
 - [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-25
 - [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-25
-- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-25
+- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-26
 - [PRD 초안 검토·수정·검증 결과](PRD_review.md) — `docs/PRD_review.md` · 수정 2026-10-19
 
 ### 조사 (6)
@@ -1417,7 +1441,7 @@
 - [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-26
 - [lib/materials — 자료 첨부 (F-017, DEC-058)](../lib/materials/README.md) — `lib/materials/README.md` · 수정 2026-11-26
 - [lib/matters — 사건 진행 (F-016, DEC-053)](../lib/matters/README.md) — `lib/matters/README.md` · 수정 2026-11-26
-- [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-21
+- [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-26
 - [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-26
 - [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-25
 - [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-26
