@@ -39,9 +39,12 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | 404 | `NOT_FOUND` | 리소스 없음. **판례·조문 404는 "검증 근거에 없음"을 뜻하며 대체 내용을 생성하지 않음** | F-003 AC3 |
 | 409 | `CONSENT_REQUIRED` | 필요한 동의 없음 (`details.kind`) | F-007 AC2, F-009 AC2, F-015 AC1 |
 | 409 | `INVALID_STATE` | 허용되지 않는 상태 전이 | F-012 AC3 |
+| 409 | `DUPLICATE_QUESTION` | 같은 요청자가 10분 안에 분석을 마친 똑같은 질문 (`details.inquiryId` = 앞의 질문, 화면은 그 결과로 간다) | DEC-072 |
 | 422 | `PII_CONFIRMATION_REQUIRED` | PII 탐지 후 사용자 확인 전 분석 요청 | F-007 AC1 |
 | 422 | `BRIEF_NEEDS_EDIT` | 간접 식별 위험 | F-011 AC2 |
-| 429 | `RATE_LIMITED` | 호출 한도 초과 | — |
+| 422 | `OFF_TOPIC` | 법률과 상관없는 요청·지시문 바꾸기 (`details.reason`: `off_topic`·`instruction`·`model`). 저장하지 않음 | DEC-072 |
+| 422 | `REPETITIVE_INPUT` | 같은 문장·구절을 되풀이해 부풀린 글. 저장하지 않음 | DEC-072 |
+| 429 | `RATE_LIMITED` | 호출 한도 초과. `details.reason: "abuse"`는 거절 경고 한도(DEC-072) | DEC-072 |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 서버 오류. 메시지는 고정 문구, 예외 내용은 응답·로그에 넣지 않음 | F-007 |
 | 502 | `SEARCH_UPSTREAM_FAILED` | 검색 저장소·외부 데이터 오류, 데모에서는 korean-law-mcp·법제처 호출 실패 (결과 없음과 구분) | F-006 AC2 |
 | 502 | `MODEL_FAILED` | LLM 호출 실패 | F-006 AC2 |
@@ -71,6 +74,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029 |
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
+| GET·POST `/laws` | 공개 | 현행 법령 이름 검색(부분 일치) | DEC-029 |
 | POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
 | POST `/materials/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 질문·검색에 붙인 자료 사진 판독 → 가린 자료 정리·검색어 후보 | F-017 AC1·AC2 |
 | POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
@@ -79,7 +83,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | POST `/matters/issues` | user | 쟁점 정리(가린 글 → 검색·답변·인용 검증) | F-016 AC3 |
 | POST `/matters/company` | user | 기업 조사(웹 검색·가져오기 요약 + 공식 API) | F-016 AC4 |
 | POST `/matters/summarize` | user | 찾은 글을 노트용으로 줄이기 | F-016 AC5 |
-| POST `/matters/auto` | user | 자동 정리(제목·법 분야·한 줄 요약, Haiku) | F-016 DEC-070 |
+| POST `/matters/auto` | user | 자동 정리(제목·법 분야·한 줄 요약, Haiku) | F-016 DEC-073 |
 | POST `/results/{id}/feedback` | 소유자 | 도움 여부 | 14 |
 | DELETE `/me/data` | anon(같은 익명 세션)·user | 내 기록 삭제·삭제 요청 | 9.2 |
 | GET `/admin/feature-gates` · PATCH `/admin/feature-gates/{key}` | admin | 게이트 조회·변경 | F-013 |
@@ -107,7 +111,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
   maskedText: string;
   piiConfirmationRequired: boolean }   // PII가 탐지됐으면 true → pii-confirmation 후 분석
 ```
-에러: `EMPTY_INPUT`, `VALIDATION_ERROR`, `CONSENT_REQUIRED`(민감정보 가능성 + 동의 없음, `details.categories`: `health`/`criminal_record`), `LOGIN_REQUIRED`(익명 세션이 이미 3회 사용), `FORBIDDEN`·`INVALID_STATE`(`parentInquiryId`가 남의 것이거나 분석 전), `RATE_LIMITED`.
+에러: `EMPTY_INPUT`, `VALIDATION_ERROR`, `CONSENT_REQUIRED`(민감정보 가능성 + 동의 없음, `details.categories`: `health`/`criminal_record`), `LOGIN_REQUIRED`(익명 세션이 이미 3회 사용), `FORBIDDEN`·`INVALID_STATE`(`parentInquiryId`가 남의 것이거나 분석 전), `RATE_LIMITED`, `OFF_TOPIC`·`REPETITIVE_INPUT`·`DUPLICATE_QUESTION`(DEC-072 남용 막기 — analyze도 모델 전에 같은 검사를 한다).
 민감정보(건강·범죄경력) 가능성이 있으면 **동의 전에는 저장하지 않는다**: `409 CONSENT_REQUIRED`를 받은 클라이언트가 동의 화면을 보여 준 뒤 같은 입력을 `sensitiveConsent: true`로 다시 보낸다 (DATA_MODEL `[PII-S]` "별도 동의 후 저장").
 원문은 PII 필터 처리 후 즉시 버리며 DB·응답·로그 어디에도 남기지 않는다 — 저장되는 것은 `maskedText`뿐 (DEC-006).
 비로그인 질문은 "가벼운 답변"으로 처리한다: 추가 질문 없이 질문마다 분석 한 번만 제공 (범위 상세는 OQ-API-08).
@@ -219,10 +223,11 @@ type DemoAnalysisResult = {
     | { kind: "custom"; title: string; steps: { label: string; difficulty: "self"|"depends"|"expert"; prepare: string[]; cautions: string[] }[] };
 }
 ```
-- **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro Max(DEC-050, 이전 Pro). 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
+- **요청 본문(선택, DEC-036)**: `{ tier?: "light" | "pro" | "max" | null }` — 사용자가 고른 답변 단계(Light Haiku · Pro Sonnet · Pro Max Opus). 없으면 Pro(DEC-069, 이전 Pro Max — DEC-050). 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["tier"]`). 무료 모드·예시 질문·주간 예산 초과면 무시된다.
 - **아카이브 재생(DEC-057)**: 질문이 전문 에이전트 아카이브 질문과 같으면 예시 질문처럼 저장된 분석을 재생한다(횟수·예산 차감 없음, `mode: "replay"`).
 - **요청 본문(선택, DEC-057)**: `{ assistant?: "home" | "report" | "market" | null }` — 분야별 비서 대화(F-018)로 보낸 질문. 라이트 답변에 그 비서의 지시문을 붙이고, 카테고리가 없으면 비서의 고정 판례 검색어·조문을 쓰며, 질문 낱말에 맞는 사례 판례(둘까지)를 법제처에서 다시 가져와 근거에 더한다. 답변 단계는 본문 `tier`와 상관없이 Pro Max(지금 Opus 5.5 effort high, DEC-050)로 고정하고(상한·예산 가중치도 그 단계), 같은 상한 안에서 Haiku 대화 한마디(`assistantTalk`)를 더한다. 횟수·인용 검증은 같다. 저장하지 않고 결과에 `assistant`·`assistantTalk`만 남긴다. 세 값이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["assistant"]`).
-- **요청 본문(선택, DEC-038)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 질문을 이미 분석 중이면 새로 시작하지 않고 `409 INVALID_STATE` + `details: { reason: "in_progress" }`(DEC-065 분석 잠금 — 화면은 결과가 저장될 때까지 GET 결과를 다시 읽는다). 가린 질문이 100자를 넘으면 이 값과 상관없이 DeepSearch(Opus 5.5 effort xhigh, 사건 정리판 포함)로 분석한다(DEC-062). 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
+- **요청 본문(선택, DEC-070)**: `{ archive?: boolean; focusCases?: string[] }` — 판례 아카이브 질문창(`/search`·`/research`·`/cases/{id}`)에서 보낸 질문. `archive: true`면 답변 단계를 본문 `tier`와 상관없이 **Light(Haiku 5.5)로 고정**한다(긴 질문은 Light의 긴 질문 설정 — 같은 Haiku, 상한·예산 가중치도 그 단계). `focusCases`는 사용자가 보고 있던 판례의 법제처 일련번호(숫자, 최대 `ARCHIVE_FOCUS_MAX`=2)로, 그 요청에서 법제처로 다시 가져와 근거 모음 앞에 더한다(가져오지 못하면 빠진다, 검증은 다른 근거와 같다). 횟수·개인정보·인용 검증·`AI_NOTICE`는 일반 질문과 같다. 저장하지 않는다. `archive`가 참·거짓이 아니거나, `archive` 없이 `focusCases`를 주거나, 꼴이 다르거나, `assistant`와 함께 주면 `400 VALIDATION_ERROR`(`details.fields`).
+- **요청 본문(선택, DEC-038)**: `{ deep?: boolean }` — DeepSearch로 보낸 질문. 같은 질문을 이미 분석 중이면 새로 시작하지 않고 `409 INVALID_STATE` + `details: { reason: "in_progress" }`(DEC-065 분석 잠금 — 화면은 결과가 저장될 때까지 GET 결과를 다시 읽는다). 가린 질문이 100자를 넘으면 이 값과 상관없이 DeepSearch(고른 단계의 긴 질문 설정 — DEC-069로 xhigh는 쓰지 않는다, 사건 정리판 포함)로 분석한다(DEC-062). 같은 비용 상한 안에서 모델에 넘겨 보는 근거를 조문 8·판례 4건까지 넓힌다. 참·거짓이 아니면 `400 VALIDATION_ERROR`(`details.fields: ["deep"]`).
 - **요청 본문(선택, DEC-028)**: `{ category?: "lease"|"deposit"|"labor"|"fraud"|"traffic"|"neighbor"|"loan"|"family"|"inheritance"|"consumer"|"defamation"|"insult"|"assault"|"stalking"|"sex_crime"|"voice_phishing"|"crime_report"|"workplace_harassment"|"industrial_accident"|"domestic_violence"|"school_violence"|"medical"|"privacy"|"commercial_lease"|"respond_civil"|"respond_criminal"|"admin_appeal"|"debt_relief" | null }` — 홈 카테고리 버튼 값. 무료 법제처 판례 검색(무료 모드·라이트 답변)에 그 분야의 고정 판례 검색어(`lib/procedure/categories` `caseQuery`)를 하나 더할 뿐 분류·답변을 바꾸지 않는다. 본문이 없으면 카테고리 없음, 정해진 값이 아니거나 JSON이 깨졌으면 소유자 확인 전에 `400 VALIDATION_ERROR`(`details.fields: ["category"]` 또는 `reason: "invalid_json"`). 저장하지 않는다.
 - **예시 답변 화면(DEC-028)**: 홈의 예시 카드는 이 API를 쓰지 않는다. `/examples/[id]`가 저장된 예시 분석(`mode: "replay"`와 같은 형식)을 빌드 때 정적으로 렌더링한다 — 질문 생성·분석·저장·횟수 차감 없음.
 - **무료 모드(기본, DEC-015)**: Claude를 부르지 않는다. 질문이 예시 질문과 같으면 `mode: "replay"`(저장된 검증 결과), 아니면 `mode: "search_only"`(법제처 조문·판례 목록, 답변 문단 없음). 저장·비로그인 차감은 유료 분석과 같다. 무료 모드는 `AI_MODE=free`이거나 API 키가 없거나 주간 예산을 넘었을 때다 — 그 밖에는 `tier`의 모델로 실제 분석을 한다(DEC-036).
@@ -286,6 +291,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 ### GET·POST `/ordinances` · GET `/ordinances/{id}` · GET·POST `/admin-rules` (DEC-029 제안)
 - 자치법규 검색 → `{ items: [{ id, name, region, kind, effectiveFrom, promulgatedAt, sourceUrl }], outcome, searchScopeNote, notice }`, 상세 → `{ ...위 항목, articles: [{ articleNo, title, text }], notice }`. `id` = 법제처 자치법규일련번호.
 - 행정규칙 검색 → `{ items: [{ id, name, kind, agency, issuedAt, effectiveFrom, sourceUrl }], … }` — 현행만, 본문은 법제처 원문 링크로.
+- 법령 이름 검색 `/laws` → `{ items: [{ id, name, kind, agency, promulgatedAt, effectiveFrom, sourceUrl }], outcome, searchScopeNote, notice }` — 이름에 검색어가 든 현행 법령(법률·대통령령·총리령·부령). 정식 이름을 몰라도 낱말 일부("의료기기")로 찾는다. `id` = 법령일련번호(MST), `kind` = 법령구분명, 순서는 법제처 응답(가나다순) 그대로이고 관련도 순위를 매기지 않는다. 상세는 `/laws/{name}/{view}`. `limit` 기본 30·최대 100.
 - 검색어 규칙·상한은 `/cases`와 같다.
 
 ### POST `/casefiles/read` (F-015, DEC-052)
@@ -322,7 +328,7 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - **서류 읽기** `POST /matters/read` `{ images, consent: { images: true, sensitive: true } }`(검증·동의는 `/casefiles/read`와 같다) → `{ reading: { doc, parties[], relations[], facts[], demands[], clauses: { ref, gist, url? }[] } | null, citations: { checked, removed, failed } | null, ai, notice }`. 사진은 Haiku 비전 호출 한 번에만 가고 저장하지 않는다. 읽은 결과(당사자 이름·서류 날짜 포함) 속 법령 조문·사건번호는 법제처 재조회로 실존이 확인된 것만 남는다(띄어 쓴 긴 법령 이름·「」 이름·앞 조문에 이어 쓴 조문까지 잡고, "같은 법 제N조"·"일본 민법"·"구 민법"처럼 법령을 정할 수 없는 조문은 재조회하지 않고 늘 가린다. 재조회 문자열에 당사자 이름이 섞이면 법제처로 보내지 않고 가린다. 재조회 전체는 25초 한도. 확인 안 된 것은 글에서 `〔확인 안 된 조문〕`·`〔확인 안 된 사건번호〕`로 가리고 조항 목록에서 뺀다, 재조회 실패면 `failed: true`로 모두 가림). 확인된 법령 조항에는 법제처 주소(`url`)가 붙는다. `citations`는 개수만 싣는다. 결과도 여기서 저장하지 않는다(화면이 사건 자료에 합쳐 `PUT`으로 저장).
 - **쟁점 정리** `POST /matters/issues` `{ text (10,000자 이하), matterId, personNames?, tier?, consent: true }` → `{ issues: { title, points: { text, label, url }[] }[], unknowns: string[], ai, notice }`. 글은 서버가 `scanInput` + 이름 목록으로 가린 뒤에만 모델·법제처 검색으로 보낸다. 이름 목록은 서버가 `matterId`의 저장된 당사자에서 직접 모으고(`maskNamesOf` — 개인 전부, 종류를 잘못 고른 사람 이름 꼴 포함) 브라우저가 보낸 `personNames`를 더한다. 남의 사건·없는 사건은 `404`, `matterId`가 없으면 `400`. `points`는 인용 검증을 통과하고 출처가 응답 목록에 있는 문단뿐이다. 동의가 없으면 `409 CONSENT_REQUIRED`.
 - **기업 조사** `POST /matters/company` `{ name (2~60자), matterId, isBusiness?, urls? (공개 http(s) 주소 4개까지), pasted? (6,000자 이하), personNames?, consent? }` → `{ report: { overview, products[], business, items[], basics[], unknowns[] } | null, sources: { title, url }[], found: { title, url }[], unread: string[], official: { places, corps, blogs }, links, ai, notice, sourceNotice }`. Opus 5.5 + Claude 웹 검색(4회)·웹 가져오기(6회, 글 3,000토큰까지) 도구를 쓴다. `sources`는 도구가 실제로 읽은 페이지, `found`는 검색 결과에 나온 페이지, `unread`는 준 링크 가운데 읽지 못한 것(자동 접근을 막은 것으로 확인된 네이버 블로그는 도구에 넘기지 않고 바로 여기에 싣는다). 사람 이름 꼴의 이름은 `reason: "not_business"`, 상호·기관 표지가 없는데 `isBusiness: true`(사용자의 "회사·기관 이름" 확인)가 없으면 `reason: "confirm_business"`, 개인 계정 사이트 링크는 `reason: "personal_site"`로 거절한다. 모델이 이름을 사람으로 보고 거절하면 `ai: { used: false, reason: "person" }`(쓴 금액은 정산)이고, 같은 이름으로 찾은 `official`은 빈 목록, `links`는 `[]`로 돌려준다. 로마자 사람 이름 꼴("Jane Doe")은 확인이 있어도 `not_business`(회사는 Inc.·Ltd. 같은 표지를 붙여 적는다). 결과에는 공개 자료 속 대표자 이름이 `basics`의 "대표자: …" 한 항목에만 남을 수 있고, 그 밖의 항목에서 사람 이름이 보이는 문장은 서버가 뺀다(DEC-053). 사용자별 하루 횟수는 공식 API를 부르기 전에 본다. 공식 API(네이버 지역·블로그 검색, 금융위)는 상호·기관 표지가 있는 이름이면 먼저 찾아 검색 요약문을 모델에 함께 주고, 표지 없이 `isBusiness`로만 통과한 이름은 모델이 회사로 보고 조사를 마친 뒤에만 찾는다(무료 모드·예산 초과·거절이면 보내지 않고 `official`은 빈 목록, `links`는 `[]`). 붙여 넣은 글에 민감정보가 보이면 `consent: true` 없이는 `409`. 붙여 넣은 글과 검색 요약문은 위 쟁점 정리와 같은 이름 목록(`matterId`의 당사자 + `personNames`)으로 가린 뒤 보낸다. 사설·로컬 주소나 연락처가 섞인 이름은 `400`. 평가·전망 문장과 검증하지 않은 조문·사건번호가 든 문장은 결과에서 뺀다.
-- **자동 정리 (DEC-070)** `POST /matters/auto` `{ matterId }` → `{ auto: { field, gist, sig, at } | null, title, ai, notice }`. 저장된 사건 자료로 법 분야(고정 목록 `MATTER_FIELDS`)·한 줄 요약과, 이름을 비워 만든 사건(`data.titleAuto`)이면 제목을 Haiku 5.5 1회로 만든다 — 화면용 자동 생성은 단계 선택과 상관없이 언제나 Haiku(사용자 절대 규칙 2026-11-27). 자료 지문(`autoSig`: 서류·사실·당사자·쟁점·요구 수와 사건 요약)이 그대로면 `reason: "unchanged"`, 자료가 비었으면 `"empty"`, 가린 글에 민감정보가 보이면 동의 화면이 없는 자동 경로라 보내지 않고 `"sensitive"`. 모델에는 쟁점 정리와 같은 방식으로 이름·연락처를 가린 글만 보낸다. 하루 횟수는 다른 사건 AI 기능과 따로 로그인 사용자 하루 120회(`MATTER_AUTO_RATE`, 임시값)로 세고, 쓰기 횟수 제한(`WRITE_RATE`)·전체 예산·금액 상한(요약과 같은 $0.002)도 받는다. 모델이 실패했거나 쓸 결과가 없으면 그 지문을 `data.autoFailedSig`에 남겨 같은 자료로 다시 부르지 않는다. 제목·요약의 숫자가 보낸 자료에 없으면 버리고, 저장(`PUT`) 때 브라우저가 보낸 `auto` 요약도 같은 규칙으로 다시 거른다. 결과는 읽은 뒤 사건이 고쳐지지 않았을 때만 저장하고(`updated_at` 조건) 목록 순서를 바꾸지 않는다. 단정·판정·유불리 표현, 검증하지 않은 조문·사건번호, 가림 표시·개인정보 꼴이 든 제목·요약은 버린다. `POST /matters`에서 `title`을 비우면 제목 "새 사건"·`titleAuto: true`로 만든다. 목록 `GET /matters`의 항목에는 `field`·`gist`·`summary`·`stale`(다시 정리할 때)이 더 붙는다.
+- **자동 정리 (DEC-073)** `POST /matters/auto` `{ matterId }` → `{ auto: { field, gist, sig, at } | null, title, ai, notice }`. 저장된 사건 자료로 법 분야(고정 목록 `MATTER_FIELDS`)·한 줄 요약과, 이름을 비워 만든 사건(`data.titleAuto`)이면 제목을 Haiku 5.5 1회로 만든다 — 화면용 자동 생성은 단계 선택과 상관없이 언제나 Haiku(사용자 절대 규칙 2026-11-27). 자료 지문(`autoSig`: 서류·사실·당사자·쟁점·요구 수와 사건 요약)이 그대로면 `reason: "unchanged"`, 자료가 비었으면 `"empty"`, 가린 글에 민감정보가 보이면 동의 화면이 없는 자동 경로라 보내지 않고 `"sensitive"`. 모델에는 쟁점 정리와 같은 방식으로 이름·연락처를 가린 글만 보낸다. 하루 횟수는 다른 사건 AI 기능과 따로 로그인 사용자 하루 120회(`MATTER_AUTO_RATE`, 임시값)로 세고, 쓰기 횟수 제한(`WRITE_RATE`)·전체 예산·금액 상한(요약과 같은 $0.002)도 받는다. 모델이 실패했거나 쓸 결과가 없으면 그 지문을 `data.autoFailedSig`에 남겨 같은 자료로 다시 부르지 않는다. 제목·요약의 숫자가 보낸 자료에 없으면 버리고, 저장(`PUT`) 때 브라우저가 보낸 `auto` 요약도 같은 규칙으로 다시 거른다. 결과는 읽은 뒤 사건이 고쳐지지 않았을 때만 저장하고(`updated_at` 조건) 목록 순서를 바꾸지 않는다. 단정·판정·유불리 표현, 검증하지 않은 조문·사건번호, 가림 표시·개인정보 꼴이 든 제목·요약은 버린다. `POST /matters`에서 `title`을 비우면 제목 "새 사건"·`titleAuto: true`로 만든다. 목록 `GET /matters`의 항목에는 `field`·`gist`·`summary`·`stale`(다시 정리할 때)이 더 붙는다.
 - **요약** `POST /matters/summarize` `{ text (6,000자 이하), matterId, personNames?, consent? }` → `{ lines: string[], ai, notice }`. 이름 목록은 쟁점 정리와 같다. 민감정보로 보이는 글은 `consent: true` 없이는 `409`. 단정·판정 표현과 검증하지 않은 조문·사건번호가 든 줄은 뺀다.
 - **AI 사용량**: 네 AI 경로는 사용자별 하루 30회(`429 RATE_LIMITED`, `reason: "matter_ai_daily"`, 관리자 모드 제외)와 전체 예산을 받는다. 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai: { used: false, reason }`으로 알린다. 호출별 상한(임시값): 서류 읽기 $0.008 · 요약 $0.002 · 쟁점 정리는 고른 단계의 DeepSearch 상한. 기업 조사는 건당 상한이 없고(예산에서 $1.5를 잡아 두고 웹 검색 요금을 포함한 실제 금액으로 정산, 넘으면 넘은 몫을 더 차감) 전체 예산만 받는다. 예상 밖 오류로 실제 금액을 모르면 잡아 둔 금액을 모두 쓴 것으로 정산한다.
 

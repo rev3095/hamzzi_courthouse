@@ -124,7 +124,7 @@ export async function saveMatter(
 }
 
 /**
- * 자동 정리(DEC-070) 결과만 붙인다. 사용자가 고친 것이 아니라 목록 순서(updated_at)는 그대로 둔다.
+ * 자동 정리(DEC-073) 결과만 붙인다. 사용자가 고친 것이 아니라 목록 순서(updated_at)는 그대로 둔다.
  * 읽은 때(updatedAt)와 달라졌으면(그 사이 화면이 자료를 저장함) 덮어쓰지 않는다 — 화면이 받은 정리를 다음 저장 때 함께 보낸다.
  */
 export async function saveMatterAuto(

@@ -65,7 +65,7 @@ export const MATTER_READ_COST_CAP_USD = 0.015;
 export const MATTER_READ_TOKENS = { max: 6_000, min: 1_500 } as const;
 export const MATTER_SUMMARY_COST_CAP_USD = 0.002;
 export const MATTER_SUMMARY_TOKENS = { max: 700, min: 200 } as const;
-/** 사건 자동 정리(DEC-070, 제목·분야·한 줄 요약): Haiku 고정, 상한은 요약과 같은 MATTER_SUMMARY_COST_CAP_USD */
+/** 사건 자동 정리(DEC-073, 제목·분야·한 줄 요약): Haiku 고정, 상한은 요약과 같은 MATTER_SUMMARY_COST_CAP_USD */
 export const MATTER_AUTO_TOKENS = { max: 400, min: 120 } as const;
 /**
  * 기업 조사에는 건당 상한을 두지 않는다 (사용자 결정 2026-11-24, DEC-053 — 이전 $0.2).
