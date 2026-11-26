@@ -61,6 +61,8 @@ export const DOCUMENT_KINDS = [
   "answer",
   "order-objection",
   "decision-objection",
+  "settlement",
+  "complaint-withdrawal",
 ] as const satisfies readonly DocumentKind[];
 
 export const isDocumentKind = (v: string): v is DocumentKind =>

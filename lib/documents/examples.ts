@@ -202,6 +202,39 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
       },
     },
   ],
+  settlement: [
+    {
+      title: "게임 채팅 욕설 사건에서 사과를 받고 합의한 경우",
+      values: {
+        victimName: ME.name,
+        victimAddress: "",
+        offenderName: OTHER.name,
+        offenderAddress: OTHER.address,
+        policeStation: "볍씨경찰서",
+        incident:
+          "2026년 10월 12일 도토리 온라인 게임 채팅에서 있었던 욕설로 고소가 접수되었습니다.",
+        terms:
+          "가해자는 피해자에게 글로 사과하였습니다.\n가해자는 같은 일을 되풀이하지 않기로 하였습니다.",
+        amount: "",
+        writtenOn: "2026-11-05",
+      },
+    },
+  ],
+  "complaint-withdrawal": [
+    {
+      title: "사과를 받고 모욕 고소를 취소하는 경우",
+      values: {
+        complainantName: ME.name,
+        complainantAddress: "",
+        accusedName: OTHER.name,
+        accusedAddress: OTHER.address,
+        crime: "모욕",
+        policeStation: "볍씨경찰서",
+        reason: "피고소인에게서 사과를 받았고, 같은 일을 되풀이하지 않겠다는 약속을 받았습니다.",
+        writtenOn: "2026-11-05",
+      },
+    },
+  ],
   "demand-letter": [
     {
       title: "커뮤니티 글의 삭제와 손해배상을 요구하는 경우",

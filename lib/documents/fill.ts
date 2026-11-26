@@ -4,10 +4,12 @@
 import type { DocumentKind } from "@/lib/procedure/steps";
 import {
   answer,
+  complaintWithdrawal,
   decisionObjection,
   defamationComplaint,
   obscenityComplaint,
   orderObjection,
+  settlement,
   tradeFraudComplaint,
 } from "./fill-assistant";
 import { compensationOrder, criminalComplaint } from "./fill-criminal";
@@ -88,6 +90,10 @@ export function fillBlocks(
         basename: "이행권고결정_이의신청서",
         blocks: decisionObjection(v),
       };
+    case "settlement":
+      return { title: "합의서", basename: "합의서", blocks: settlement(v) };
+    case "complaint-withdrawal":
+      return { title: "고소취소장", basename: "고소취소장", blocks: complaintWithdrawal(v) };
     case "criminal-complaint":
       return { title: "고소장 (사기)", basename: "고소장_사기", blocks: criminalComplaint(v) };
     case "compensation-order":

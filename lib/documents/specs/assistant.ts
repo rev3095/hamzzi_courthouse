@@ -2,6 +2,7 @@
 // 내려받아 대조한 양식(2026-11-26, docs/research/05 8절):
 // - 고소장 3종: 경찰청 경찰민원24 민원 서식 [수사] 간이고소장(모욕,명예훼손) · [수사] 고소장(표준, 중고거래 사기·통신매체이용음란에 씀)
 // - 받은 쪽 민사 3종: 법원 전자민원센터 양식모음 [민사] 답변서 · 지급명령에 대한 이의신청서(A2335) · 이행권고결정에 대한 이의신청서(A2412-1)
+// - 고소당한 쪽 형사 2종: 경찰청 경찰민원24 민원 서식 [수사] 합의서 · [수사] 고소취소장 (둘 다 피해자·고소인이 서명하는 문서)
 // 고소장은 진실확약(무고 서약)이 붙는 문서라 AI 초안(DEC-023)을 쓰지 않는다. 수사·재판 결과를 예측하지 않는다(절대 규칙 2).
 // 기간 숫자는 우리가 쓰지 않고, 공식 양식의 유의 사항 문장을 출처와 함께 그대로 인용한다(officialNotice, 절대 규칙 3).
 // 참고한 민간 예시(중고거래 사기 고소장)에서는 범죄사실에 넣을 '사실 항목'만 반영했고 문장·틀은 옮기지 않았다.
@@ -804,12 +805,158 @@ export const ASSISTANT_SPECS = {
       { title: "받은 날·작성일", fields: ["servedOn", "writtenOn"] },
     ],
   },
+
+  settlement: {
+    kind: "settlement",
+    title: "합의서",
+    stepLabel: "피해 회복·합의 협의",
+    intro:
+      "수사 중인 사건에서 피해자와 가해자가 합의한 내용을 적어 사건 담당자에게 내는 문서예요. 서명은 피해자가 내용을 다 읽고 직접 해요. 경찰청 합의서 양식의 순서(피해자 · 가해자 · 합의 내용 · 피해자 서명)를 따랐어요.",
+    tips: [
+      "합의서는 피해자가 스스로 정해 서명하는 문서예요. 미리 적어 가더라도 대신 서명하거나 서명을 재촉하면 안 돼요.",
+      "피해자에게 직접 연락하지 말고, 담당 수사관이나 변호인을 통해 뜻을 확인하세요. 연락이나 접근을 막는 조치가 내려져 있으면 연락하는 것부터 문제가 돼요.",
+      "피해자의 주소처럼 모르는 정보는 비워 두세요. 알아내려고 하지 말고, 피해자가 직접 적게 두세요.",
+      "문서 아래쪽의 '처벌을 원하지 않습니다'와 '이의를 제기하지 않겠습니다'는 빈 칸으로 나와요. 피해자가 뜻을 정했을 때 손으로 직접 표시해요.",
+      "'이의를 제기하지 않겠습니다'에 표시하면 나중에 손해배상을 청구하기 어려워질 수 있어요. 피해자가 그 뜻을 알고 정해야 해요.",
+      "무엇을 언제 어떻게 하기로 했는지를 있는 그대로 적어요. 아직 하지 않은 일을 이미 한 것처럼 적지 않아요.",
+      "합의가 절차에 주는 영향은 죄의 종류에 따라 달라요. 담당 수사관이나 전문가에게 확인하세요.",
+      "혐의를 다투는 경우에는 합의가 해당하지 않을 수 있어요. 할지 말지는 본인이 정해요.",
+      "본인이 아닌 사람이 대신 낼 때 필요한 서류(위임장 등)는 양식의 안내와 사건 담당자에게 확인하세요.",
+    ],
+    links: [OFFICIAL.police, OFFICIAL.klac],
+    officialForms: [{ name: "[수사] 합의서", source: POLICE_SOURCE, url: POLICE_FORMS }],
+    basis: ["법령이 정한 서식이 아니에요 (경찰 민원 서식의 순서를 따랐어요)"],
+    draftFields: "",
+    fields: [
+      name("victimName", "피해자 이름", "합의서에 서명하는 사람이에요."),
+      {
+        ...address("victimAddress", "피해자 주소"),
+        optional: true,
+        help: "피해자가 직접 적는 칸이에요. 모르면 비워 두고, 알아내려고 하지 마세요.",
+      },
+      name(
+        "offenderName",
+        "가해자 이름",
+        "신고나 고소를 당한 사람이에요. 양식에서 쓰는 이름이에요.",
+      ),
+      {
+        ...address("offenderAddress", "가해자 주소"),
+        help: "도로명주소와 동·호수까지 적어요.",
+      },
+      {
+        key: "policeStation",
+        label: "사건을 맡은 경찰서",
+        type: "text",
+        max: 50,
+        help: "신고나 고소를 받은 경찰서예요. 합의서는 사건 담당자에게 내요.",
+        example: "○○경찰서",
+      },
+      {
+        key: "incident",
+        label: "어떤 사건인가요",
+        type: "textarea",
+        max: LONG,
+        help: "언제 어디서 어떤 일이 있었고 신고나 고소가 있었는지 사실만 적어요.",
+        example: "○월 ○일 ○○ 게임 채팅에서 있었던 일로 신고가 접수되었습니다.",
+      },
+      {
+        key: "terms",
+        label: "합의한 내용",
+        type: "textarea",
+        max: LONG,
+        help: "서로 하기로 한 일을 적어요. 사과, 글 삭제, 돈을 주고받는 방법과 때 같은 것이에요.",
+        example: "가해자는 피해자에게 사과하고 문제가 된 글을 지우기로 하였습니다.",
+      },
+      {
+        key: "amount",
+        label: "주고받는 돈 (있을 때만)",
+        type: "money",
+        max: 20,
+        optional: true,
+        help: "돈을 주고받기로 했다면 그 금액을 숫자로 적어요. 없으면 비워 두세요.",
+      },
+      { ...writtenOn, help: "합의서를 쓰는 날이에요. 비워 두면 직접 적을 수 있어요." },
+    ],
+    pages: [
+      { title: "피해자", help: RRN_NOTICE, fields: ["victimName", "victimAddress"] },
+      { title: "가해자", fields: ["offenderName", "offenderAddress"] },
+      { title: "어떤 사건인가요", fields: ["policeStation", "incident"] },
+      { title: "합의한 내용", fields: ["terms", "amount"] },
+      { title: "작성일", fields: ["writtenOn"] },
+    ],
+  },
+
+  "complaint-withdrawal": {
+    kind: "complaint-withdrawal",
+    title: "고소취소장",
+    stepLabel: "피해 회복·합의 협의",
+    intro:
+      "고소한 사람이 그 고소를 취소한다고 수사기관에 알리는 문서예요. 고소한 사람이 스스로 정해 쓰고 서명해요 — 고소당한 사람이 대신 서명할 수 없어요. 고소를 취소하면 같은 일로 다시 고소할 수 없어요. 경찰청 고소취소장 양식의 순서(고소인 · 피고소인 · 취소 내용 · 고소인 서명)를 따랐어요.",
+    tips: [
+      "고소를 취소하면 같은 일로 다시 고소할 수 없어요. 내기 전에 충분히 생각하고, 어렵다면 전문가 상담을 권해요.",
+      "고소당한 사람이 이 문서를 미리 적어 가더라도 서명을 재촉하면 안 돼요. 고소한 사람에게 직접 연락하지 말고 담당 수사관이나 변호인을 통해 뜻을 확인하세요. 연락이나 접근을 막는 조치가 내려져 있으면 연락하는 것부터 문제가 돼요.",
+      "고소한 사람의 주소처럼 모르는 정보는 비워 두세요. 알아내려고 하지 마세요.",
+      "받기로 한 것이 있다면 실제로 받았는지, 아직이라면 어떻게 받기로 했는지를 사유에 있는 그대로 적어요.",
+      "취소가 절차에 주는 영향은 죄의 종류에 따라 달라요. 담당 수사관에게 확인하세요.",
+      "본인이 아닌 사람이 대신 낼 때 필요한 서류(위임장 등)는 양식의 안내와 사건 담당자에게 확인하세요.",
+    ],
+    links: [OFFICIAL.police, OFFICIAL.klac],
+    officialForms: [{ name: "[수사] 고소취소장", source: POLICE_SOURCE, url: POLICE_FORMS }],
+    basis: ["형사소송법 제232조(고소의 취소)"],
+    draftFields: "",
+    fields: [
+      name("complainantName", "고소인 이름", "고소를 한 사람이에요. 이 문서에 서명해요."),
+      {
+        ...address("complainantAddress", "고소인 주소"),
+        optional: true,
+        help: "고소인이 직접 적는 칸이에요. 모르면 비워 두고, 알아내려고 하지 마세요.",
+      },
+      name("accusedName", "피고소인 이름", "고소를 당한 사람이에요."),
+      {
+        ...address("accusedAddress", "피고소인 주소"),
+        optional: true,
+        help: "알면 적고, 모르면 비워 두세요.",
+      },
+      {
+        key: "crime",
+        label: "어떤 혐의로 고소했나요",
+        type: "text",
+        max: 60,
+        help: "고소장에 적은 죄명을 그대로 옮겨요.",
+        example: "모욕",
+      },
+      {
+        key: "policeStation",
+        label: "고소한 경찰서",
+        type: "text",
+        max: 50,
+        example: "○○경찰서",
+      },
+      {
+        key: "reason",
+        label: "취소하는 사유",
+        type: "textarea",
+        max: LONG,
+        help: "왜 취소하는지 있는 그대로 적어요. 취소하면 같은 일로 다시 고소할 수 없어요.",
+        example: "피고소인에게서 사과를 받고 문제가 된 글이 지워진 것을 확인하였습니다.",
+      },
+      { ...writtenOn, help: "고소취소장을 내는 날이에요. 비워 두면 직접 적을 수 있어요." },
+    ],
+    pages: [
+      { title: "고소인", help: RRN_NOTICE, fields: ["complainantName", "complainantAddress"] },
+      { title: "피고소인", fields: ["accusedName", "accusedAddress"] },
+      { title: "어떤 고소인가요", fields: ["crime", "policeStation"] },
+      { title: "취소하는 사유·작성일", fields: ["reason", "writtenOn"] },
+    ],
+  },
 } satisfies Record<
   | "defamation-complaint"
   | "trade-fraud-complaint"
   | "obscenity-complaint"
   | "answer"
   | "order-objection"
-  | "decision-objection",
+  | "decision-objection"
+  | "settlement"
+  | "complaint-withdrawal",
   DocumentSpec
 >;

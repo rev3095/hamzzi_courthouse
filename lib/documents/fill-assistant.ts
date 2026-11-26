@@ -280,3 +280,59 @@ export function decisionObjection(v: V): Block[] {
     p(`${v.court} 귀중`),
   ];
 }
+
+/**
+ * 경찰 합의서: 피해자 → 가해자 → 합의 내용 → 피해자 서명.
+ * 처벌 불원·이의 포기는 설문에서 받지 않는다 — 고소당한 사람이 설문을 채울 수 있어, 빈 체크칸으로 인쇄하고 피해자가 손으로 표시하게 한다.
+ */
+export function settlement(v: V): Block[] {
+  return [
+    title("합    의    서"),
+    blank,
+    p(`피 해 자  ${v.victimName}  ${RRN}`),
+    p(`          주소 : ${orBlank(v.victimAddress)}`),
+    p(`가 해 자  ${v.offenderName}  ${RRN}`),
+    p(`          주소 : ${v.offenderAddress}`),
+    blank,
+    heading("사건"),
+    ...lines(v.incident),
+    p(`사건을 맡은 곳 : ${v.policeStation}`),
+    blank,
+    heading("합의 내용"),
+    ...lines(v.terms),
+    ...(v.amount ? [p(`주고받는 돈 : 금 ${formatWon(v.amount)}원`)] : []),
+    blank,
+    heading("피해자의 뜻 (해당하는 곳에 피해자가 직접 표시)"),
+    p("□ 피해자는 가해자의 처벌을 원하지 않습니다."),
+    p("□ 피해자는 차후로 이 사건으로 민·형사상의 이의를 제기하지 않겠습니다."),
+    blank,
+    signDate(v),
+    right(`위 피해자  ${v.victimName}  (인)`),
+    blank,
+    p(`${v.policeStation}장 귀하`),
+  ];
+}
+
+/** 경찰 고소취소장: 고소인 → 피고소인 → 취소 내용 → 고소인 서명. 취소하는 까닭은 사용자가 적은 사유만 쓴다 */
+export function complaintWithdrawal(v: V): Block[] {
+  return [
+    title("고 소 취 소 장"),
+    blank,
+    p(`고 소 인  ${v.complainantName}  ${RRN}`),
+    p(`          주소 : ${orBlank(v.complainantAddress)}`),
+    p(`피고소인  ${v.accusedName}  ${RRN}`),
+    p(`          주소 : ${orBlank(v.accusedAddress)}`),
+    blank,
+    p(
+      `위 고소인은 피고소인 ${v.accusedName}에 대하여 ${v.crime} 혐의로 ${v.policeStation}에 고소한 사실이 있습니다.`,
+    ),
+    heading("취소 사유"),
+    ...lines(v.reason),
+    p("위 고소인은 피고소인에 대한 고소 내용 전체를 취소하고자 합니다."),
+    blank,
+    signDate(v),
+    right(`위 고소인  ${v.complainantName}  (인)`),
+    blank,
+    p(`${v.policeStation}장 귀하`),
+  ];
+}
