@@ -388,6 +388,13 @@ function Shelf() {
           <h2 className="text-ink text-sm font-bold">보관함 {pins.length}</h2>
           {pins.length > 0 && (
             <span className="flex gap-1 whitespace-nowrap">
+              {/* 폴더·메모·내보내기 (DEC-072 ⓒ) */}
+              <Link
+                href="/research/shelf"
+                className="text-link flex min-h-11 items-center px-1 text-[13px] font-semibold underline-offset-2 hover:underline"
+              >
+                정리하기
+              </Link>
               <button
                 type="button"
                 onClick={() => void copy()}
@@ -415,7 +422,10 @@ function Shelf() {
               <li key={p.href}>
                 <Link href={p.href} className={item}>
                   <span className="text-ink text-[13px] font-semibold">{p.title}</span>
-                  <span className="text-muted text-[12px]">{p.sub}</span>
+                  <span className="text-muted text-[12px]">
+                    {p.folder ? `${p.folder} · ` : ""}
+                    {p.sub}
+                  </span>
                 </Link>
               </li>
             ))}
