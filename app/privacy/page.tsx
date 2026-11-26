@@ -62,6 +62,12 @@ export default function PrivacyPage() {
           브라우저의 저장소(localStorage)에 둬요. 검색어와 질문은 담지 않고 서버로 보내지 않아요.
           &lsquo;지우기&rsquo;나 &lsquo;내 기록 삭제&rsquo;를 누르면 지워져요.
         </p>
+        <p>
+          로그인하지 않고 보낸 질문은 왼쪽 &lsquo;내 세션&rsquo; 목록에 보이도록 개인정보를 가린
+          질문 문장·질문 번호·보낸 시각과 직접 붙인 세션 이름만 이 브라우저의 저장소(localStorage)에
+          둬요. 적으신 원문은 담지 않아요. 목록에서 지우거나 &lsquo;내 기록 삭제&rsquo;를 누르면
+          지워져요.
+        </p>
         {googleLogin && (
           <p>
             로그인은 Google 계정으로만 할 수 있어요. Google로 로그인하면 인증 서비스(Supabase

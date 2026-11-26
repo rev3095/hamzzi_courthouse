@@ -106,8 +106,19 @@ export async function saveMatter(
   userId: string,
   id: string,
   patch: { title?: string; data?: MatterData },
-): Promise<{ id: string; updatedAt: string }> {
-  const { data, error } = await createServiceClient()
+): Promise<{ id: string; updatedAt: string }>;
+export async function saveMatter(
+  userId: string,
+  id: string,
+  patch: { title?: string; data?: MatterData; ifUpdatedAt: string },
+): Promise<{ id: string; updatedAt: string } | null>;
+/** ifUpdatedAt을 주면 읽은 뒤 아무도 고치지 않았을 때만 저장하고, 그 사이 고쳐졌으면 null */
+export async function saveMatter(
+  userId: string,
+  id: string,
+  patch: { title?: string; data?: MatterData; ifUpdatedAt?: string },
+): Promise<{ id: string; updatedAt: string } | null> {
+  let query = createServiceClient()
     .from("matters")
     .update({
       ...(patch.title !== undefined && { title: patch.title }),
@@ -115,11 +126,16 @@ export async function saveMatter(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("user_id", userId)
+    .eq("user_id", userId);
+  if (patch.ifUpdatedAt) query = query.eq("updated_at", patch.ifUpdatedAt);
+  const { data, error } = await query
     .select("id, updated_at")
     .maybeSingle<{ id: string; updated_at: string }>();
   if (error) throw new Error("matters 저장 실패");
-  if (!data) throw new ApiError("NOT_FOUND");
+  if (!data) {
+    if (patch.ifUpdatedAt) return null;
+    throw new ApiError("NOT_FOUND");
+  }
   return { id: data.id, updatedAt: data.updated_at };
 }
 

@@ -78,11 +78,24 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     sig,
     at: new Date().toISOString(),
   };
-  const title = m.data.titleAuto && r.out.title ? r.out.title : m.title;
-  await saveMatterAuto(user.userId, id, {
-    title,
-    data: { ...m.data, auto },
-    updatedAt: m.updatedAt,
-  });
+  let title = m.data.titleAuto && r.out.title ? r.out.title : m.title;
+  // 그 사이 화면이 자료를 저장했으면(조건부 저장 실패) 최신 자료에 한 번 더 붙인다 — 자료가 달라졌으면 붙이지 않는다
+  if (
+    !(await saveMatterAuto(user.userId, id, {
+      title,
+      data: { ...m.data, auto },
+      updatedAt: m.updatedAt,
+    }))
+  ) {
+    const latest = await getMatter(user.userId, id);
+    if (autoSig(latest.data) === sig) {
+      title = latest.data.titleAuto && r.out.title ? r.out.title : latest.title;
+      await saveMatterAuto(user.userId, id, {
+        title,
+        data: { ...latest.data, auto },
+        updatedAt: latest.updatedAt,
+      });
+    }
+  }
   return reply(auto, title, { used: true });
 });

@@ -581,6 +581,25 @@ def analysis_lock(conn) -> None:
     conn.execute("delete from auth.users where id = %s", (owner,))
 
 
+
+def session_title(conn) -> None:
+    print("[12] 내 세션 이름 (DEC-073)")
+    owner = make_user(conn)
+    iid = scalar(conn, "insert into public.inquiries (user_id, masked_text, saved) values (%s, '[검증] 마스킹본', true) returning id", (owner,))
+    check(scalar(conn, "select session_title is null from public.inquiries where id = %s", (iid,)) is True,
+          "새 질문은 세션 이름이 비어 있다")
+    conn.execute("update public.inquiries set session_title = '보증금 상담' where id = %s", (iid,))
+    check(scalar(conn, "select session_title from public.inquiries where id = %s", (iid,)) == "보증금 상담",
+          "세션 이름을 바꿀 수 있다")
+    try:
+        with conn.transaction():
+            conn.execute("update public.inquiries set session_title = repeat('가', 61) where id = %s", (iid,))
+        check(False, "61자 이름은 막힌다")
+    except psycopg.errors.CheckViolation:
+        check(True, "61자 이름은 막힌다")
+    conn.execute("delete from auth.users where id = %s", (owner,))
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -591,7 +610,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials, analysis_lock):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials, analysis_lock, session_title):
                         try:
                             with conn.transaction():
                                 step(conn)

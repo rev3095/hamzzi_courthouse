@@ -8,17 +8,20 @@ import { useState } from "react";
 import {
   confirmPii,
   createInquiry,
+  isSignedIn,
   isUserDailyLimit,
   notifyQuotaChanged,
   rememberDeep,
   rememberQuestion,
   type ClientError,
 } from "@/lib/client/api";
+import { addLocalSession } from "@/lib/client/local-sessions";
 import { readSave } from "@/lib/client/save";
 import type { MaterialReading } from "@/lib/materials/limits";
 import type { PiiFinding } from "@/lib/pii";
 import type { CategoryKey } from "@/lib/procedure/categories";
 import { LimitNotice } from "../LimitNotice";
+import { currentQuota } from "../useQuota";
 import { Modal, PrimaryButton, SecondaryButton } from "../Modal";
 
 type Pending =
@@ -137,6 +140,10 @@ export function useAsk(
       return;
     }
     rememberQuestion(r.data.id, r.data.maskedText, opts.parentInquiryId, opts.category);
+    // 비로그인 내 세션(DEC-073): 새 질문(이어 묻기 제외)의 가린 문장을 이 브라우저 목록에 둔다. 로그인이면 계정 목록을 쓴다
+    const quota = currentQuota();
+    if (!opts.parentInquiryId && quota && !isSignedIn(quota))
+      addLocalSession(r.data.id, r.data.maskedText);
     // 100자를 넘는 질문은 서버가 DeepSearch로 분석한다(DEC-062) — 화면도 DeepSearch 진행 표시를 쓰게 같이 남긴다
     if (deep || isLongQuestion(r.data.maskedText)) rememberDeep(r.data.id);
     onCreated?.(r.data.id);

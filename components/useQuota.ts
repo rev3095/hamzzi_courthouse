@@ -45,6 +45,9 @@ export function QuotaRouteSync() {
   return null;
 }
 
+/** 지금 알고 있는 값 (아직 받지 못했으면 null) */
+export const currentQuota = () => current;
+
 export function useQuota(): Quota | null {
   useEffect(() => {
     void refreshQuota();
