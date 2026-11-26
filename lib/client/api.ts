@@ -170,6 +170,8 @@ export type CaseRef = {
   court: string;
   decidedAt: string | null;
   sourceUrl: string;
+  /** 거르기 검색(개선안 A)에서만: 법제처 사건종류명, 없으면 사건번호 부호로 읽은 종류 */
+  caseType?: string | null;
 };
 export type CaseList = {
   items: CaseRef[];
@@ -182,6 +184,10 @@ export type CaseDetailView = CaseRef & {
   sections: { section: string; text: string }[];
   fromBody: boolean;
   citedStatutes: { raw: string; id: string | null }[];
+  /** 참조판례 (DEC-075 ⓑ): 법제처 원문 토막과 그 사건번호 */
+  citedCases?: { label: string; caseNo: string }[];
+  /** 법제처 판결유형 ("판결"·"결정") */
+  decisionType?: string | null;
   notice: string;
 };
 export type StatuteView = {
@@ -202,6 +208,21 @@ export type StatuteView = {
 /** 검색어는 본문으로 보낸다 — 주소·접속 기록에 남지 않게 (F-007) */
 export const searchCases = (q: string) =>
   call<CaseList>("/api/v1/cases", { method: "POST", body: JSON.stringify({ q }) });
+
+/** 판례 거르기·쪽 넘기기 (개선안 A). 법원·선고 연도·정렬은 법제처가 걸러 준다 */
+export type CaseFilterInput = {
+  court?: string | null;
+  fromYear?: string | null;
+  toYear?: string | null;
+  sort?: "source" | "newest" | "oldest" | "name";
+  page?: number;
+};
+export type CasePage = CaseList & { totalCount: number; page: number; pageSize: number };
+export const searchCasesPage = (q: string, f: CaseFilterInput) =>
+  call<CasePage>("/api/v1/cases", {
+    method: "POST",
+    body: JSON.stringify({ q, ...f, page: f.page ?? 1, sort: f.sort ?? "source" }),
+  });
 export const getCaseDetail = (id: string) =>
   call<CaseDetailView>(`/api/v1/cases/${encodeURIComponent(id)}`);
 export const getStatute = (id: string, asOf?: string) =>
@@ -359,6 +380,44 @@ export const searchAdminRules = (q: string) =>
 export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
+/** 두 날짜 조문 비교 (DEC-075 ⓔ) */
+export type CompareSideView =
+  | {
+      date: string;
+      found: true;
+      lawName: string;
+      articleNo: string;
+      articleTitle: string;
+      body: string;
+      version: LawVersionView;
+    }
+  | { date: string; found: false; note: string; version: LawVersionView | null };
+export type StatuteCompareView = {
+  lawName: string;
+  articleNo: string;
+  from: CompareSideView;
+  to: CompareSideView;
+  diff: DiffPart[] | null;
+  same: boolean | null;
+  sameVersion: boolean;
+  notice: string;
+};
+export const compareStatute = (id: string, from: string, to: string) =>
+  call<StatuteCompareView>(
+    `/api/v1/statutes/${encodeURIComponent(id)}/compare?${new URLSearchParams({ from, to })}`,
+  );
+/** 조문 개정 이력 (DEC-075 ⓔ, 법제처 값 그대로) */
+export type ArticleRevisionView = {
+  mst: string | null;
+  promulgatedAt: string | null;
+  effectiveFrom: string | null;
+  revisionType: string | null;
+  changeReason: string | null;
+};
+export const getStatuteHistory = (id: string) =>
+  call<{ lawName: string; articleNo: string; items: ArticleRevisionView[]; notice: string }>(
+    `/api/v1/statutes/${encodeURIComponent(id)}/history`,
+  );
 export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 

@@ -13,12 +13,16 @@ import {
   getOrdinance,
   searchAdminRules,
   searchCases,
+  searchCasesPage,
   searchDecisions,
   searchLaws,
   searchOrdinances,
   type ApiResult,
+  type CaseFilterInput,
+  type CaseRef,
   type ClientError,
 } from "@/lib/client/api";
+import { MAX_CASE_PAGE, isCourtName } from "@/lib/search/case-filter";
 import { directTarget } from "@/lib/search/explore";
 import { highlightTerms } from "@/lib/search/highlight";
 import { dotDate } from "../result/labels";
@@ -74,9 +78,42 @@ export function refine(
   });
 }
 
-type Found = { rows: Row[]; notice: string; note: string };
+/** 판례 탭의 법제처 거르기·쪽 (개선안 A) */
+type Paging = { total: number; page: number; pageSize: number; filter: CaseFilterInput };
+type Found = { rows: Row[]; notice: string; note: string; paging?: Paging };
 
-async function run(kind: Kind, q: string): Promise<ApiResult<Found>> {
+const caseRow = (c: CaseRef): Row => ({
+  kind: "cases",
+  id: c.id,
+  href: `/cases/${c.id}?from=search`,
+  title: c.caseName || c.caseNo,
+  org: c.court,
+  date: c.decidedAt,
+  refNo: c.caseNo,
+  sourceUrl: c.sourceUrl,
+  caseType: c.caseType ?? null,
+});
+
+async function run(kind: Kind, q: string, filter: CaseFilterInput = {}): Promise<ApiResult<Found>> {
+  // 판례(사건번호 바로 가기가 아니면): 법제처가 법원·기간·정렬을 걸러 준 한 쪽과 전체 건수를 받는다
+  if (kind === "cases" && directTarget(q)?.kind !== "case") {
+    const r = await searchCasesPage(q, filter);
+    if (!r.ok) return r;
+    return {
+      ok: true,
+      data: {
+        notice: r.data.notice,
+        note: r.data.searchScopeNote,
+        rows: r.data.items.map(caseRow),
+        paging: {
+          total: r.data.totalCount,
+          page: r.data.page,
+          pageSize: r.data.pageSize,
+          filter,
+        },
+      },
+    };
+  }
   if (kind === "cases") {
     const r = await searchCases(q);
     if (!r.ok) return r;
@@ -351,6 +388,13 @@ function Shelf() {
           <h2 className="text-ink text-sm font-bold">보관함 {pins.length}</h2>
           {pins.length > 0 && (
             <span className="flex gap-1 whitespace-nowrap">
+              {/* 폴더·메모·내보내기 (DEC-075 ⓒ) */}
+              <Link
+                href="/research/shelf"
+                className="text-link flex min-h-11 items-center px-1 text-[13px] font-semibold underline-offset-2 hover:underline"
+              >
+                정리하기
+              </Link>
               <button
                 type="button"
                 onClick={() => void copy()}
@@ -378,7 +422,10 @@ function Shelf() {
               <li key={p.href}>
                 <Link href={p.href} className={item}>
                   <span className="text-ink text-[13px] font-semibold">{p.title}</span>
-                  <span className="text-muted text-[12px]">{p.sub}</span>
+                  <span className="text-muted text-[12px]">
+                    {p.folder ? `${p.folder} · ` : ""}
+                    {p.sub}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -428,10 +475,15 @@ export function ResearchView() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [sort, setSort] = useState<Sort>("source");
+  // 판례 탭 (개선안 A): 법원은 법제처로 다시 찾고, 사건 종류는 받아 온 목록 안에서 거른다
+  const [court, setCourt] = useState("");
+  const [caseSort, setCaseSort] = useState<NonNullable<CaseFilterInput["sort"]>>("source");
+  const [caseTypes, setCaseTypes] = useState<string[]>([]);
+  const [more, setMore] = useState<"idle" | "loading" | ClientError>("idle");
   const listRef = useRef<HTMLUListElement>(null);
   const previewRef = useRef<HTMLElement>(null);
 
-  const submit = async (kind: Kind = tab, value: string = text) => {
+  const submit = async (kind: Kind = tab, value: string = text, filter: CaseFilterInput = {}) => {
     const q = value.trim();
     if (!q) {
       setState({ kind: "error", error: { code: "EMPTY_INPUT", message: "" } });
@@ -446,7 +498,9 @@ export function ResearchView() {
     if (target !== tab) setTab(target);
     setState({ kind: "loading" });
     setOrgs([]);
-    const r = await run(target, q);
+    setCaseTypes([]);
+    setMore("idle");
+    const r = await run(target, q, target === "cases" ? filter : {});
     if (!r.ok) {
       setState({ kind: "error", error: r.error });
       return;
@@ -483,7 +537,58 @@ export function ResearchView() {
     for (const r of rows) if (r.org) count.set(r.org, (count.get(r.org) ?? 0) + 1);
     return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
   }, [rows]);
-  const shown = useMemo(() => refine(rows, { orgs, from, to, sort }), [rows, orgs, from, to, sort]);
+  const paging = state.kind === "done" ? state.data.paging : undefined;
+  // 법제처가 거른 판례 쪽은 법원·기간·정렬을 다시 걸지 않고 사건 종류만 거른다
+  const shown = useMemo(
+    () =>
+      paging
+        ? rows.filter(
+            (r) => caseTypes.length === 0 || (r.caseType && caseTypes.includes(r.caseType)),
+          )
+        : refine(rows, { orgs, from, to, sort }),
+    [paging, rows, caseTypes, orgs, from, to, sort],
+  );
+  const caseTypeOptions = useMemo(() => {
+    const count = new Map<string, number>();
+    for (const r of rows) if (r.caseType) count.set(r.caseType, (count.get(r.caseType) ?? 0) + 1);
+    return [...count.entries()].sort((a, b) => b[1] - a[1]);
+  }, [rows]);
+  const courtOptions = useMemo(
+    () =>
+      [...new Set(["대법원", ...(court ? [court] : []), ...orgOptions.map(([n]) => n)])].filter(
+        isCourtName,
+      ),
+    [orgOptions, court],
+  );
+  const caseFilter = (): CaseFilterInput => ({
+    court: court || null,
+    fromYear: from.length === 4 ? from : null,
+    toYear: to.length === 4 ? to : null,
+    sort: caseSort,
+  });
+  const applyCaseFilter = () => {
+    if (state.kind === "done") void submit("cases", state.q, caseFilter());
+  };
+  const loadMore = async () => {
+    if (state.kind !== "done" || !paging) return;
+    setMore("loading");
+    const r = await run("cases", state.q, { ...paging.filter, page: paging.page + 1 });
+    if (!r.ok) {
+      setMore(r.error);
+      return;
+    }
+    setMore("idle");
+    const seen = new Set(state.data.rows.map((x) => x.id));
+    setState({
+      kind: "done",
+      q: state.q,
+      data: {
+        ...state.data,
+        rows: [...state.data.rows, ...r.data.rows.filter((x) => !seen.has(x.id))],
+        paging: r.data.paging,
+      },
+    });
+  };
   const current =
     shown.find((r) => `${r.kind}:${r.id}` === selected) ?? (shown.length > 0 ? shown[0] : null);
 
@@ -526,7 +631,7 @@ export function ResearchView() {
             role="search"
             onSubmit={(e) => {
               e.preventDefault();
-              void submit();
+              void submit(tab, text, tab === "cases" ? caseFilter() : {});
             }}
             className="mt-5 flex max-w-[860px] gap-2"
           >
@@ -566,67 +671,167 @@ export function ResearchView() {
 
       <div className="mx-auto grid w-full max-w-[1320px] gap-4 px-4 py-5 lg:grid-cols-[250px_minmax(0,1fr)_minmax(0,430px)]">
         <aside className={`${panel} h-fit p-4`} aria-label="거르기">
-          <p className={fieldLabel}>정렬</p>
-          <select
-            aria-label="정렬"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className={`${input} mt-1.5`}
-          >
-            <option value="source">법제처 검색 순서</option>
-            <option value="newest">날짜 최신순</option>
-            <option value="oldest">날짜 오래된순</option>
-          </select>
-          <p className={`${fieldLabel} mt-4`}>기간 (연도)</p>
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <input
-              aria-label="시작 연도"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="2015"
-              value={from}
-              onChange={(e) => setFrom(e.target.value.replace(/\D/g, ""))}
-              className={input}
-            />
-            <span className="text-muted">~</span>
-            <input
-              aria-label="끝 연도"
-              inputMode="numeric"
-              maxLength={4}
-              placeholder="2026"
-              value={to}
-              onChange={(e) => setTo(e.target.value.replace(/\D/g, ""))}
-              className={input}
-            />
-          </div>
-          {orgOptions.length > 1 && (
-            <>
-              <p className={`${fieldLabel} mt-4`}>{tab === "cases" ? "법원" : "기관"}</p>
-              <ul className="mt-1.5 grid gap-0.5">
-                {orgOptions.map(([name, n]) => (
-                  <li key={name}>
-                    <label className="text-ink flex min-h-9 items-center gap-2 text-[13px]">
-                      <input
-                        type="checkbox"
-                        className="size-4"
-                        checked={orgs.includes(name)}
-                        onChange={() =>
-                          setOrgs((p) =>
-                            p.includes(name) ? p.filter((x) => x !== name) : [...p, name],
-                          )
-                        }
-                      />
-                      <span className="flex-1">{name}</span>
-                      <span className="text-muted">{n}</span>
-                    </label>
-                  </li>
+          {tab === "cases" ? (
+            // 판례 (개선안 A): 법원·기간·정렬은 법제처에서 다시 찾고, 사건 종류는 받아 온 목록 안에서 거른다
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                applyCaseFilter();
+              }}
+            >
+              <p className={fieldLabel}>정렬</p>
+              <select
+                aria-label="정렬"
+                value={caseSort}
+                onChange={(e) => setCaseSort(e.target.value as typeof caseSort)}
+                className={`${input} mt-1.5`}
+              >
+                <option value="source">법제처 검색 순서</option>
+                <option value="newest">선고일 최신순</option>
+                <option value="oldest">선고일 오래된순</option>
+                <option value="name">사건명 가나다순</option>
+              </select>
+              <p className={`${fieldLabel} mt-4`}>선고 연도</p>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <input
+                  aria-label="시작 연도"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="2015"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value.replace(/\D/g, ""))}
+                  className={input}
+                />
+                <span className="text-muted">~</span>
+                <input
+                  aria-label="끝 연도"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="2026"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value.replace(/\D/g, ""))}
+                  className={input}
+                />
+              </div>
+              <p className={`${fieldLabel} mt-4`}>법원</p>
+              <select
+                aria-label="법원"
+                value={court}
+                onChange={(e) => setCourt(e.target.value)}
+                className={`${input} mt-1.5`}
+              >
+                <option value="">모든 법원</option>
+                {courtOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
-              </ul>
+              </select>
+              <button
+                type="submit"
+                disabled={state.kind !== "done"}
+                className="bg-ink rounded-button mt-3 min-h-11 w-full text-sm font-semibold text-white disabled:opacity-50"
+              >
+                법제처에서 다시 찾기
+              </button>
+              {caseTypeOptions.length > 1 && (
+                <>
+                  <p className={`${fieldLabel} mt-4`}>사건 종류</p>
+                  <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                    {caseTypeOptions.map(([name, n]) => {
+                      const on = caseTypes.includes(name);
+                      return (
+                        <li key={name}>
+                          <button
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() =>
+                              setCaseTypes((p) => (on ? p.filter((x) => x !== name) : [...p, name]))
+                            }
+                            className={`flex min-h-9 items-center rounded-full border px-3 text-[13px] ${
+                              on
+                                ? "border-gold bg-honey text-ink font-semibold"
+                                : "border-line text-ink bg-white"
+                            }`}
+                          >
+                            {name} <span className="text-muted ml-1">{n}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+              <p className="text-muted mt-4 text-[12px] leading-relaxed">
+                법원·연도·정렬은 법제처에서 다시 찾아요. 사건 종류는 불러온 목록 안에서 거르고,
+                법제처 사건 종류가 없으면 사건번호 부호로 나눠요. 관련도 순위는 매기지 않아요.
+              </p>
+            </form>
+          ) : (
+            <>
+              <p className={fieldLabel}>정렬</p>
+              <select
+                aria-label="정렬"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as Sort)}
+                className={`${input} mt-1.5`}
+              >
+                <option value="source">법제처 검색 순서</option>
+                <option value="newest">날짜 최신순</option>
+                <option value="oldest">날짜 오래된순</option>
+              </select>
+              <p className={`${fieldLabel} mt-4`}>기간 (연도)</p>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <input
+                  aria-label="시작 연도"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="2015"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value.replace(/\D/g, ""))}
+                  className={input}
+                />
+                <span className="text-muted">~</span>
+                <input
+                  aria-label="끝 연도"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="2026"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value.replace(/\D/g, ""))}
+                  className={input}
+                />
+              </div>
+              {orgOptions.length > 1 && (
+                <>
+                  <p className={`${fieldLabel} mt-4`}>기관</p>
+                  <ul className="mt-1.5 grid gap-0.5">
+                    {orgOptions.map(([name, n]) => (
+                      <li key={name}>
+                        <label className="text-ink flex min-h-9 items-center gap-2 text-[13px]">
+                          <input
+                            type="checkbox"
+                            className="size-4"
+                            checked={orgs.includes(name)}
+                            onChange={() =>
+                              setOrgs((p) =>
+                                p.includes(name) ? p.filter((x) => x !== name) : [...p, name],
+                              )
+                            }
+                          />
+                          <span className="flex-1">{name}</span>
+                          <span className="text-muted">{n}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <p className="text-muted mt-4 text-[12px] leading-relaxed">
+                거르기와 정렬은 이번에 가져온 목록 안에서만 해요. 관련도 순위는 매기지 않아요.
+              </p>
             </>
           )}
-          <p className="text-muted mt-4 text-[12px] leading-relaxed">
-            거르기와 정렬은 이번에 가져온 목록 안에서만 해요. 관련도 순위는 매기지 않아요.
-          </p>
           <div className="border-line mt-4 border-t pt-4">
             <Shelf />
           </div>
@@ -645,9 +850,15 @@ export function ResearchView() {
             </h2>
             {state.kind === "done" && (
               <span data-testid="research-count" className="text-gold text-sm font-bold">
-                {shown.length === rows.length
-                  ? `${rows.length}건`
-                  : `${shown.length}/${rows.length}건`}
+                {paging
+                  ? `전체 ${paging.total.toLocaleString("ko-KR")}건 중 ${
+                      shown.length === rows.length
+                        ? `${rows.length}건`
+                        : `${shown.length}/${rows.length}건`
+                    }`
+                  : shown.length === rows.length
+                    ? `${rows.length}건`
+                    : `${shown.length}/${rows.length}건`}
               </span>
             )}
             {state.kind === "done" && <SearchNotice notice={state.data.notice} />}
@@ -725,6 +936,25 @@ export function ResearchView() {
               })}
             </ul>
           )}
+          {paging &&
+            paging.page * paging.pageSize < paging.total &&
+            paging.page < MAX_CASE_PAGE && (
+              <div className="border-line flex flex-wrap items-center gap-3 border-t px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => void loadMore()}
+                  disabled={more === "loading"}
+                  className="rounded-button border-line text-ink min-h-11 border bg-white px-4 text-sm font-semibold disabled:opacity-60"
+                >
+                  {more === "loading" ? "불러오는 중…" : "더 보기"}
+                </button>
+                {typeof more === "object" && (
+                  <span role="alert" className="text-warn-text text-[13px]">
+                    {searchErrorText(more)}
+                  </span>
+                )}
+              </div>
+            )}
           {state.kind === "done" && state.data.note && (
             <p className="text-muted border-line border-t px-4 py-3 text-[12px] leading-relaxed">
               {state.data.note}

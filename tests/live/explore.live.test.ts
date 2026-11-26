@@ -102,6 +102,31 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 �
     expect((await source.searchAdminRules("임대차", 5)).length).toBeGreaterThan(0);
   });
 
+  test("판례 거르기(개선안 A): 법원·선고 연도(prncYd)·정렬이 법제처에서 걸러지고 전체 건수가 온다", async () => {
+    const page = await source.searchCasesPage("임대차 보증금", {
+      court: "대법원",
+      fromYear: "2020",
+      toYear: "2021",
+      sort: "newest",
+      page: 1,
+    });
+    expect(page.total).toBeGreaterThan(0);
+    expect(page.items.length).toBeGreaterThan(0);
+    for (const c of page.items) {
+      expect(c.court).toBe("대법원");
+      expect(c.decidedAt! >= "2020-01-01" && c.decidedAt! <= "2021-12-31").toBe(true);
+    }
+    const dates = page.items.map((c) => c.decidedAt!);
+    expect([...dates].sort().reverse()).toEqual(dates);
+  });
+
+  test("조문 개정 이력(DEC-075 ⓔ): 법제처 lsJoHstInf에서 시행일·개정 구분이 온다", async () => {
+    const h = await source.articleHistory("주택임대차보호법", "제3조");
+    expect(h?.items.length).toBeGreaterThan(0);
+    expect(h!.items[0].effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(h!.items.some((r) => r.revisionType)).toBe(true);
+  });
+
   test("법령 이름 일부로 찾기: '의료기기' → 의료기기법과 그 시행령·시행규칙", async () => {
     const names = (await source.searchLaws("의료기기")).map((h) => h.name);
     expect(names).toEqual(

@@ -31,6 +31,10 @@ export type CaseDetail = CaseHit & {
   fromBody: boolean;
   /** fromBody일 때만: 당사자·대리인 머리 블록을 떼고 개인정보를 가린 본문 일부. 저장하지 않는다 */
   bodyExcerpt: string | null;
+  /** 법제처 참조판례 원문 (DEC-075 ⓑ — 사건번호만 뽑아 링크로 쓴다) */
+  citedCasesRaw?: string | null;
+  /** 법제처 판결유형 ("판결"·"결정" 등) — 인용 표기에 그대로 붙인다 */
+  decisionType?: string | null;
 };
 
 /** 인용 실존 재조회 결과 (F-005 AC2 ③). exists=null은 판정 불가(확인 필요) */
