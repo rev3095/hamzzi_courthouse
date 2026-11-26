@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-26 동안 세션 19개가 남긴 작업 기록 530건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-27 동안 세션 21개가 남긴 작업 기록 540건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -44,14 +44,39 @@
     서류 분석(F-015) 예제 프리셋을 실제 서류 분석과 같은 길로 실호출해 만들고(실제 서면 양식 2건·600자 넘는 가상 사건 3건), 실제 양식 2건은 사용자 계정 기록에도 남긴다. 도중에 Pro Max를 Opus 5.5 effort xhigh로 바꾸라는 요청이 더해졌다.
     - **서류 판독에서 '성+○○' 꼴 이름 가리기** — Claude Desktop · 2026-11-25 ~ 2026-11-26 · 기록 6건 · PR 40, 48  
       서류 분석 예제를 만들다 legal-reviewer가 찾은 빈틈: 서비스 판독 거르기(screenReading)가 '박○○'처럼 이미 일부 가린 이름을 그대로 내보냈다. 사건 개요·요구·당사자에 들어가기 전에 ○○○로 가린다.
+  - **답변 먼저·인용 확인은 나중 / 질문 남용 막기** — Claude Desktop · 2026-11-27 · 기록 8건 · PR 63, 67  
+    모든 답변 경로에서 답변을 먼저 쓰고 법제처 인용 확인은 그 뒤에 하도록 순서를 바꾸고(DEC-071), 질문창에 법률과 상관없는 요청이나 같은 글 반복으로 유료 모델을 쓰게 하는 것을 막는 판별·안전장치를 만든다(DEC-072, 절대 규칙 9).
 - **VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티)** — VS Code · 2026-11-18 ~ 2026-11-20 · 기록 71건  
   VS Code에서 시작해 lexdiff 기능 범위의 판례·법령 탐색을 독자 구현하고, 문서 작성 검증, 답변 단계 선택, DeepSearch, 예시 답변 확대, 질문 해석 라벨링까지 이어 간 개발 세션.
 - **서류 이미지 분석·사건 진행 (VS Code)** — VS Code (Claude Code) · 2026-11-24 · 기록 11건  
   사용자가 올린 법률 서류 이미지를 Haiku로 읽어 상황·쟁점·당사자 구도를 정리하고 관계도로 보여 주는 이미지 첨부 기능과, 로그인 사용자용 '사건 진행' 화면(변호사의 사건 진행 흐름대로 정보를 쌓아 가는 정리 도구)을 만드는 VS Code 세션.
+- **국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)** — VS Code (Claude Code) · 2026-11-27 · 기록 2건 · PR 73  
+  의료기기법 위주로 국내·해외 법령 검색을 한 번에 하고 국내/해외·나라별로 거르며, 법령 화면은 원문보다 요약·쟁점·실제 판례를 먼저 보여 디지털 문해력이 낮은 사람도 이해하게 한다(DEC-074). 세션 보고 기준.
 
 ---
 
 ## 날짜별 기록
+
+### 2026-11-27 (금)
+
+#### 메인 개발 (Legal tech 플랫폼 개발 계획)
+
+
+##### ↳ 답변 먼저·인용 확인은 나중 / 질문 남용 막기
+
+- `04:42` **[feature] 답변 먼저, 인용 확인은 나중 (DEC-071)** — 일반 답변·DeepSearch·전문 에이전트 모두 답변 모델에 법제처 근거 목록을 넘기지 않고 먼저 답한다. 법제처 검색은 답변과 동시에 돌려 근거 목록·절차에 쓰고, 답변 뒤 본문의 조문·사건번호(법령 이름이 본문에 적힌 것만)를 법제처에서 실존 확인한다. 없다고 확인된 인용이 든 문단은 빼고, 있다고 확인된 것은 '법제처 확인' 링크(주소는 이번 요청 근거 목록에 있을 때만)를 단다. 조회 실패는 그대로 둔다. 판례 아카이브에서 사용자가 고른 판례만 답변 전에 넘기는 예외로 둔다. ([`ce1e5db`](https://github.com/rev3095/hamzzi_courthouse/commit/ce1e5db), F-005, DEC-071)
+- `04:50` **[확인] legal-reviewer 3회 검토 반영** — 1차: 결과 아래 출처 안내·진행 문구·검증 탭·기능 가이드·안내 챗봇이 '법제처 근거로 썼다/원문 대조했다'고 말하던 5곳, 근거 목록으로 법령을 짐작하던 경로, 짐작한 법령 이름으로 만든 대체 주소를 고쳤다. 2차: 사건 진행 쟁점 정리가 확인 안 된 인용이 섞인 문단을 근거로 붙이던 것을 고쳤다. 병합 충돌 해결분 재검토 위반 없음. ([`ceaf408`](https://github.com/rev3095/hamzzi_courthouse/commit/ceaf408), F-005, DEC-071)
+- `04:55` **[확인] 실호출 확인 1회 (Pro 2문항, 약 $0.024)** — 사용자가 승인한 계획대로 1회만 돌렸다. 각 약 11초, 진행 단계가 해석 → 답변 → 법제처 확인 순서로 나오고, 사건 질문에 '법제처 확인' 링크 2건이 붙었다. 임시 테스트 파일은 지웠다. (DEC-071)
+- `05:00` **[문제] 결정 번호 DEC-070 겹침 → DEC-071로** — 올리기 직전 main을 보니 판례 아카이브 질문창(다른 세션)이 DEC-070을 먼저 썼다. 이 작업을 DEC-071로 바꾸고 main을 병합했다. ([`8a038e0`](https://github.com/rev3095/hamzzi_courthouse/commit/8a038e0), DEC-070, DEC-071)
+- `05:05` **[확인] PR 63 병합·배포** — CI(web·collector) 통과 뒤 병합했고(병합 커밋 05a504d) Vercel 운영 배포 완료를 확인했다. ([`05a504d`](https://github.com/rev3095/hamzzi_courthouse/commit/05a504d), DEC-071)
+- `05:20` **[확인] 오탐 검사와 legal-reviewer 2회 반영** — 1차 검토에서 실제 피해 사연(식중독 보상, 앱 외주 대금, 사진 합성 유포, 근저당 설정, 투자 리딩방 등)이 법률 무관으로 막히는 오탐이 나와, 요청 꼴은 짧은 부탁·명령으로 끝날 때만 막고 법률 낱말을 늘렸다. 가림 표시가 반복으로 잡히던 것, 이어 묻기 같은 질문 판정, 공용 IP 경고, 구조화 비용 정산 누락도 고쳤다. 예시·평가 문항·커뮤니티 정답 묶음·사용자 제공 사례 1,696건에서 차단 0건(무료 검사, DB 사용자 질문은 쓰지 않음). ([`8040d91`](https://github.com/rev3095/hamzzi_courthouse/commit/8040d91), DEC-072)
+- `05:27` **[feature] 질문 남용 막기 (DEC-072, 절대 규칙 9)** — 세 겹으로 막는다. ① 무료 규칙 판별: 80자 이하 부탁·명령 꼴의 법률 무관 요청(음식·코드·게임·이미지·글짓기·번역)·잡담·코드 붙여 넣기, 같은 문장·구절 반복·도배, 지시문 바꾸기를 저장·모델 호출 전에 거절(422 OFF_TOPIC·REPETITIVE_INPUT). ② 모델 판별: 질문 해석 kind off_topic·사건 구조화 offTopic이면 검색·답변 모델 전에 멈추고 쓴 금액만 정산. ③ 경고 한도: 지시문 바꾸기·모델 판별 거절이 1시간에 5번이면 그 창 동안 429. 10분 안에 분석한 같은 질문은 앞의 결과로 보낸다(409 DUPLICATE_QUESTION). 관리자 모드 면제, 오류·로그에는 이유 코드만. ([`8040d91`](https://github.com/rev3095/hamzzi_courthouse/commit/8040d91), F-001, DEC-072)
+- `05:30` **[확인] PR 67 병합·배포** — 사용자 지시로 CI 통과 뒤 병합했고(병합 커밋 97aa454) Vercel 운영 배포 완료를 확인했다. 운영 사이트에서 실제 질문으로는 확인하지 않았다. ([`97aa454`](https://github.com/rev3095/hamzzi_courthouse/commit/97aa454), DEC-072)
+
+#### 국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)
+
+- `05:56` **[feature] 국내·해외 법령 통합 검색 (PR 73, 병합 전)** — /search 법령 탭과 GET·POST /world-laws: 법제처와 각국 공식 공개 API(미국 eCFR, 일본 e-Gov, 영국 legislation.gov.uk, 호주 legislation.gov.au)를 실시간으로 함께 찾고, 유럽연합·캐나다·중국은 직접 고른 핵심 법령의 공식 링크만 둔다. 전체/국내/해외/나라별 필터와 국기·나라 이름, 의료기기 핵심 법령 29건, 고정 낱말표로 검색어를 바꾸며(모델 번역 없음) 모델·저장·긁기 없음. 세션 보고 기준. ([`0cdcfb5`](https://github.com/rev3095/hamzzi_courthouse/commit/0cdcfb5), F-004, DEC-074)
+- `05:56` **[feature] 법령 쉬운 설명 (PR 73, 병합 전)** — /laws/[name] 기본 탭: 한눈에 보기 → 누구에게 → 핵심 내용 → 쟁점 → 실제 판례(법제처만) → 해외 공개 기록(의료기기 법령은 FDA 리콜) → 가상 사례 → 원문(접힘). Haiku 1회(건당 상한 $0.004), 조문 전체와 대조해 거르고, 가상 사례는 실제 판례가 2건보다 적을 때만 'AI가 만든 가상 사례 · 실제 판례 아님' 꼬리표와 함께 보인다. 단위 테스트 2,320건·빌드 통과, legal-reviewer 3회 반영, 유료 호출 0건(실제 모델 출력은 아직 확인 안 함). 세션 보고 기준. ([`0cdcfb5`](https://github.com/rev3095/hamzzi_courthouse/commit/0cdcfb5), F-004, DEC-074)
 
 ### 2026-11-26 (목)
 
@@ -895,6 +920,9 @@
 | 2026-11-20 | VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티) | 기간 예산은 $95 그대로(오전의 $80은 해석 차이), 같은 네트워크 하루 100회는 추천안대로 유지. | DEC-050 |
 | 2026-11-24 | 메인 개발 (Legal tech 플랫폼 개발 계획) | 서류 PDF는 사진과 같이 동의 뒤 그대로 판독에 보낸다(문서는 글만 꺼내 가린 뒤). | DEC-052 |
 | 2026-11-25 | 서류 분석 예제 프리셋 5건·Pro Max xhigh | Pro Max 답변을 Opus 5.5 effort xhigh로 올리고 출력·시간·상한을 실측에 맞춰 늘린다(일반 $0.6, DeepSearch $1.2). | DEC-050 |
+| 2026-11-27 | 답변 먼저·인용 확인은 나중 / 질문 남용 막기 | 모든 답변 경로에서 답변을 먼저 쓰고, 본문의 조문·사건번호는 그 뒤 법제처에서 실존을 확인한다(없으면 문단 제거, 있으면 '법제처 확인' 링크, 조회 실패는 그대로). 절대 규칙 1을 바꾼다. | DEC-071 |
+| 2026-11-27 | 답변 먼저·인용 확인은 나중 / 질문 남용 막기 | 법률 무관 요청·같은 글 반복으로 유료 모델을 쓰게 하지 않는다 — 규칙 판별·모델 판별·경고 한도·같은 질문 되보내기. 절대 규칙 9로 둔다. | DEC-072 |
+| 2026-11-27 | 국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code) | 국내·해외 법령을 공식 공개 API로 한 번에 찾고 국내/해외로 거르며, 법령 화면은 쉬운 설명(요약·쟁점·실제 판례)을 먼저 보이고 원문은 접는다. 실제 판례가 모자랄 때만 표시를 붙인 가상 사례를 만든다. | DEC-074 |
 
 ## 결정 로그 (PRD 16.2)
 
@@ -966,6 +994,13 @@
 | DEC-064 | 빠른 답 먼저 (2026-11-26 사용자 요청·승인) |
 | DEC-065 | 분석 잠금·이어받기 (2026-11-26 사용자 요청) |
 | DEC-066 | 전문 에이전트 갈래와 갈래별 서식 (2026-11-26 사용자 요청·승인) |
+| DEC-067 | UI·UX 전면 개정 1단계 — 주 메뉴와 공통 틀 (2026-11-26 사용자 승인, 개정 계획 PR 1) |
+| DEC-068 | 상황 정리 먼저 — 홈 질문창·자료 바로 분석·양쪽 입장과 예상 반론·구조도 보기 원칙 (2026-11-26 사용자 요청) |
+| DEC-069 | 답변이 언제나 나오게 · 기본 Sonnet · 일반 법률 질문 (2026-11-27 사용자 결정) |
+| DEC-070 | 판례 아카이브 질문창 · 법령 이름 검색 (2026-11-27 사용자 요청·승인) |
+| DEC-071 | 답변 먼저, 인용 확인은 나중 (2026-11-27 사용자 결정) |
+| DEC-072 | 질문 남용 막기 (2026-11-27 사용자 결정, 절대 규칙 9) |
+| DEC-073 | 사건 목록 자동 정리 — 언제나 Haiku (2026-11-27 사용자 요청·결정) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -1105,6 +1140,13 @@
 - ○ 세 개로 가린 상호('○○○ 주식회사')는 당사자 상호 칸에서 빠질 수 있다.
 - 같은 규칙을 scanInput(모든 입력 경로)에 넣을지는 정하지 않았다.
 
+**답변 먼저·인용 확인은 나중 / 질문 남용 막기**
+
+- 질문 해석 지시문을 바꿨지만 라벨 정확도 비교(DEC-045, 유료)는 돌리지 않았다.
+- 모델 판별로 거절된 질문도 함께 도는 빠른 답 미리보기 1회는 과금된다(정산은 한다).
+- 같은 협박 문자를 증거로 여러 번 붙인 글은 반복으로 막힐 수 있다(경고는 세지 않음).
+- 운영 사이트에서 실제 질문으로 거절 화면을 확인하지 않았다.
+
 **VS Code 세션 (판례·법령 탐색·DeepSearch·라벨 평가·커뮤니티)**
 
 - Opus 실호출 비교는 질문 1건이고 두 모델이 받은 근거가 달라 경향만 보인다.
@@ -1130,15 +1172,52 @@
 - 판독 개선(글자 수 한도, '동일 기한' 같은 지시 표현, 통지 대리인 자리)과 쟁점 정리 실호출(상한 $0.5)이 남았다.
 - OQ-011·OQ-012(법무 검토), 판독 상한 $0.005 등 임시값 확인, 앱 반영 여부가 남았다.
 
+**국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)**
+
+- PR 73 병합 전. 미리 만든 쉬운 설명(data.json)이 비어 있어 병합하면 법령 화면을 열 때마다 Haiku 호출(최대 $0.004) — 의료기기 관련 7개 법령을 미리 만들기(최대 약 $0.03)는 사용자 승인 대기.
+- 해외 출처를 넓히려면 사용자가 CourtListener 토큰·api.data.gov 키·EUR-Lex 웹서비스 등록·캐나다 대량 XML 색인 승인을 준비해야 한다.
+- 사용자가 말한 해외 DB 목록 사진은 그 세션에서 보이지 않아 공식 출처 기준으로 진행했다.
+- 쉬운 설명의 실제 모델 출력과 e2e(law-text.spec)는 실행하지 않았다.
+
 ## 커밋 색인
 
-<details><summary>main 커밋 254개 (병합 제외)</summary>
+<details><summary>main 커밋 284개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`8040d91`](https://github.com/rev3095/hamzzi_courthouse/commit/8040d91) | 2026-11-27 05:27 | feat: F-001 DEC-072 질문 남용 막기 — 법률 무관 요청·같은 글 반복 판별 (절대 규칙 9) |
+| [`b8fbcea`](https://github.com/rev3095/hamzzi_courthouse/commit/b8fbcea) | 2026-11-27 05:19 | fix: DEC-070 ③ 판독 사용자 횟수는 실제로 읽을 때만 세기 · 주석 자리 (legal-reviewer 재검토 참고) |
+| [`097be38`](https://github.com/rev3095/hamzzi_courthouse/commit/097be38) | 2026-11-27 05:16 | fix: DEC-070 ③ legal-reviewer 반영 — 로그인 판독 하루 30회, AI 개요는 서류 요지에만, 일반 사진 질문 길이 맞춤 |
+| [`1b0c8d1`](https://github.com/rev3095/hamzzi_courthouse/commit/1b0c8d1) | 2026-11-27 05:11 | feat: DEC-070 ③ 사진 용도로 갈 곳 정하기 · 사건 정리 화면(DeepSearch) |
+| [`3f80f49`](https://github.com/rev3095/hamzzi_courthouse/commit/3f80f49) | 2026-11-27 05:08 | fix: DEC-070 ② 이름만 바꾸다 두 번 겹치면 409 — 자동 제목이 사용자 이름을 덮지 않게 (legal-reviewer 재검토) |
+| [`fa860c2`](https://github.com/rev3095/hamzzi_courthouse/commit/fa860c2) | 2026-11-27 05:07 | fix: DEC-070 ② 내 세션 legal-reviewer 반영 — 사건 묶음 AI 고지, 비로그인 이름도 가림, 끈 자동 제목 유지, 이름만 바꿀 때 조건부 저장, 문구 |
+| [`aaef3de`](https://github.com/rev3095/hamzzi_courthouse/commit/aaef3de) | 2026-11-27 05:02 | feat: DEC-070 ② 내 세션 사이드바 — 대화·사건 묶음, 이름 바꾸기·삭제, 비로그인은 이 브라우저 |
+| [`5f292c8`](https://github.com/rev3095/hamzzi_courthouse/commit/5f292c8) | 2026-11-27 04:56 | docs: 답변 먼저 결정 번호를 DEC-071로 (DEC-070은 판례 아카이브 질문창이 먼저 씀) |
+| [`4a3e43a`](https://github.com/rev3095/hamzzi_courthouse/commit/4a3e43a) | 2026-11-27 04:55 | fix: F-016 DEC-070 자동 정리 재검토 반영 — 숫자 낱말 단위 대조·서버 실패 지문 확인·횟수는 모델 호출 때만·AI 제목 고지 |
+| [`ceaf408`](https://github.com/rev3095/hamzzi_courthouse/commit/ceaf408) | 2026-11-27 04:54 | fix: F-005 DEC-070 안내 문구·인용 확인 기준을 답변 먼저 흐름에 맞춤 |
+| [`aa4092f`](https://github.com/rev3095/hamzzi_courthouse/commit/aa4092f) | 2026-11-27 04:52 | fix: F-016 DEC-070 자동 정리 legal-reviewer 반영 — 하루 상한·실패 지문·숫자 대조·저장 때 다시 거르기·AI 제목 표시 |
+| [`8d8f7d3`](https://github.com/rev3095/hamzzi_courthouse/commit/8d8f7d3) | 2026-11-27 04:49 | feat: F-003 F-005 DEC-070 판례 아카이브 질문창 (Light 고정) |
+| [`7689062`](https://github.com/rev3095/hamzzi_courthouse/commit/7689062) | 2026-11-27 04:49 | feat: F-016 DEC-070 사건 목록 한 줄 목록 · Haiku 자동 정리(제목·법 분야·한 줄 요약) |
+| [`ce1e5db`](https://github.com/rev3095/hamzzi_courthouse/commit/ce1e5db) | 2026-11-27 04:42 | feat: F-005 DEC-070 답변 먼저, 인용 확인은 나중 (일반·DeepSearch·전문 에이전트) |
+| [`101a037`](https://github.com/rev3095/hamzzi_courthouse/commit/101a037) | 2026-11-27 04:34 | feat: F-016 F-015 주 메뉴 '사건 진행'을 '사건'으로 — 진행·정리 전환 (DEC-067 보충) |
+| [`058cffa`](https://github.com/rev3095/hamzzi_courthouse/commit/058cffa) | 2026-11-27 04:28 | feat: F-003 F-004 법령 이름 일부로 찾는 '법령' 탭 · 법령 출처 점검 |
+| [`bf6dcaa`](https://github.com/rev3095/hamzzi_courthouse/commit/bf6dcaa) | 2026-11-27 04:04 | feat: F-005 F-006 DEC-069 답변이 언제나 나오게 · 기본 Sonnet · 일반 법률 질문 |
+| [`7d2285a`](https://github.com/rev3095/hamzzi_courthouse/commit/7d2285a) | 2026-11-26 20:34 | feat: UI·UX 개정 PR 6 — 기능별 마무리: 사건 진행 로그인 안내·대화 기록 토글·내 기록·광장 (DEC-067) |
+| [`2af0f4d`](https://github.com/rev3095/hamzzi_courthouse/commit/2af0f4d) | 2026-11-26 20:33 | fix: PR 5 리서치 목록 누르기 — matchMedia가 없는 환경(jsdom)에서도 동작 |
+| [`f5b80a4`](https://github.com/rev3095/hamzzi_courthouse/commit/f5b80a4) | 2026-11-26 20:30 | feat: UI·UX 개정 PR 5 — 판례·법령 두 보기 톤 통일·휴대폰 목록·상세 돌아가기 (DEC-067) |
+| [`b16d73a`](https://github.com/rev3095/hamzzi_courthouse/commit/b16d73a) | 2026-11-26 20:26 | fix: PR 4 홈 질문창 되돌리기 effect의 lint 오류 (react-hooks/set-state-in-effect) |
+| [`7f0071c`](https://github.com/rev3095/hamzzi_courthouse/commit/7f0071c) | 2026-11-26 20:23 | feat: UI·UX 개정 PR 4 — 결과 화면 중복 정리·다시 적어 보기·예시 사연 표기 (DEC-067) |
+| [`5f3427d`](https://github.com/rev3095/hamzzi_courthouse/commit/5f3427d) | 2026-11-26 20:18 | feat: UI·UX 개정 PR 3 — 긴 질문 안내·답변 모드 잠금, 로딩 화면 정리, 이어 묻기, 동의 화면 하나로 (DEC-067) |
+| [`4cb6b65`](https://github.com/rev3095/hamzzi_courthouse/commit/4cb6b65) | 2026-11-26 20:01 | fix: 서식 PDF 내보내기에서 한글 글자가 빠지던 문제 (DEC-025) |
+| [`5444d7a`](https://github.com/rev3095/hamzzi_courthouse/commit/5444d7a) | 2026-11-26 19:38 | feat: UI·UX 개정 PR 2 — 제목·버튼·탭 통일, 사건 진행·전문 에이전트 브랜드 토큰 (DEC-067) |
+| [`81f5530`](https://github.com/rev3095/hamzzi_courthouse/commit/81f5530) | 2026-11-26 19:36 | fix: 문서 작성 목록(DEC-067)의 고소·형사 묶음에 합의서·고소취소장 추가 |
+| [`39bddbd`](https://github.com/rev3095/hamzzi_courthouse/commit/39bddbd) | 2026-11-26 19:33 | feat: F-018 고소당한 쪽 형사 갈래에 합의서·고소취소장 서식 (DEC-066) |
+| [`121e31f`](https://github.com/rev3095/hamzzi_courthouse/commit/121e31f) | 2026-11-26 19:24 | feat: UI·UX 개정 PR 1 — 주 메뉴 5개·휴대폰 아래 탭바·문서 작성 목록 (DEC-067) |
+| [`2916f9e`](https://github.com/rev3095/hamzzi_courthouse/commit/2916f9e) | 2026-11-26 19:22 | docs: devlog에 PR 48 병합 반영 (기록 530건) |
 | [`1dfa604`](https://github.com/rev3095/hamzzi_courthouse/commit/1dfa604) | 2026-11-26 19:13 | docs: devlog에 띄어 쓴 '박 ㅇㅇ씨' 가리기·PR 48 반영 (기록 529건) |
 | [`08d8567`](https://github.com/rev3095/hamzzi_courthouse/commit/08d8567) | 2026-11-26 16:31 | feat: F-018 전문 에이전트 갈래별 서식 6종·가상 예시·게임 사례 (DEC-066) |
 | [`6e12a6c`](https://github.com/rev3095/hamzzi_courthouse/commit/6e12a6c) | 2026-11-26 16:26 | wip: 갈래 서식 6종·예시 |
+| [`046591d`](https://github.com/rev3095/hamzzi_courthouse/commit/046591d) | 2026-11-26 16:17 | feat: F-001 F-015 상황 정리 먼저 — 자료 올리면 바로 분석, 양쪽 입장·예상 반론·문서, 구조도 확대·이동 (DEC-065) |
 | [`909f650`](https://github.com/rev3095/hamzzi_courthouse/commit/909f650) | 2026-11-26 16:16 | fix: F-015 AC2 띄어 쓴 '박 ㅇㅇ씨' 꼴과 NFKC로 바뀐 'ㅇ' 가리기 (절대 규칙 4) |
 | [`22273e9`](https://github.com/rev3095/hamzzi_courthouse/commit/22273e9) | 2026-11-26 16:15 | docs: CLAUDE.md·README 최신화 — DEC-062 긴 질문 자동 DeepSearch·DEC-064 빠른 답 먼저·진행 표시 규칙, Phase 2 폐기 번호(DEC-055), README 고지를 무료 법률 상담으로 |
 | [`23c6c9e`](https://github.com/rev3095/hamzzi_courthouse/commit/23c6c9e) | 2026-11-26 16:14 | feat: F-005 DEC-065 분석 잠금·이어받기 — 새로고침해도 같은 질문을 두 번 분석하지 않음 |
@@ -1422,17 +1501,17 @@
 - [PRD — 햄찌법원 (Hamzzi Court): 열린 법률 아카이브 & AI 법률 길잡이](03_PRD_햄찌법원.md) — `docs/03_PRD_햄찌법원.md` · 수정 2026-10-19
 - [04. 추가로 작성할 것 · 생각하고 결정해야 할 것](04_추가_결정사항.md) — `docs/04_추가_결정사항.md` · 수정 2026-10-19
 - [05. 햄찌법원 브랜드 가이드 v0.1](05_브랜드_가이드.md) — `docs/05_브랜드_가이드.md` · 수정 2026-10-19
-- [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-26
+- [07. Figma 연동 — 디자인 기준 파일과 코드 반영 절차](07_Figma_연동.md) — `docs/07_Figma_연동.md` · 수정 2026-11-27
 - [08. Google Play 배포 (Android 앱)](08_Google_Play_배포.md) — `docs/08_Google_Play_배포.md` · 수정 2026-11-20
-- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-26
+- [햄찌법원 API 명세 (API)](API.md) — `docs/API.md` · 수정 2026-11-27
 - [햄찌법원 기술 설계 (ARCHITECTURE)](ARCHITECTURE.md) — `docs/ARCHITECTURE.md` · 수정 2026-11-25
-- [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-26
-- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-26
+- [햄찌법원 데이터 모델 (DATA_MODEL)](DATA_MODEL.md) — `docs/DATA_MODEL.md` · 수정 2026-11-27
+- [햄찌법원 PRD](PRD.md) — `docs/PRD.md` · 수정 2026-11-27
 - [PRD 초안 검토·수정·검증 결과](PRD_review.md) — `docs/PRD_review.md` · 수정 2026-10-19
 
 ### 조사 (6)
 
-- [리서치 1. 판결문·법령 데이터 공식 소스와 이용 조건](research/01_데이터_소스.md) — `docs/research/01_데이터_소스.md` · 수정 2026-10-19
+- [리서치 1. 판결문·법령 데이터 공식 소스와 이용 조건](research/01_데이터_소스.md) — `docs/research/01_데이터_소스.md` · 수정 2026-11-27
 - [리서치 2. 국내 경쟁·유사 서비스 비교](research/02_경쟁사_비교.md) — `docs/research/02_경쟁사_비교.md` · 수정 2026-10-19
 - [리서치 3. 규제 쟁점 — 변호사법 · 개인정보보호법 · AI 기본법](research/03_규제_쟁점.md) — `docs/research/03_규제_쟁점.md` · 수정 2026-10-19
 - [04. 화면설계 도구 조사 — Figma·Claude·AI 디자인 툴 비교와 작업 절차](research/04_화면설계_도구_조사.md) — `docs/research/04_화면설계_도구_조사.md` · 수정 2026-10-21
@@ -1455,7 +1534,7 @@
 - [lib/business — 법인·사업자 공개 정보 조회 (F-015 AC4, DEC-052)](../lib/business/README.md) — `lib/business/README.md` · 수정 2026-11-24
 - [lib/calc — 계산 모듈 (F-014)](../lib/calc/README.md) — `lib/calc/README.md` · 수정 2026-10-19
 - [lib/casefile — 서류 분석 (F-015, DEC-052)](../lib/casefile/README.md) — `lib/casefile/README.md` · 수정 2026-11-26
-- [lib/citations — 인용 검증기 (F-005)](../lib/citations/README.md) — `lib/citations/README.md` · 수정 2026-11-25
+- [lib/citations — 인용 검증기 (F-005)](../lib/citations/README.md) — `lib/citations/README.md` · 수정 2026-11-27
 - [lib/community — 커뮤니티와 씨앗 (DEC-047)](../lib/community/README.md) — `lib/community/README.md` · 수정 2026-11-26
 - [lib/demo — 무료 모드 (DEC-015)](../lib/demo/README.md) — `lib/demo/README.md` · 수정 2026-11-20
 - [lib/documents — 단계별 공식 서식 설문·편집·내보내기 (DEC-022·023·025·055)](../lib/documents/README.md) — `lib/documents/README.md` · 수정 2026-11-26
@@ -1467,7 +1546,7 @@
 - [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-26
 - [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-26
 - [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-25
-- [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-26
+- [lib/search — 하이브리드 검색 (F-003, F-004, F-006)](../lib/search/README.md) — `lib/search/README.md` · 수정 2026-11-27
 - [lib/supabase — DB·인증 클라이언트](../lib/supabase/README.md) — `lib/supabase/README.md` · 수정 2026-10-21
 - [햄찌법원 앱 (Capacitor) 변경 기록](../mobile/CHANGELOG.md) — `mobile/CHANGELOG.md` · 수정 2026-11-20
 - [CapApp-SPM](../mobile/ios/App/CapApp-SPM/README.md) — `mobile/ios/App/CapApp-SPM/README.md` · 수정 2026-11-20
@@ -1481,5 +1560,5 @@
 - [DB 마이그레이션 추가](../.claude/skills/add-migration/SKILL.md) — `.claude/skills/add-migration/SKILL.md` · 수정 2026-10-19
 - [Figma → 코드 반영](../.claude/skills/figma-sync/SKILL.md) — `.claude/skills/figma-sync/SKILL.md` · 수정 2026-10-22
 - [AGENTS.md](../AGENTS.md) — `AGENTS.md` · 수정 2026-10-19
-- [CLAUDE.md](../CLAUDE.md) — `CLAUDE.md` · 수정 2026-11-26
+- [CLAUDE.md](../CLAUDE.md) — `CLAUDE.md` · 수정 2026-11-27
 
