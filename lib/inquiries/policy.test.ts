@@ -202,3 +202,15 @@ describe("DEC-010 분석 마무리 결과 (finish_demo_analysis)", () => {
     expect(caught(() => finishedResultId({ status: "unknown_inquiry" })).code).toBe("NOT_FOUND");
   });
 });
+
+describe("DEC-065 분석 잠금", () => {
+  test("비었거나 라우트 한도보다 오래된 잠금만 다시 잡을 수 있다", async () => {
+    const { ANALYSIS_LOCK_MS, lockExpired } = await import("./policy");
+    const now = Date.parse("2026-11-26T07:00:00Z");
+    expect(ANALYSIS_LOCK_MS).toBeGreaterThan(300_000);
+    expect(lockExpired(null, now)).toBe(true);
+    expect(lockExpired(new Date(now - 60_000).toISOString(), now)).toBe(false);
+    expect(lockExpired(new Date(now - ANALYSIS_LOCK_MS).toISOString(), now)).toBe(true);
+    expect(lockExpired("이상한 값", now)).toBe(true);
+  });
+});

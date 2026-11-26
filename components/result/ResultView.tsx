@@ -51,6 +51,15 @@ export function ResultRoute() {
   return <ResultView key={id} id={id} />;
 }
 
+/** 분석 잠금(DEC-065)으로 이어 받을 때 보이는 단계 문구 — 고정 문구, 입력 원문 없음 */
+const RESUME_STEP: StepEvent = {
+  stage: "answer",
+  message: "이 질문은 이미 분석 중이에요. 새로 시작하지 않고 끝나는 대로 보여 드릴게요",
+};
+/** 결과를 다시 읽는 간격과, 다시 분석을 청하기 전까지 읽는 횟수 (약 20초마다 잠금 상태를 다시 본다) */
+const RESUME_POLL_MS = 4_000;
+const RESUME_POLLS = 5;
+
 export function ResultView({ id }: { id: string }) {
   const [view, setView] = useState<View>({ kind: "loading" });
   // 질문 마스킹본은 이 기기(sessionStorage)에만 있다. 서버 렌더링에서는 비어 있다
@@ -79,35 +88,66 @@ export function ResultView({ id }: { id: string }) {
 
   const analyze = useCallback(async () => {
     setView({ kind: "analyzing", steps: [] });
-    const r = await analyzeStream(
-      id,
-      (e) => {
-        if (!alive.current) return;
-        setView((v) => (v.kind === "analyzing" ? { ...v, steps: [...v.steps, e] } : v));
-      },
-      // 렌더 값 대신 저장소에서 바로 읽는다 — 화면 상태가 바뀌어도 분석을 다시 시작하지 않게
-      categoryOf(recallQuestion(id).category),
-      {
-        // 빠른 답 먼저 (DEC-064): 완성된 답이 오면 결과 화면으로 바뀌며 사라진다
-        onPreview: (p) => {
+    // 분석 잠금(DEC-065)으로 기다리다 다시 청할 때 처음으로 돌아온다
+    for (;;) {
+      const r = await analyzeStream(
+        id,
+        (e) => {
           if (!alive.current) return;
-          setView((v) => (v.kind === "analyzing" ? { ...v, preview: p } : v));
+          setView((v) => (v.kind === "analyzing" ? { ...v, steps: [...v.steps, e] } : v));
         },
-      },
-    );
-    if (!alive.current) return;
-    if (r.ok) {
-      notifyQuotaChanged();
-      setView({ kind: "done", result: r.data.result, resultId: r.data.resultId });
+        // 렌더 값 대신 저장소에서 바로 읽는다 — 화면 상태가 바뀌어도 분석을 다시 시작하지 않게
+        categoryOf(recallQuestion(id).category),
+        {
+          // 빠른 답 먼저 (DEC-064): 완성된 답이 오면 결과 화면으로 바뀌며 사라진다
+          onPreview: (p) => {
+            if (!alive.current) return;
+            setView((v) => (v.kind === "analyzing" ? { ...v, preview: p } : v));
+          },
+        },
+      );
+      if (!alive.current) return;
+      if (r.ok) {
+        notifyQuotaChanged();
+        setView({ kind: "done", result: r.data.result, resultId: r.data.resultId });
+        return;
+      }
+      // 다른 창에서 먼저 끝났으면 저장된 결과를 읽는다
+      if (r.error.code === "INVALID_STATE") {
+        // 분석 잠금 (DEC-065): 다른 창·새로고침 전의 요청이 아직 분석 중이면 새로 시작하지 않고, 결과가 저장될 때까지 기다렸다가 읽는다
+        if (r.error.details?.reason === "in_progress") {
+          setView({ kind: "analyzing", steps: [RESUME_STEP] });
+          for (let i = 0; i < RESUME_POLLS; i++) {
+            await new Promise((ok) => setTimeout(ok, RESUME_POLL_MS));
+            if (!alive.current) return;
+            const saved = await getResult(id);
+            if (saved.ok) {
+              notifyQuotaChanged();
+              return setView({
+                kind: "done",
+                result: saved.data.result,
+                resultId: saved.data.resultId,
+              });
+            }
+            if (saved.error.code !== "NOT_FOUND")
+              return setView({ kind: "error", error: saved.error });
+          }
+          // 아직 결과가 없으면 분석을 다시 청해 본다 — 먼저 간 분석이 실패해 잠금이 풀렸으면 이때 다시 분석하고,
+          // 아직 진행 중이면 다시 409를 받아 이 기다림을 이어 간다
+          continue;
+        } else {
+          const saved = await getResult(id);
+          if (saved.ok)
+            return setView({
+              kind: "done",
+              result: saved.data.result,
+              resultId: saved.data.resultId,
+            });
+        }
+      }
+      setView({ kind: "error", error: r.error });
       return;
     }
-    // 다른 창에서 먼저 끝났으면 저장된 결과를 읽는다
-    if (r.error.code === "INVALID_STATE") {
-      const saved = await getResult(id);
-      if (saved.ok)
-        return setView({ kind: "done", result: saved.data.result, resultId: saved.data.resultId });
-    }
-    setView({ kind: "error", error: r.error });
   }, [id]);
 
   useEffect(() => {
