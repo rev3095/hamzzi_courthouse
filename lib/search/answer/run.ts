@@ -19,7 +19,6 @@ import { AI_NOTICE } from "@/lib/api/respond";
 import {
   SEARCH_ANSWER_RATE,
   assertRateLimit,
-  recordAbuseStrike,
   settleAiQuota,
   tryAiQuota,
 } from "@/lib/auth/rate-limit";
@@ -61,7 +60,28 @@ const view = (
   virtualNotice: answer && answer.virtualCases.length > 0 ? ANSWER_VIRTUAL_NOTICE : null,
 });
 
-const userIdOf = (owner: Owner) => (owner.kind === "user" ? owner.userId : null);
+/**
+ * 답을 만들지 못한 검색어를 이 서버 인스턴스에서 잠깐(MISS_MS) 기억한다 — 탭을 바꾸거나 다시 눌러도 모델을 또 부르지 않게.
+ * 요청자는 담지 않고 검색어 키만 둔다(메모리, 저장하지 않음). 인스턴스가 여럿이면 각자 센다(1시간 횟수·예산이 바깥 상한)
+ */
+export const MISS_MS = 10 * 60 * 1000;
+const MISS_MAX = 500;
+const misses = new Map<string, { reason: AnswerAiReason; until: number }>();
+function rememberMiss(mode: AnswerMode, key: string, reason: AnswerAiReason, now: Date) {
+  if (misses.size >= MISS_MAX) misses.delete(misses.keys().next().value!);
+  misses.set(`${mode}|${key}`, { reason, until: now.getTime() + MISS_MS });
+}
+function recentMiss(mode: AnswerMode, key: string, now: Date): AnswerAiReason | null {
+  const m = misses.get(`${mode}|${key}`);
+  if (!m) return null;
+  if (m.until <= now.getTime()) {
+    misses.delete(`${mode}|${key}`);
+    return null;
+  }
+  return m.reason;
+}
+/** 테스트용 */
+export const clearMisses = () => misses.clear();
 
 export async function runSearchAnswer(input: {
   q: string;
@@ -104,8 +124,10 @@ export async function runSearchAnswer(input: {
     return view(merged, true);
   }
 
-  // 2. 새로 만들기 전 검사
+  // 2. 새로 만들기 전 검사. 방금 같은 검색어로 답을 만들지 못했으면 다시 부르지 않는다 (같은 글 반복, 절대 규칙 9)
   if (aiMode() === "free") return view(null, false, "free_mode");
+  const miss = recentMiss(mode, key, now);
+  if (miss) return view(null, false, miss);
   try {
     await assertQuestionAllowed(q, owner, headers);
   } catch (e) {
@@ -132,8 +154,9 @@ export async function runSearchAnswer(input: {
   try {
     const it = await interpretSearch(m, { query: q, focus });
     if (!it.ok) return view(null, false, it.reason);
+    // 짧은 검색어를 모델이 잘못 볼 수 있어 경고는 세지 않고(상담까지 막히지 않게) AI 답만 쉰다. 잠깐 기억해 다시 부르지 않는다
     if (it.interp.offTopic) {
-      if (!owner.admin) await recordAbuseStrike(headers, userIdOf(owner));
+      rememberMiss(mode, key, "off_topic", now);
       return view(null, false, "off_topic");
     }
     const found = await gatherFound({ query: q, focus, mode, ...it.interp });
@@ -147,7 +170,11 @@ export async function runSearchAnswer(input: {
       cases: found.cases.map((c) => c.caseName).filter(Boolean),
       needVirtual,
     });
-    if (!wr.ok) return view(null, false, wr.reason === "empty" ? "model_failed" : wr.reason);
+    if (!wr.ok) {
+      const reason = wr.reason === "empty" ? "model_failed" : wr.reason;
+      rememberMiss(mode, key, reason, now);
+      return view(null, false, reason);
+    }
 
     // 성립 조건 근거는 법제처에서 실존을 확인한 것만 근거로 붙인다 (DEC-071)
     const cites = wr.written.conditions.flatMap((c) => (c.cite ? [citeText(c.cite)] : []));

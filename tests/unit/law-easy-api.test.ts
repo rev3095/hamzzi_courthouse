@@ -248,6 +248,32 @@ describe("DEC-074 GET /laws/{name}/easy", () => {
     expect(db.saveGenerated).toHaveBeenCalledTimes(1);
   });
 
+  test("DEC-076 같은 지시문 판으로 두 칸을 이미 시도했으면 다시 부르지 않는다", async () => {
+    const payload: Record<string, unknown> = {
+      ...EASY,
+      requirements: [],
+      alternatives: [],
+      extraTried: "law-easy-test",
+    };
+    delete payload.lawName;
+    db.readGenerated.mockResolvedValueOnce({ payload, promptVersion: "v", updatedAt: "" });
+    const { data } = (await (await call()).json()) as Body;
+    expect(ai.explainLaw).not.toHaveBeenCalled();
+    expect(data.easy.keyPoints).toEqual(EASY.keyPoints);
+  });
+
+  test("DEC-076 두 칸이 거른 뒤 비면 시도 표시와 함께 저장해 둔다", async () => {
+    stored.findEasyLaw.mockReturnValue({ ...EASY, requirements: [], alternatives: [] });
+    ai.explainLaw.mockResolvedValue({ ok: false, reason: "empty", costUsd: 0.001 });
+    await call();
+    expect(db.saveGenerated).toHaveBeenCalledWith(
+      "law_easy",
+      "의료기기법",
+      expect.objectContaining({ extraTried: "law-easy-test" }),
+      "law-easy-test",
+    );
+  });
+
   test("DEC-076 두 칸을 더 채우지 못해도 앞의 설명은 그대로 보인다", async () => {
     stored.findEasyLaw.mockReturnValue({ ...EASY, requirements: [], alternatives: [] });
     rate.tryAiQuota.mockResolvedValue(false);

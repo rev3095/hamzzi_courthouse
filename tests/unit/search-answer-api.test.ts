@@ -7,7 +7,7 @@ import type { SearchAnswer, SearchAnswerView } from "@/lib/search/answer/types";
 
 vi.mock("server-only", () => ({}));
 const rate = vi.hoisted(() => ({
-  assertRateLimit: vi.fn(async (_rule: { bucket: string }): Promise<void> => undefined),
+  assertRateLimit: vi.fn<(rule: { bucket: string }) => Promise<void>>(async () => undefined),
   tryAiQuota: vi.fn(async () => true),
   settleAiQuota: vi.fn(async () => undefined),
   recordAbuseStrike: vi.fn(async () => undefined),
@@ -23,7 +23,7 @@ const owner = vi.hoisted(() => ({ resolveOwner: vi.fn(async () => null) }));
 vi.mock("@/lib/inquiries/store", () => owner);
 const db = vi.hoisted(() => ({
   readGenerated: vi.fn(async (): Promise<unknown> => null),
-  saveGenerated: vi.fn(async (..._args: unknown[]) => true),
+  saveGenerated: vi.fn<(...args: unknown[]) => Promise<boolean>>(async () => true),
   bumpGenerated: vi.fn(async () => undefined),
 }));
 vi.mock("@/lib/search/answer/store", () => db);
@@ -64,6 +64,7 @@ const ai = vi.hoisted(() => ({
 vi.mock("@/lib/ai/search-answer", () => ai);
 
 const route = await import("@/app/api/v1/search-answer/route");
+const { clearMisses } = await import("@/lib/search/answer/run");
 
 const INTERP = {
   offTopic: false,
@@ -107,6 +108,7 @@ type Body = { data: SearchAnswerView };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  clearMisses();
   mode.aiMode.mockReturnValue("paid");
   rate.tryAiQuota.mockResolvedValue(true);
   ai.interpretSearch.mockResolvedValue({ ok: true, interp: INTERP });
@@ -203,17 +205,24 @@ describe("DEC-076 POST /search-answer", () => {
     expect(rate.tryAiQuota).not.toHaveBeenCalled();
   });
 
-  test("해석(Haiku)이 법률 무관으로 보면 경고 하나를 세고 검색·답 쓰기 전에 멈춘다 — 쓴 금액은 정산", async () => {
+  test("해석(Haiku)이 법률 무관으로 보면 검색·답 쓰기 전에 멈춘다 — 경고는 세지 않고(상담까지 막지 않게) 쓴 금액은 정산, 10분 동안 다시 부르지 않는다", async () => {
     ai.interpretSearch.mockResolvedValue({ ok: true, interp: { ...INTERP, offTopic: true } });
     const { data } = (await (
       await post({ q: "오늘 기분", mode: "search", focus: "cases" })
     ).json()) as Body;
     expect(data.ai).toEqual({ used: false, reason: "off_topic" });
-    expect(rate.recordAbuseStrike).toHaveBeenCalledTimes(1);
+    expect(rate.recordAbuseStrike).not.toHaveBeenCalled();
     expect(found.gatherFound).not.toHaveBeenCalled();
     expect(ai.writeSearchAnswer).not.toHaveBeenCalled();
     expect(rate.settleAiQuota).toHaveBeenCalledWith(2, 0.0011);
     expect(db.saveGenerated).not.toHaveBeenCalled();
+    // 같은 검색어를 다시 보내도 모델·예산을 쓰지 않는다
+    const again = (await (
+      await post({ q: "오늘 기분", mode: "search", focus: "cases" })
+    ).json()) as Body;
+    expect(again.data.ai).toEqual({ used: false, reason: "off_topic" });
+    expect(ai.interpretSearch).toHaveBeenCalledTimes(1);
+    expect(rate.tryAiQuota).toHaveBeenCalledTimes(1);
   });
 
   test("예산이 없거나 1시간 횟수를 넘으면 모델을 부르지 않는다", async () => {

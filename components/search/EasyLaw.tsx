@@ -199,7 +199,9 @@ function LawMap({ d, virtual }: { d: EasyLawView; virtual: EasyLawView["easy"]["
           columns={columns}
           links={links}
           footer={
-            d.ai.used ? "핵심·요건·방법은 AI가 조문을 풀어 쓴 설명 · AI 생성" : "조문 제목으로 정리"
+            d.ai.used
+              ? `핵심·요건·방법은 AI가 조문을 풀어 쓴 설명 · ${AI_NOTICE}`
+              : `조문 제목으로 정리 · ${d.notice}`
           }
           label={`${d.lawName} 구조도`}
           fileName={`법령구조-${d.lawName}`}

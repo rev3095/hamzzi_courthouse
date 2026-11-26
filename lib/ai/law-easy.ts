@@ -43,7 +43,7 @@ const SYSTEM = `당신은 무료 법률 서비스 "햄찌법원"의 법령 해�
 - issues: 사람들이 자주 궁금해하는 점 2~5개를 묻는 말로 (예: "허가 없이 팔면 어떻게 되나요?"). articleNo는 답이 적힌 조문 번호 하나.
 - virtualCases: {virtual}
 - requirements: 이 법의 주된 의무·금지가 걸리는 조건(성립 요건) 2~5개. text는 "~인 경우에 해당해요"처럼 조건 한 문장, articleNo는 근거 조문 번호 하나.
-- alternatives: 이 법을 어기지 않고 하려는 일을 할 수 있는 방법 3~5개 (예: "판매 전에 허가를 신청해요", "인증받은 제품인지 확인하고 들여와요"). title은 짧은 제목, body는 1~2문장 설명, articleNo는 근거 조문 번호(없으면 null). 법을 피하거나 단속에 걸리지 않는 요령이 아니라, 법이 정한 절차를 지키는 길만 씁니다.
+- alternatives: 이 법이 정한 의무·절차를 지키는 방법 3~5개 (예: "판매 전에 허가를 신청해요", "인증받은 제품인지 확인하고 들여와요"). title은 짧은 제목, body는 1~2문장 설명, articleNo는 그 의무·절차가 적힌 조문 번호 하나. 적용 대상에서 벗어나거나 면제받거나 나눠서 하는 식으로 법을 피하는 요령은 쓰지 않습니다.
 {only}`;
 const ONLY_EXTRA = `이번에는 requirements와 alternatives만 씁니다. summary·who·keyPoints·issues·virtualCases는 모두 빈 배열 []로 둡니다.`;
 

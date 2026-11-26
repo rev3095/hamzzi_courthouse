@@ -57,6 +57,12 @@ const FOREIGN_RECORDS = 3;
 /** 저장 키: 공백 없는 법령 이름 */
 const lawKey = (name: string) => name.normalize("NFKC").replace(/\s+/g, "");
 
+/** 저장해 둔 설명에 남긴 '성립 요건·대안을 이 지시문 판으로 시도함' 표시 */
+const extraTriedOf = (payload: unknown): string | null => {
+  const v = (payload as { extraTried?: unknown } | null)?.extraTried;
+  return typeof v === "string" ? v : null;
+};
+
 /** 저장해 둔 설명을 지금 조문으로 다시 거른다 (조문이 바뀌면 없어진 번호·숫자는 빠진다) */
 function screenStored(
   payload: unknown,
@@ -136,8 +142,14 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
     let easy: EasyLaw | null =
       fromDb ?? findEasyLaw(law.lawName, articles, { allowVirtual: needVirtual });
     let ai: EasyAiState = { used: true };
-    // 성립 요건·대안까지 있으면 모델을 부르지 않는다. 앞의 설명이 있으면 빠진 두 칸만 더 쓴다
-    const want: "all" | "extra" | null = !easy ? "all" : easyComplete(easy) ? null : "extra";
+    // 성립 요건·대안까지 있으면 모델을 부르지 않는다. 앞의 설명이 있으면 빠진 두 칸만 더 쓴다.
+    // 같은 지시문 판으로 두 칸을 이미 시도했으면(거른 뒤 비었어도) 다시 부르지 않는다 — 열 때마다 유료 호출이 되풀이되지 않게
+    const triedExtra = extraTriedOf(stored?.payload) === LAW_EASY_PROMPT_VERSION;
+    const want: "all" | "extra" | null = !easy
+      ? "all"
+      : easyComplete(easy) || triedExtra
+        ? null
+        : "extra";
     if (want) {
       if (articles.length === 0) ai = { used: false, reason: "no_articles" };
       else if (aiMode() === "free") ai = { used: false, reason: "free_mode" };
@@ -154,7 +166,20 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
           if (out.ok) {
             easy = easy ? mergeEasy(easy, out.easy) : out.easy;
             // 법령 이름은 공개 자료라 그대로 키로 쓴다. 저장이 실패해도 화면은 그대로 간다
-            await saveGenerated("law_easy", lawKey(law.lawName), easy, LAW_EASY_PROMPT_VERSION);
+            await saveGenerated(
+              "law_easy",
+              lawKey(law.lawName),
+              { ...easy, ...(want === "extra" && { extraTried: LAW_EASY_PROMPT_VERSION }) },
+              LAW_EASY_PROMPT_VERSION,
+            );
+          } else if (easy && want === "extra" && out.reason !== "model_failed") {
+            // 거른 뒤 남는 것이 없었거나 상한에 못 맞춘 경우: 앞의 설명을 시도 표시와 함께 저장해 다시 부르지 않는다
+            await saveGenerated(
+              "law_easy",
+              lawKey(law.lawName),
+              { ...easy, extraTried: LAW_EASY_PROMPT_VERSION },
+              LAW_EASY_PROMPT_VERSION,
+            );
           } else if (!easy) ai = { used: false, reason: out.reason };
         } finally {
           await settleAiQuota(LAW_EASY_WEIGHT, costUsd);
@@ -179,7 +204,7 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
       sourceUrl: lawUrl(law.lawName),
     };
     const res = ok(body, scope.requestId);
-    // 같은 브라우저가 다시 열 때 모델을 또 부르지 않게 한다. 서버에는 저장하지 않는다
+    // 같은 브라우저가 다시 열 때 서버에 묻지도 않게 한다. 만든 설명은 위에서 generated_results에 저장했다(DEC-076)
     // 실패·대체 응답은 붙잡아 두지 않는다 — 다시 열면 새로 시도한다
     res.headers.set(
       "cache-control",

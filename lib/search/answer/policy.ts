@@ -36,7 +36,28 @@ export const answerKey = (focus: AnswerFocus, q: string): string => `${focus}:${
 export function storableQuery(q: string): boolean {
   const n = normalizeQuery(q);
   if (!n || n.length > ANSWER_QUERY_MAX) return false;
-  return scanInput(n).findings.length === 0;
+  if (scanInput(n).findings.length > 0) return false;
+  return !looksLikeBareName(n);
+}
+
+/** 흔한 성씨 (첫 글자) */
+const SURNAME =
+  "김이박최정강조윤장임한오서신권황안송류전홍고문양손배백허유남심노하곽성차주우구민진지엄채원천방공현함변염여추도소석선설마길연위표명기반왕금옥육인맹제모탁국어은편용예봉경사부";
+/** 법률 낱말에 흔한 끝 글자 — 이 글자로 끝나는 세 글자 낱말은 이름으로 보지 않는다 (임대차·유류분·위자료·공무원 등) */
+const NOUN_END =
+  "차금분장세율료권법죄인자물비서제안원액약사업가용해직상속험도증송청정산급모회단령칙표판건택역률소";
+
+/**
+ * 맨 이름 + 낱말 꼴("홍길동 횡령")인지 — 이름 감지(scanInput)는 호칭·조사가 있어야 잡으므로, 저장할 때만 한 번 더 보수적으로 본다.
+ * 낱말이 둘 이상이고, 그중 하나가 '성씨로 시작하는 세 글자 한글'이며 법률 낱말 끝 글자로 끝나지 않으면 이름일 수 있다고 본다.
+ * 잘못 걸려도 그 검색어를 저장·재사용하지 않을 뿐이다 (답은 그대로 만든다).
+ */
+export function looksLikeBareName(n: string): boolean {
+  const words = n.split(" ").filter(Boolean);
+  if (words.length < 2) return false;
+  return words.some(
+    (w) => /^[가-힣]{3}$/.test(w) && SURNAME.includes(w[0]) && !NOUN_END.includes(w[w.length - 1]),
+  );
 }
 
 // ── 검색어 해석 (Haiku 1단계) ────────────────────────────────────

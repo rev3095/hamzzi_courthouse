@@ -135,7 +135,8 @@ const NAMED_LAW_ARTICLE = /([가-힣]+(?:법|법률))\s*제\s*\d+\s*조/g;
 const PERSON =
   /[가-힣]\s?(?:○○|OO|XX|모)\s?(?:씨|님|군|양)|[가-힣]{2,4}\s?(?:씨|님)(?=[이가은는를을의도와과에께]|[\s.,]|$)|[가-힣]{1,2}[○O]{1,2}(?![가-힣])/;
 /** 대안 칸에 쓰지 않는 말 — 법을 피하거나 걸리지 않는 요령으로 읽힌다 */
-const EVASION = /피하|빠져나|회피|우회|걸리지\s?않|들키|숨기|편법|꼼수|빈틈|단속을/;
+const EVASION =
+  /피하|빠져나|회피|우회|걸리지\s?않|들키|숨기|편법|꼼수|빈틈|단속을|대상(?:에서|이)\s?(?:벗어|빠지|아니게)|해당하지\s?않(?:게|도록)|적용(?:을|받지)\s?않|면제|쪼개|나눠\s?서/;
 /** 회사 이름 꼴 */
 const COMPANY = /\(주\)|㈜|주식회사|유한회사|\(유\)/;
 
@@ -316,9 +317,12 @@ export function screenEasy(
       lineDrop(title, ctx, L.alternatives.title, false) ??
       lineDrop(body, ctx, L.alternatives.body, false) ??
       (EVASION.test(`${title} ${body}`) ? ("evasion" as const) : null);
+    const articleNo = articleNoOf(k.articleNo, ctx);
     if (why) dropped.push(why);
+    // 근거 조문을 댈 수 없는 방법은 싣지 않는다 — 조문이 정한 절차를 지키는 길만 남긴다
+    else if (!articleNo) dropped.push("no_article");
     else if (alternatives.length >= L.alternatives.max) dropped.push("over_limit");
-    else alternatives.push({ title, body, articleNo: articleNoOf(k.articleNo, ctx) });
+    else alternatives.push({ title, body, articleNo });
   }
 
   return {

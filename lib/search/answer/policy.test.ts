@@ -59,6 +59,23 @@ describe("DEC-076 저장 키·저장 가능한 검색어", () => {
     expect(storableQuery("")).toBe(false);
     expect(storableQuery("가".repeat(101))).toBe(false);
   });
+
+  test("맨 이름 + 낱말 꼴은 저장하지 않는다 — 흔한 법률 낱말은 그대로 저장한다", () => {
+    for (const q of ["홍길동 횡령", "김철수 사기 고소", "박영희 손해배상"])
+      expect(storableQuery(q), q).toBe(false);
+    for (const q of [
+      "임대차 보증금",
+      "유류분 반환",
+      "위자료 청구",
+      "이혼 소송",
+      "부당해고",
+      "의료기기법",
+      "공무원 징계",
+      "양육비 이행",
+      "변호사 선임",
+    ])
+      expect(storableQuery(q), q).toBe(true);
+  });
 });
 
 describe("DEC-076 검색어 해석 거르기", () => {

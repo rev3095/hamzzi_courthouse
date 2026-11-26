@@ -6,6 +6,7 @@
 // AI 문장(요약·쓰이는 곳·조건·쟁점·가상 사례)과 검색 결과(법령·판례·건수)를 섞지 않고 출처를 밝힌다. 관련도·유불리·확률 표시는 없다(절대 규칙 2).
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AI_NOTICE } from "@/lib/api/respond";
 import { getSearchAnswer, type ClientError } from "@/lib/client/api";
 import {
   ANSWER_REASON_TEXT,
@@ -193,7 +194,7 @@ function Diagram({ a }: { a: Answer }) {
           badges={[a.field || "법령", "AI Light"]}
           columns={columns}
           links={links}
-          footer="법령·판례는 공식 사이트 검색 결과, 쓰이는 곳·조건은 AI 설명 · AI 생성"
+          footer={`법령·판례는 공식 사이트 검색 결과, 쓰이는 곳·조건은 AI 설명 · ${AI_NOTICE}`}
           label={`${a.query} 법령 구조도`}
           fileName={`법령구조-${a.query}`}
         />
@@ -374,7 +375,9 @@ function Laws({ a }: { a: Answer }) {
       <h3 id="ans-laws" className={H}>
         관련 법령
       </h3>
-      <p className="text-muted mt-1 text-[13px]">{RANK_NOTE}</p>
+      <p className="text-muted mt-1 text-[13px]">
+        검색어와 AI가 고른 법령 이름으로 법제처·각 나라 공식 사이트에서 찾은 법령이에요. {RANK_NOTE}
+      </p>
       {domestic.length > 0 && (
         <>
           <p className="text-ink mt-3 text-[14px] font-semibold">국내</p>
