@@ -10,7 +10,7 @@
 // (쓰임을 묻는 창 없음). 분석은 질문 1번으로 센다. DeepSearch 창에서 보낼 때 사진이 붙어 있으면 자료 첨부(F-017)로 간다.
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
+import { isQuotaBlocked, isSignedIn, takeDraft } from "@/lib/client/api";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { AssistantCards } from "../assistants/AssistantCards";
 import { AttachDrop } from "../ask/AttachTray";
@@ -63,6 +63,13 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
   };
   // 자료를 올리면 곧바로 분석 창을 연다 (0개 → 1개 이상이 된 순간 한 번, DeepSearch 창이 열려 있으면 그쪽이 맡는다)
   const count = attach.items.length;
+  // 결과 없음에서 '다시 적어 보기'로 오면 쓰던 질문을 질문창에 되돌린다 (DEC-067)
+  useEffect(() => {
+    const draft = takeDraft();
+    // 이 탭 저장소는 화면을 그린 뒤에만 읽을 수 있다 (서버 렌더와 맞추려고 처음에는 빈 질문창으로 그린다)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (draft) setText((t) => t || draft);
+  }, []);
   const prevCount = useRef(0);
   const textRef = useRef(text);
   const startRef = useRef(caseFile.start);

@@ -192,7 +192,7 @@ export function HomeGuide({
             <p className="text-muted order-last min-w-0 basis-full text-[13px] sm:order-none sm:flex-1 sm:basis-0">
               {mode === "categories"
                 ? "분야를 고르면 질문창 위에 질문 틀과 문장 시작이 나와요."
-                : "직접 작성한 가상 사연이에요 · 질문 횟수에 포함되지 않아요."}
+                : "직접 쓰거나 AI로 지은 가상 사연이에요 · 질문 횟수에 포함되지 않아요."}
             </p>
             <button
               type="button"
