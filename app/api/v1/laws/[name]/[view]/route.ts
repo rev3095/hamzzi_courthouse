@@ -1,8 +1,10 @@
 // GET /api/v1/laws/{name}/{view} — 법령 도구 (DEC-029 제안). view = easy | articles | three-tier | old-new | history | annexes | impact.
 // 법제처에 등록된 관계·대조표만 정리해 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 // easy(DEC-074)만 AI를 쓴다: 조문 원문을 쉬운 말로 푼 Haiku 1회(1건 $0.004 상한, 주간·기간 예산은 분석과 함께 센다).
-// 하루 질문 횟수는 쓰지 않는다. 실제 판례는 법제처 검색 결과만 싣고, 모델이 만든 사례는 가상 사례로 따로 표시한다. 결과는 저장하지 않는다.
-import { explainLaw } from "@/lib/ai/law-easy";
+// 하루 질문 횟수는 쓰지 않는다. 실제 판례는 법제처 검색 결과만 싣고, 모델이 만든 사례는 가상 사례로 따로 표시한다.
+// DEC-076: 만든 설명(요약·핵심·성립 요건·대안·가상 사례)은 법령 이름을 키로 저장해 다시 쓰고, 빠진 칸이 있으면 그 칸만 더 채워 덧붙인다.
+// 판례 목록은 저장하지 않는다(그 요청에서 법제처로 다시 찾는다, DEC-007).
+import { LAW_EASY_PROMPT_VERSION, explainLaw } from "@/lib/ai/law-easy";
 import { aiMode } from "@/lib/ai/mode";
 import { LAW_EASY_WEIGHT } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
@@ -16,13 +18,19 @@ import {
   tryAiQuota,
   tryLawEasyDaily,
 } from "@/lib/auth/rate-limit";
+import { bumpGenerated, readGenerated, saveGenerated } from "@/lib/search/answer/store";
 import { findEasyLaw } from "@/lib/search/easy/data";
 import {
   EASY_REAL_CASES_ENOUGH,
   EASY_SOURCE_NOTE,
   EASY_VIRTUAL_NOTICE,
+  easyComplete,
+  easyUsable,
   fallbackEasy,
+  mergeEasy,
+  screenEasy,
   type EasyAiState,
+  type EasyArticle,
   type EasyLaw,
   type EasyLawView,
 } from "@/lib/search/easy/policy";
@@ -45,6 +53,20 @@ const REAL_CASES = 4;
 /** 해외 공개 기록을 함께 싣는 법령 이름 */
 const MEDICAL_DEVICE_LAW = /의료기기|체외진단/;
 const FOREIGN_RECORDS = 3;
+
+/** 저장 키: 공백 없는 법령 이름 */
+const lawKey = (name: string) => name.normalize("NFKC").replace(/\s+/g, "");
+
+/** 저장해 둔 설명을 지금 조문으로 다시 거른다 (조문이 바뀌면 없어진 번호·숫자는 빠진다) */
+function screenStored(
+  payload: unknown,
+  lawName: string,
+  articles: EasyArticle[],
+  allowVirtual: boolean,
+): EasyLaw | null {
+  const { easy } = screenEasy(payload, articles, { allowVirtual, lawName });
+  return easyUsable(easy) ? { lawName, ...easy } : null;
+}
 
 const found = <T>(v: T | null): T => {
   if (v === null) throw new ApiError("NOT_FOUND");
@@ -108,9 +130,15 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
     // 판례 검색이 실패했으면 "판례가 적다"고 볼 수 없으므로 가상 사례를 만들지 않는다
     const needVirtual = !realCasesFailed && realCases.length < EASY_REAL_CASES_ENOUGH;
 
-    let easy: EasyLaw | null = findEasyLaw(law.lawName, articles, { allowVirtual: needVirtual });
+    // 1) 저장해 둔 설명(DEC-076, generated_results) → 2) 미리 만든 설명(data.json) 순서로 찾는다. 둘 다 지금 조문으로 다시 거른다
+    const stored = await readGenerated("law_easy", lawKey(law.lawName));
+    const fromDb = stored ? screenStored(stored.payload, law.lawName, articles, needVirtual) : null;
+    let easy: EasyLaw | null =
+      fromDb ?? findEasyLaw(law.lawName, articles, { allowVirtual: needVirtual });
     let ai: EasyAiState = { used: true };
-    if (!easy) {
+    // 성립 요건·대안까지 있으면 모델을 부르지 않는다. 앞의 설명이 있으면 빠진 두 칸만 더 쓴다
+    const want: "all" | "extra" | null = !easy ? "all" : easyComplete(easy) ? null : "extra";
+    if (want) {
       if (articles.length === 0) ai = { used: false, reason: "no_articles" };
       else if (aiMode() === "free") ai = { used: false, reason: "free_mode" };
       // 같은 네트워크·같은 법령은 하루 LAW_EASY_DAILY_LIMIT번까지만 모델로 만든다 — 넘으면 모델 없는 정리
@@ -121,14 +149,21 @@ export const GET = withRoute<Ctx>(async (req, ctx, scope) => {
         // 실제로 쓴 금액만 예산에 남긴다 (DEC-040). 예외가 나도 잡아 둔 금액은 돌려준다
         let costUsd = 0;
         try {
-          const out = await explainLaw({ lawName: law.lawName, articles, needVirtual });
+          const out = await explainLaw({ lawName: law.lawName, articles, needVirtual, want });
           costUsd = out.costUsd;
-          if (out.ok) easy = out.easy;
-          else ai = { used: false, reason: out.reason };
+          if (out.ok) {
+            easy = easy ? mergeEasy(easy, out.easy) : out.easy;
+            // 법령 이름은 공개 자료라 그대로 키로 쓴다. 저장이 실패해도 화면은 그대로 간다
+            await saveGenerated("law_easy", lawKey(law.lawName), easy, LAW_EASY_PROMPT_VERSION);
+          } else if (!easy) ai = { used: false, reason: out.reason };
         } finally {
           await settleAiQuota(LAW_EASY_WEIGHT, costUsd);
         }
       }
+      // 앞의 설명은 있는데 두 칸을 더 채우지 못했으면 있는 설명을 그대로 보인다
+      if (easy && !ai.used) ai = { used: true };
+    } else if (fromDb) {
+      void bumpGenerated("law_easy", lawKey(law.lawName));
     }
     const body: EasyLawView = {
       lawName: law.lawName,

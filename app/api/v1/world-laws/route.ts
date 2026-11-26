@@ -1,5 +1,6 @@
 // /api/v1/world-laws — 국내·해외 법령 통합 검색 (DEC-074). 법제처와 각국 정부의 공식 공개 API를 그 요청에서 조회하고 저장하지 않는다.
-// 모델을 쓰지 않는다(WORLD_NOTICE). 관련도 순위 없이 고정 목록 → 나라 순서로 준다. 실패한 출처는 failed로만 알린다.
+// 모델을 쓰지 않는다(WORLD_NOTICE). 관련도 순위 없이 고정 규칙(DEC-076, lib/search/rank.ts — 국내 먼저·자주 쓰는 법령·위계,
+// 해외는 핵심 법령 → 나라 순서)으로 준다. 실패한 출처는 failed로만 알린다.
 import { ok } from "@/lib/api/respond";
 import { readJson, withRoute, type RequestScope } from "@/lib/api/route";
 import { SEARCH_RATE, assertRateLimit } from "@/lib/auth/rate-limit";

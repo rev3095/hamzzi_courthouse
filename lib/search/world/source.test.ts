@@ -93,7 +93,7 @@ const countryOrder = (list: { country: CountryCode }[]) =>
 const sorted = (xs: number[]) => xs.every((x, i) => i === 0 || xs[i - 1] <= x);
 
 describe("DEC-074 searchWorldLaws", () => {
-  test("목록(핵심 법령) 먼저, 그다음 나라 순서대로 각 출처 순서 그대로 잇는다 — 관련도 점수 없음", async () => {
+  test("DEC-076 국내 먼저, 해외는 핵심 법령 → 나라 순서 → 출처 순서 — 관련도 점수 없음", async () => {
     const f = fakeFetch();
     const koreanSearch = vi.fn(async () => [KR_OTHER]);
     const r = await searchWorldLaws("의료기기 리콜", { fetch: f.fetch, koreanSearch });
@@ -104,9 +104,15 @@ describe("DEC-074 searchWorldLaws", () => {
     const live = r.items.filter((h) => !h.curated);
     expect(curated.length).toBeGreaterThan(0);
     expect(live.length).toBeGreaterThan(0);
-    expect(r.items.slice(0, curated.length)).toEqual(curated);
-    expect(sorted(countryOrder(curated))).toBe(true);
-    expect(sorted(countryOrder(live))).toBe(true);
+    // 국내 줄이 모두 해외 줄보다 앞에 있다
+    const kr = r.items.filter((h) => h.country === "kr");
+    expect(r.items.slice(0, kr.length)).toEqual(kr);
+    // 해외: 핵심 법령 먼저, 그다음 나라 순서
+    const foreign = r.items.filter((h) => h.country !== "kr");
+    const foreignCurated = foreign.filter((h) => h.curated);
+    expect(foreign.slice(0, foreignCurated.length)).toEqual(foreignCurated);
+    expect(sorted(countryOrder(foreignCurated))).toBe(true);
+    expect(sorted(countryOrder(foreign.filter((h) => !h.curated)))).toBe(true);
     // 일본 결과는 목록에 있는 법령이라 목록 줄 하나로 합쳐진다
     expect(new Set(live.map((h) => h.country))).toEqual(new Set(["kr", "us", "uk", "au"]));
     expect(curated.filter((h) => h.id === "jp:335AC0000000145")).toHaveLength(1);

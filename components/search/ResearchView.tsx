@@ -4,6 +4,8 @@
 // 법제처가 준 값만 보여 주고 거르기·정렬만 한다 — 관련도 점수·유불리 판단을 만들지 않는다 (PRD 8.3, 절대 규칙 2).
 // 검색어는 주소에 두지 않는다. 결과 화면·검색 화면에서 넘어올 때도 이 기기(sessionStorage)로만 건넨다 (F-007).
 // 판례 아카이브(DEC-054): 위쪽 전환으로 검색(/search)과 오가고, 보관함은 검색 화면과 같다.
+// 물어보기 AI 리서치 브리프 (DEC-076): '물어보기'를 누르면 목록과 함께 쟁점·요건·법령 체계를 정리한 Light 브리프가 붙는다
+// (components/search/SearchAnswer). 목록·거르기·미리보기는 지금처럼 AI 없이 법제처 값만 쓴다.
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +38,7 @@ import {
   searchErrorText,
 } from "./parts";
 import { ArchiveSwitch } from "./ArchiveSwitch";
-import { AskArchive } from "./AskArchive";
+import { SearchAnswer } from "./SearchAnswer";
 import { KindTabs } from "./KindTabs";
 import { clearPins, usePins, useRecent } from "./recent";
 import { PAGE_TITLE } from "@/components/ui/styles";
@@ -612,20 +614,13 @@ export function ResearchView() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h1 className={PAGE_TITLE}>판례 리서치</h1>
             <div className="flex flex-wrap items-center gap-3">
-              {/* 질문창 (DEC-070): 미리보기 중인 판례가 있으면 그 판례를 근거에 넣을 수 있다 */}
-              <AskArchive
-                focus={
-                  current?.kind === "cases"
-                    ? { id: current.id, title: metaLine(current) || current.title }
-                    : null
-                }
-              />
               <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} />
             </div>
           </div>
           <p className="text-muted mt-2 text-sm">
-            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문
-            횟수와 따로 세요.
+            법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 물어보기를 누르면
+            AI(Light · Haiku 5.5)가 쟁점·요건을 정리한 리서치 브리프를 함께 보여 줘요. 질문 횟수와
+            따로 세요.
           </p>
           <form
             role="search"
@@ -651,7 +646,7 @@ export function ResearchView() {
               disabled={state.kind === "loading"}
               className="bg-ink rounded-button min-h-12 shrink-0 px-6 text-[15px] font-bold text-white disabled:opacity-60"
             >
-              검색
+              물어보기
             </button>
           </form>
           <div className="mt-4">
@@ -667,6 +662,19 @@ export function ResearchView() {
             />
           </div>
         </section>
+        {/* 물어보기 AI 리서치 브리프 (DEC-076): 목록·미리보기는 AI 없이 그대로, 그 위에 Light 브리프 */}
+        {state.kind === "done" && (
+          <SearchAnswer
+            key={`${tab}:${state.q}`}
+            q={state.q}
+            mode="research"
+            focus={tab === "laws" ? "laws" : "cases"}
+            onPick={(q) => {
+              setText(q);
+              void submit(tab, q, tab === "cases" ? caseFilter() : {});
+            }}
+          />
+        )}
       </div>
 
       <div className="mx-auto grid w-full max-w-[1320px] gap-4 px-4 py-5 lg:grid-cols-[250px_minmax(0,1fr)_minmax(0,430px)]">

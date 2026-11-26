@@ -60,6 +60,22 @@ const RAW = {
       articleNo: "제6조",
     },
   ],
+  requirements: [
+    { text: "의료기기를 업으로 만들려는 경우에 해당해요.", articleNo: "제6조" },
+    { text: "근거 없는 요건이에요.", articleNo: null },
+  ],
+  alternatives: [
+    {
+      title: "만들기 전에 허가를 신청해요",
+      body: "제조를 시작하기 전에 허가를 신청해 볼 수 있어요.",
+      articleNo: "제6조",
+    },
+    {
+      title: "단속을 피하는 방법",
+      body: "허가 없이 팔되 들키지 않게 할 수 있어요.",
+      articleNo: null,
+    },
+  ],
 };
 
 const msg = (text: string): ModelMessage =>
@@ -84,7 +100,7 @@ function fakeModel(opts: { tokens?: number; fail?: unknown; text?: string } = {}
 }
 
 describe("DEC-074 법령 쉬운 설명 Haiku 호출", () => {
-  test("Haiku 1회, thinking 끔, effort low, 출력 1,800토큰 이하, 1건 $0.004 이하", async () => {
+  test("Haiku 1회, thinking 끔, effort low, 출력 2,400토큰 이하, 1건 $0.004 이하", async () => {
     const model = fakeModel();
     const out = await explainLaw(
       { lawName: LAW, articles: ARTICLES, needVirtual: true },
@@ -96,7 +112,7 @@ describe("DEC-074 법령 쉬운 설명 Haiku 호출", () => {
     expect(p.thinking).toEqual({ type: "disabled" });
     expect(p.output_config?.effort).toBe("low");
     expect(p.max_tokens).toBeLessThanOrEqual(LAW_EASY_TOKENS.max);
-    expect(LAW_EASY_TOKENS.max).toBe(1_800);
+    expect(LAW_EASY_TOKENS.max).toBe(2_400);
     // 조문 목차와 본문이 들어간다
     expect(JSON.stringify(p.messages)).toContain("제6조 제조업의 허가 등");
     expect(JSON.stringify(p.system)).toContain(LAW);
@@ -107,11 +123,38 @@ describe("DEC-074 법령 쉬운 설명 Haiku 호출", () => {
     expect(out.easy.lawName).toBe(LAW);
     expect(out.easy.keyPoints.map((k) => k.title)).toEqual(["만들려면 허가가 필요해요"]);
     expect(out.easy.virtualCases.map((v) => v.title)).toEqual(["허가 없이 만든 경우"]);
-    expect(out.dropped).toEqual(["unknown_article", "case_like"]);
+    // DEC-076: 근거 없는 요건·법을 피하는 요령으로 읽히는 대안은 빠진다
+    expect(out.easy.requirements.map((r) => r.articleNo)).toEqual(["제6조"]);
+    expect(out.easy.alternatives.map((a) => a.title)).toEqual(["만들기 전에 허가를 신청해요"]);
+    expect(out.dropped).toEqual(["unknown_article", "case_like", "no_article", "evasion"]);
+    expect(JSON.stringify(p.system)).toContain("alternatives");
     // 입력 9,000토큰 $0.0009 + 출력 1,000토큰 $0.0005
     expect(out.costUsd).toBeCloseTo(0.0014, 6);
     expect(out.costUsd).toBeLessThanOrEqual(LAW_EASY_COST_CAP_USD);
     expect(LAW_EASY_COST_CAP_USD).toBe(0.004);
+  });
+
+  test("DEC-076 extra: 성립 요건·대안만 쓰게 하고, 그 두 칸이 남으면 쓸 수 있다", async () => {
+    const model = fakeModel({
+      text: JSON.stringify({
+        summary: [],
+        who: [],
+        keyPoints: [],
+        issues: [],
+        virtualCases: [],
+        requirements: RAW.requirements,
+        alternatives: RAW.alternatives,
+      }),
+    });
+    const out = await explainLaw(
+      { lawName: LAW, articles: ARTICLES, needVirtual: true, want: "extra" },
+      { model },
+    );
+    expect(JSON.stringify(model.calls[0].system)).toContain("requirements와 alternatives만");
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.easy.summary).toEqual([]);
+    expect(out.easy.alternatives).toHaveLength(1);
   });
 
   test("실제 판례가 충분하면 가상 사례를 시키지 않고, 모델이 내도 버린다", async () => {

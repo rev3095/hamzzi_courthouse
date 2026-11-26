@@ -145,6 +145,8 @@ export const BUDGET_UNIT_USD = 0.0015;
 export const HELPER_WEIGHT = 1;
 /** 법령 쉬운 설명(DEC-074) 1건. Haiku 상한 $0.004 ÷ 단위 $0.0015 올림 (단위 테스트가 확인) */
 export const LAW_EASY_WEIGHT = 3;
+/** 검색 '물어보기' AI 답(DEC-076) 1건. Haiku 두 번 상한 $0.003 ÷ 단위 $0.0015 올림 (단위 테스트가 확인) */
+export const SEARCH_ANSWER_WEIGHT = 2;
 /** 서류 판독(F-015, DEC-052) 1건. Haiku 비전 상한 $0.015(사진 30장·문서, 2026-11-24) ÷ 단위 $0.0015 올림 (단위 테스트가 확인) */
 export const CASEFILE_WEIGHT = 10;
 /** 사건 진행(F-016, DEC-053): 서류 읽기 $0.015(사진 30장·문서, 2026-11-24) · 요약 $0.002 — 상한 ÷ 단위 올림. 기업 조사는 건당 상한이 없어 잡아 두는 금액 $1.5 ÷ 단위 (단위 테스트가 확인) */

@@ -7,6 +7,8 @@ import { COUNTRIES, WORLD_NOTICE, type WorldLawHit } from "@/lib/search/world/ty
 const api = vi.hoisted(() => ({ searchWorldLaws: vi.fn(), searchCases: vi.fn() }));
 vi.mock("@/lib/client/api", async (orig) => ({
   ...(await orig<typeof import("@/lib/client/api")>()),
+  // DEC-076 물어보기 AI 답은 이 화면 테스트에서 끝나지 않은 채로 둔다 (목록만 본다)
+  getSearchAnswer: () => new Promise(() => {}),
   searchWorldLaws: api.searchWorldLaws,
   searchCases: api.searchCases,
 }));

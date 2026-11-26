@@ -29,6 +29,12 @@ export const EXAMPLE_RATE: RateRule = { bucket: "example", limit: 30, windowSeco
 export const DOC_DRAFT_RATE: RateRule = { bucket: "doc_draft", limit: 10, windowSeconds: 3600 };
 /** 법령 쉬운 설명(DEC-074): 같은 네트워크 1시간 20회 (유료 호출일 수 있어 법령 조회와 따로 센다) */
 export const LAW_EASY_RATE: RateRule = { bucket: "law_easy", limit: 20, windowSeconds: 3600 };
+/** 검색 '물어보기' AI 답(DEC-076)을 새로 만드는 횟수: 같은 네트워크 1시간 30회. 저장해 둔 답을 다시 보는 것은 세지 않는다 */
+export const SEARCH_ANSWER_RATE: RateRule = {
+  bucket: "search_answer",
+  limit: 30,
+  windowSeconds: 3600,
+};
 /** 같은 네트워크가 같은 법령의 쉬운 설명을 모델로 만들 수 있는 하루(24시간 창) 횟수 (사용자 결정 2026-11-27) */
 export const LAW_EASY_DAILY_LIMIT = 20;
 /** 법령마다 따로 세는 하루 통. 통 이름에는 공개 법령 이름만 들어간다 */

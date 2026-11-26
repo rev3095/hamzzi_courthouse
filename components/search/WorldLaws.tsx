@@ -14,6 +14,7 @@ import {
   type CountryCode,
   type WorldLawHit,
 } from "@/lib/search/world/types";
+import { RANK_NOTE } from "@/lib/search/rank";
 import { dotDate } from "../result/labels";
 import { CountryLabel, Flag } from "./Flag";
 import { Highlighted, SearchNotice } from "./parts";
@@ -202,6 +203,7 @@ export function WorldResults({
       <div className="mt-2">
         <SearchNotice notice={data.notice || WORLD_NOTICE} />
       </div>
+      <p className="text-muted mt-2 text-[13px]">{RANK_NOTE}</p>
       {sent.length > 0 && (
         <p data-testid="world-translated" className="text-muted mt-3 text-sm leading-relaxed">
           해외 자료는 이렇게 찾았어요: {sent.join(" · ")}

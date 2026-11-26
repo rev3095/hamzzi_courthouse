@@ -14,12 +14,24 @@ const api = vi.hoisted(() => ({
   searchCases: vi.fn(),
   searchCasesPage: vi.fn(),
   getCaseDetail: vi.fn(),
+  // DEC-076 물어보기 AI 리서치 브리프 — 이 화면 테스트에서는 AI 답을 만들지 않은 것으로 둔다
+  getSearchAnswer: vi.fn(async () => ({
+    ok: true,
+    data: {
+      answer: null,
+      ai: { used: false, reason: "free_mode" },
+      reused: false,
+      notice: "",
+      virtualNotice: null,
+    },
+  })),
 }));
 vi.mock("@/lib/client/api", async (orig) => ({
   ...(await orig<typeof import("@/lib/client/api")>()),
   searchCases: api.searchCases,
   searchCasesPage: api.searchCasesPage,
   getCaseDetail: api.getCaseDetail,
+  getSearchAnswer: api.getSearchAnswer,
 }));
 
 const { ResearchView, citationLine, refine } = await import("@/components/search/ResearchView");
@@ -86,7 +98,7 @@ afterEach(cleanup);
 
 const searchFor = async (q: string) => {
   fireEvent.change(screen.getByLabelText("리서치 검색어"), { target: { value: q } });
-  fireEvent.click(screen.getByRole("button", { name: "검색" }));
+  fireEvent.click(screen.getByRole("button", { name: "물어보기" }));
   return screen.findByTestId("research-count");
 };
 
@@ -178,7 +190,7 @@ describe("판례 리서치 화면", () => {
   test("법령명 + 조문 번호는 조문 화면으로 바로 간다", async () => {
     render(<ResearchView />);
     fireEvent.change(screen.getByLabelText("리서치 검색어"), { target: { value: "민법 750조" } });
-    fireEvent.click(screen.getByRole("button", { name: "검색" }));
+    fireEvent.click(screen.getByRole("button", { name: "물어보기" }));
     expect(push).toHaveBeenCalledWith(`/statutes/${encodeURIComponent("민법:제750조")}`);
     expect(api.searchCases).not.toHaveBeenCalled();
   });

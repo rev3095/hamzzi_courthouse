@@ -23,7 +23,7 @@ import {
 import { LAW_EASY_COST_CAP_USD, LAW_EASY_TOKENS } from "./cost";
 import { MODELS } from "./policy";
 
-export const LAW_EASY_PROMPT_VERSION = "law-easy-2026-11-27c";
+export const LAW_EASY_PROMPT_VERSION = "law-easy-2026-11-27d";
 const TIMEOUT_MS = 25_000;
 
 const SYSTEM = `당신은 무료 법률 서비스 "햄찌법원"의 법령 해설 도우미입니다. 법령을 한 번도 읽어 본 적 없는 사람이 이해하도록 "{law}"을(를) 쉬운 말로 풀어 씁니다.
@@ -41,7 +41,11 @@ const SYSTEM = `당신은 무료 법률 서비스 "햄찌법원"의 법령 해�
 - who: 이 법이 누구에게 해당하는지 1~3줄 (예: "의료기기를 만들거나 파는 사업자").
 - keyPoints: 핵심 내용 3~6개. title은 짧은 제목(20자 안팎), body는 쉬운 설명 1~2문장, articleNo는 근거가 되는 조문 번호 하나.
 - issues: 사람들이 자주 궁금해하는 점 2~5개를 묻는 말로 (예: "허가 없이 팔면 어떻게 되나요?"). articleNo는 답이 적힌 조문 번호 하나.
-- virtualCases: {virtual}`;
+- virtualCases: {virtual}
+- requirements: 이 법의 주된 의무·금지가 걸리는 조건(성립 요건) 2~5개. text는 "~인 경우에 해당해요"처럼 조건 한 문장, articleNo는 근거 조문 번호 하나.
+- alternatives: 이 법을 어기지 않고 하려는 일을 할 수 있는 방법 3~5개 (예: "판매 전에 허가를 신청해요", "인증받은 제품인지 확인하고 들여와요"). title은 짧은 제목, body는 1~2문장 설명, articleNo는 근거 조문 번호(없으면 null). 법을 피하거나 단속에 걸리지 않는 요령이 아니라, 법이 정한 절차를 지키는 길만 씁니다.
+{only}`;
+const ONLY_EXTRA = `이번에는 requirements와 alternatives만 씁니다. summary·who·keyPoints·issues·virtualCases는 모두 빈 배열 []로 둡니다.`;
 
 const VIRTUAL_ON = `이 법이 실제로 어떻게 쓰이는지 보여 주는 지어낸 일상 상황 2개. title은 짧은 제목, situation은 "이런 상황이라면"에 해당하는 상황 1~2문장(사람은 "판매업자 A"처럼 역할로만 부릅니다), lawSays는 "이 법은 이렇게 정하고 있어요"에 해당하는 설명 1~2문장, articleNo는 근거 조문 번호 하나. 실제 사건·판례처럼 보이게 쓰지 않고, 재판·소송·수사 이야기나 \"벌금을 냈어요\" 같은 결과를 쓰지 않으며, 숫자·날짜·회사 이름·사람 이름을 넣지 않습니다.`;
 const VIRTUAL_OFF = `빈 배열 []로 둡니다.`;
@@ -84,8 +88,34 @@ const SCHEMA = {
         additionalProperties: false,
       },
     },
+    requirements: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { text: { type: "string" }, articleNo },
+        required: ["text", "articleNo"],
+        additionalProperties: false,
+      },
+    },
+    alternatives: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { title: { type: "string" }, body: { type: "string" }, articleNo },
+        required: ["title", "body", "articleNo"],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ["summary", "who", "keyPoints", "issues", "virtualCases"],
+  required: [
+    "summary",
+    "who",
+    "keyPoints",
+    "issues",
+    "virtualCases",
+    "requirements",
+    "alternatives",
+  ],
   additionalProperties: false,
 } as const;
 
@@ -98,7 +128,13 @@ export type ExplainLawOutput =
     };
 
 export async function explainLaw(
-  input: { lawName: string; articles: EasyArticle[]; needVirtual: boolean },
+  input: {
+    lawName: string;
+    articles: EasyArticle[];
+    needVirtual: boolean;
+    /** extra = 성립 요건·대안만 쓴다 (앞서 만든 설명에 덧붙일 때, DEC-076) */
+    want?: "all" | "extra";
+  },
   deps: { model?: ModelClient; costCapUsd?: number } = {},
 ): Promise<ExplainLawOutput> {
   if (input.articles.length === 0) return { ok: false, reason: "no_articles", costUsd: 0 };
@@ -107,6 +143,7 @@ export async function explainLaw(
     deps.costCapUsd ?? LAW_EASY_COST_CAP_USD,
   );
   const digest = digestArticles(input.articles);
+  const extraOnly = input.want === "extra";
   try {
     const res = await callModel(
       model,
@@ -118,10 +155,12 @@ export async function explainLaw(
         system: [
           {
             type: "text",
-            text: SYSTEM.replaceAll("{law}", input.lawName).replace(
-              "{virtual}",
-              input.needVirtual ? VIRTUAL_ON : VIRTUAL_OFF,
-            ),
+            text: SYSTEM.replaceAll("{law}", input.lawName)
+              .replace(
+                "{virtual}",
+                input.needVirtual && extraOnly === false ? VIRTUAL_ON : VIRTUAL_OFF,
+              )
+              .replace("{only}", extraOnly ? ONLY_EXTRA : ""),
           },
         ],
         output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
@@ -136,7 +175,10 @@ export async function explainLaw(
       allowVirtual: input.needVirtual,
       lawName: input.lawName,
     });
-    if (!easyUsable(easy)) return { ok: false, reason: "empty", costUsd: model.spentUsd() };
+    const usable = extraOnly
+      ? easy.requirements.length > 0 || easy.alternatives.length > 0
+      : easyUsable(easy);
+    if (!usable) return { ok: false, reason: "empty", costUsd: model.spentUsd() };
     return {
       ok: true,
       easy: { lawName: input.lawName, ...easy },

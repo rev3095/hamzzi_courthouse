@@ -2,10 +2,12 @@ import "server-only";
 // 국내·해외 법령 통합 검색 (DEC-074) — 각국 정부의 공식 공개 API를 그 요청에서 조회한다. 모델을 쓰지 않는다.
 // 가져온 자료는 저장하지 않고(DEC-009와 같은 원칙), 웹 화면(HTML)을 긁지 않는다 — 공개 API의 JSON·Atom만 읽는다.
 // 요청에는 일반적인 클라이언트 이름만 싣는다(프로젝트·사용자 이름 금지). 로그에 검색어를 남기지 않는다.
-// 출처 하나가 실패해도 전체를 막지 않고 그 나라만 failed로 알린다. 관련도 점수 없이 출처가 준 순서 그대로 둔다.
+// 출처 하나가 실패해도 전체를 막지 않고 그 나라만 failed로 알린다. 관련도 점수 없이 고정 규칙(lib/search/rank.ts, DEC-076)으로 놓는다.
+// 검색 '물어보기'(DEC-076)는 Haiku 해석이 고른 낱말을 deps.extra로 더해 부른다 — 이 모듈 자체는 모델을 부르지 않는다.
 import { createLawSource } from "@/lib/search/law-source";
 import { stripHtml } from "@/lib/search/normalize";
 import type { LawHit } from "@/lib/search/types";
+import { rankWorld } from "@/lib/search/rank";
 import { catalogSearch } from "./catalog";
 import { queryTerms, translateQuery, type QueryTerms } from "./glossary";
 import {
@@ -27,6 +29,8 @@ export type WorldDeps = {
   /** 법제처 법령 이름 검색. 테스트에서 가짜로 바꾼다 */
   koreanSearch?: (query: string) => Promise<LawHit[]>;
   timeoutMs?: number;
+  /** 검색어 해석(Haiku, DEC-076)이 고른 낱말. 국내 이름 검색(ko)과 해외 검색(en·ja)에 더한다 */
+  extra?: { ko?: string[]; en?: string[]; ja?: string[] };
 };
 
 type Ctx = { fetch: typeof fetch; signal: AbortSignal };
@@ -349,17 +353,31 @@ async function timed<T>(ms: number, run: (signal: AbortSignal) => Promise<T>): P
 const HANGUL = /[가-힣]/;
 
 /**
- * 국내·해외 법령을 한 번에 찾는다. 고정 목록(catalog)을 먼저, 그다음 나라 순서(kr, us, eu …)대로
- * 각 출처가 준 순서 그대로 잇는다. 같은 법령이 목록과 실시간 결과에 함께 있으면 목록의 한국어 이름·설명을 살린다.
+ * 국내·해외 법령을 한 번에 찾는다. 순서는 rankWorld 고정 규칙(국내 먼저 → 자주 쓰는 법령·위계, 해외는 핵심 법령 → 나라 순서)이고
+ * 같은 자리끼리는 출처가 준 순서 그대로다. 같은 법령이 목록과 실시간 결과에 함께 있으면 목록의 한국어 이름·설명을 살린다.
  */
 export async function searchWorldLaws(
   query: string,
   deps: WorldDeps = {},
 ): Promise<WorldSearchResult> {
   const q = query.normalize("NFKC").replace(/\s+/g, " ").trim();
-  const translated = translateQuery(q);
-  if (!q) return { items: [], failed: [], translated };
-  const terms = queryTerms(q);
+  const glossary = translateQuery(q);
+  if (!q) return { items: [], failed: [], translated: glossary };
+  const base = queryTerms(q);
+  // 검색어 해석(DEC-076)이 준 영어·일본어 낱말이 있으면 고정 낱말표 앞에 둔다 (공식 사이트 검색에 그대로 보낸다)
+  const terms: QueryTerms = deps.extra
+    ? {
+        ko: [...new Set([...base.ko, ...(deps.extra.ko ?? [])])],
+        en: [...new Set([...(deps.extra.en ?? []), ...base.en])].slice(0, 4),
+        ja: [...new Set([...(deps.extra.ja ?? []), ...base.ja])].slice(0, 4),
+      }
+    : base;
+  const translated = deps.extra
+    ? {
+        ...(terms.en.length > 0 && { en: terms.en.join(" ") }),
+        ...(terms.ja.length > 0 && { ja: terms.ja.join(" ") }),
+      }
+    : glossary;
   const doFetch = deps.fetch ?? fetch;
   const ms = deps.timeoutMs ?? WORLD_TIMEOUT_MS;
   const korean =
@@ -400,11 +418,12 @@ export async function searchWorldLaws(
     }
   });
 
-  const all = [...merged.values()];
-  const ordered = [
-    ...all.filter((h) => h.curated),
-    ...COUNTRY_CODES.flatMap((c) => all.filter((h) => !h.curated && h.country === c)),
-  ];
+  // 순서 (DEC-076): 국내 먼저(자주 쓰는 법령 표 → 법령 위계), 해외는 핵심 법령 → 나라 순서. 관련도 점수 없음
+  const ordered = rankWorld(
+    [...merged.values()],
+    (h) => ({ name: h.title, kind: h.kind, country: h.country, curated: h.curated }),
+    COUNTRY_CODES,
+  );
   const seen = new Map<CountryCode, number>();
   const items = ordered.filter((h) => {
     const n = (seen.get(h.country) ?? 0) + 1;

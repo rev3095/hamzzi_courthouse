@@ -22,10 +22,17 @@ vi.mock("@/lib/auth/rate-limit", async (orig) => ({
 const mode = vi.hoisted(() => ({ aiMode: vi.fn() }));
 vi.mock("@/lib/ai/mode", () => mode);
 vi.mock("@/lib/search/world/source", () => ({ searchWorldCases: async () => [] }));
-const ai = vi.hoisted(() => ({ explainLaw: vi.fn() }));
+const ai = vi.hoisted(() => ({ explainLaw: vi.fn(), LAW_EASY_PROMPT_VERSION: "law-easy-test" }));
 vi.mock("@/lib/ai/law-easy", () => ai);
 const stored = vi.hoisted(() => ({ findEasyLaw: vi.fn() }));
 vi.mock("@/lib/search/easy/data", () => stored);
+// DEC-076 저장소 (가짜): 저장해 둔 설명이 있으면 다시 쓰고, 새로 만든 설명은 저장한다
+const db = vi.hoisted(() => ({
+  readGenerated: vi.fn(async (): Promise<unknown> => null),
+  saveGenerated: vi.fn(async () => true),
+  bumpGenerated: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/search/answer/store", () => db);
 
 const route = await import("@/app/api/v1/laws/[name]/[view]/route");
 const { LAW_EASY_RATE, LOOKUP_RATE } = await import("@/lib/auth/rate-limit");
@@ -65,6 +72,14 @@ const EASY = {
       title: "허가 없이 만든 경우",
       situation: "제조업자 A가 허가 없이 만들려고 해요.",
       lawSays: "이 법은 허가를 받도록 정하고 있어요.",
+      articleNo: "제6조",
+    },
+  ],
+  requirements: [{ text: "의료기기를 업으로 만들려는 경우에 해당해요.", articleNo: "제6조" }],
+  alternatives: [
+    {
+      title: "먼저 허가를 신청해요",
+      body: "만들기 전에 허가를 신청해 볼 수 있어요.",
       articleNo: "제6조",
     },
   ],
@@ -196,6 +211,50 @@ describe("DEC-074 GET /laws/{name}/easy", () => {
     expect(rate.tryAiQuota).not.toHaveBeenCalled();
     expect(data.ai).toEqual({ used: true });
     expect(data.notice).toBe(AI_NOTICE);
+  });
+
+  test("DEC-076 새로 만든 설명은 법령 이름을 키로 저장한다", async () => {
+    await call();
+    expect(db.saveGenerated).toHaveBeenCalledWith(
+      "law_easy",
+      "의료기기법",
+      expect.objectContaining({ requirements: EASY.requirements, alternatives: EASY.alternatives }),
+      "law-easy-test",
+    );
+  });
+
+  test("DEC-076 저장해 둔 설명이 다 채워져 있으면 모델·예산 없이 다시 쓴다", async () => {
+    const payload: Record<string, unknown> = { ...EASY };
+    delete payload.lawName;
+    db.readGenerated.mockResolvedValueOnce({
+      payload,
+      promptVersion: "v",
+      updatedAt: "2026-11-27",
+    });
+    const { data } = (await (await call()).json()) as Body;
+    expect(ai.explainLaw).not.toHaveBeenCalled();
+    expect(rate.tryAiQuota).not.toHaveBeenCalled();
+    expect(db.bumpGenerated).toHaveBeenCalledWith("law_easy", "의료기기법");
+    expect(data.easy.alternatives.map((a) => a.title)).toEqual(["먼저 허가를 신청해요"]);
+  });
+
+  test("DEC-076 미리 만든 설명에 성립 요건·대안이 없으면 그 두 칸만 더 써서 덧붙인다", async () => {
+    stored.findEasyLaw.mockReturnValue({ ...EASY, requirements: [], alternatives: [] });
+    const { data } = (await (await call()).json()) as Body;
+    expect(ai.explainLaw).toHaveBeenCalledTimes(1);
+    expect(ai.explainLaw.mock.calls[0][0]).toMatchObject({ want: "extra" });
+    expect(data.easy.summary).toEqual(EASY.summary);
+    expect(data.easy.alternatives).toEqual(EASY.alternatives);
+    expect(db.saveGenerated).toHaveBeenCalledTimes(1);
+  });
+
+  test("DEC-076 두 칸을 더 채우지 못해도 앞의 설명은 그대로 보인다", async () => {
+    stored.findEasyLaw.mockReturnValue({ ...EASY, requirements: [], alternatives: [] });
+    rate.tryAiQuota.mockResolvedValue(false);
+    const { data } = (await (await call()).json()) as Body;
+    expect(data.ai).toEqual({ used: true });
+    expect(data.notice).toBe(AI_NOTICE);
+    expect(data.easy.keyPoints).toEqual(EASY.keyPoints);
   });
 
   test("횟수 제한은 쉬운 설명 전용 통(1시간 20회)으로 세고, 넘으면 모델 전에 막는다", async () => {

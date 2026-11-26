@@ -25,6 +25,7 @@ vi.mock("@/lib/client/api", async (orig) => ({
   getStatuteCases: api.getStatuteCases,
 }));
 
+const { EasyLawBody } = await import("@/components/search/EasyLaw");
 const { LawRoute } = await import("@/components/search/LawTools");
 
 const ARTICLES = [
@@ -64,6 +65,14 @@ const VIEW: EasyLawView = {
         title: "허가 없이 만든 경우",
         situation: "제조업자 A가 허가 없이 만들려고 해요.",
         lawSays: "이 법은 허가를 받도록 정하고 있어요.",
+        articleNo: "제6조",
+      },
+    ],
+    requirements: [{ text: "의료기기를 업으로 만들려는 경우에 해당해요.", articleNo: "제6조" }],
+    alternatives: [
+      {
+        title: "먼저 허가를 신청해요",
+        body: "만들기 전에 허가를 신청해 볼 수 있어요.",
         articleNo: "제6조",
       },
     ],
@@ -108,7 +117,7 @@ describe("DEC-074 법령 화면은 쉬운 설명이 먼저", () => {
     expect(screen.getByText(/법령을 쉬운 말로 풀고 있어요/)).toBeTruthy();
     expect(await screen.findByRole("heading", { name: "한눈에 보기" })).toBeTruthy();
     expect(api.getLawView).toHaveBeenCalledWith("의료기기법", "easy", undefined);
-    for (const h of ["누구에게 해당하나요", "핵심 내용", "자주 문제 되는 쟁점", "실제 판례"])
+    for (const h of ["누구에게 해당하나요", "핵심 내용", "자주 문제 되는 쟁점", "실제 사례·판례"])
       expect(screen.getByRole("heading", { name: h })).toBeTruthy();
     expect(screen.getByText("의료기기를 관리하는 규칙을 정한 법이에요.")).toBeTruthy();
   });
@@ -155,7 +164,7 @@ describe("DEC-074 법령 화면은 쉬운 설명이 먼저", () => {
 
   test("실제 판례가 모자라면 가상 사례를 다른 모양·꼬리표로 보인다", async () => {
     render(<LawRoute />);
-    await screen.findByRole("heading", { name: "실제 판례" });
+    await screen.findByRole("heading", { name: "실제 사례·판례" });
     expect(screen.getByText("법제처에서 찾은 판례")).toBeTruthy();
     expect(screen.getByText(/찾은 판례가 없어요/)).toBeTruthy();
     const virtual = screen.getByTestId("easy-virtual");
@@ -173,7 +182,7 @@ describe("DEC-074 법령 화면은 쉬운 설명이 먼저", () => {
   test("실제 판례가 충분하면 가상 사례·꼬리표를 보이지 않고 판례 화면으로 잇는다", async () => {
     easyView = { ...VIEW, realCases: [CASE("11"), CASE("12")], virtualNotice: null };
     render(<LawRoute />);
-    await screen.findByRole("heading", { name: "실제 판례" });
+    await screen.findByRole("heading", { name: "실제 사례·판례" });
     expect(screen.getByRole("link", { name: /의료기기법위반 11/ }).getAttribute("href")).toBe(
       "/cases/11",
     );
@@ -185,7 +194,14 @@ describe("DEC-074 법령 화면은 쉬운 설명이 먼저", () => {
   test("AI 설명을 못 만들면 조문 제목 정리와 부드러운 안내를 보인다 (AI 고지 없음)", async () => {
     easyView = {
       ...VIEW,
-      easy: { ...VIEW.easy, who: [], issues: [], virtualCases: [] },
+      easy: {
+        ...VIEW.easy,
+        who: [],
+        issues: [],
+        virtualCases: [],
+        requirements: [],
+        alternatives: [],
+      },
       ai: { used: false, reason: "free_mode" },
       notice: SEARCH_NOTICE,
       virtualNotice: null,
@@ -232,5 +248,29 @@ describe("DEC-074 원문·판례 탭", () => {
     fireEvent.click(screen.getByRole("tab", { name: "원문·판례" }));
     expect(push).toHaveBeenCalledWith(`/laws/${encodeURIComponent("의료기기법")}?tab=articles`);
     await screen.findByRole("heading", { name: "한눈에 보기" });
+  });
+});
+
+describe("DEC-076 법령 화면 순서·구조도·성립 요건·대안", () => {
+  test("요약 → 실제 사례 → 구조도 → 성립 요건 → 대안 순서로 보이고 원문은 접혀 있다", () => {
+    render(<EasyLawBody d={VIEW} />);
+    const order = [
+      "한눈에 보기",
+      "실제 사례·판례",
+      "한 장으로 보는 구조",
+      "성립 요건",
+      "법령에 어긋나지 않게 하는 방법",
+    ].map((name) => screen.getByRole("heading", { name }));
+    for (let i = 1; i < order.length; i += 1) {
+      expect(
+        order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    expect(screen.getByRole("img", { name: /의료기기법 구조도/ })).toBeTruthy();
+    expect(screen.getByTestId("easy-alternatives").textContent).toContain("먼저 허가를 신청해요");
+    expect(screen.getByRole("button", { name: "원문 펼치기" }).getAttribute("aria-expanded")).toBe(
+      "false",
+    );
+    expect(document.body.textContent).not.toMatch(/%/);
   });
 });

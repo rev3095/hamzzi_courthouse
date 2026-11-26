@@ -13,6 +13,11 @@ export type EasyVirtualCase = {
   articleNo: string | null;
 };
 
+/** 성립 요건 한 줄 (DEC-076): 이 법의 의무·금지가 걸리는 조건. 근거 조문(그 법의 실제 조문)이 있어야 싣는다 */
+export type EasyRequirement = { text: string; articleNo: string | null };
+/** 법령에 어긋나지 않게 하는 방법 (DEC-076): 지키는 길을 제안하는 말 — 법을 피하는 요령이 아니다 */
+export type EasyAlternative = { title: string; body: string; articleNo: string | null };
+
 export type EasyLaw = {
   lawName: string;
   /** 한눈에: 이 법이 무엇을 정하는지 2~4문장 */
@@ -25,6 +30,10 @@ export type EasyLaw = {
   who: string[];
   /** 가상 사례 — 실제 사례가 2건 미만일 때만 채운다 */
   virtualCases: EasyVirtualCase[];
+  /** 성립 요건 2~5개 (DEC-076). 미리 만든 설명에는 없을 수 있다(빈 배열) */
+  requirements: EasyRequirement[];
+  /** 법령에 어긋나지 않는 방법 3~5개 (DEC-076). 미리 만든 설명에는 없을 수 있다(빈 배열) */
+  alternatives: EasyAlternative[];
 };
 
 /** 모델이 낸 그대로의 모양 (거르기 전) */
@@ -48,7 +57,13 @@ export const EASY_LIMITS = {
   issues: { max: 5, chars: 120 },
   who: { max: 3, chars: 140 },
   virtual: { max: 2, title: 40, chars: 320 },
+  requirements: { max: 5, chars: 200 },
+  alternatives: { max: 5, title: 40, body: 280 },
 } as const;
+
+/** 대안 칸 머리말 — 법을 피하는 요령이 아니라 지키는 길이라는 것을 밝힌다 */
+export const EASY_ALTERNATIVE_NOTE =
+  "이 법을 지키면서 할 수 있는 방법을 AI가 조문을 바탕으로 정리했어요. 내 상황에 맞는지는 원문과 담당 기관에서 확인해 주세요.";
 
 /** AI를 쓰지 않은 이유 */
 export type EasyAiReason =

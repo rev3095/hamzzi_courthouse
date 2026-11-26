@@ -6,11 +6,13 @@ import { articlesIn, caseNumbersIn } from "@/lib/citations/patterns";
 import { scanInput } from "@/lib/pii";
 import {
   EASY_LIMITS,
+  type EasyAlternative,
   type EasyArticle,
   type EasyIssue,
   type EasyKeyPoint,
   type EasyLaw,
   type EasyRaw,
+  type EasyRequirement,
   type EasyVirtualCase,
 } from "./types";
 
@@ -94,7 +96,8 @@ export type EasyDrop =
   | "number_in_virtual"
   | "other_law_article"
   | "no_article"
-  | "over_limit";
+  | "over_limit"
+  | "evasion";
 
 /** 법원·재판부를 가리키는 낱말 (긴 것부터). 그 낱말이 법 원문에 있을 때만 설명에 남긴다 */
 const COURT =
@@ -131,6 +134,8 @@ const NAMED_LAW_ARTICLE = /([가-힣]+(?:법|법률))\s*제\s*\d+\s*조/g;
 /** 사람 이름처럼 보이는 꼴: "김○○", "박 모 씨", "홍길동 씨" — 가상 사례는 역할(판매업자 A)로만 쓴다 */
 const PERSON =
   /[가-힣]\s?(?:○○|OO|XX|모)\s?(?:씨|님|군|양)|[가-힣]{2,4}\s?(?:씨|님)(?=[이가은는를을의도와과에께]|[\s.,]|$)|[가-힣]{1,2}[○O]{1,2}(?![가-힣])/;
+/** 대안 칸에 쓰지 않는 말 — 법을 피하거나 걸리지 않는 요령으로 읽힌다 */
+const EVASION = /피하|빠져나|회피|우회|걸리지\s?않|들키|숨기|편법|꼼수|빈틈|단속을/;
 /** 회사 이름 꼴 */
 const COMPANY = /\(주\)|㈜|주식회사|유한회사|\(유\)/;
 
@@ -197,6 +202,12 @@ function lineDrop(raw: string, ctx: Ctx, maxChars: number, virtual: boolean): Ea
   if (scanInput(text).findings.length > 0) return "pii";
   return null;
 }
+
+/** 원문이 없는 글(검색 답, DEC-076)에 쓰는 빈 바탕 — 숫자·조문 번호·법원 이름·판례 낱말·유불리 낱말을 모두 받지 않는다 */
+const BARE_CTX = contextOf([]);
+/** 원문 없이 모델이 쓴 한 줄을 거른다 (DEC-076 검색 답). 통과하면 null */
+export const bareLineDrop = (text: string, maxChars: number, virtual = false): EasyDrop | null =>
+  lineDrop(text, BARE_CTX, maxChars, virtual);
 
 /** 근거 조문 번호: 이 법에 실제로 있는 조문이면 "제N조[의M]", 아니면 null */
 function articleNoOf(raw: unknown, ctx: Ctx): string | null {
@@ -283,7 +294,37 @@ export function screenEasy(
     }
   }
 
-  return { easy: { summary, keyPoints, issues, who, virtualCases }, dropped };
+  const requirements: EasyRequirement[] = [];
+  for (const item of list(r.requirements)) {
+    const k = (item ?? {}) as Record<string, unknown>;
+    const text = str(k.text);
+    const why = lineDrop(text, ctx, L.requirements.chars, false);
+    const articleNo = articleNoOf(k.articleNo, ctx);
+    if (why) dropped.push(why);
+    // 근거 조문을 댈 수 없는 요건은 싣지 않는다
+    else if (!articleNo) dropped.push("no_article");
+    else if (requirements.length >= L.requirements.max) dropped.push("over_limit");
+    else requirements.push({ text, articleNo });
+  }
+
+  const alternatives: EasyAlternative[] = [];
+  for (const item of list(r.alternatives)) {
+    const k = (item ?? {}) as Record<string, unknown>;
+    const title = str(k.title);
+    const body = str(k.body);
+    const why =
+      lineDrop(title, ctx, L.alternatives.title, false) ??
+      lineDrop(body, ctx, L.alternatives.body, false) ??
+      (EVASION.test(`${title} ${body}`) ? ("evasion" as const) : null);
+    if (why) dropped.push(why);
+    else if (alternatives.length >= L.alternatives.max) dropped.push("over_limit");
+    else alternatives.push({ title, body, articleNo: articleNoOf(k.articleNo, ctx) });
+  }
+
+  return {
+    easy: { summary, keyPoints, issues, who, virtualCases, requirements, alternatives },
+    dropped,
+  };
 }
 
 /** 화면에 낼 만큼 남았는지: 한눈에 보기 한 줄 이상 + 핵심 내용 한 개 이상 */
@@ -329,5 +370,29 @@ export function fallbackEasy(lawName: string, articles: EasyArticle[]): EasyLaw 
     issues: [],
     who: [],
     virtualCases: [],
+    requirements: [],
+    alternatives: [],
+  };
+}
+
+/** 성립 요건·대안까지 채워졌는지 (DEC-076). 모자라면 그 두 칸만 모델로 더 채운다 */
+export const easyComplete = (easy: EasyRaw): boolean =>
+  easy.requirements.length > 0 && easy.alternatives.length > 0;
+
+/**
+ * 앞서 만든 설명(미리 만든 자료·저장해 둔 설명)에 새로 만든 칸을 덧붙인다 (DEC-076). 앞의 칸이 비어 있을 때만 새 것을 쓴다 —
+ * 이미 검토한 문장을 모델이 다시 쓴 것으로 바꾸지 않는다.
+ */
+export function mergeEasy(base: EasyLaw, extra: EasyRaw): EasyLaw {
+  const pick = <T>(a: T[], b: T[]) => (a.length > 0 ? a : b);
+  return {
+    ...base,
+    summary: pick(base.summary, extra.summary),
+    who: pick(base.who, extra.who),
+    keyPoints: pick(base.keyPoints, extra.keyPoints),
+    issues: pick(base.issues, extra.issues),
+    virtualCases: pick(base.virtualCases, extra.virtualCases),
+    requirements: pick(base.requirements, extra.requirements),
+    alternatives: pick(base.alternatives, extra.alternatives),
   };
 }

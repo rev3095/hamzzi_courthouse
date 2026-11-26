@@ -8,7 +8,9 @@ export type EasyStored = {
   /** 만든 때의 지시문 버전 (lib/ai/law-easy.ts LAW_EASY_PROMPT_VERSION) */
   promptVersion: string;
   generatedAt: string;
-  easy: EasyRaw;
+  /** 성립 요건·대안(DEC-076)은 그 뒤에 더한 칸이라 미리 만든 자료에는 없을 수 있다 */
+  easy: Omit<EasyRaw, "requirements" | "alternatives"> &
+    Partial<Pick<EasyRaw, "requirements" | "alternatives">>;
 };
 export type EasyData = { version: number; laws: Record<string, EasyStored> };
 

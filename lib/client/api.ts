@@ -1,5 +1,6 @@
 // 브라우저에서 부르는 API 도우미 (docs/API.md 2·4.1절). 화면(app/, components/)은 이 모듈로만 서버를 부른다.
 // 입력 원문은 요청 본문으로만 보내고 저장하지 않는다. 브라우저에 남기는 것은 마스킹본뿐이다 (DEC-006).
+import type { SearchAnswerView } from "@/lib/search/answer/types";
 import type { MaterialReading } from "@/lib/materials/limits";
 import { readTier } from "./tier";
 import type { StepEvent } from "@/lib/ai/policy";
@@ -386,6 +387,9 @@ export type WorldLawList = WorldSearchResult & {
   outcome: "grounded" | "no_result_in_scope";
 };
 export const searchWorldLaws = (q: string) => post<WorldLawList>("/api/v1/world-laws", { q });
+/** 검색 '물어보기' AI 답 (DEC-076). 검색 결과 목록과 따로 부른다 — 실패해도 목록은 그대로 보인다 */
+export const getSearchAnswer = (q: string, mode: "search" | "research", focus: "cases" | "laws") =>
+  post<SearchAnswerView>("/api/v1/search-answer", { q, mode, focus });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
 /** 두 날짜 조문 비교 (DEC-075 ⓔ) */

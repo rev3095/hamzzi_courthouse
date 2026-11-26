@@ -22,6 +22,7 @@ EXPECTED_TABLES = {
     "result_citations", "result_feedback", "feature_gates", "gate_changes", "consents",
     "audit_logs", "deletion_requests", "anon_usage", "rate_limit_hits",
     "community_posts", "community_comments", "seed_ledger", "matters",
+    "generated_results",
 }
 GATE_KEYS = {
     "lawyer_verification", "brief_posting", "proposals", "billing",
@@ -600,6 +601,32 @@ def session_title(conn) -> None:
     conn.execute("delete from auth.users where id = %s", (owner,))
 
 
+def generated_results(conn) -> None:
+    print("[13] 검색 AI 결과 저장 (DEC-076)")
+    for role in ("anon", "authenticated"):
+        for priv in ("select", "insert", "update", "delete"):
+            check(not scalar(conn, "select has_table_privilege(%s, 'public.generated_results', %s)", (role, priv)),
+                  f"{role}는 generated_results {priv} 권한 없음")
+        check(not scalar(conn, "select has_function_privilege(%s, 'public.bump_generated_result(text, text)', 'execute')", (role,)),
+              f"{role}는 bump_generated_result 실행 불가")
+    cols = {r[0] for r in conn.execute(
+        "select column_name from information_schema.columns where table_schema = 'public' and table_name = 'generated_results'"
+    )}
+    check(not ({"user_id", "anon_session_id", "ip_hash"} & cols), "요청자를 가리키는 컬럼이 없다")
+    conn.execute(
+        "insert into public.generated_results (kind, key, payload, prompt_version) values ('search', '[검증] 의료기기', '{\"summary\": []}', 'v1')"
+    )
+    conn.execute("select public.bump_generated_result('search', '[검증] 의료기기')")
+    check(scalar(conn, "select hits from public.generated_results where kind = 'search' and key = '[검증] 의료기기'") == 1,
+          "다시 쓴 횟수를 올린다")
+    raises(conn, "같은 종류·키는 한 행만",
+           "insert into public.generated_results (kind, key, payload, prompt_version) values ('search', '[검증] 의료기기', '{}', 'v1')")
+    raises(conn, "모르는 종류는 막힌다",
+           "insert into public.generated_results (kind, key, payload, prompt_version) values ('other', '[검증] x', '{}', 'v1')")
+    raises(conn, "너무 큰 결과는 막힌다",
+           "insert into public.generated_results (kind, key, payload, prompt_version) values ('law_easy', '[검증] 큰 법', (select jsonb_agg(md5(i::text)) from generate_series(1, 6000) i), 'v1')")
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -610,7 +637,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials, analysis_lock, session_title):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials, analysis_lock, session_title, generated_results):
                         try:
                             with conn.transaction():
                                 step(conn)

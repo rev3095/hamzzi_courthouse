@@ -37,11 +37,20 @@ export const DOC_DRAFT_TOKENS = { max: 1_500, min: 400 } as const;
 
 /**
  * 법령 쉬운 설명(DEC-074) 1건 상한 — Haiku 1회. 입력은 목차 + 주요 조문 약 12,000자(lib/search/easy/policy.ts EASY_INPUT_CHARS).
- * 계산: 입력을 글자당 1.5토큰으로 넉넉히 잡아 약 19,000토큰($0.0019) + 출력 1,800토큰($0.0009) = $0.0028 → 상한 $0.004.
+ * 계산: 입력을 글자당 1.5토큰으로 넉넉히 잡아 약 19,000토큰($0.0019) + 출력 2,400토큰($0.0012, DEC-076 성립 요건·대안 추가로 1,800 → 2,400) = $0.0031 → 상한 $0.004.
  * 실제 입력은 호출 전에 무과금 토큰 세기로 재고, 상한을 넘으면 부르지 않는다. 실제로 쓴 금액만 예산에서 빠진다.
  */
 export const LAW_EASY_COST_CAP_USD = 0.004;
-export const LAW_EASY_TOKENS = { max: 1_800, min: 900 } as const;
+export const LAW_EASY_TOKENS = { max: 2_400, min: 900 } as const;
+
+/**
+ * 검색 '물어보기' AI 답(DEC-076) 1건 상한 — Haiku 두 번(검색어 해석 + 답 쓰기).
+ * 계산: 해석 입력 약 700토큰($0.00007) + 출력 450토큰($0.000225), 답 쓰기 입력 약 1,500토큰($0.00015) + 출력 1,600토큰($0.0008)
+ * = 약 $0.0012 → 상한 $0.003. 같은 검색어는 저장해 둔 답을 다시 써 모델을 부르지 않는다.
+ */
+export const SEARCH_ANSWER_COST_CAP_USD = 0.003;
+export const SEARCH_INTERPRET_TOKENS = { max: 450, min: 200 } as const;
+export const SEARCH_WRITE_TOKENS = { max: 1_600, min: 700 } as const;
 
 /**
  * 서류 판독(F-015, DEC-052) 1건 상한 — Haiku 비전 1회. **임시값, 사용자 확인 전**.

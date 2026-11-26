@@ -7,7 +7,9 @@
 // 결과 카드에서 리서치와 같은 보관함(hz:pins)에 바로 담는다 (DEC-054).
 // 법령 탭(2026-11-27): 정식 이름을 몰라도 낱말 일부("의료기기")로 현행 법령을 찾고 /laws/[name]으로 간다.
 // 법령 탭은 국내·해외 통합 검색(DEC-074)이다: 법제처 + 각국 공식 사이트 결과를 한 목록으로, 국기·나라 필터와 함께 보인다
-// (components/search/WorldLaws). 검색 전에는 직접 고른 의료기기 핵심 법령 목록을 보인다. 모델은 쓰지 않는다.
+// (components/search/WorldLaws). 검색 전에는 직접 고른 의료기기 핵심 법령 목록을 보인다. 목록에는 모델을 쓰지 않는다.
+// 물어보기 AI 답 (DEC-076): '물어보기'를 누르면 목록과 함께 AI 한눈에 답(Light · Haiku, components/search/SearchAnswer)이 붙는다.
+// 이전의 '궁금한 점 바로 묻기' 단추(DEC-070)는 이 답으로 합쳐 뺐다.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -32,8 +34,8 @@ import { useAttachments } from "../ask/useAttachments";
 import { MaterialsView } from "../result/MaterialsView";
 import { useQuota } from "../useQuota";
 import { ArchiveSwitch } from "./ArchiveSwitch";
-import { AskArchive } from "./AskArchive";
 import { KindTabs } from "./KindTabs";
+import { SearchAnswer } from "./SearchAnswer";
 import {
   Highlighted,
   OriginalLink,
@@ -341,8 +343,6 @@ export function SearchView() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className={PAGE_TITLE}>판례·법령 검색</h1>
           <div className="flex flex-wrap items-center gap-3">
-            {/* 질문창 (DEC-070): 검색 결과는 AI 없이 그대로, 질문만 상담 경로로 (Light 고정) */}
-            <AskArchive />
             <ArchiveSwitch
               current="search"
               searched={state.kind === "done" || state.kind === "world"}
@@ -411,7 +411,8 @@ export function SearchView() {
         <p className="text-muted mt-2 text-[12px]">
           출처 ·{" "}
           {tab === "laws" ? "법제처와 각 나라 정부의 공식 법령 사이트" : "법제처 국가법령정보센터"}{" "}
-          · 검색은 질문 횟수와 따로 세요 · 이름·전화번호 같은 개인정보는 검색어에 넣지 말아 주세요
+          · 물어보기를 누르면 검색 결과와 함께 AI(Light · Haiku 5.5)가 짧게 답해요 · 질문 횟수와
+          따로 세요 · 이름·전화번호 같은 개인정보는 검색어에 넣지 말아 주세요
           {tab === "laws" && " · 법령 검색어는 해외 공식 사이트에도 전달돼요"}
         </p>
         {tab === "cases" && state.kind === "idle" && (
@@ -447,6 +448,19 @@ export function SearchView() {
         />
       )}
 
+      {/* 물어보기 AI 답 (DEC-076): 목록은 AI 없이 그대로, 그 위에 Light 답을 붙인다 */}
+      {(state.kind === "done" || state.kind === "world") && (
+        <SearchAnswer
+          key={`${tab}:${state.q}`}
+          q={state.q}
+          mode="search"
+          focus={tab === "laws" ? "laws" : "cases"}
+          onPick={(q) => {
+            setText(q);
+            void submit(tab, q);
+          }}
+        />
+      )}
       {tab === "laws" && state.kind === "idle" && <WorldStarter onPick={worldPick} />}
       {state.kind === "world" && (
         <WorldResults
