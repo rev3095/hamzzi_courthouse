@@ -34,6 +34,7 @@ import { userMessage } from "./message";
 import { tierOf, type TierId } from "./models";
 import {
   AnswerZ,
+  OffTopicQuestion,
   STEP_MESSAGES,
   UNDERSTAND_SCHEMA,
   UnderstandZ,
@@ -55,7 +56,7 @@ import { GENERAL_ANSWER_ADDON, LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./p
 
 import { runWebRefs, type WebRef } from "./web-refs";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-27b-answer-then-verify";
+export const LITE_PROMPT_VERSION = "lite-2026-11-27c-off-topic";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -214,6 +215,9 @@ export async function runLiteAnalysis(
       if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
         throw e;
     }
+
+  // 남용 막기 (DEC-072, 절대 규칙 9): 질문 해석이 법률과 상관없는 요청으로 보면 답변 모델·검색을 부르지 않고 멈춘다
+  if (understood?.kind === "off_topic") throw new OffTopicQuestion(model.spentUsd());
 
   // 비서 대화 한마디(Haiku)는 검색과 함께 돌린다 — 같은 질문 1건 상한 안이고 실패해도 답변은 그대로 간다
   const talkRun = deps.assistant ? runTalk(model, deps.assistant.talkSystem, input) : null;

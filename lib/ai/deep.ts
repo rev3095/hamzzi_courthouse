@@ -52,6 +52,7 @@ import {
 } from "@/lib/materials/policy";
 import { longDeepOf, tierOf, type TierId } from "./models";
 import {
+  OffTopicQuestion,
   STEP_MESSAGES,
   assembleDraft,
   screenPoints,
@@ -63,7 +64,7 @@ import {
 } from "./policy";
 import { DEEP_ANSWER_SYSTEM, DEEP_PLAN_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prompts";
 
-export const DEEP_PROMPT_VERSION = "deep-2026-11-25b-title60";
+export const DEEP_PROMPT_VERSION = "deep-2026-11-27-off-topic";
 /** 긴 질문(DEC-062) 답변의 프롬프트 꼬리표. 정리판 지시문을 바꾸면 올린다 */
 export const LONG_PROMPT_TAG = "long-plan-3-rebuttals";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
@@ -173,6 +174,8 @@ export async function runDeepAnalysis(
     usage = addUsage(usage, res);
     const parsed = DeepStructZ.safeParse(JSON.parse(textOf(res)));
     // 사건 구조의 항목은 사용자가 적은 글(질문 + 가린 첨부 자료)에 있는 숫자만 쓸 수 있다
+    // 남용 막기 (DEC-072): 법률과 상관없는 요청이면 답변 모델·검색을 부르지 않고 멈춘다
+    if (parsed.success && parsed.data.offTopic) throw new OffTopicQuestion(model.spentUsd());
     if (parsed.success)
       struct = screenStruct(
         parsed.data,
@@ -208,6 +211,10 @@ export async function runDeepAnalysis(
       lawHints: deps.lawHints,
       deep: true,
       ...(deps.focusCaseIds?.length && { focusCaseIds: deps.focusCaseIds }),
+    }).catch((e: unknown) => {
+      // 법률 무관으로 멈춰도 이미 쓴 구조화 비용을 함께 넘긴다 (정산이 실제보다 적지 않게)
+      if (e instanceof OffTopicQuestion) throw new OffTopicQuestion(spentOnStruct + e.costUsd);
+      throw e;
     });
     return {
       ...lite,

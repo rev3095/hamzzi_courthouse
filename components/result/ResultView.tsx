@@ -392,6 +392,14 @@ const PROBLEM_TEXT: Partial<Record<string, { title: string; body: string }>> = {
     title: "이 네트워크에서 질문을 많이 했어요",
     body: "같은 네트워크에서는 24시간 안에 분석할 수 있는 횟수가 정해져 있어요. 잠시 뒤에 다시 와 주세요.",
   },
+  OFF_TOPIC: {
+    title: "법률 문제만 상담할 수 있어요",
+    body: "겪고 있는 일이나 궁금한 법·제도를 적어 주세요. 법률과 상관없는 요청은 답하지 않아요.",
+  },
+  REPETITIVE_INPUT: {
+    title: "같은 내용이 여러 번 반복돼 있어요",
+    body: "반복을 지우고 한 번만 적어 다시 질문해 주세요.",
+  },
   LOGIN_REQUIRED: {
     title: DEMO_LIMIT_TITLE,
     body: DEMO_LIMIT_TEXT,
@@ -426,7 +434,17 @@ export function Problem({
 }) {
   // INTERNAL_ERROR 등은 고정 문구만 (예외 내용 표시 금지)
   // 로그인 사용자의 하루 한도(DEC-035)는 네트워크 상한과 다른 안내
-  const text = (isUserDailyLimit(error) ? limitCopy(true) : PROBLEM_TEXT[error.code]) ?? {
+  const abuse = error.code === "RATE_LIMITED" && error.details?.reason === "abuse";
+  const text = (
+    isUserDailyLimit(error)
+      ? limitCopy(true)
+      : abuse
+        ? {
+            title: "잠시 질문을 받지 않아요",
+            body: "법률과 상관없는 요청이 여러 번 있었어요. 잠시 뒤에 다시 와 주세요.",
+          }
+        : PROBLEM_TEXT[error.code]
+  ) ?? {
     title: "일시적인 오류가 발생했어요",
     body: "잠시 후 다시 시도해 주세요.",
   };

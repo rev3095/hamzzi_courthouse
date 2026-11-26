@@ -39,7 +39,7 @@ import {
 import { runDeepAnalysis } from "./deep";
 import { buildDeepMap } from "./deep-policy";
 import type { TierId } from "./models";
-import { isAssertive } from "./policy";
+import { OffTopicQuestion, isAssertive } from "./policy";
 
 // 2026-11-24b: 판독 시험(사진 5장)에서 틀린 곳 — "동일 기한"을 "명시 없음"으로 바꿈, 통지 대리 회사를 other로 둠 — 을 지시문에 반영
 // 2026-11-24c: 문서 글(한글·워드 등)의 [이름n] 가림 표시를 그대로 옮기고 이름을 짐작하지 않게 (legal-reviewer 권고)
@@ -240,7 +240,16 @@ export async function organizeIssues(
     onCost?: (usd: number) => void;
   } = {},
 ): Promise<OrganizeIssuesOutput> {
-  const analysis = await (deps.run ?? runDeepAnalysis)({ maskedText }, { tier: deps.tier });
+  const analysis = await (deps.run ?? runDeepAnalysis)({ maskedText }, { tier: deps.tier }).catch(
+    (e: unknown) => {
+      // 사건 구조화가 법률 무관으로 보면(DEC-072) 오류 500 대신 OFF_TOPIC으로 알린다. 쓴 금액은 runMatterAi가 정산한다
+      if (e instanceof OffTopicQuestion) {
+        deps.onCost?.(e.costUsd);
+        throw new ApiError("OFF_TOPIC", { reason: "model" });
+      }
+      throw e;
+    },
+  );
   deps.onCost?.(analysis.costUsd);
   const verified = await (deps.verify ?? verifyDraft)(analysis.draft, analysis.evidence, {
     screened: analysis.dropped.length,
