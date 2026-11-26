@@ -4,10 +4,11 @@ import type { DecisionDomain } from "@/lib/client/api";
 import { DECISION_TABS } from "@/lib/search/explore";
 import { addPin, removePin, type RecentItem } from "./recent";
 
-export type Kind = "cases" | DecisionDomain | "ordinances" | "admin_rules";
+export type Kind = "cases" | "laws" | DecisionDomain | "ordinances" | "admin_rules";
 
 export const KIND_LIST: { kind: Kind; label: string }[] = [
   { kind: "cases", label: "판례" },
+  { kind: "laws", label: "법령" },
   ...DECISION_TABS.map((d) => ({ kind: d.domain as Kind, label: d.label })),
   { kind: "ordinances", label: "자치법규" },
   { kind: "admin_rules", label: "행정규칙" },
@@ -33,6 +34,7 @@ export type Row = {
 
 export const DATE_WORD = {
   cases: "선고",
+  laws: "시행",
   ordinances: "시행",
   admin_rules: "시행",
   ...Object.fromEntries(DECISION_TABS.map((d) => [d.domain, d.dateLabel])),
@@ -42,8 +44,8 @@ export const DATE_WORD = {
 export function citationLine(r: Pick<Row, "kind" | "title" | "org" | "date" | "refNo">): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date ?? "");
   const date = m ? `${m[1]}. ${Number(m[2])}. ${Number(m[3])}. ${DATE_WORD[r.kind]}` : null;
-  // 자치법규·행정규칙은 사건번호가 없다 — 이름과 기관·시행일만 적는다
-  if (r.kind === "ordinances" || r.kind === "admin_rules") {
+  // 법령·자치법규·행정규칙은 사건번호가 없다 — 이름과 기관·시행일만 적는다
+  if (r.kind === "laws" || r.kind === "ordinances" || r.kind === "admin_rules") {
     const tail = [r.org, date].filter(Boolean).join(" ");
     return tail ? `${r.title} (${tail})` : r.title;
   }

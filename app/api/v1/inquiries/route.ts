@@ -17,6 +17,7 @@ import {
 } from "@/lib/inquiries/policy";
 import {
   createInquiry,
+  findRecentDuplicate,
   getAnonQuestionsUsed,
   getOwnedInquiry,
   resolveOwner,
@@ -24,6 +25,8 @@ import {
 } from "@/lib/inquiries/store";
 import { mergeFindings, parseStoredMaterials } from "@/lib/materials/policy";
 import { scanInput } from "@/lib/pii";
+import { ApiError } from "@/lib/api/errors";
+import { assertQuestionAllowed } from "@/lib/inquiries/abuse-guard";
 
 export const POST = withRoute(async (req, _ctx, scope) => {
   const { text, sensitiveConsent, parentInquiryId, save, materials } = parseCreateRequest(
@@ -39,6 +42,9 @@ export const POST = withRoute(async (req, _ctx, scope) => {
 
   const owner = await resolveOwner(scope, { create: true });
   if (!owner) throw new Error("owner 없음");
+  // 남용 막기 (DEC-072, 절대 규칙 9): 경고 한도 → 법률 무관·반복·지시문 바꾸기 규칙 판별. 거절하면 저장하지 않는다
+  // analyze와 같은 기준이 되도록 가린 문장으로 본다
+  await assertQuestionAllowed(scan.maskedText, owner, req.headers);
   // 자료가 붙은 질문은 예시 재생으로 보지 않는다 (분석도 같은 기준, lib/inquiries/analyze)
   const example = findExampleFor(scan.maskedText, attached.materials) !== null;
   if (countsAnonQuota(owner)) {
@@ -48,6 +54,12 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   } else if (countsUserQuota(owner) && !example) {
     // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035). 예시 질문은 세지 않는다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
+  }
+
+  // 같은 질문을 방금 분석했으면 새로 만들지 않고 앞의 결과로 보낸다 (DEC-072). 예시 질문·관리자 모드는 보지 않는다
+  if (!example && !owner.admin && attached.materials.length === 0) {
+    const previous = await findRecentDuplicate(owner, scan.maskedText, parentInquiryId);
+    if (previous) throw new ApiError("DUPLICATE_QUESTION", { inquiryId: previous });
   }
 
   if (parentInquiryId) {

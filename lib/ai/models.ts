@@ -50,7 +50,12 @@ export const TIERS = {
     timeoutMs: 25_000,
     weight: 20,
     deep: { capUsd: 0.06, answerTokens: { max: 2_400, min: 1_200 }, timeoutMs: 45_000, weight: 40 },
-    long: { capUsd: 0.2, answerTokens: { max: 10_000, min: 3_000 }, timeoutMs: 120_000, weight: 134 },
+    long: {
+      capUsd: 0.2,
+      answerTokens: { max: 10_000, min: 3_000 },
+      timeoutMs: 120_000,
+      weight: 134,
+    },
   },
   max: {
     label: "Pro Max",
@@ -64,8 +69,18 @@ export const TIERS = {
     answerTokens: { max: 8_000, min: 2_000 },
     timeoutMs: 120_000,
     weight: 200,
-    deep: { capUsd: 0.6, answerTokens: { max: 12_000, min: 3_000 }, timeoutMs: 150_000, weight: 400 },
-    long: { capUsd: 0.5, answerTokens: { max: 14_000, min: 4_000 }, timeoutMs: 180_000, weight: 334 },
+    deep: {
+      capUsd: 0.6,
+      answerTokens: { max: 12_000, min: 3_000 },
+      timeoutMs: 150_000,
+      weight: 400,
+    },
+    long: {
+      capUsd: 0.5,
+      answerTokens: { max: 14_000, min: 4_000 },
+      timeoutMs: 180_000,
+      weight: 334,
+    },
   },
 } as const;
 
@@ -78,6 +93,13 @@ export const TIER_IDS = Object.keys(TIERS) as TierId[];
  * 이미 다른 단계를 골라 둔 기기는 그 선택을 그대로 쓴다.
  */
 export const DEFAULT_TIER: TierId = "pro";
+/**
+ * 판례 아카이브 질문창(DEC-070): 판례·법령 검색·리서치 화면에서 묻는 질문은 사용자가 단계를 고르지 않고 Light(Haiku 5.5)로만 답한다.
+ * 긴 질문(DEC-062)도 이 단계의 긴 질문 설정(Light long — 같은 Haiku)으로 간다
+ */
+export const ARCHIVE_ANSWER_TIER: TierId = "light";
+/** 질문창에서 근거에 넣을 수 있는 판례 수 (보고 있던 판례·보관함 판례) */
+export const ARCHIVE_FOCUS_MAX = 2;
 
 export const isTierId = (v: unknown): v is TierId =>
   typeof v === "string" && Object.hasOwn(TIERS, v);

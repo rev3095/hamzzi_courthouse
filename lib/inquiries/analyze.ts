@@ -3,7 +3,7 @@
 // 근거 모음(EvidenceSet)은 이 함수 안에서만 쓰고 저장하지 않는다 (DEC-007).
 import "server-only";
 import { aiMode } from "@/lib/ai/mode";
-import { ASSISTANTS, ASSISTANT_ANSWER_TIER, type AssistantId } from "@/lib/assistants/agents";
+import { ASSISTANTS, type AssistantId } from "@/lib/assistants/agents";
 import { assistantLiteOptions } from "@/lib/assistants/run-config";
 import { settleAiQuota, tryAiQuota } from "@/lib/auth/rate-limit";
 import { WEB_REFS_WEIGHT } from "@/lib/ai/web-refs";
@@ -22,7 +22,7 @@ import {
   tierOf,
   type TierId,
 } from "@/lib/ai/models";
-import type { StepEvent } from "@/lib/ai/policy";
+import { OffTopicQuestion, type StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
 import { CATEGORIES, type CategoryKey } from "@/lib/procedure/categories";
@@ -37,7 +37,9 @@ import {
   type InquiryRow,
   type Owner,
 } from "./store";
+import { answerTierFor } from "./policy";
 import { procedureHintFor, saveLabelProposal } from "./procedure-hint";
+import { rejectOffTopic } from "./abuse-guard";
 
 /** 라우트 maxDuration(300초, 2026-11-25 Opus high) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-014, 목표 p95 ≤ 90초) */
 export const ANALYSIS_BUDGET_MS = 280_000;
@@ -55,6 +57,10 @@ export async function analyzeInquiry(
     onPreview?: (p: QuickPreview) => void;
     /** 분야별 비서 (DEC-057). 지시문·고정 근거만 바꾸고 횟수·상한·검증은 일반 질문과 같다 */
     assistant?: AssistantId | null;
+    /** 판례 아카이브 질문창 (DEC-070): 답변 단계를 Light(Haiku)로 고정한다. 횟수·상한·검증은 일반 질문과 같다 */
+    archive?: boolean;
+    /** 질문창에서 근거에 넣을 판례 일련번호 (보고 있던 판례). 법제처에서 다시 가져온 것만 쓴다 */
+    focusCaseIds?: string[];
   } = {},
 ): Promise<{ resultId: string; result: DemoAnalysisResult }> {
   // 홈 카테고리(DEC-028)는 무료 판례 검색에 정해 둔 법률 용어 하나를 더할 뿐, 분류·답변을 모델이 정하게 하지 않는다
@@ -82,7 +88,11 @@ export async function analyzeInquiry(
     // 긴 질문(100자 초과, DEC-062)은 DeepSearch 버튼과 상관없이 DeepSearch로, 고른 단계의 긴 질문 설정으로 답한다 (2026-11-27 — xhigh 사용 금지).
     // 분야별 비서 질문도 길면 DeepSearch로 간다(비서 말투·고정 근거는 그대로 넘긴다, 사용자 결정 2026-11-25)
     const long = isLongQuestion(inquiry.masked_text);
-    const tier = tierOf(assistant ? ASSISTANT_ANSWER_TIER : opts.tier);
+    // 판례 아카이브 질문창(DEC-070)은 화면이 보낸 단계와 상관없이 Light(Haiku)로 답한다
+    const tier = tierOf(
+      answerTierFor({ assistant: !!assistant, archive: !!opts.archive, tier: opts.tier }),
+    );
+    const focusCaseIds = opts.archive ? (opts.focusCaseIds ?? []) : [];
     const longCfg = longDeepOf(tier.id);
     // DeepSearch(DEC-041)는 구조화 호출과 더 긴 답변이 들어가 상한·예산 차감이 일반 질문의 2배다
     // 짧은 비서 질문은 지금처럼 일반 답변 경로(지시문·대화 한마디)로 간다 (DEC-057)
@@ -163,6 +173,12 @@ export async function analyzeInquiry(
           })
           .catch(() => 0)
       : Promise.resolve(0);
+    // 남용 막기 (DEC-072): 질문 해석·구조화가 법률 무관으로 보면 답변 전에 멈춘다 — 쓴 만큼만 정산하고 경고를 센 뒤 거절
+    const offTopic = async (e: unknown): Promise<never> => {
+      if (!(e instanceof OffTopicQuestion)) throw e;
+      await settleAiQuota(weight, e.costUsd + (await quick));
+      return rejectOffTopic(owner, headers);
+    };
     // 일반 질문: 무료 법제처 검색 + 답변 1회 (DEC-020·026·036)
     // DeepSearch: 사건 구조화(Haiku) + 쟁점별 검색 + 쟁점별 답변 1회 (DEC-041). 답변 모델은 둘 다 고른 단계
     const deepRun = deep
@@ -175,6 +191,7 @@ export async function analyzeInquiry(
             tier: tier.id,
             costCapUsd: capUsd,
             long,
+            ...(focusCaseIds.length > 0 && { focusCaseIds }),
             ...(assistant && {
               persona: assistant.persona,
               ...(({ pinnedCaseIds, promptTag }) => ({ pinnedCaseIds, promptTag }))(
@@ -182,7 +199,7 @@ export async function analyzeInquiry(
               ),
             }),
           },
-        )
+        ).catch(offTopic)
       : null;
     const analysis =
       deepRun ??
@@ -196,12 +213,13 @@ export async function analyzeInquiry(
           costCapUsd: capUsd,
           // 일반 법률 질문의 참고 자료(DEC-069)는 예산을 따로 잡을 수 있을 때만 찾는다
           reserveWebRefs: () => tryAiQuota(WEB_REFS_WEIGHT),
+          ...(focusCaseIds.length > 0 && { focusCaseIds }),
           // 비서 지시문 + 대화 한마디(Haiku) + 질문 낱말에 맞는 사례 판례 (lib/assistants/run-config, 실호출 테스트와 같은 설정)
           ...(assistant && {
             assistant: assistantLiteOptions(assistant.id, inquiry.masked_text).assistant,
           }),
         },
-      ));
+      ).catch(offTopic));
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
     await settleAiQuota(weight, analysis.costUsd + (await quick));
     if ("refsCostUsd" in analysis && analysis.refsCostUsd !== undefined)
@@ -209,6 +227,7 @@ export async function analyzeInquiry(
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep: step,
       screened: analysis.dropped.length,
+      ...(analysis.answerEvidence && { claimEvidence: analysis.answerEvidence }),
     });
     // 예비 답변 (2026-11-27 사용자 결정 — 어떤 경우에도 실제 답변이 나오게): 남은 문단이 하나도 없으면
     // 근거 없이 같은 단계 모델로 한 번 더 답한다. 예산을 따로 잡고, 잡지 못하면 결과 없음 그대로 둔다

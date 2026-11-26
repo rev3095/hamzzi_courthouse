@@ -159,8 +159,8 @@ function fakeModel(talkOut: string | Error) {
           points: [
             {
               text: "공연히 모욕한 경우를 정한 조문이 있어요.",
-              source: "law:형법:제311조",
-              quote: "공연히 사람을 모욕한 자는",
+              source: "model",
+              quote: "",
             },
           ],
         }),

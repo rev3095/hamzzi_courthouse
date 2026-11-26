@@ -168,3 +168,58 @@ export async function assertRateLimit(rule: RateRule, headers: Headers) {
     throw new ApiError("RATE_LIMITED", { reason: `${rule.bucket}_hourly`, limit: rule.limit });
   }
 }
+
+/**
+ * 질문 남용 경고 (DEC-072, 절대 규칙 9): 지시문 바꾸기·모델 판별로 거절된 질문을 같은 네트워크(로그인은 계정)별
+ * 1시간 고정 창으로 센다. ABUSE_STRIKE_LIMIT번에 닿으면 그 창이 끝날 때까지 질문을 받지 않는다(RATE_LIMITED, reason abuse).
+ * 경고 카운터에는 IP 해시·계정 해시만 남고 질문 글은 남지 않는다.
+ */
+export const ABUSE_STRIKE_RULE: RateRule = { bucket: "abuse", limit: 5, windowSeconds: 3600 };
+
+/** 로그인 사용자는 계정 키만 본다 — 학교·회사 같은 공용 IP에서 다른 사람이 쌓은 경고로 막히지 않게. 비로그인은 IP 해시 */
+function abuseKeys(headers: Headers, userId?: string | null): string[] {
+  if (userId) return [`u:${hashUserId(userId)}`];
+  const ip = requestIpHash(headers);
+  return ip ? [ip] : [];
+}
+
+/** DB 함수와 같은 고정 창 시작 (date_bin(창, now(), '2000-01-01')) */
+export function windowStartIso(windowSeconds: number, now: Date = new Date()): string {
+  const origin = Date.UTC(2000, 0, 1);
+  const w = windowSeconds * 1000;
+  return new Date(origin + Math.floor((now.getTime() - origin) / w) * w).toISOString();
+}
+
+/** 거절된 질문 1건을 경고로 센다. 실패해도 거절 응답은 그대로 나간다 */
+export async function recordAbuseStrike(headers: Headers, userId?: string | null): Promise<void> {
+  const db = createServiceClient();
+  for (const key of abuseKeys(headers, userId)) {
+    try {
+      // 한도를 크게 줘서 세기만 한다 — 막을지는 assertNotAbuseBlocked가 ABUSE_STRIKE_RULE.limit로 본다
+      await db.rpc("hit_rate_limit", {
+        p_bucket: ABUSE_STRIKE_RULE.bucket,
+        p_key: key,
+        p_limit: 1_000_000,
+        p_window: `${ABUSE_STRIKE_RULE.windowSeconds} seconds`,
+      });
+    } catch {
+      // 세지 못해도 계속한다
+    }
+  }
+}
+
+/** 경고가 한도에 닿은 네트워크·계정이면 질문을 받지 않는다 (카운터를 올리지 않고 읽기만 한다) */
+export async function assertNotAbuseBlocked(headers: Headers, userId?: string | null) {
+  const keys = abuseKeys(headers, userId);
+  if (keys.length === 0) return;
+  const { data, error } = await createServiceClient()
+    .from("rate_limit_hits")
+    .select("hits")
+    .eq("bucket", ABUSE_STRIKE_RULE.bucket)
+    .eq("window_start", windowStartIso(ABUSE_STRIKE_RULE.windowSeconds))
+    .in("key_hash", keys);
+  if (error) return; // 읽지 못하면 막지 않는다 (질문 1건·주간 비용 상한은 그대로 받는다)
+  if ((data ?? []).some((r: { hits: number }) => r.hits >= ABUSE_STRIKE_RULE.limit)) {
+    throw new ApiError("RATE_LIMITED", { reason: "abuse", limit: ABUSE_STRIKE_RULE.limit });
+  }
+}

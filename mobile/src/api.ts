@@ -202,7 +202,12 @@ export function errorText(e: ApiError): string {
   if (e.code === "LOGIN_REQUIRED") return "오늘 쓸 수 있는 질문을 모두 썼어요. 내일 다시 채워져요.";
   if (e.code === "RATE_LIMITED" && reason === "user_daily")
     return "오늘 쓸 수 있는 질문을 모두 썼어요. 내일 다시 채워져요.";
+  if (e.code === "RATE_LIMITED" && reason === "abuse")
+    return "법률과 상관없는 요청이 여러 번 있어 잠시 질문을 받지 않아요. 잠시 뒤에 다시 해 주세요.";
   if (e.code === "RATE_LIMITED") return "요청이 많아요. 잠시 뒤에 다시 해 주세요.";
+  if (e.code === "OFF_TOPIC") return "햄찌법원은 법률 문제만 상담해요. 겪고 있는 일이나 궁금한 법·제도를 적어 주세요.";
+  if (e.code === "REPETITIVE_INPUT") return "같은 내용이 여러 번 반복돼 있어요. 반복을 지우고 한 번만 적어 주세요.";
+  if (e.code === "DUPLICATE_QUESTION") return "방금 같은 질문을 보냈어요. 앞의 답변을 확인해 주세요.";
   if (e.code === "FORBIDDEN" && reason === "wrong_password") return "비밀번호가 맞지 않아요.";
   if (e.code === "FORBIDDEN") return "이 글을 쓴 계정으로 로그인해야 해요.";
   if (e.code === "NOT_FOUND") return "찾을 수 없어요.";

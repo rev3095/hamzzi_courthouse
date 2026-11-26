@@ -16,7 +16,7 @@ import { statuteIdOf } from "@/lib/search/browse";
 import { LAW_VIEWS, type LawView } from "@/lib/search/explore";
 import { dotDate } from "../result/labels";
 import { H1, H2, Pending, Shell, useLoad } from "./DetailViews";
-import { OriginalLink, SearchNotice } from "./parts";
+import { OriginalLink, SearchNotice, rememberSearch } from "./parts";
 
 const LABELS: Record<LawView, string> = {
   articles: "법령 전문·판례",
@@ -452,6 +452,19 @@ function View<K extends LawView>({
     return (
       <div className="mt-4">
         <Pending r={r} loading={LOADING} />
+        {r && r.error.code === "NOT_FOUND" && (
+          // 정식 이름·공식 약칭이 아니면 법령을 못 연다 — 법령 탭에서 이름 일부로 다시 찾게 한다
+          <p className="text-muted mt-3 text-sm leading-relaxed">
+            법령 이름이 정식 이름과 다르면 열리지 않아요.{" "}
+            <Link
+              href="/search?from=statute&kind=laws"
+              onClick={() => rememberSearch(lawName)}
+              className="text-link font-semibold underline-offset-2 hover:underline"
+            >
+              &lsquo;{lawName}&rsquo;(이)가 들어간 법령 찾기 →
+            </Link>
+          </p>
+        )}
       </div>
     );
   return (

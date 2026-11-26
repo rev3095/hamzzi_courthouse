@@ -15,7 +15,7 @@ const STEPS = [
   { stage: "search" as const, message: FREE_STEP_MESSAGES.search },
   { stage: "search" as const, message: FREE_STEP_MESSAGES.search, added: ["law:민법:제536조"] },
   { stage: "search" as const, message: FREE_STEP_MESSAGES.search },
-  { stage: "answer" as const, message: "찾은 근거로 답변을 쓰고 있어요" },
+  { stage: "answer" as const, message: "답변을 쓰고 있어요" },
   {
     stage: "verify" as const,
     message: "인용한 법령·판례를 법제처에 다시 확인하고 있어요",

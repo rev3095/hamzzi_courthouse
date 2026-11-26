@@ -1,7 +1,7 @@
 // 질문(inquiry) 입력·확인 규칙 (F-001 AC2, F-007). 순수 함수 — DB·인증과 분리해 테스트한다.
-import { isTierId, type TierId } from "@/lib/ai/models";
+import { ARCHIVE_ANSWER_TIER, ARCHIVE_FOCUS_MAX, isTierId, type TierId } from "@/lib/ai/models";
 import { ApiError } from "@/lib/api/errors";
-import { isAssistantId, type AssistantId } from "@/lib/assistants/agents";
+import { ASSISTANT_ANSWER_TIER, isAssistantId, type AssistantId } from "@/lib/assistants/agents";
 import { scanInput } from "@/lib/pii";
 import { isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import type { PiiFinding, SensitiveCategory } from "@/lib/pii";
@@ -350,8 +350,20 @@ export function parseAnalyzeRequest(raw: string): {
   tier: TierId | null;
   deep: boolean;
   assistant: AssistantId | null;
+  /** 판례 아카이브 질문창(DEC-070)에서 보낸 질문 — 답변 단계는 서버가 Light로 고정한다 */
+  archive: boolean;
+  /** 질문창에서 근거에 넣을 판례 일련번호 (archive일 때만, 최대 ARCHIVE_FOCUS_MAX) */
+  focusCases: string[];
 } {
-  if (!raw.trim()) return { category: null, tier: null, deep: false, assistant: null };
+  if (!raw.trim())
+    return {
+      category: null,
+      tier: null,
+      deep: false,
+      assistant: null,
+      archive: false,
+      focusCases: [],
+    };
   let body: unknown;
   try {
     body = JSON.parse(raw);
@@ -373,5 +385,39 @@ export function parseAnalyzeRequest(raw: string): {
   const assistant = b.assistant ?? null;
   if (assistant !== null && !isAssistantId(assistant))
     throw new ApiError("VALIDATION_ERROR", { fields: ["assistant"] });
-  return { category, tier, deep: b.deep === true, assistant };
+  // 판례 아카이브 질문창(DEC-070): 참·거짓 하나와 법제처 판례 일련번호(숫자)만. 비서와 함께 쓰지 않는다
+  if (b.archive !== undefined && typeof b.archive !== "boolean")
+    throw new ApiError("VALIDATION_ERROR", { fields: ["archive"] });
+  const archive = b.archive === true;
+  const focus = b.focusCases ?? [];
+  if (
+    !Array.isArray(focus) ||
+    focus.length > ARCHIVE_FOCUS_MAX ||
+    !focus.every((v) => typeof v === "string" && /^\d{1,12}$/.test(v)) ||
+    (focus.length > 0 && !archive) ||
+    (archive && assistant !== null)
+  )
+    throw new ApiError("VALIDATION_ERROR", { fields: ["focusCases"] });
+  return {
+    category,
+    tier,
+    deep: b.deep === true,
+    assistant,
+    archive,
+    focusCases: [...new Set(focus as string[])],
+  };
+}
+
+/**
+ * 이 분석의 답변 단계 (순수). 분야별 비서는 ASSISTANT_ANSWER_TIER(DEC-057), 판례 아카이브 질문창은 Light(DEC-070),
+ * 그 밖에는 화면에서 고른 단계(없으면 tierOf가 기본값으로 바꾼다). 화면이 보낸 단계로 비서·질문창 단계를 바꿀 수 없다
+ */
+export function answerTierFor(o: {
+  assistant: boolean;
+  archive: boolean;
+  tier: TierId | null | undefined;
+}): TierId | null {
+  if (o.assistant) return ASSISTANT_ANSWER_TIER;
+  if (o.archive) return ARCHIVE_ANSWER_TIER;
+  return o.tier ?? null;
 }
