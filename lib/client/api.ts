@@ -431,6 +431,28 @@ const PKEY = (id: string) => `hz:p:${id}`;
 const CKEY = (id: string) => `hz:c:${id}`;
 const DKEY = (id: string) => `hz:d:${id}`;
 
+/**
+ * 다시 적어 보기 (DEC-067): 결과 없음 화면에서 홈으로 돌아갈 때 쓰던 질문(가린 문장)을 질문창에 다시 넣는다.
+ * 주소에 싣지 않고 이 탭의 저장소에만 한 번 건넨다 — 홈이 읽으면 바로 지운다.
+ */
+const DRAFT_KEY = "hz:draft";
+export function stashDraft(text: string) {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, text);
+  } catch {
+    // 저장소를 못 쓰면 빈 질문창으로 간다
+  }
+}
+export function takeDraft(): string | null {
+  try {
+    const t = sessionStorage.getItem(DRAFT_KEY);
+    sessionStorage.removeItem(DRAFT_KEY);
+    return t;
+  } catch {
+    return null;
+  }
+}
+
 /** DeepSearch로 보낸 질문 표시 (DEC-038). 개인정보가 아닌 표시 하나만 이 기기에 둔다 */
 export function rememberDeep(id: string) {
   try {

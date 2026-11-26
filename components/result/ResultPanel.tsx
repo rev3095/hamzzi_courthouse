@@ -2,7 +2,7 @@
 // 결과 패널 (S-04, F-003~F-006, F-014 데모 축소판 DEC-021). 답변 요약형 순서:
 // AI 고지 → 질문 → 판사 → 제목 → 답변 먼저(한눈에 보기 + 검증된 답변 문단, 2026-11-24) → 사실 요약(근거 개수·추천 첫 단계 난이도)
 // → 절차 타임라인(또는 유형 안내) → "먼저 ○○를 추천드립니다" → 세부 내용(접힘: 의도 요약·법령·판례·검증 탭·더 찾아본 과정)
-// → 이어 묻기(심층 질문) → 다음 단계 카드(○○ 바로 가기·이어 묻기) → 의견 → 법제처 출처.
+// → 이어 묻기 → 다음 단계 카드(○○ 바로 가기·소장 작성) → 의견 → 법제처 출처. (DEC-067: 입력란으로 옮기기만 하던 카드는 뺐다)
 // 승소·처벌 가능성, 확률 숫자, 예상 기간·비용 숫자는 넣지 않는다 (절대 규칙 2·3, DEC-002).
 // 문서 작성은 DEC-055로 모두에게 열려 있어 '바로 가기'는 작성 화면(무료 AI 대리 작성)으로 간다.
 import { rememberSearch } from "../search/parts";
@@ -45,7 +45,6 @@ export function ResultPanel({
   followUp,
   footer,
   onAskStep,
-  onDeepAsk,
   inquiryId,
   category,
   askHref,
@@ -59,8 +58,6 @@ export function ResultPanel({
   footer?: React.ReactNode;
   /** 타임라인 단계의 "이 단계 질문하기" — 이어 묻기 입력란에 문장을 넣는다 */
   onAskStep?: (question: string) => void;
-  /** "이어 묻기" — 이어 묻기 입력란으로 이동 */
-  onDeepAsk?: () => void;
   /** 이 결과의 질문 번호 — 문서 작성 안내에 ?from=으로 넘겨 초안 도우미(DEC-023)가 쓴다 */
   inquiryId?: string;
   /** 홈에서 고른 카테고리 (DEC-028). 규칙이 타임라인을 정하지 못할 때만 분류를 돕는다 */
@@ -108,7 +105,7 @@ export function ResultPanel({
 
       <AnswerFirst result={result} />
 
-      <SummaryStrip result={result} plan={plan} />
+      <SummaryStrip result={result} />
 
       {parties}
 
@@ -137,6 +134,9 @@ export function ResultPanel({
             <p className="font-display text-ink text-[17px] leading-snug font-bold">
               {recommendText(plan.recommended)}
             </p>
+            <p className="text-label mt-1 text-[13px] font-semibold">
+              추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
+            </p>
             <p className="text-muted mt-1 text-sm leading-relaxed">{plan.reason}</p>
             <p className="text-muted mt-1 text-[13px]">
               {plan.byAi
@@ -157,7 +157,7 @@ export function ResultPanel({
       <Details result={result} />
 
       <div id="deep-question">{followUp}</div>
-      <NextSteps plan={plan} onDeepAsk={onDeepAsk} inquiryId={inquiryId} askHref={askHref} />
+      <NextSteps plan={plan} inquiryId={inquiryId} askHref={askHref} />
       {footer}
       <SourceCredit note={result.searchScopeNote} />
     </article>
@@ -214,7 +214,7 @@ function timingText(result: DemoAnalysisResult): string | null {
 }
 
 /** 결과 머리 사실 요약: 근거 개수 + 추천 첫 단계의 난이도. 확률·가능성은 쓰지 않는다 */
-function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: ProcedurePlan }) {
+function SummaryStrip({ result }: { result: DemoAnalysisResult }) {
   return (
     <ul aria-label="요약" className="mt-4 flex flex-wrap gap-2">
       <li className="rounded-button bg-soft text-ink px-3 py-1.5 text-sm">
@@ -223,11 +223,6 @@ function SummaryStrip({ result, plan }: { result: DemoAnalysisResult; plan: Proc
       {timingText(result) && (
         <li className="rounded-button bg-soft text-muted px-3 py-1.5 text-sm">
           {timingText(result)}
-        </li>
-      )}
-      {hasTimeline(plan) && (
-        <li className="rounded-button bg-cream text-label px-3 py-1.5 text-sm font-semibold">
-          추천 첫 단계 · {plan.recommended.label} · {difficultyLabel(plan.recommended)}
         </li>
       )}
     </ul>
@@ -338,12 +333,10 @@ function Details({ result }: { result: DemoAnalysisResult }) {
 /** 다음 단계 (Figma D+ "다음 단계" 카드). 문서 작성은 작성 화면, 그 밖에는 그 단계의 공식 창구로 간다 */
 function NextSteps({
   plan,
-  onDeepAsk,
   inquiryId,
   askHref,
 }: {
   plan: ProcedurePlan;
-  onDeepAsk?: () => void;
   inquiryId?: string;
   askHref?: string;
 }) {
@@ -417,23 +410,7 @@ function NextSteps({
             →
           </span>
         </a>
-      ) : (
-        <button
-          type="button"
-          onClick={onDeepAsk}
-          className="rounded-card border-line text-ink flex min-h-[72px] items-center justify-between gap-3 border bg-white px-5 py-4 text-left"
-        >
-          <span>
-            <span className="block text-base font-bold">이어 묻기</span>
-            <span className="text-muted mt-0.5 block text-[13px]">
-              위 입력란에 이 사건을 더 물어보세요 · 질문 1번으로 세요
-            </span>
-          </span>
-          <span aria-hidden="true" className="text-xl">
-            →
-          </span>
-        </button>
-      )}
+      ) : null}
     </section>
   );
 }

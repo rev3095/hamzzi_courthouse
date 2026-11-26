@@ -18,6 +18,7 @@ import {
   notifyQuotaChanged,
   recallDeep,
   recallQuestion,
+  stashDraft,
   type ClientError,
 } from "@/lib/client/api";
 import { ASSISTANTS, isAssistantId } from "@/lib/assistants/agents";
@@ -360,6 +361,7 @@ export function NoResult({
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Link
           href="/"
+          onClick={() => question && stashDraft(question)}
           className="rounded-button bg-ink flex min-h-11 items-center px-5 text-[15px] font-semibold text-white"
         >
           다시 적어 보기
@@ -519,7 +521,6 @@ function DoneView({
         setText(q);
         focusBox();
       }}
-      onDeepAsk={focusBox}
       inquiryId={parentId}
       category={category}
       parties={<PartiesCard inquiryId={parentId} />}
