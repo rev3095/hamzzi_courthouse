@@ -91,6 +91,10 @@ const PARTY_WORDS: Record<DocumentKind, { me: string; other: string }> = {
   answer: { me: "피고", other: "원고" },
   "order-objection": { me: "채무자", other: "채권자" },
   "decision-objection": { me: "피고", other: "원고" },
+  // 합의서·고소취소장은 AI 초안을 붙이지 않는다 (FACTS_FIELD에 더하지 말 것): 고소당한 사람이 설문을 채울 수 있어
+  // 사연으로 문장을 만들면 피해자·고소인의 말로 둔갑한다. 아래 이름은 문서에서 부르는 말일 뿐이다
+  settlement: { me: "피해자", other: "가해자" },
+  "complaint-withdrawal": { me: "고소인", other: "피고소인" },
 };
 
 /** 원고·피고 / 보내는 사람·받는 사람 / 신청인·피신청인 / 채권자·채무자를 문장에서 부르는 말 */

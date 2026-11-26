@@ -34,7 +34,9 @@ export type DocumentKind =
   | "obscenity-complaint"
   | "answer"
   | "order-objection"
-  | "decision-objection";
+  | "decision-objection"
+  | "settlement"
+  | "complaint-withdrawal";
 
 export type OfficialLink = { label: string; url: string };
 
