@@ -10,6 +10,8 @@ import { ApiError } from "@/lib/api/errors";
 import { hasCitation, isJudging, type CaseImage, type CaseText } from "@/lib/casefile/policy";
 import { documentBlocks } from "./casefile";
 import { verifyDraft } from "@/lib/citations/verify";
+import { claimsInText } from "@/lib/citations/policy";
+import { EvidenceSet } from "@/lib/search/evidence";
 import {
   MATTER_READING_SCHEMA,
   MatterReadingZ,
@@ -258,7 +260,18 @@ export async function organizeIssues(
     const ref = p ? refOf(p.source) : null;
     // 출처를 응답 목록에서 찾지 못한 문단은 내지 않는다 (절대 규칙 1)
     // 인용 구절이 원문과 맞지 않은 문단(quote_mismatch)도 내지 않는다 — 확인된 근거만 붙인다
-    return p && ref && p.check === "verified" ? [{ text: p.text, ...ref }] : [];
+    if (p && ref && p.check === "verified") return [{ text: p.text, ...ref }];
+    // 답변 먼저(DEC-070): 모델 문단은 본문 인용이 모두 법제처에서 있다고 확인되고(법령을 정하지 못한 조문도 없고)
+    // 원문 주소가 있을 때만 붙인다 — 확인되지 않은 인용이 확인된 근거 옆에 섞여 보이지 않게
+    if (p?.check !== "model" || !p.confirmed?.length) return [];
+    const inText = claimsInText(p.text, new EvidenceSet());
+    const confirmed = new Set(p.confirmed.map((c) => c.label));
+    const allConfirmed =
+      inText.unresolved.length === 0 &&
+      inText.claims.length > 0 &&
+      inText.claims.every((c) => confirmed.has(c.citation));
+    const hit = p.confirmed.find((c) => c.url);
+    return allConfirmed && hit?.url ? [{ text: p.text, label: hit.label, url: hit.url }] : [];
   };
 
   if (!analysis.struct) {

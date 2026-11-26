@@ -2,7 +2,7 @@
 // 재조회가 실패하면 검증할 수 없으므로 결과를 내보내지 않고 SEARCH_UPSTREAM_FAILED를 그대로 올린다 (F-006 AC2).
 import "server-only";
 import { MODEL_SOURCE, type DemoDraft, type StepEvent } from "@/lib/ai/policy";
-import type { EvidenceSet } from "@/lib/search/evidence";
+import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import type { CitationCheck } from "@/lib/search/types";
 import { assembleResult, claimForKey, claimsInText, uniqueClaims, type Claim } from "./policy";
@@ -20,7 +20,8 @@ export async function verifyDraft(
   for (const p of draft.answer.points) {
     // 답변 먼저(DEC-070): 모델이 쓴 문단도 본문에 적힌 조문·사건번호를 법제처에서 실존 확인한다
     if (p.source === MODEL_SOURCE) {
-      textClaims.push(...claimsInText(p.text, evidence).claims);
+      // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (근거 목록으로 법령을 짐작하지 않는다)
+      textClaims.push(...claimsInText(p.text, new EvidenceSet()).claims);
       continue;
     }
     const c = claimForKey(p.source, evidence);

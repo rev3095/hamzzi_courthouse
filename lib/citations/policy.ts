@@ -9,7 +9,7 @@ import type { AssistantTalk } from "@/lib/assistants/talk";
 import type { MaterialsMap } from "@/lib/materials/map";
 import type { ProcedureHint } from "@/lib/procedure/labels";
 import { MODEL_SOURCE, citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
-import type { EvidenceSet } from "@/lib/search/evidence";
+import { EvidenceSet } from "@/lib/search/evidence";
 import type { CitationCheck } from "@/lib/search/types";
 import { articlesIn, caseNumbersIn } from "./patterns";
 
@@ -95,7 +95,7 @@ export function claimsInText(
   return { claims, unresolved };
 }
 
-/** 확인된 인용의 법제처 원문 주소: 근거 목록에 있으면 그 주소, 조문이면 법제처 조문 주소, 판례는 근거 목록에 있을 때만 */
+/** 확인된 인용의 법제처 원문 주소: 이번 요청에서 법제처로 가져온 근거 목록에 있을 때만 (이름을 짐작해 주소를 만들지 않는다) */
 export function urlForClaim(c: Claim, evidence: EvidenceSet): string | undefined {
   const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
   if (c.kind === "case") {
@@ -115,8 +115,7 @@ export function urlForClaim(c: Claim, evidence: EvidenceSet): string | undefined
         norm(i.ref.lawName) === norm(lawName) &&
         norm(i.ref.articleNo) === norm(articleNo),
     );
-  if (hit && hit.kind === "statute") return hit.ref.sourceUrl;
-  return `https://www.law.go.kr/${encodeURIComponent("법령")}/${encodeURIComponent(lawName.trim())}/${encodeURIComponent(norm(articleNo))}`;
+  return hit && hit.kind === "statute" ? hit.ref.sourceUrl : undefined;
 }
 
 /** 재조회할 조문·사건번호를 종류별로 중복 없이 모은다 */
@@ -218,14 +217,18 @@ export function assembleResult(input: {
     if (p.source === MODEL_SOURCE) {
       // 답변 먼저(DEC-070): 본문 인용을 법제처에서 확인한다. 없다고 확인된 인용이 있으면 문단을 빼고,
       // 있다고 확인된 것은 원문 링크와 함께 붙이며, 조회 실패·판정 불가는 그대로 둔다
-      const inText = claimsInText(p.text, evidence).claims;
+      // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (verify.ts와 같은 기준)
+      const inText = claimsInText(p.text, new EvidenceSet()).claims;
       if (inText.some((c) => checks.get(c.citation)?.exists === false)) {
         removedBy.not_confirmed += 1;
         continue;
       }
       const confirmed = inText
         .filter((c) => checks.get(c.citation)?.exists === true)
-        .map((c) => ({ label: c.citation, url: urlForClaim(c, evidence) }));
+        .map((c) => {
+          const url = urlForClaim(c, evidence);
+          return { label: c.citation, ...(url && { url }) };
+        });
       for (const c of confirmed) confirmedCitations.add(c.label);
       kept.push({
         ...p,

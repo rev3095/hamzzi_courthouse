@@ -233,7 +233,7 @@ describe("F-005 AC2 최종 결과 조립", () => {
       [
         "민법 제750",
         "model",
-        [{ label: "민법 제750조", url: expect.stringMatching(/^https:\/\/www\.law\.go\.kr\//) }],
+        [{ label: "민법 제750조" }],
       ],
       ["형법 제311", "model", undefined],
     ]);
