@@ -27,12 +27,16 @@ import { MAX_INPUT_CHARS } from "@/lib/inquiries/policy";
 import {
   analyzeStream,
   getResult,
+  isQuotaBlocked,
   isUserDailyLimit,
   notifyQuotaChanged,
   rememberAssistant,
 } from "@/lib/client/api";
 import { sourceRef } from "@/components/result/labels";
+import { AttachButton, AttachTray } from "@/components/ask/AttachTray";
 import { askErrorText, useAsk } from "@/components/ask/useAsk";
+import { useAttachments } from "@/components/ask/useAttachments";
+import { useMaterialsAsk } from "@/components/ask/useMaterialsAsk";
 import { TIER_TEXT } from "@/components/ask/TierSlider";
 import { useQuota } from "@/components/useQuota";
 import { AssistantEmblem } from "./AssistantIcon";
@@ -182,10 +186,29 @@ export function AssistantChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSend]);
 
+  // 사진·문서 붙이기: 자료 첨부(F-017)와 같은 창(동의 → 읽기 → 확인)을 거쳐 같은 길로 질문을 보낸다.
+  // 읽기 호출·횟수·금액 상한은 그 경로의 서버 규칙 그대로다. 질문이 준비되면 위 onReady가 비서 분석으로 잇는다
+  const attach = useAttachments();
+  const attached = attach.items.length > 0;
+  const materials = useMaterialsAsk({
+    attach,
+    send: ask.send,
+    busy: ask.busy,
+    error: ask.error,
+    blocked: isQuotaBlocked(quota),
+    showLimit: ask.showLimit,
+  });
+
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     if (busy || ask.busy) return;
+    if (materials.start(text)) return;
     void ask.send(text);
+  };
+
+  const pickStarter = (s: string) => {
+    setText(s);
+    input.current?.focus();
   };
 
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -228,24 +251,10 @@ export function AssistantChat({
           </div>
         </BotRow>
 
-        {turns.length === 0 && (
-          <div className={compact ? "pl-10" : "sm:pl-[46px]"} role="group" aria-label="질문 예">
-            <p className="hza-muted mb-2.5 text-[13px] font-semibold">이렇게 물어볼 수 있어요</p>
-            <div className="flex flex-col items-start gap-2.5">
-              {a.starters.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className="hza-chip"
-                  onClick={() => {
-                    setText(s);
-                    input.current?.focus();
-                  }}
-                >
-                  {s.trim()}
-                </button>
-              ))}
-            </div>
+        {/* 챗봇 창은 아래가 좁아 질문 예를 대화 칸 안에 둔다. 비서 페이지는 질문창 아래에서 고른다 */}
+        {compact && turns.length === 0 && (
+          <div className="pl-10">
+            <Starters list={a.starters} onPick={pickStarter} />
           </div>
         )}
 
@@ -278,7 +287,13 @@ export function AssistantChat({
         onSubmit={submit}
         className={compact ? "border-t border-[var(--hza-line)] px-3 pt-2.5 pb-3" : "mt-5"}
       >
-        <div className="flex items-end gap-2.5">
+        <div className={`flex items-end gap-2.5 ${compact ? "" : "max-sm:flex-wrap"}`}>
+          {/* 사진·문서 붙이기 (F-017 자료 첨부와 같은 흐름): 비서 페이지에서만 */}
+          {!compact && (
+            <div className="hza-attach">
+              <AttachButton attach={attach} disabled={busy || ask.busy} noun="자료" />
+            </div>
+          )}
           <label htmlFor={`hza-input-${id}-${variant}`} className="sr-only">
             {a.name}에게 질문하기
           </label>
@@ -291,20 +306,28 @@ export function AssistantChat({
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKey}
             placeholder={
-              lastDone
-                ? "이어서 묻고 싶은 것을 적어 주세요"
-                : "있었던 일을 적어 주세요 (이름·연락처·계좌번호는 빼고)"
+              attached
+                ? "붙인 자료에 대해 궁금한 점을 적어 주세요 (비워도 돼요)"
+                : lastDone
+                  ? "이어서 묻고 싶은 것을 적어 주세요"
+                  : "있었던 일을 적어 주세요 (이름·연락처·계좌번호는 빼고)"
             }
-            className="hza-input"
+            className={`hza-input ${compact ? "" : "max-sm:order-first max-sm:basis-full"}`}
           />
           <button
             type="submit"
-            className="hza-btn shrink-0"
-            disabled={busy || ask.busy || !text.trim()}
+            className={`hza-btn shrink-0 ${compact ? "" : "max-sm:flex-1"}`}
+            disabled={busy || ask.busy || (!text.trim() && !attached)}
           >
             보내기
           </button>
         </div>
+        {!compact && <AttachTray attach={attach} noun="자료" />}
+        {!compact && attached && (
+          <p className="hza-muted mt-2 text-[13px] leading-relaxed">
+            보내기를 누르면 동의를 받은 뒤 AI가 붙인 자료를 읽고, 읽은 내용을 확인한 다음 질문해요.
+          </p>
+        )}
         {ask.error && (
           <p role="alert" className="mt-2 text-sm font-semibold text-[var(--hza-strong)]">
             {ask.error}
@@ -325,8 +348,30 @@ export function AssistantChat({
             </button>
           )}
         </div>
+        {!compact && turns.length === 0 && (
+          <div className="mt-6">
+            <Starters list={a.starters} onPick={pickStarter} />
+          </div>
+        )}
       </form>
+      {materials.flow}
       {ask.modals}
+    </div>
+  );
+}
+
+/** 질문 예: 누르면 질문창에 문장을 넣는다 (보내기는 사용자가 누른다) */
+function Starters({ list, onPick }: { list: string[]; onPick: (s: string) => void }) {
+  return (
+    <div role="group" aria-label="질문 예">
+      <p className="hza-eyebrow mb-2.5">이렇게 물어볼 수 있어요</p>
+      <div className="flex flex-col items-stretch gap-2.5">
+        {list.map((s) => (
+          <button key={s} type="button" className="hza-chip" onClick={() => onPick(s)}>
+            {s.trim()}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
