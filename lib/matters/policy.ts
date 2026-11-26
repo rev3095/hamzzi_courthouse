@@ -17,7 +17,9 @@ import {
 import { CASE_NO, MERGED_SERIAL, articlesIn } from "@/lib/citations/patterns";
 import { maskContacts, nameAfterRelation, scanInput } from "@/lib/pii";
 import { statuteUrl } from "@/lib/search/normalize";
+import { LEANING } from "./preset-screen";
 import {
+  MATTER_FIELDS,
   MATTER_KINDS,
   MATTER_LIMITS,
   MATTER_SIDES,
@@ -120,6 +122,16 @@ export const MatterDataZ = z.object({
       }),
     )
     .max(L.notes),
+  // 자동 정리 (DEC-070): 서버가 Haiku로 붙이고 화면이 저장할 때 함께 돌아온다
+  auto: z
+    .object({
+      field: z.enum(MATTER_FIELDS),
+      gist: clean(L.line),
+      sig: z.string().max(40),
+      at: z.string().max(40),
+    })
+    .optional(),
+  titleAuto: z.boolean().optional(),
 });
 
 const invalid = (field: string, reason: string) =>
@@ -829,4 +841,48 @@ export function companyNoteBody(r: CompanyReport): string {
     ...block("기본 정보", r.basics),
     ...block("자료에서 확인하지 못한 것", r.unknowns),
   ].join("\n");
+}
+
+// --- 자동 정리 (DEC-070): 사건 제목·법 분야·한 줄 요약 ------------------------------------------
+
+/** 모델 출력 모양 (json_schema). 분야는 고정 목록에서만 */
+export const MATTER_AUTO_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "field", "gist"],
+  properties: {
+    title: { type: "string" },
+    field: { type: "string", enum: [...MATTER_FIELDS] },
+    gist: { type: "string" },
+  },
+} as const;
+
+const AUTO_TITLE_MAX = 30;
+
+/** 쓸 수 없는 문장: 가림 표시([이름1] 등)·개인정보 꼴·단정·판정·유불리·검증 전 조문·사건번호 (절대 규칙 1·2·4) */
+const unusable = (s: string) =>
+  /\[[^\]]*\d\]/.test(s) ||
+  scanInput(s).findings.length > 0 ||
+  isAssertive(s) ||
+  isJudging(s) ||
+  LEANING.test(s) ||
+  hasCitation(s);
+
+/** 모델 출력 거르기. 쓸 수 없는 제목·요약은 비우고, 분야가 목록 밖이면 기타 */
+export function screenAuto(raw: unknown): {
+  title: string;
+  field: (typeof MATTER_FIELDS)[number];
+  gist: string;
+} {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const tidy = (v: unknown, max: number) =>
+    typeof v === "string" ? v.normalize("NFKC").replace(/\s+/g, " ").trim().slice(0, max) : "";
+  let title = tidy(r.title, AUTO_TITLE_MAX + 10).replace(/^["'“”‘’]+|["'“”‘’.]+$/g, "");
+  if (title.length < 2 || title.length > AUTO_TITLE_MAX || unusable(title)) title = "";
+  let gist = tidy(r.gist, L.line);
+  if (gist.length < 5 || unusable(gist)) gist = "";
+  const field = (MATTER_FIELDS as readonly string[]).includes(r.field as string)
+    ? (r.field as (typeof MATTER_FIELDS)[number])
+    : "other";
+  return { title, field, gist };
 }

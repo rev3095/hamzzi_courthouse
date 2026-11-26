@@ -142,35 +142,86 @@ export function SectionTitle({
 }
 
 /** 사건 목록의 한 칸 (내 사건·가상 사건 공통). 숫자는 담긴 항목 수다 */
-export function MatterCard({
+/** 사건 목록 (2026-11-27 사용자 요청, DEC-070): 카드 대신 한 줄씩 — 제목·법 분야, 한 줄 요약, 담긴 자료 수·고친 날 */
+export function MatterList({ children, testId }: { children: ReactNode; testId?: string }) {
+  return (
+    <ul className={`${card} divide-line mt-3 divide-y overflow-hidden`} data-testid={testId}>
+      {children}
+    </ul>
+  );
+}
+
+const dayOf = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+};
+
+export function MatterRow({
   title,
   counts,
+  field,
+  gist,
+  byAi = false,
+  updatedAt,
   tag,
+  pending = false,
   onClick,
 }: {
   title: string;
   counts: { docs: number; parties: number; issues: number; notes: number };
+  /** 법 분야 이름 (MATTER_FIELD_LABEL) */
+  field?: string | null;
+  /** 한 줄 요약 — AI 자동 정리이거나 사용자가 적은 요약 */
+  gist?: string;
+  byAi?: boolean;
+  updatedAt?: string;
   tag?: string;
+  /** 자동 정리 중 */
+  pending?: boolean;
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${card} hover:border-ink h-full w-full px-4 py-3 text-left`}
-    >
-      <span className="flex items-start justify-between gap-2">
-        <span className="text-ink line-clamp-2 text-[15px] leading-snug font-bold">{title}</span>
-        {tag && (
-          <span className="border-line text-muted shrink-0 rounded-[4px] border px-1.5 py-0.5 text-[11px] font-semibold">
-            {tag}
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        className="hover:bg-cream/60 flex w-full items-start gap-3 px-4 py-3 text-left"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-1.5">
+            <span className="text-ink text-[15px] leading-snug font-bold">{title}</span>
+            {field && (
+              <span className="bg-cream text-ink rounded-full px-2 py-0.5 text-[11px] font-semibold">
+                {field}
+              </span>
+            )}
+            {tag && (
+              <span className="border-line text-muted rounded-[4px] border px-1.5 py-0.5 text-[11px] font-semibold">
+                {tag}
+              </span>
+            )}
           </span>
-        )}
-      </span>
-      <span className="text-muted mt-1.5 block text-[12px]">
-        자료 {counts.docs} · 당사자 {counts.parties} · 쟁점 {counts.issues} · 노트 {counts.notes}
-      </span>
-    </button>
+          {gist ? (
+            <span className="text-muted mt-1 line-clamp-2 text-[13px] leading-relaxed">
+              {byAi && <span className="text-label mr-1 text-[11px] font-semibold">AI 요약</span>}
+              {gist}
+            </span>
+          ) : pending ? (
+            <span className="text-muted mt-1 block text-[13px]" aria-live="polite">
+              AI가 사건을 정리하는 중…
+            </span>
+          ) : null}
+        </span>
+        <span className="text-muted shrink-0 text-right text-[12px] leading-relaxed">
+          {updatedAt && <span className="block">{dayOf(updatedAt)}</span>}
+          <span className="block whitespace-nowrap">
+            자료 {counts.docs} · 쟁점 {counts.issues}
+          </span>
+        </span>
+      </button>
+    </li>
   );
 }
 

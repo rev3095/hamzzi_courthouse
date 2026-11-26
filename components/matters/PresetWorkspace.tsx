@@ -10,7 +10,7 @@ import type { MatterData } from "@/lib/matters/model";
 import { MATTER_PRESETS, PRESET_NOTICE } from "@/lib/matters/presets";
 import { GoogleLoginButton } from "../LimitNotice";
 import { MatterBoard } from "./MatterBoard";
-import { MatterCard, SectionTitle, btn } from "./ui";
+import { MatterList, MatterRow, SectionTitle, btn } from "./ui";
 
 export function PresetWorkspace({
   signedIn = false,
@@ -50,26 +50,26 @@ export function PresetWorkspace({
               )
             }
           />
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" data-testid="preset-list">
+          <MatterList testId="preset-list">
             {MATTER_PRESETS.map((p) => (
-              <li key={p.id}>
-                <MatterCard
-                  title={p.title}
-                  counts={{
-                    docs: p.data.docs.length,
-                    parties: p.data.parties.length,
-                    issues: p.data.issues.length,
-                    notes: p.data.notes.length,
-                  }}
-                  onClick={() => {
-                    setOpenId(p.id);
-                    setFailed(null);
-                    setDone(null);
-                  }}
-                />
-              </li>
+              <MatterRow
+                key={p.id}
+                title={p.title}
+                gist={p.data.summary}
+                counts={{
+                  docs: p.data.docs.length,
+                  parties: p.data.parties.length,
+                  issues: p.data.issues.length,
+                  notes: p.data.notes.length,
+                }}
+                onClick={() => {
+                  setOpenId(p.id);
+                  setFailed(null);
+                  setDone(null);
+                }}
+              />
             ))}
-          </ul>
+          </MatterList>
         </section>
       </div>
     );
