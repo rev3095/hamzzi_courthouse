@@ -150,6 +150,11 @@ export async function runLiteAnalysis(
      * 분야별 비서 (DEC-057): 답변 지시문 뒤에 붙는 비서 지시문과, 그 요청에서 법제처로 다시 가져올 사례 판례 일련번호.
      * 판례는 근거 모음에 더해질 뿐 검증(verifyDraft)은 다른 근거와 같다. promptTag는 프롬프트 버전 뒤에 붙는다
      */
+    /**
+     * 판례 아카이브 질문창(DEC-070): 사용자가 보고 있던 판례의 법제처 일련번호. 비서 사례 판례와 같이 그 요청에서 다시 가져와
+     * 근거 모음 앞에 더할 뿐, 검증은 다른 근거와 같다. 가져오지 못하면 빠진다
+     */
+    focusCaseIds?: string[];
     assistant?: {
       persona: string;
       pinnedCaseIds: string[];
@@ -234,7 +239,9 @@ export async function runLiteAnalysis(
   // 비서 사례 판례(DEC-057)는 검색 결과보다 앞에 둔다 — 답변에 넘기는 판례 수가 정해져 있어 뒤에 두면 잘린다.
   // 이 요청에서 법제처로 다시 가져온 것만 쓰고(DEC-009), 가져오지 못하면 빠진다
   const pinned = await Promise.all(
-    (deps.assistant?.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
+    [...new Set([...(deps.focusCaseIds ?? []), ...(deps.assistant?.pinnedCaseIds ?? [])])].map(
+      (id) => source.getCase(id).catch(() => null),
+    ),
   );
   for (const c of pinned) if (c) evidence.addCase(c);
   for (const c of found.cases) evidence.addCase(c);

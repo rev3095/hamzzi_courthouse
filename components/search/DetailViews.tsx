@@ -26,6 +26,7 @@ import {
   rememberSearch,
   searchErrorText,
 } from "./parts";
+import { AskArchive } from "./AskArchive";
 import { useRecordRecent } from "./recent";
 
 const noSubscribe = () => () => {};
@@ -240,8 +241,15 @@ export function CaseRoute() {
           </ul>
         </section>
       )}
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-4">
         <OriginalLink url={c.sourceUrl} label="법제처에서 판결 원문 보기 →" />
+        {/* 질문창 (DEC-070): 이 판례를 근거에 넣어 Light로 묻는다 */}
+        <AskArchive
+          focus={{
+            id: c.id,
+            title: [c.court, c.caseNo].filter(Boolean).join(" ") || c.caseName,
+          }}
+        />
       </div>
     </Shell>
   );

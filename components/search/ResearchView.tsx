@@ -32,6 +32,7 @@ import {
   searchErrorText,
 } from "./parts";
 import { ArchiveSwitch } from "./ArchiveSwitch";
+import { AskArchive } from "./AskArchive";
 import { KindTabs } from "./KindTabs";
 import { clearPins, usePins, useRecent } from "./recent";
 import { PAGE_TITLE } from "@/components/ui/styles";
@@ -505,7 +506,17 @@ export function ResearchView() {
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h1 className={PAGE_TITLE}>판례 리서치</h1>
-            <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* 질문창 (DEC-070): 미리보기 중인 판례가 있으면 그 판례를 근거에 넣을 수 있다 */}
+              <AskArchive
+                focus={
+                  current?.kind === "cases"
+                    ? { id: current.id, title: metaLine(current) || current.title }
+                    : null
+                }
+              />
+              <ArchiveSwitch current="research" searched={state.kind === "done"} kind={tab} />
+            </div>
           </div>
           <p className="text-muted mt-2 text-sm">
             법제처 자료를 찾고, 옆에서 요지를 읽고, 필요한 자료를 보관함에 모아요. 검색은 질문

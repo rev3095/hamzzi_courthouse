@@ -386,6 +386,8 @@ export async function analyzeStream(
   extra: { assistant?: string; onPreview?: (p: QuickPreview) => void } = {},
 ): Promise<ApiResult<AnalyzedResult>> {
   const assistant = extra.assistant ?? recallAssistant(id);
+  // 판례 아카이브 질문창(DEC-070)에서 보낸 질문: 단계는 Light 고정(서버도 고정), 보고 있던 판례를 근거로 넘긴다
+  const archive = assistant ? null : recallArchive(id);
   let res: Response;
   try {
     // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
@@ -394,10 +396,12 @@ export async function analyzeStream(
       method: "POST",
       headers: { accept: "text/event-stream", "content-type": "application/json" },
       body: JSON.stringify({
-        tier: readTier(),
+        tier: archive ? "light" : readTier(),
         ...(category && { category }),
         ...(recallDeep(id) && { deep: true }),
         ...(assistant && { assistant }),
+        ...(archive && { archive: true }),
+        ...(archive && archive.focus.length > 0 && { focusCases: archive.focus }),
       }),
       credentials: "same-origin",
     });
@@ -487,6 +491,33 @@ export function rememberAssistant(id: string, assistant: string) {
 export function recallAssistant(id: string): string | null {
   try {
     return sessionStorage.getItem(AKEY(id));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 판례 아카이브 질문창(DEC-070)에서 보낸 질문 표시와, 근거에 넣을 판례 일련번호(공개 자료 번호)만 이 기기에 둔다.
+ * 결과 화면에서 다시 분석해도 같은 조건(Light 고정·같은 판례)으로 간다
+ */
+const ARKEY = (id: string) => `hz:ar:${id}`;
+export function rememberArchive(id: string, focus: string[]) {
+  try {
+    sessionStorage.setItem(ARKEY(id), JSON.stringify({ focus: focus.slice(0, 2) }));
+  } catch {
+    // 저장소를 못 쓰면 고른 단계로 분석된다
+  }
+}
+
+export function recallArchive(id: string): { focus: string[] } | null {
+  try {
+    const raw = sessionStorage.getItem(ARKEY(id));
+    if (!raw) return null;
+    const v = JSON.parse(raw) as { focus?: unknown };
+    const focus = Array.isArray(v.focus)
+      ? v.focus.filter((x): x is string => typeof x === "string" && /^\d{1,12}$/.test(x))
+      : [];
+    return { focus };
   } catch {
     return null;
   }
