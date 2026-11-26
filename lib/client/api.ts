@@ -7,6 +7,8 @@ import type { QuickPreview } from "@/lib/ai/quick-policy";
 import type { ErrorCode, ErrorDetails } from "@/lib/api/errors";
 import type { DemoAnalysisResult } from "@/lib/citations/policy";
 import type { PiiFinding } from "@/lib/pii";
+import type { EasyLawView } from "@/lib/search/easy/types";
+import type { WorldSearchResult } from "@/lib/search/world/types";
 
 export type ClientError = {
   code: ErrorCode;
@@ -357,12 +359,19 @@ export const getOrdinance = (id: string) =>
 export const searchAdminRules = (q: string) =>
   post<Listed<AdminRuleRef>>("/api/v1/admin-rules", { q });
 export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
+/** 국내·해외 법령 통합 검색 (DEC-074). 모델 없음 — 각국 공식 사이트 검색 결과만 */
+export type WorldLawList = WorldSearchResult & {
+  notice: string;
+  outcome: "grounded" | "no_result_in_scope";
+};
+export const searchWorldLaws = (q: string) => post<WorldLawList>("/api/v1/world-laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
 export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 
 export type LawViews = {
+  easy: EasyLawView;
   articles: LawBase & {
     articles: { articleNo: string; title: string; text: string; effectiveFrom: string | null }[];
   };
@@ -376,6 +385,9 @@ export const getLawView = <K extends keyof LawViews>(lawName: string, view: K, m
   call<LawViews[K]>(
     `/api/v1/laws/${encodeURIComponent(lawName)}/${view}${mst ? `?${new URLSearchParams({ mst })}` : ""}`,
   );
+
+/** 법령 쉬운 설명 (DEC-074). 하루 질문 횟수에 들어가지 않는다 */
+export const getEasyLaw = (lawName: string) => getLawView(lawName, "easy");
 
 /** SSE 한 덩어리("event: …\ndata: …")를 읽는다. 형식이 다르면 null */
 export function parseSseBlock(block: string): { event: string; data: unknown } | null {

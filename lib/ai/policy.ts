@@ -400,6 +400,27 @@ export function numberTokens(text: string): { digits: string[]; words: string[] 
   return { digits, words };
 }
 
+/** 원문에 적힌 숫자 토큰 묶음 — numbersWithin의 대조 기준 */
+export type NumberBag = { digits: Set<string>; bare: Set<string>; words: Set<string> };
+
+export function numberBag(source: string): NumberBag {
+  const t = numberTokens(source);
+  return {
+    digits: new Set(t.digits),
+    bare: new Set(t.digits.map((d) => d.replace(/[^\d.]/g, ""))),
+    words: new Set(t.words),
+  };
+}
+
+/** 글 속 숫자(단위 포함)·한글 수사가 모두 원문에 같은 토큰으로 있는지 (절대 규칙 3) */
+export function numbersWithin(text: string, bag: NumberBag): boolean {
+  const mine = numberTokens(text);
+  return (
+    mine.digits.every((d) => (/\d$/.test(d) ? bag.bare.has(d) : bag.digits.has(d))) &&
+    mine.words.every((w) => bag.words.has(w))
+  );
+}
+
 /** 본문에 적힌 조문번호·사건번호 */
 export function citationsIn(text: string): { articles: string[]; cases: string[] } {
   return { articles: articlesIn(text).map((a) => a.label), cases: caseNumbersIn(text) };
@@ -467,15 +488,7 @@ export function screenPoints(
       dropped.push("assertive");
       continue;
     }
-    const source = numberTokens(evidence.sourceText(p.source));
-    const mine = numberTokens(text);
-    const digits = new Set(source.digits);
-    const bare = new Set(source.digits.map((d) => d.replace(/[^\d.]/g, "")));
-    const words = new Set(source.words);
-    const numberOk =
-      mine.digits.every((d) => (/\d$/.test(d) ? bare.has(d) : digits.has(d))) &&
-      mine.words.every((w) => words.has(w));
-    if (!numberOk) {
+    if (!numbersWithin(text, numberBag(evidence.sourceText(p.source)))) {
       dropped.push("number_not_in_source");
       continue;
     }

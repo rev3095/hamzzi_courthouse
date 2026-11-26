@@ -36,6 +36,14 @@ export const DOC_DRAFT_COST_CAP_USD = 0.0015;
 export const DOC_DRAFT_TOKENS = { max: 1_500, min: 400 } as const;
 
 /**
+ * 법령 쉬운 설명(DEC-074) 1건 상한 — Haiku 1회. 입력은 목차 + 주요 조문 약 12,000자(lib/search/easy/policy.ts EASY_INPUT_CHARS).
+ * 계산: 입력을 글자당 1.5토큰으로 넉넉히 잡아 약 19,000토큰($0.0019) + 출력 1,800토큰($0.0009) = $0.0028 → 상한 $0.004.
+ * 실제 입력은 호출 전에 무과금 토큰 세기로 재고, 상한을 넘으면 부르지 않는다. 실제로 쓴 금액만 예산에서 빠진다.
+ */
+export const LAW_EASY_COST_CAP_USD = 0.004;
+export const LAW_EASY_TOKENS = { max: 1_800, min: 900 } as const;
+
+/**
  * 서류 판독(F-015, DEC-052) 1건 상한 — Haiku 비전 1회. **임시값, 사용자 확인 전**.
  * 계산: 사진 5장을 장당 IMAGE_TOKEN_ESTIMATE(5,000)토큰으로 넉넉히 잡은 입력 약 27,000토큰($0.0027) + 출력 2,000토큰($0.001).
  * 2026-11-24 사진 30장·문서 읽기(사용자 요청)로 $0.005 → $0.015: 사진 30장(장당 약 1,600토큰) + 문서 글 20,000자 + PDF까지 들어간다.

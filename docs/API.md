@@ -73,10 +73,11 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | GET `/statutes/{id}` | 공개/user | 조문 + 시행일 + 그 날짜의 조문 | F-004, DEC-029 |
 | GET `/statutes/{id}/cases` | 공개 | 이 조문이 나오는 판례 | F-003, DEC-029 |
 | GET·POST `/decisions` · GET `/decisions/{domain}/{id}` | 공개 | 법령해석례·헌재 결정례·조세심판 재결례·관세청 해석 검색·상세 | F-003, DEC-029 |
-| GET `/laws/{name}/{view}` | 공개 | 법령 도구: 3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029 |
+| GET `/laws/{name}/{view}` | 공개 | 법령 도구: 쉬운 설명(AI, DEC-074)·원문·3단 비교·신구조문 대조·개정 연혁·별표·연계·위임 대조 | F-004, DEC-029·073 |
 | GET·POST `/ordinances` · GET `/ordinances/{id}` | 공개 | 자치법규 검색·조문 | DEC-029 |
 | GET·POST `/admin-rules` | 공개 | 행정규칙 검색 | DEC-029 |
 | GET·POST `/laws` | 공개 | 현행 법령 이름 검색(부분 일치) | DEC-029 |
+| GET·POST `/world-laws` | 공개 | 국내·해외 법령 통합 검색(법제처 + 각국 공식 공개 API, 모델 없음) | F-004, DEC-074 |
 | POST `/casefiles/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 서류 사진 판독 → 가린 사건 개요·요구·당사자 | F-015 AC1·AC2 |
 | POST `/materials/read` | anon·user (하루 질문 횟수를 다 썼으면 차단 — 차감은 분석 때) | 질문·검색에 붙인 자료 사진 판독 → 가린 자료 정리·검색어 후보 | F-017 AC1·AC2 |
 | POST `/businesses/lookup` | 공개 | 법인·사업자 공개 정보 조회(공식 API, AI 없음) | F-015 AC4 |
@@ -286,13 +287,21 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - AI 생성물이 없으므로 `notice` = `SEARCH_NOTICE`.
 
 ### GET `/laws/{name}/{view}` (DEC-029 제안)
-`name` = 법령명(약칭 가능, URL 인코딩), `view` = `articles` · `three-tier` · `old-new` · `history` · `annexes` · `impact`. 법령을 못 찾거나 없는 `view`면 `404`. 모든 응답에 `lawName`(정식 이름)·`sourceUrl`·`notice`. 상세 상한에 함께 센다.
-- `articles` → `{ articles: [{ articleNo, title, text, effectiveFrom }] }` — 현행 법령 전문(조문 단위). 화면은 보고 있는 조문을 따라 `GET /statutes/{id}/cases`로 판례 패널을 갱신한다.
+`name` = 법령명(약칭 가능, URL 인코딩), `view` = `easy` · `articles` · `three-tier` · `old-new` · `history` · `annexes` · `impact`. 법령을 못 찾거나 없는 `view`면 `404`. 모든 응답에 `lawName`(정식 이름)·`sourceUrl`·`notice`. 상세 상한에 함께 센다(`easy`만 따로 — 아래).
+- `easy` (DEC-074) → `{ easy: { lawName, summary: string[], who: string[], keyPoints: [{ title, body, articleNo }], issues: [{ question, articleNo }], virtualCases: [{ title, situation, lawSays, articleNo }] }, articles: [{ articleNo, title, text, effectiveFrom }], realCases: [{ id, caseNo, caseName, court, decidedAt, sourceUrl }], realCasesFailed: boolean, foreignRecords: [{ id, kind, title, summary, date?, sourceUrl, source }], ai: { used: true } | { used: false, reason }, virtualNotice: string | null, sourceNote: string | null }` — 법령을 쉬운 말로 푼 설명. `easy`는 Haiku 1회 결과를 조문 원문과 대조해 거른 것이고(`notice` = `AI_NOTICE`), 무료 모드·예산 초과·모델 실패(`reason` = `free_mode` · `budget` · `cost_cap` · `model_failed` · `empty` · `no_articles`)면 조문 제목으로 만든 정리(모델 없음, `notice` = `SEARCH_NOTICE`). `realCases`는 법제처 판례 검색 결과만이고, 검색이 실패하면 `realCasesFailed: true`(판례 없음과 구분, 이때 가상 사례도 만들지 않는다). `foreignRecords`는 의료기기 법령일 때만 싣는 미국 FDA 공개 리콜 기록(openFDA, 원문 그대로·모델 없음·실패하면 빈 목록). 핵심 내용과 가상 사례는 그 법의 조문 번호(`articleNo`)가 있는 것만 온다. `virtualCases`는 실제 판례가 2건보다 적을 때만 채워지는 **AI가 만든 가상 사례**이고 그때 `virtualNotice`가 온다 — 실제 판례가 아니다. 하루 질문 횟수는 쓰지 않는다. 상한은 따로 센다(`law_easy`, 같은 네트워크 1시간 20회 → `429`). `cache-control: private, max-age=600`(판례 조회 실패·AI 없는 정리 응답은 `no-store`), 서버 저장 없음.
+- `articles` → `{ articles: [{ articleNo, title, text, effectiveFrom }] }` — 현행 법령 조문 전체(조문 단위, 화면은 접어 두고 누른 조문만 펼친다). 화면은 보고 있는 조문을 따라 `GET /statutes/{id}/cases`로 판례 패널을 갱신한다.
 - `three-tier` → `{ rows: [{ articleNo, title, text, delegations: [{ type, lawName, articleNo, title, text }] }] }` — 법제처 3단비교(위임조문).
 - `old-new?mst=` → `{ old, new: LawVersion | null, oldRows, newRows: [{ no, text, changed: string[] }] }` — 법제처 신구법 대조표. `mst` 없으면 현행과 직전, 있으면 그 버전과 직전. 다른 법령의 `mst`면 `404`. `changed`는 법제처가 표시한 바뀐 부분.
 - `history` → `{ versions: LawVersion[] }` — 시행일 내림차순.
 - `annexes` → `{ items: [{ no, title, kind, fileUrl, pdfUrl }] }` — 별표·서식 목록과 법제처 파일 주소(인증키가 든 주소는 주지 않음).
 - `impact` → `{ articleCount, lower: [{ articleNo, title, delegations }], ordinances: [{ lawName, lawArticleNo, ordinanceId, ordinanceName, ordinanceArticleNo }], checks: [{ articleNo, title, phrase, linked }], impactNote, delegationNote }` — 법제처 3단비교·법령-자치법규 연계에 등록된 관계와, 조문의 위임 문구("대통령령으로 정한다" 등) 대비 연결 수. **영향 크기·중요도·입법 공백 여부는 판정하지 않는다**(절대 규칙 2).
+
+### GET·POST `/world-laws` (DEC-074)
+`?q=`(POST 본문 `{ q }`, 화면은 POST — F-007). 검색어 규칙·상한은 `/cases`와 같다(`search_hourly`, 100자 넘거나 개인정보로 보이면 `400 VALIDATION_ERROR`, 비면 `400 EMPTY_INPUT`).
+- `200 { items: WorldLawHit[], failed: CountryCode[], translated: { en?, ja? }, outcome: "grounded" | "no_result_in_scope", notice }` — `WorldLawHit` = `{ id, country, title, titleKo?, kind, citation?, snippet?, date?, sourceUrl, source, internal?, curated? }`. `country` = `kr` · `us` · `eu` · `jp` · `uk` · `ca` · `au` · `cn` · `intl`.
+- 국내는 법제처 법령 이름 검색(`internal` = `/laws/{이름}`), 해외는 그 요청에서 각국 정부 공개 API(미국 eCFR, 일본 e-Gov, 영국 legislation.gov.uk, 호주 Federal Register of Legislation)를 조회한 결과와 직접 고른 핵심 법령 목록(`curated: true`, 유럽연합·캐나다·중국은 목록만)이다. 저장하지 않는다.
+- 출처 하나가 실패하거나 6초를 넘기면 오류가 아니라 `failed`에 그 나라가 실린다. `translated`는 한국어 검색어를 고정 낱말표로 바꿔 해외 출처에 보낸 말(모델 번역 아님).
+- `title`은 공식 출처의 원어 그대로이고 번역하지 않는다. 관련도 순위·판정 없음. `notice` = `WORLD_NOTICE`(AI 생성물 없음).
 
 ### GET·POST `/ordinances` · GET `/ordinances/{id}` · GET·POST `/admin-rules` (DEC-029 제안)
 - 자치법규 검색 → `{ items: [{ id, name, region, kind, effectiveFrom, promulgatedAt, sourceUrl }], outcome, searchScopeNote, notice }`, 상세 → `{ ...위 항목, articles: [{ articleNo, title, text }], notice }`. `id` = 법제처 자치법규일련번호.
@@ -302,13 +311,12 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 
 ### POST `/casefiles/read` (F-015, DEC-052)
 `req { images?: { mediaType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf"; data: string(base64) }[]; texts?: { name: string; text: string }[]; question?: string (500자 이하); consent: { images: true; sensitive: true } }` — images·texts 합쳐 1~30개 (2026-11-24, 이전 사진 1~5장)
-→ `200 { reading: { purpose: "case" | "question"; docTypes: string[]; summary: string; claims: string[]; parties: { role; side: "claimant" | "respondent" | "other"; kind: "business" | "agency" | "person"; name }[] } | null; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 무료 법률 상담" | null }` (`cache-control: no-store`)
+→ `200 { reading: { docTypes: string[]; summary: string; claims: string[]; parties: { role; side: "claimant" | "respondent" | "other"; kind: "business" | "agency" | "person"; name }[] } | null; piiFindings: { type; count }[]; sensitive: string[]; dropped: number; ai: { used: true } | { used: false; reason: "free_mode" | "budget" | "cost_cap" | "model_failed" | "unreadable" }; notice: "AI 생성 · 무료 법률 상담" | null }` (`cache-control: no-store`)
 - **동의**: 사진 전송(`consent.images`)과 민감정보 처리(`consent.sensitive`)를 따로 받는다. 하나라도 `true`가 아니면 `409 CONSENT_REQUIRED` + `details.kind` `casefile_images`·`sensitive_info` — 사진을 모델로 보내지 않는다.
 - **사진**: 서류 사진은 미리 가릴 수 없어 판독 호출(Haiku 비전 1회)에만 그대로 쓴다(절대 규칙 4의 예외) — 토큰 세기 호출에도 사진을 보내지 않고 장당 고정값으로 상한을 확인한다. 사진·판독 원문은 저장·로그하지 않는다. 사진 한 장 base64 820,000자, 전체 4,000,000자까지. 종류는 내용 앞부분으로 다시 확인한다. 넘으면 `400 VALIDATION_ERROR` + `details.reason` `too_many`·`too_large`·`media_type`·`encoding`(값은 싣지 않는다), 사진이 없으면 `400 EMPTY_INPUT`.
 - **PDF·문서 (2026-11-24 사용자 요청)**: PDF는 사진과 같은 동의 뒤 document 블록으로 그대로 보낸다(한 개 base64 1,200,000자, 쪽 수 합계 20쪽 — 넘으면 `too_large`·`too_many_pages`). 한글·워드·파워포인트·엑셀·텍스트 문서는 브라우저가 글만 꺼내 `texts`로 보내고(전체 20,000자, `name`은 확장자만 쓴다), 서버가 `scanInput`으로 가린 글만 모델에 보낸다. 사건 진행 `POST /matters/read`도 같은 본문을 받는다. 판독 1건 상한 $0.015(임시값, 실제 쓴 금액만 기간 예산에서 뺀다).
 - **응답**: `docTypes`는 정해진 목록(`DOC_TYPES`)의 값뿐이다. `summary`·`claims`는 가린 문장이다 — `scanInput`에 더해, 모델이 따로 적어 준 개인 이름 목록(응답에 싣지 않고 버린다)·서류 역할어 뒤의 이름 꼴·차량번호·생년월일·지번 주소를 가린다. 조문 번호·사건번호(지급명령·가사 등 사건부호 포함)가 든 문장과, 사건 개요에서 결과·유불리를 내다보는 문장은 빠지고 그 수가 `dropped`에 실린다(내용은 싣지 않는다). 서류의 주장을 옮긴 요구·주장 칸에는 판정 표현 검사를 걸지 않는다(단정 표현만). `parties`의 `name`은 표지(주식회사·법원 등)가 있는 상호·기관 이름만 있고 대표자·담당자 이름과 직함은 잘라 낸다. 개인(`person`)은 언제나 빈 문자열이다. `role`은 서류에 적힌 절차상 역할(발신인·수신인·원고·피고·피의자 등 정해진 값 — "피해자"·"가해자"는 없다), `side`는 서류에서의 자리이며 옳고 그름을 뜻하지 않는다.
-- **횟수·비용**: 하루 질문 횟수를 다 썼으면 `401 LOGIN_REQUIRED`(비로그인)·`429 RATE_LIMITED`(`reason: "user_daily"`)로 모델 전에 막는다. 차감은 하지 않는다 — 확인한 개요를 `POST /inquiries` → `/analyze`로 분석할 때 1회 센다. 같은 네트워크 1시간 10회(`reason: "casefile_hourly"`, 관리자 모드 제외). 로그인 사용자는 판독을 하루 30회(`CASEFILE_USER_RATE`, DEC-073 ③ — 사건 진행으로 간 판독은 질문 횟수가 차감되지 않아서)로도 센다. 1건 비용 상한 $0.005(임시값)와 전체 예산을 받고, 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai.used: false`로 알린다.
-- **용도 (DEC-073 ③)**: 같은 판독 호출이 `purpose`도 고른다 — `case` 한 사건의 서류, `question` 무엇인지·어떤 법인지 묻는 일반 사진(안내문·표지판·조문 화면·상품 표시·빈 양식 등). 목록 밖 값·없음은 `case`. 홈 질문창(바로 분석)은 `question`이면 일반 질문으로(`deep` 없이, 사진 내용을 덧붙인 문장), `case`면 로그인 사용자는 `POST /matters`(제목 비움 → 자동 정리가 지음)로 사건 진행의 새 사건을 만들어 열고, 비로그인이거나 사건을 만들지 못하면 지금처럼 DeepSearch로 분석한다. 사건 정리 화면(`/casefile`)은 언제나 DeepSearch다.
+- **횟수·비용**: 하루 질문 횟수를 다 썼으면 `401 LOGIN_REQUIRED`(비로그인)·`429 RATE_LIMITED`(`reason: "user_daily"`)로 모델 전에 막는다. 차감은 하지 않는다 — 확인한 개요를 `POST /inquiries` → `/analyze`로 분석할 때 1회 센다. 같은 네트워크 1시간 10회(`reason: "casefile_hourly"`, 관리자 모드 제외). 1건 비용 상한 $0.005(임시값)와 전체 예산을 받고, 무료 모드·예산 초과·상한 초과·읽지 못함은 오류가 아니라 `ai.used: false`로 알린다.
 - 판독 결과는 저장하지 않는다. 화면은 사용자가 확인·수정한 개요를 `POST /inquiries`(`sensitiveConsent: true`)로 보내고 `/analyze`에 `deep: true`를 붙인다. 당사자 목록은 브라우저(sessionStorage)에만 둔다.
 
 ### POST `/materials/read` (F-017, DEC-058)

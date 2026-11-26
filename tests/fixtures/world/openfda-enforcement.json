@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "results": {
+      "skip": 0,
+      "limit": 2,
+      "total": 586
+    }
+  },
+  "results": [
+    {
+      "recall_number": "Z-0216-2027",
+      "classification": "Class I",
+      "status": "Ongoing",
+      "recalling_firm": "Cardinal Health 200, LLC",
+      "product_description": "Cardinal Health Presource PBDS kits, Containing BD Alaris Pump Infusion Sets used with BD Alaris Pump Module Model 8100, labeled as:    1) KIT,C SECTION ADMIT,, CATALOG # MATJV8300D;   2) KIT,C SECTION ADMIT,, CATALOG # MATJV8300C;   3) KIT, EMERGENCY C SECTION ADMIT, CATALOG # MAT216337B;   4) IN PATIENT KIT   , CATALOG # PG21OTAUHA.",
+      "reason_for_recall": "Kits contain infusion sets which were recalled for performance issues.",
+      "recall_initiation_date": "20260924"
+    },
+    {
+      "recall_number": "Z-0215-2027",
+      "classification": "Class I",
+      "status": "Ongoing",
+      "recalling_firm": "Cardinal Health 200, LLC",
+      "product_description": "Cardinal Health Presource PBDS kits, Containing BD Alaris Pump Infusion Sets used with BD Alaris Pump Module Model 8100, labeled as:   1) KIT, CABG,            , CATALOG # PCOCCG3A12;  2) KIT, CABG,            , CATALOG # PCOCCG3A11;  3) KIT, TAVR             , CATALOG # PCOCTVWP6;  4) KIT, TAVR             , CATALOG # PCOCTVWP5;  5) KIT, VALVE,           , CATALOG # PCOC49365;  6) KIT, VALVE,    ",
+      "reason_for_recall": "Kits contain infusion sets which were recalled for performance issues.",
+      "recall_initiation_date": "20260924"
+    }
+  ]
+}

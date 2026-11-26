@@ -1,0 +1,137 @@
+{
+  "results": [
+    {
+      "starts_on": "2016-12-30",
+      "ends_on": null,
+      "type": "Section",
+      "hierarchy": {
+        "title": "21",
+        "subtitle": null,
+        "chapter": "I",
+        "subchapter": "H",
+        "part": "810",
+        "subpart": "B",
+        "subject_group": null,
+        "section": "810.13",
+        "appendix": null
+      },
+      "hierarchy_headings": {
+        "title": "Title 21",
+        "subtitle": null,
+        "chapter": " Chapter I",
+        "subchapter": "Subchapter H",
+        "part": "Part 810",
+        "subpart": "Subpart B",
+        "subject_group": null,
+        "section": "§ 810.13",
+        "appendix": null
+      },
+      "headings": {
+        "title": "Food and Drugs",
+        "subtitle": null,
+        "chapter": "Food and Drug Administration, Department of Health and Human Services",
+        "subchapter": "<strong>Medical</strong> <strong>Devices</strong>",
+        "part": "<strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Authority",
+        "subpart": "Mandatory <strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Procedures",
+        "subject_group": null,
+        "section": "Mandatory <strong>recall</strong> order.",
+        "appendix": null
+      },
+      "full_text_excerpt": "order should be amended to require a <strong>recall</strong> of the <strong>device</strong> with respect to which the order was<span class=\"elipsis\">…</span>require such a <strong>recall</strong>. FDA shall amend the order to require such a <strong>recall</strong> within 15 working<span class=\"elipsis\">…</span>(b) In a mandatory <strong>recall</strong> order, FDA may: (1) Specify that the <strong>recall</strong> is to extend to the",
+      "reserved": false,
+      "removed": false,
+      "change_types": ["effective", "initial"]
+    },
+    {
+      "starts_on": "2016-12-30",
+      "ends_on": null,
+      "type": "Section",
+      "hierarchy": {
+        "title": "21",
+        "subtitle": null,
+        "chapter": "I",
+        "subchapter": "H",
+        "part": "810",
+        "subpart": "B",
+        "subject_group": null,
+        "section": "810.14",
+        "appendix": null
+      },
+      "hierarchy_headings": {
+        "title": "Title 21",
+        "subtitle": null,
+        "chapter": " Chapter I",
+        "subchapter": "Subchapter H",
+        "part": "Part 810",
+        "subpart": "Subpart B",
+        "subject_group": null,
+        "section": "§ 810.14",
+        "appendix": null
+      },
+      "headings": {
+        "title": "Food and Drugs",
+        "subtitle": null,
+        "chapter": "Food and Drug Administration, Department of Health and Human Services",
+        "subchapter": "<strong>Medical</strong> <strong>Devices</strong>",
+        "part": "<strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Authority",
+        "subpart": "Mandatory <strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Procedures",
+        "subject_group": null,
+        "section": "Cease distribution and notification or mandatory <strong>recall</strong> strategy.",
+        "appendix": null
+      },
+      "full_text_excerpt": "810.11(e) or § 810.12(c) or a mandatory <strong>recall</strong> order issued under § 810.13 shall develop<span class=\"elipsis\">…</span>consequences related to the <strong>device</strong>; (2) The ease of identifying the <strong>device</strong>; (3) The extent to which<span class=\"elipsis\">…</span>presented by the <strong>device</strong> is obvious to a health professional or <strong>device</strong> user facility; and",
+      "reserved": false,
+      "removed": false,
+      "change_types": ["effective", "initial"]
+    },
+    {
+      "starts_on": "2016-12-30",
+      "ends_on": null,
+      "type": "Section",
+      "hierarchy": {
+        "title": "21",
+        "subtitle": null,
+        "chapter": "I",
+        "subchapter": "H",
+        "part": "810",
+        "subpart": "B",
+        "subject_group": null,
+        "section": "810.17",
+        "appendix": null
+      },
+      "hierarchy_headings": {
+        "title": "Title 21",
+        "subtitle": null,
+        "chapter": " Chapter I",
+        "subchapter": "Subchapter H",
+        "part": "Part 810",
+        "subpart": "Subpart B",
+        "subject_group": null,
+        "section": "§ 810.17",
+        "appendix": null
+      },
+      "headings": {
+        "title": "Food and Drugs",
+        "subtitle": null,
+        "chapter": "Food and Drug Administration, Department of Health and Human Services",
+        "subchapter": "<strong>Medical</strong> <strong>Devices</strong>",
+        "part": "<strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Authority",
+        "subpart": "Mandatory <strong>Medical</strong> <strong>Device</strong> <strong>Recall</strong> Procedures",
+        "subject_group": null,
+        "section": "Termination of a cease distribution and notification or mandatory <strong>recall</strong> order.",
+        "appendix": null
+      },
+      "full_text_excerpt": "order issued under § 810.10 or a mandatory <strong>recall</strong> order issued under § 810.13 may request<span class=\"elipsis\">…</span>of a <strong>recall</strong> order shall include a description of the disposition of the <strong>recalled</strong> device<span class=\"elipsis\">…</span>order issued under § 810.10 or a mandatory <strong>recall</strong> order issued under § 810.13 when the agency",
+      "reserved": false,
+      "removed": false,
+      "change_types": ["effective", "initial"]
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "total_pages": 7,
+    "total_count": 31,
+    "max_score": 87.977356,
+    "description": "Changes to sections matching 'medical device recall' in Title 21"
+  }
+}

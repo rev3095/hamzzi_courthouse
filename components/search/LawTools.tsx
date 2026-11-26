@@ -1,5 +1,5 @@
 "use client";
-// 법령 도구 /laws/[name] (DEC-029 제안): 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 대조.
+// 법령 도구 /laws/[name] (DEC-029 제안): 쉬운 설명(DEC-074, 기본 탭) · 원문·판례 · 3단 비교 · 신구조문 대조 · 개정 연혁 · 별표·서식 · 연계·위임 대조.
 // 법제처에 등록된 대조표·관계만 보여 주고, 영향 크기·중요도 같은 판단은 붙이지 않는다 (절대 규칙 2).
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -16,10 +16,12 @@ import { statuteIdOf } from "@/lib/search/browse";
 import { LAW_VIEWS, type LawView } from "@/lib/search/explore";
 import { dotDate } from "../result/labels";
 import { H1, H2, Pending, Shell, useLoad } from "./DetailViews";
+import { ArticleFolds, EasyLawBody, EasySkeleton } from "./EasyLaw";
 import { OriginalLink, SearchNotice, rememberSearch } from "./parts";
 
 const LABELS: Record<LawView, string> = {
-  articles: "법령 전문·판례",
+  easy: "쉬운 설명",
+  articles: "원문·판례",
   "three-tier": "3단 비교",
   "old-new": "신구조문 대조",
   history: "개정 연혁",
@@ -56,7 +58,8 @@ function ArticleLink({ lawName, articleNo }: { lawName: string; articleNo: strin
 type LiveCases = { status: "loading" } | { status: "error" } | { status: "done"; items: CaseRef[] };
 
 /**
- * 법령 전문 + 라이브 판례 패널. 화면에서 보고 있는 조문이 바뀌면 그 조문이 본문에 나오는 판례를 법제처에서 찾아 옆에 보여 준다.
+ * 법령 원문 + 라이브 판례 패널. 조문은 번호·제목만 보이게 접어 두고(DEC-074), 누른 조문만 펼친다.
+ * 화면에서 보고 있는 조문이나 방금 펼친 조문이 바뀌면 그 조문이 본문에 나오는 판례를 법제처에서 찾아 옆에 보여 준다.
  * 스크롤이 멈춘 뒤에만 조회하고(상세 상한에 함께 센다) 한 번 찾은 조문은 다시 조회하지 않는다. 관련도 점수는 없다.
  */
 function LawText({ d }: { d: LawViews["articles"] }) {
@@ -64,6 +67,8 @@ function LawText({ d }: { d: LawViews["articles"] }) {
   const [cases, setCases] = useState<Record<string, LiveCases>>({});
   const asked = useRef(new Set<string>());
   const list = useRef<HTMLDivElement>(null);
+  // 방금 펼친 조문: 화면을 움직이기 전까지는 판례 패널이 이 조문에 머문다
+  const pinned = useRef<{ no: string; y: number } | null>(null);
 
   // 화면 위쪽에 걸친 조문을 '지금 보는 조문'으로 삼는다
   useEffect(() => {
@@ -77,13 +82,26 @@ function LawText({ d }: { d: LawViews["articles"] }) {
           if (e.isIntersecting) visible.add(no);
           else visible.delete(no);
         }
+        // 조문을 펼치면 아래 조문들이 밀려나며 이 콜백이 불린다 — 그때는 펼친 조문을 그대로 둔다
+        if (pinned.current) return;
         const first = order.find((no) => visible.has(no));
         if (first) setActive(first);
       },
       { rootMargin: "-90px 0px -55% 0px" },
     );
     list.current.querySelectorAll("[data-article]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    // 화면을 눈에 띄게 움직이면 다시 '보고 있는 조문'을 따라간다
+    const onScroll = () => {
+      if (!pinned.current || Math.abs(window.scrollY - pinned.current.y) < 80) return;
+      pinned.current = null;
+      const first = order.find((no) => visible.has(no));
+      if (first) setActive(first);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [d.articles]);
 
   // 스크롤이 멈춘 뒤 조회 (빠르게 지나친 조문은 조회하지 않는다)
@@ -108,23 +126,16 @@ function LawText({ d }: { d: LawViews["articles"] }) {
   const current = d.articles.find((a) => a.articleNo === active);
   return (
     <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div ref={list} className="grid gap-5">
-        {d.articles.map((a) => (
-          <section
-            key={a.articleNo}
-            data-article={a.articleNo}
-            className={`scroll-mt-24 border-l-4 py-1 pl-4 ${
-              a.articleNo === active ? "border-l-gold" : "border-l-transparent"
-            }`}
-          >
-            <h2 className="text-ink text-[15px] font-bold">
-              <ArticleLink lawName={d.lawName} articleNo={a.articleNo} />
-              {a.title && ` (${a.title})`}
-            </h2>
-            <p className="text-ink mt-1 text-[15px] leading-[1.8] whitespace-pre-line">{a.text}</p>
-          </section>
-        ))}
-      </div>
+      <ArticleFolds
+        lawName={d.lawName}
+        articles={d.articles}
+        active={active}
+        listRef={list}
+        onOpen={(no) => {
+          pinned.current = { no, y: window.scrollY };
+          setActive(no);
+        }}
+      />
       <aside
         aria-label="지금 보는 조문의 판례"
         aria-live="polite"
@@ -135,8 +146,8 @@ function LawText({ d }: { d: LawViews["articles"] }) {
           {current ? `${current.articleNo}${current.title ? ` (${current.title})` : ""}` : "조문"}
         </p>
         <p className="text-muted mt-1 text-[12px] leading-relaxed">
-          조문을 따라 내려가면 그 조문이 판결 본문에 나오는 판례로 바뀌어요. 관련이 적은 판례가 섞일
-          수 있어요.
+          조문을 펼치거나 따라 내려가면 그 조문이 판결 본문에 나오는 판례로 바뀌어요. 관련이 적은
+          판례가 섞일 수 있어요.
         </p>
         {(!now || now.status === "loading") && (
           <p className="text-muted mt-3 text-sm">법제처에서 판례를 찾고 있어요…</p>
@@ -440,18 +451,21 @@ function View<K extends LawView>({
   lawName,
   view,
   mst,
+  loading,
   children,
 }: {
   lawName: string;
   view: K;
   mst?: string;
+  /** 불러오는 동안 보일 화면 (없으면 한 줄 안내) */
+  loading?: React.ReactNode;
   children: (d: LawViews[K]) => React.ReactNode;
 }) {
   const r = useLoad(`${lawName}|${view}|${mst ?? ""}`, () => getLawView(lawName, view, mst));
   if (!r?.ok)
     return (
       <div className="mt-4">
-        <Pending r={r} loading={LOADING} />
+        {!r && loading ? loading : <Pending r={r} loading={LOADING} />}
         {r && r.error.code === "NOT_FOUND" && (
           // 정식 이름·공식 약칭이 아니면 법령을 못 연다 — 법령 탭에서 이름 일부로 다시 찾게 한다
           <p className="text-muted mt-3 text-sm leading-relaxed">
@@ -483,8 +497,9 @@ export function LawRoute() {
   const lawName = decodeURIComponent(params.name);
   const query = useSearchParams();
   const router = useRouter();
-  const raw = query.get("tab") ?? "articles";
-  const tab = ((LAW_VIEWS as readonly string[]).includes(raw) ? raw : "articles") as LawView;
+  // 기본은 쉬운 설명 (DEC-074). 원문은 ?tab=articles — 예전 링크도 그대로 열린다
+  const raw = query.get("tab") ?? "easy";
+  const tab = ((LAW_VIEWS as readonly string[]).includes(raw) ? raw : "easy") as LawView;
   const mst = query.get("mst") ?? undefined;
   const go = (next: LawView, nextMst?: string) =>
     router.push(
@@ -511,6 +526,11 @@ export function LawRoute() {
           </button>
         ))}
       </div>
+      {tab === "easy" && (
+        <View lawName={lawName} view="easy" loading={<EasySkeleton />}>
+          {(d) => <EasyLawBody d={d} onShowOriginalTab={() => go("articles")} />}
+        </View>
+      )}
       {tab === "articles" && (
         <View lawName={lawName} view="articles">
           {(d) => <LawText d={d} />}

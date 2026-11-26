@@ -942,6 +942,8 @@ export function ordinanceLinks(xml: string): OrdinanceLink[] {
 // --- 법령 도구 경로 ------------------------------------------------------------------------
 
 export const LAW_VIEWS = [
+  // 쉬운 설명 (DEC-074): 법령 화면의 기본 탭. 원문은 articles
+  "easy",
   "articles",
   "three-tier",
   "old-new",
