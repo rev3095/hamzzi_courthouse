@@ -69,8 +69,8 @@ export async function probe(): Promise<boolean> {
 export type Tier = "light" | "pro" | "max";
 export const TIER_LABEL: Record<Tier, { name: string; hint: string }> = {
   light: { name: "Light", hint: "빠르게" },
-  pro: { name: "Pro", hint: "중간" },
-  max: { name: "Pro Max", hint: "기본 · 깊게" },
+  pro: { name: "Pro", hint: "기본 · 중간" },
+  max: { name: "Pro Max", hint: "깊게" },
 };
 
 export type Quota = {

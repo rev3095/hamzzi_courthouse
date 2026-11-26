@@ -51,9 +51,11 @@ import {
   type FollowupTurn,
   type StepEvent,
 } from "./policy";
-import { LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
+import { GENERAL_ANSWER_ADDON, LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-25-free-consult";
+import { runWebRefs, type WebRef } from "./web-refs";
+
+export const LITE_PROMPT_VERSION = "lite-2026-11-27-answer-first-general";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -86,6 +88,12 @@ export type LiteAnalysisOutput = {
   newLabel?: { title: string; keywords: string[] } | null;
   /** 첨부 자료(DEC-058)가 있을 때 문단별로 참고한 자료 번호. 검증 뒤 자료 지도에 잇는다 */
   materialRefs?: MaterialRef[];
+  /** 사건 질문인지, 법·제도가 궁금한 일반 질문인지 (2026-11-27). 질문 해석이 없으면 case */
+  questionKind?: "case" | "general";
+  /** 일반 질문의 법제처 밖 참고 자료 링크 (lib/ai/web-refs, 도구가 실제로 가져온 주소만) */
+  references?: WebRef[];
+  /** 참고 자료 찾기에 쓴 금액. costUsd에 넣지 않고 analyze가 WEB_REFS_WEIGHT 예약으로 따로 정산한다 */
+  refsCostUsd?: number;
 };
 
 /** 답변 모델에 넘길 근거 키 순서: 조문 먼저, 그다음 요지가 있는 판례 */
@@ -132,6 +140,13 @@ export async function runLiteAnalysis(
     /** DeepSearch (DEC-038): 근거를 조문 8·판례 4건까지 넘겨 본다. 비용 상한은 그대로라 넘으면 뒤에서부터 뺀다 */
     deep?: boolean;
     /**
+     * 예비 답변 (2026-11-27 사용자 결정): 질문 해석·법제처 검색 없이 모델이 아는 법령·판례로만 답한다(모든 문단이 모델 인용).
+     * 본 답변에서 남은 문단이 하나도 없을 때 analyze가 한 번 더 부른다 — 어떤 경우에도 답변이 나오게
+     */
+    noEvidence?: boolean;
+    /** 일반 질문의 참고 자료 찾기 예산을 따로 잡는다 (analyze가 tryAiQuota를 넘긴다). 없거나 false면 찾지 않는다 */
+    reserveWebRefs?: () => Promise<boolean>;
+    /**
      * 분야별 비서 (DEC-057): 답변 지시문 뒤에 붙는 비서 지시문과, 그 요청에서 법제처로 다시 가져올 사례 판례 일련번호.
      * 판례는 근거 모음에 더해질 뿐 검증(verifyDraft)은 다른 근거와 같다. promptTag는 프롬프트 버전 뒤에 붙는다
      */
@@ -155,54 +170,64 @@ export async function runLiteAnalysis(
 
   // ⓪ 질문 해석 (DEC-033): 섹션 라벨 + 법률 용어 검색어. 실패하면 질문 문장으로 찾는 기존 방식 그대로 간다
   let understood: ReturnType<typeof screenUnderstanding> | null = null;
-  deps.onStep?.({ stage: "intent", message: STEP_MESSAGES.understand });
-  try {
-    const res = await callModel(
-      model,
-      "understand",
-      {
-        model: UNDERSTAND_MODEL,
-        max_tokens: UNDERSTAND_TOKENS.max,
-        thinking: { type: "disabled" },
-        // 지시문·라벨 목록은 요청마다 같아 캐시에서 싸게 다시 읽는다 (DEC-042)
-        system: [{ type: "text", text: UNDERSTAND_SYSTEM, cache_control: { type: "ephemeral" } }],
-        output_config: { format: { type: "json_schema", schema: UNDERSTAND_SCHEMA } },
-        // 비슷한 질문의 라벨 예시를 골라 붙인다 (DEC-042 — 미세조정 대신 매번 관련 예시를 보여 준다)
-        messages: [
-          {
-            role: "user",
-            content: [
-              examplesBlock(input.maskedText),
-              userMessage(input.maskedText, context, materials),
-            ]
-              .filter(Boolean)
-              .join("\n\n"),
-          },
-        ],
-      },
-      UNDERSTAND_TIMEOUT_MS,
-      { minOutputTokens: UNDERSTAND_TOKENS.min },
-    );
-    usage = addUsage(usage, res);
-    const parsed = UnderstandZ.safeParse(JSON.parse(textOf(res)));
-    if (parsed.success) understood = screenUnderstanding(parsed.data, input.maskedText);
-  } catch (e) {
-    // 상한·시간 초과·형식 오류·모델 오류 모두 해석 없이 계속한다 (오류로 끝내지 않는다)
-    if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
-      throw e;
-  }
+  if (!deps.noEvidence) deps.onStep?.({ stage: "intent", message: STEP_MESSAGES.understand });
+  if (!deps.noEvidence)
+    try {
+      const res = await callModel(
+        model,
+        "understand",
+        {
+          model: UNDERSTAND_MODEL,
+          max_tokens: UNDERSTAND_TOKENS.max,
+          thinking: { type: "disabled" },
+          // 지시문·라벨 목록은 요청마다 같아 캐시에서 싸게 다시 읽는다 (DEC-042)
+          system: [{ type: "text", text: UNDERSTAND_SYSTEM, cache_control: { type: "ephemeral" } }],
+          output_config: { format: { type: "json_schema", schema: UNDERSTAND_SCHEMA } },
+          // 비슷한 질문의 라벨 예시를 골라 붙인다 (DEC-042 — 미세조정 대신 매번 관련 예시를 보여 준다)
+          messages: [
+            {
+              role: "user",
+              content: [
+                examplesBlock(input.maskedText),
+                userMessage(input.maskedText, context, materials),
+              ]
+                .filter(Boolean)
+                .join("\n\n"),
+            },
+          ],
+        },
+        UNDERSTAND_TIMEOUT_MS,
+        { minOutputTokens: UNDERSTAND_TOKENS.min },
+      );
+      usage = addUsage(usage, res);
+      const parsed = UnderstandZ.safeParse(JSON.parse(textOf(res)));
+      if (parsed.success) understood = screenUnderstanding(parsed.data, input.maskedText);
+    } catch (e) {
+      // 상한·시간 초과·형식 오류·모델 오류 모두 해석 없이 계속한다 (오류로 끝내지 않는다)
+      if (!(e instanceof CostCapReached || e instanceof SyntaxError || e instanceof ApiError))
+        throw e;
+    }
 
   // 비서 대화 한마디(Haiku)는 검색과 함께 돌린다 — 같은 질문 1건 상한 안이고 실패해도 답변은 그대로 간다
   const talkRun = deps.assistant ? runTalk(model, deps.assistant.talkSystem, input) : null;
-  const found = await freeSearch(input.maskedText, {
-    lawSource: source,
-    onStep: deps.onStep,
-    caseHint: deps.caseHint,
-    lawHints: deps.lawHints,
-    wide: deps.deep,
-    lawQuery: understood?.lawQuery,
-    caseQueries: understood?.caseQueries,
-  });
+  // 일반 법률 질문(2026-11-27): 법제처 검색과 함께 법제처 밖 참고 자료를 웹 검색으로 찾는다 (따로 상한, 실패해도 답변은 그대로)
+  const general = understood?.kind === "general" && !deps.assistant && !deps.noEvidence;
+  // Light는 답변 상한이 작아(웹 검색 한 번이 상한의 수십 배) 참고 자료를 찾지 않는다. 예산을 따로 잡지 못해도 찾지 않는다
+  const refsRun =
+    general && tier.id !== "light" && deps.reserveWebRefs && (await deps.reserveWebRefs())
+      ? runWebRefs(input.maskedText)
+      : null;
+  const found = deps.noEvidence
+    ? { articles: [], cases: [], searches: [] }
+    : await freeSearch(input.maskedText, {
+        lawSource: source,
+        onStep: deps.onStep,
+        caseHint: deps.caseHint,
+        lawHints: deps.lawHints,
+        wide: deps.deep,
+        lawQuery: understood?.lawQuery,
+        caseQueries: understood?.caseQueries,
+      });
 
   const evidence = new EvidenceSet();
   for (const a of found.articles) evidence.addArticle(a);
@@ -242,6 +267,7 @@ export async function runLiteAnalysis(
             system: [
               { type: "text", text: LITE_ANSWER_SYSTEM },
               ...(deps.assistant ? [{ type: "text" as const, text: deps.assistant.persona }] : []),
+              ...(general ? [{ type: "text" as const, text: GENERAL_ANSWER_ADDON }] : []),
             ],
             output_config: {
               effort: tier.effort,
@@ -294,6 +320,7 @@ export async function runLiteAnalysis(
     }
   }
   spent = model.spentUsd();
+  const refsOut = refsRun ? await refsRun : null;
 
   const draft = assembleDraft({
     maskedText: input.maskedText,
@@ -330,6 +357,8 @@ export async function runLiteAnalysis(
     newLabel: understood?.newLabel ?? null,
     ...(talkOut && { talk: talkOut.talk }),
     materialRefs,
+    questionKind: general ? "general" : "case",
+    ...(refsOut && { references: refsOut.refs, refsCostUsd: refsOut.costUsd }),
   };
 }
 

@@ -1,4 +1,4 @@
-// 예시 답변의 빈 칸 채우기 (DEC-062). **과금된다** — 쪽 답변마다 Opus 5.5 effort xhigh 1회 (상한 $0.4).
+// 예시 답변의 빈 칸 채우기 (DEC-062). **과금된다** — 쪽 답변마다 Opus 5.5 effort medium 1회 (상한 $0.4, 2026-11-27부터 — 이전 xhigh).
 // 실행(사용자 허락 2026-11-25, 1회): ALLOW_PAID_API=1 BOARD_FILL=1 pnpm exec vitest run --config vitest.live.config.ts tests/live/board-fill.live.test.ts
 //   BOARD_BUDGET_USD=15  전체 금액 상한(넘을 수 있는 건은 시작하지 않는다)
 // 결과는 evals/board-gen/out/<예시>--<쪽>.json에 한 건씩 쓴다(이미 있으면 건너뛰어 다시 과금하지 않는다).
@@ -28,7 +28,7 @@ type Side = {
 
 describe.skipIf(!RUN)("예시 답변 빈 칸 채우기 (DEC-062)", () => {
   test(
-    "쪽 답변마다 Opus 5.5 xhigh 1회로 정리판·빈 쟁점·없는 문서만 채운다",
+    "쪽 답변마다 Opus 5.5 medium 1회로 정리판·빈 쟁점·없는 문서만 채운다",
     async () => {
       fs.mkdirSync(OUT, { recursive: true });
       const { examples } = JSON.parse(

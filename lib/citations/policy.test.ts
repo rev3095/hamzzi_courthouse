@@ -139,7 +139,7 @@ describe("F-005 AC2 최종 결과 조립", () => {
     expect(stats).toMatchObject({ total: 2, removed: 0, quoteMismatch: 1 });
   });
 
-  test("① 근거에 없는 출처, ③ 부존재·판정 불가 인용이 있는 문단은 뺀다", () => {
+  test("③ 부존재로 확인된 인용이 든 문단만 빼고, 근거에 없는 출처·판정 불가 인용은 모델 인용 문단으로 남긴다 (2026-11-27)", () => {
     const ev = evidence();
     const { result, citations, stats } = assembleResult({
       draft: draft([
@@ -156,15 +156,18 @@ describe("F-005 AC2 최종 결과 조립", () => {
       ),
       screened: 2,
     });
-    expect(result.answer.points.map((p) => p.text)).toEqual([
-      "주택임대차보호법 제3조의2에 따릅니다.",
+    expect(result.answer.points.map((p) => [p.text, p.check])).toEqual([
+      ["설명", "model"],
+      ["주택임대차보호법 제3조의2에 따릅니다.", "verified"],
+      ["민법 제536조도 봅니다.", "model"],
     ]);
-    expect(citations.map((c) => c.status)).toEqual(["removed", "removed", "verified", "removed"]);
+    // 모델 인용 문단은 DB 인용 행을 만들지 않는다 (DEC-055)
+    expect(citations.map((c) => c.status)).toEqual(["removed", "verified"]);
     expect(stats).toEqual({
       total: 6,
-      removed: 5,
+      removed: 3,
       quoteMismatch: 0,
-      removedBy: { not_in_evidence: 1, not_confirmed: 2, screened: 2 },
+      removedBy: { not_in_evidence: 0, not_confirmed: 1, screened: 2 },
     });
     expect(result.recheck.ok).toBe(false);
     // 검증 탭에는 남은 문단이 쓴(확인된) 인용만. 미확인 조문·사건번호 문자열은 내보내지 않는다
@@ -177,7 +180,7 @@ describe("F-005 AC2 최종 결과 조립", () => {
     const { result } = assembleResult({
       draft: draft([{ text: "설명", source: "case:2020다12345", quote: CASE_QUOTE }]),
       evidence: evidence(),
-      checks: checks({ citation: "2020다12345", exists: null }),
+      checks: checks({ citation: "2020다12345", exists: false }),
     });
     expect(result.outcome).toBe("no_result_in_scope");
     expect(result.answer.points).toEqual([]);

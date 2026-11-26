@@ -70,8 +70,8 @@ describe("분야별 비서 정의 (DEC-057)", () => {
     expect(inScope("market", "none")).toBe(true);
   });
 
-  test("비서 답변 모델은 Pro Max(지금 Opus 5.5 effort high)로 고정이다 — 소개 페이지 문구가 이 값을 적는다 (DEC-057 ⑧)", () => {
-    expect(ASSISTANT_ANSWER_TIER).toBe("max");
+  test("비서 답변 모델은 Pro(Sonnet 5.5, 2026-11-27)로 고정이다 — 소개 페이지 문구가 이 값을 적는다 (DEC-057 ⑧)", () => {
+    expect(ASSISTANT_ANSWER_TIER).toBe("pro");
   });
 
   test("고정 조문은 셋까지 (무료 검색이 앞에서부터 셋만 가져온다)", () => {

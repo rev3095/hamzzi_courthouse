@@ -152,7 +152,7 @@ describe("DEC-036 단계별 답변 모델", () => {
     expect(out.costUsd).toBeCloseTo(UNDERSTAND_COST, 6);
   });
 
-  test("Pro Max = Opus 5.5 — adaptive + effort xhigh, 생각 + 답변을 20,000토큰으로 묶는다. 비용은 $0.6 이하", async () => {
+  test("Pro Max = Opus 5.5 — adaptive + effort medium, 생각 + 답변을 8,000토큰으로 묶는다. 비용은 $0.3 이하 (2026-11-27)", async () => {
     const model = fakeModel();
     const out = await runLiteAnalysis(
       { maskedText: "보증금을 못 받았어요" },
@@ -161,11 +161,11 @@ describe("DEC-036 단계별 답변 모델", () => {
     const p = model.calls.find((c) => c.model === "claude-opus-5-5");
     if (!p) throw new Error("Opus 답변 호출 없음");
     expect(p.thinking).toEqual({ type: "adaptive" });
-    expect(p.output_config?.effort).toBe("xhigh");
-    expect(p.max_tokens).toBe(20_000);
+    expect(p.output_config?.effort).toBe("medium");
+    expect(p.max_tokens).toBe(8_000);
     // 답변: 입력 5,000 × $4 + 출력 400 × $20 = $0.028 (+ 질문 해석 Haiku 몫)
     expect(out.costUsd).toBeGreaterThanOrEqual(0.028);
-    expect(out.costUsd).toBeLessThanOrEqual(0.6);
+    expect(out.costUsd).toBeLessThanOrEqual(0.3);
     expect(out.model).toBe("claude-opus-5-5");
   });
 
@@ -400,6 +400,7 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
         "100% 승소",
         "모욕죄 공연성",
       ],
+      kind: "case",
     });
     expect(bad.lawQuery).toBeNull();
     expect(bad.caseQueries).toEqual(["모욕죄 공연성"]);

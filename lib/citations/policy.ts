@@ -133,6 +133,10 @@ export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
   document?: VirtualDocument;
   /** 단계별 분석 시간 (DEC-063): 전체 ms와 단계마다의 ms. 글은 담지 않는다 */
   timing?: AnalysisTiming;
+  /** 법·제도가 궁금한 일반 질문 (2026-11-27). 화면은 타임라인·절차 대신 답변과 근거·참고 자료만 보인다 */
+  kind?: "general";
+  /** 일반 질문의 법제처 밖 참고 자료 링크 (인용이 아니다) */
+  references?: { title: string; url: string; note: string }[];
 };
 
 export type PointRemoval = "not_in_evidence" | "not_confirmed";
@@ -156,8 +160,9 @@ export type VerifyStats = {
 };
 
 /**
- * 재조회 결과로 최종 결과를 만든다. 문단의 출처와 본문 인용이 모두 실존 확인(exists === true)돼야 남긴다.
- * 판정 불가(null)도 실존 미확인으로 보고 뺀다.
+ * 재조회 결과로 최종 결과를 만든다. 문단의 출처와 본문 인용이 모두 실존 확인(exists === true)되면 근거 문단(verified)으로 남긴다.
+ * 법제처가 없다고 확인한(exists === false) 인용이 하나라도 있으면 뺀다. 조회 실패·판정 불가(null)는 빼지 않고
+ * 출처 표시 없는 모델 인용 문단(check "model")으로 남긴다 (DEC-069 — 답변이 언제나 나오게).
  */
 export function assembleResult(input: {
   draft: DemoDraft;
@@ -194,18 +199,26 @@ export function assembleResult(input: {
       quote,
     });
 
-    if (!sourceClaim || !allowed.has(p.source)) {
-      removedBy.not_in_evidence += 1;
+    // 2026-11-27 사용자 결정: 답변이 나오는 것이 먼저다. 근거 키로 잇지 못했거나 법제처 조회가 실패·판정 불가인 문단은
+    // 빼지 않고 모델 인용 문단(DEC-055, 재조회·원문 대조 없음)으로 남긴다. 법제처가 "없다"고 확인한 인용이 든 문단만 뺀다
+    const asModel = () => kept.push({ ...p, source: MODEL_SOURCE, quote: "", check: "model" });
+    const inText = claimsInText(p.text, evidence);
+    const claimed = [...(sourceClaim ? [sourceClaim] : []), ...inText.claims];
+    // 법제처가 "없다"고 확인한 인용이 하나라도 있으면 어느 경우든 뺀다
+    if (claimed.some((c) => checks.get(c.citation)?.exists === false)) {
+      removedBy.not_confirmed += 1;
       rows.push(row("removed", null));
       continue;
     }
-    const inText = claimsInText(p.text, evidence);
+    if (!sourceClaim || !allowed.has(p.source)) {
+      asModel();
+      continue;
+    }
     const confirmed =
       inText.unresolved.length === 0 &&
-      [sourceClaim, ...inText.claims].every((c) => checks.get(c.citation)?.exists === true);
+      claimed.every((c) => checks.get(c.citation)?.exists === true);
     if (!confirmed) {
-      removedBy.not_confirmed += 1;
-      rows.push(row("removed", null));
+      asModel();
       continue;
     }
     for (const c of [sourceClaim, ...inText.claims]) confirmedCitations.add(c.citation);

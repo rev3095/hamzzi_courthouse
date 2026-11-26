@@ -70,7 +70,7 @@ describe("DEC-042 복수 라벨·온/오프라인·새 라벨 제안", () => {
   const Q = "행정심판을 청구하고 싶어요. 구청에서 과태료를 부과했는데 억울해요.";
   const base = { lawQuery: "과태료 부과 처분 불복 절차", caseQueries: ["과태료 이의"] };
 
-  test("출력 형식은 여섯 항목을 모두 요구하고, others는 정해진 라벨만 고를 수 있다", () => {
+  test("출력 형식은 일곱 항목(2026-11-27 kind 추가)을 모두 요구하고, others는 정해진 라벨만 고를 수 있다", () => {
     expect(UNDERSTAND_SCHEMA.required).toEqual([
       "section",
       "others",
@@ -78,6 +78,7 @@ describe("DEC-042 복수 라벨·온/오프라인·새 라벨 제안", () => {
       "newLabel",
       "lawQuery",
       "caseQueries",
+      "kind",
     ]);
     expect(UNDERSTAND_SCHEMA.properties.others.items.enum).toEqual(SECTION_LABELS);
   });

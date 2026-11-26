@@ -50,7 +50,7 @@ import {
   withMaterialRefs,
   type MaterialRef,
 } from "@/lib/materials/policy";
-import { LONG_DEEP, tierOf, type TierId } from "./models";
+import { longDeepOf, tierOf, type TierId } from "./models";
 import {
   STEP_MESSAGES,
   assembleDraft,
@@ -65,7 +65,7 @@ import { DEEP_ANSWER_SYSTEM, DEEP_PLAN_SYSTEM, DEEP_STRUCT_SYSTEM } from "./prom
 
 export const DEEP_PROMPT_VERSION = "deep-2026-11-25b-title60";
 /** 긴 질문(DEC-062) 답변의 프롬프트 꼬리표. 정리판 지시문을 바꾸면 올린다 */
-export const LONG_PROMPT_TAG = "long-xhigh-plan-3-rebuttals";
+export const LONG_PROMPT_TAG = "long-plan-3-rebuttals";
 export const DEEP_STRUCT_MODEL = "claude-haiku-5-5";
 // 2026-11-19 첫 실호출에서 구조화가 실패해 일반 답변으로 내려갔다. 사실 8개·쟁점 4개·확인할 사실 5개를 한국어 JSON으로
 // 쓰면 1,000토큰을 넘을 수 있어(출력 한도 초과 = 실패) 한도를 2,000으로 늘렸다. Haiku 출력 2,000토큰 = $0.001
@@ -108,26 +108,27 @@ export async function runDeepAnalysis(
     pinnedCaseIds?: string[];
     /** 답변이 어긋나지 않게 할 검토 메모 (아카이브 만들기 전용, 사용자 입력이 아니다) */
     notes?: string;
-    /** 긴 질문(DEC-062): Opus 5.5 effort xhigh로 답하고 사건 정리판(종류·당사자 자리와 대응·준비 자료)을 함께 받는다 */
+    /** 긴 질문(DEC-062): 고른 단계의 모델로 답하고 사건 정리판(종류·당사자 자리와 대응·준비 자료)을 함께 받는다 */
     long?: boolean;
     /** 분야별 비서(DEC-057)의 말투 지시문 — 긴 비서 질문도 DeepSearch로 간다 (DEC-062) */
     persona?: string;
     /** 프롬프트 버전 꼬리표 (비서 지시문 버전 등) */
     promptTag?: string;
     /** 답변 effort를 단계 값 대신 쓴다 — 미리 만드는 예시(가상 사건 프리셋 보강)에서만 쓴다. 서비스 요청 경로는 단계 값 그대로 */
-    effort?: "low" | "medium" | "high" | "xhigh";
-    /** 답변 출력 한도를 단계 값 대신 쓴다 — xhigh는 생각 토큰이 많아 단계 한도로는 답이 잘린다 (미리 만드는 예시 전용) */
+    effort?: "low" | "medium" | "high";
+    /** 답변 출력 한도를 단계 값 대신 쓴다 (미리 만드는 예시 전용) */
     answerMaxTokens?: number;
   } = {},
 ): Promise<DeepAnalysisOutput> {
-  const tier = tierOf(deps.long ? LONG_DEEP.tier : deps.tier);
-  // 답변 호출 설정: 긴 질문은 xhigh 설정, 그 밖은 고른 단계의 DeepSearch 설정
+  const tier = tierOf(deps.tier);
+  // 답변 호출 설정: 긴 질문은 고른 단계의 긴 질문 설정(사건 정리판 몫만큼 크다), 그 밖은 그 단계의 DeepSearch 설정
+  const long = longDeepOf(tier.id);
   const answer = deps.long
     ? {
-        effort: LONG_DEEP.effort,
-        tokens: LONG_DEEP.answerTokens,
-        timeoutMs: LONG_DEEP.timeoutMs,
-        capUsd: LONG_DEEP.capUsd,
+        effort: long.effort,
+        tokens: long.answerTokens,
+        timeoutMs: long.timeoutMs,
+        capUsd: long.capUsd,
       }
     : {
         effort: tier.effort,
