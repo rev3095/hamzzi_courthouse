@@ -80,6 +80,19 @@ export function questionsUsedToday(
 export const ANON_IP_DAILY_LIMIT = 100;
 export const ANON_IP_WINDOW = "24 hours";
 export const ANON_IP_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * 분석 잠금 (DEC-065): 같은 질문의 유료 분석이 새로고침·재접속으로 두 번 돌지 않게 한다.
+ * 분석 라우트 한도(maxDuration 300초)보다 조금 길게 잡아, 서버가 중간에 죽어 풀지 못한 잠금도 이 시간이 지나면 풀린 것으로 본다.
+ */
+export const ANALYSIS_LOCK_MS = 320_000;
+
+/** 잠금 시각이 비었거나 오래됐으면 새로 잡을 수 있다 (순수 규칙, 실제 잡기는 store.claimAnalysis의 조건부 update) */
+export function lockExpired(startedAt: string | null, now: number = Date.now()): boolean {
+  if (!startedAt) return true;
+  const t = Date.parse(startedAt);
+  return !Number.isFinite(t) || now - t >= ANALYSIS_LOCK_MS;
+}
 /** LOGIN_REQUIRED details.loginProviders — Google 로그인만 연다 (DEC-005, DEC-035) */
 export const LOGIN_PROVIDERS = ["google"];
 
