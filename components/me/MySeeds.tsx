@@ -40,14 +40,14 @@ export function MySeeds() {
         </p>
       )}
       <p className="text-muted mt-2 text-[13px] leading-relaxed">
-        커뮤니티에 글을 쓰면 씨앗 {SEEDS.post}개, 댓글을 쓰면 {SEEDS.comment}개가 쌓여요. 씨앗은
-        활동 기록이에요. 햄찌법원은 전면 무료라 씨앗을 돈이나 할인으로 바꾸지 않아요.
+        광장(커뮤니티)에 글을 쓰면 씨앗 {SEEDS.post}개, 댓글을 쓰면 {SEEDS.comment}개가 쌓여요.
+        씨앗은 활동 기록이에요. 햄찌법원은 전면 무료라 씨앗을 돈이나 할인으로 바꾸지 않아요.
       </p>
       <Link
         href="/community"
         className="text-link mt-2 inline-block text-[14px] underline-offset-2 hover:underline"
       >
-        커뮤니티로 가기
+        광장으로 가기
       </Link>
     </section>
   );

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { PostRoute } from "@/components/community/Community";
 
 export const metadata: Metadata = {
-  title: "커뮤니티 글 · 햄찌법원",
+  title: "광장 글 · 햄찌법원",
   robots: { index: false, follow: false },
 };
 

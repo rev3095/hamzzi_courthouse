@@ -57,7 +57,7 @@ export function MyPage() {
           />
         }
         settings={<SettingsCard />}
-        records={<RecordsCard />}
+        records={<RecordsCard signedIn />}
       />
     );
   }
@@ -230,30 +230,22 @@ function SettingsCard() {
   );
 }
 
-function RecordsCard() {
+function RecordsCard({ signedIn = false }: { signedIn?: boolean }) {
   const link = "text-link inline-flex min-h-11 items-center underline underline-offset-2";
   return (
     <section aria-labelledby="me-records" className={card}>
       <h2 id="me-records" className="text-ink text-lg font-bold">
         내 기록
       </h2>
-      <ul className="mt-3 space-y-1 text-[15px]">
-        <li>
-          <Link href="/privacy#delete" className={link}>
-            내 질문·결과 지우기 →
-          </Link>
-        </li>
-        <li>
-          <Link href="/privacy" className={link}>
-            개인정보처리방침 →
-          </Link>
-        </li>
-        <li>
-          <Link href="/terms" className={link}>
-            이용약관 →
-          </Link>
-        </li>
-      </ul>
+      {/* DEC-067: 개인정보처리방침·이용약관은 푸터에 늘 있어 여기서는 지우기만 둔다 */}
+      <p className="text-muted mt-2 text-[14px] leading-relaxed">
+        {signedIn
+          ? "기록에 남긴 질문과 사건 진행의 사건은 '내 세션'에서 모아 볼 수 있어요."
+          : "Google로 로그인하면 기록에 남긴 질문과 사건 진행의 사건을 '내 세션'에서 모아 볼 수 있어요."}
+      </p>
+      <Link href="/privacy#delete" className={`${link} mt-1 text-[15px]`}>
+        내 질문·결과 지우기 →
+      </Link>
     </section>
   );
 }

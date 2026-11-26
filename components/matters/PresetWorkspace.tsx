@@ -2,6 +2,7 @@
 // 가상 사건 프리셋 (DEC-061): 로그인하지 않은 사람에게 '사건 분석' 기능을 미리 채운 가상 사건으로 보여 준다.
 // 목록에서 하나를 고르면 내 사건과 같은 판(MatterBoard)으로 열리고, 고친 내용은 이 화면 메모리에만 둔다(서버에 저장하지 않음).
 // AI 기능 버튼은 서버가 로그인을 요구해 "로그인이 필요해요"로 끝난다 — 판례 검색처럼 로그인이 필요 없는 기능은 그대로 쓴다.
+// DEC-067: 누르기 전에 알 수 있게 가상 사건 안내 상자에 로그인 뒤 쓸 수 있는 기능을 미리 적는다.
 import { useState, type ReactNode } from "react";
 import { AI_NOTICE } from "@/lib/api/respond";
 import { createMatter, type LoadedMatter } from "@/lib/client/matters";
@@ -89,10 +90,19 @@ export function PresetWorkspace({
       banner={
         <section
           aria-label="가상 사건 안내"
-          className="border-line mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[8px] border bg-white px-4 py-3"
+          className="border-line rounded-card mt-3 flex flex-wrap items-center justify-between gap-3 border bg-white px-4 py-3"
         >
           <div className="min-w-0 flex-1 basis-[320px]">
             <p className="text-muted text-[13px] leading-relaxed">{PRESET_NOTICE}</p>
+            {!signedIn && (
+              <p
+                className="text-ink mt-1 text-[13px] font-semibold"
+                data-testid="preset-login-note"
+              >
+                서류 읽기·쟁점 정리 같은 AI 기능은 로그인한 뒤 쓸 수 있어요. 둘러보기와 판례 찾기는
+                지금 바로 돼요.
+              </p>
+            )}
             <p className="text-muted mt-0.5 text-[12px]">{AI_NOTICE}</p>
           </div>
           {signedIn ? (

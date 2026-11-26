@@ -355,7 +355,7 @@ export function CommunityBoard() {
         <div className="flex items-center gap-3">
           <HamzziJudge size={56} />
           <div>
-            <h1 className={PAGE_TITLE}>커뮤니티</h1>
+            <h1 className={PAGE_TITLE}>광장</h1>
             <p className="text-muted text-[14px]">
               법 이야기부터 잡담까지, 로그인 없이도 편하게 나눠요.
             </p>
@@ -578,7 +578,7 @@ export function PostRoute() {
     return (
       <Shell>
         <Link href="/community" className="text-link text-sm underline-offset-2 hover:underline">
-          ← 커뮤니티
+          ← 광장
         </Link>
         <p role="alert" className="text-warn-text">
           {communityErrorText(data.error)}
@@ -649,7 +649,7 @@ export function PostRoute() {
   return (
     <Shell>
       <Link href="/community" className="text-link text-sm underline-offset-2 hover:underline">
-        ← 커뮤니티
+        ← 광장
       </Link>
 
       {note && (

@@ -241,7 +241,7 @@ function CommunityHint() {
         href="/community"
         className="text-link font-semibold underline-offset-2 hover:underline"
       >
-        커뮤니티로 가기
+        광장으로 가기
       </Link>
     </p>
   );
