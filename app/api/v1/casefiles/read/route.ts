@@ -57,10 +57,12 @@ export const POST = withRoute(async (req, _ctx, scope) => {
     await assertAnonIpAvailable(req.headers);
   } else if (countsUserQuota(owner)) {
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
-    // 사건 진행으로 간 판독은 질문 횟수가 차감되지 않아 판독을 따로 센다 (DEC-070 ③)
-    if (owner.kind === "user") await assertUserRate(CASEFILE_USER_RATE, owner.userId);
   }
   if (!owner.admin) await assertRateLimit(CASEFILE_RATE, req.headers);
+  // 사건 진행으로 간 판독은 질문 횟수가 차감되지 않아 로그인 사용자의 판독을 따로 센다 (DEC-070 ③) — 실제로 읽을 때만
+  if (countsUserQuota(owner) && owner.kind === "user" && aiMode() !== "free") {
+    await assertUserRate(CASEFILE_USER_RATE, owner.userId);
+  }
 
   let ai: AiState;
   let data: { reading: unknown; piiFindings: unknown; sensitive: unknown; dropped: number } | null =

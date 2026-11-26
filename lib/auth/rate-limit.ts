@@ -34,7 +34,6 @@ export const BUSINESS_RATE: RateRule = { bucket: "business", limit: 30, windowSe
 
 /** 사건 진행(F-016, DEC-053)의 AI 기능: 로그인 사용자 한 사람이 하루(24시간 창) 30회 — 임시값 */
 export const MATTER_AI_RATE: RateRule = { bucket: "matter_ai", limit: 30, windowSeconds: 86_400 };
-/** 사건 자동 정리(DEC-070, Haiku): 자료가 바뀔 때마다 불러도 된다는 사용자 결정이라 따로 넉넉히 — 로그인 사용자 하루 120회 (임시값) */
 /**
  * 로그인 사용자의 서류 판독 하루 횟수 (DEC-070 ③): 홈에서 올린 사건 서류는 판독 뒤 사건 진행으로 가 질문 횟수가 차감되지 않으므로
  * 판독 자체를 사용자별로 센다 — 하루 질문 한도(USER_QUESTION_LIMIT)와 같은 30회 (임시값)
@@ -44,6 +43,7 @@ export const CASEFILE_USER_RATE: RateRule = {
   limit: 30,
   windowSeconds: 86_400,
 };
+/** 사건 자동 정리(DEC-070, Haiku): 자료가 바뀔 때마다 불러도 된다는 사용자 결정이라 따로 넉넉히 — 로그인 사용자 하루 120회 (임시값) */
 export const MATTER_AUTO_RATE: RateRule = {
   bucket: "matter_auto",
   limit: 120,
