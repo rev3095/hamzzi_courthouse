@@ -101,4 +101,11 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 �
     expect((await source.linkedOrdinances(LAW)).length).toBeGreaterThan(0);
     expect((await source.searchAdminRules("임대차", 5)).length).toBeGreaterThan(0);
   });
+
+  test("법령 이름 일부로 찾기: '의료기기' → 의료기기법과 그 시행령·시행규칙", async () => {
+    const names = (await source.searchLaws("의료기기")).map((h) => h.name);
+    expect(names).toEqual(
+      expect.arrayContaining(["의료기기법", "의료기기법 시행령", "의료기기법 시행규칙"]),
+    );
+  });
 });

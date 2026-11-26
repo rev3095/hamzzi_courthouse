@@ -16,6 +16,8 @@ const store = vi.hoisted(() => ({
   claimAnalysis: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
+// 남용 막기(DEC-072)는 tests/unit/abuse-api.test.ts에서 따로 본다
+vi.mock("@/lib/inquiries/abuse-guard", () => ({ assertQuestionAllowed: vi.fn(), rejectOffTopic: vi.fn() }));
 const runner = vi.hoisted(() => ({ analyzeInquiry: vi.fn() }));
 vi.mock("@/lib/inquiries/analyze", () => runner);
 // 로그인 사용자 하루 상한(DEC-039)은 tests/unit/login-history.test.ts에서 따로 본다

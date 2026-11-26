@@ -1,4 +1,4 @@
-// PATCH·DELETE /api/v1/me/inquiries/{id} — 내 세션 이름 바꾸기·목록에서 빼기 (DEC-070, API.md). 로그인 사용자만, 본인이 남긴 질문만.
+// PATCH·DELETE /api/v1/me/inquiries/{id} — 내 세션 이름 바꾸기·목록에서 빼기 (DEC-073, API.md). 로그인 사용자만, 본인이 남긴 질문만.
 // 이름은 가린 뒤에만 저장한다. 빼기는 '기록에 남기기'만 끄고 질문·결과는 지우지 않는다(하루 횟수가 되살아나지 않게) —
 // 기록을 모두 지우는 길은 DELETE /me/data다. 남의 질문·없는 질문은 똑같이 404.
 import { ApiError } from "@/lib/api/errors";

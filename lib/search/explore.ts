@@ -16,6 +16,7 @@ import type {
   DecisionDetail,
   DecisionDomain,
   DecisionHit,
+  LawHit,
   LawVersion,
   OldNewCompare,
   OldNewRow,
@@ -871,6 +872,32 @@ export function ordinanceDetail(id: string, json: unknown): OrdinanceDetail | nu
   };
 }
 
+/**
+ * 법령 목록 응답(lawSearch target=law)을 법령 행으로. 법제처는 이름에 검색어가 든 법령을 가나다순으로 주고,
+ * 그 순서를 그대로 둔다 — 관련도 순위를 매기지 않는다 (PRD 8.3). 같은 법령이 두 번 오면 하나만 둔다.
+ */
+export function lawHits(xml: string): LawHit[] {
+  const seen = new Set<string>();
+  return xmlItems(xml, "law").flatMap((r) => {
+    const id = r["법령일련번호"];
+    const name = r["법령명한글"];
+    if (!id || !/^\d+$/.test(id) || !name || seen.has(name)) return [];
+    if (r["현행연혁코드"] && r["현행연혁코드"] !== "현행") return [];
+    seen.add(name);
+    return [
+      {
+        id,
+        name,
+        kind: r["법령구분명"] || null,
+        agency: r["소관부처명"] || null,
+        promulgatedAt: isoDate(r["공포일자"]),
+        effectiveFrom: isoDate(r["시행일자"]),
+        sourceUrl: lawUrl(name),
+      },
+    ];
+  });
+}
+
 export function adminRuleHits(xml: string): AdminRuleHit[] {
   return xmlItems(xml, "admrul").flatMap((r) => {
     const id = r["행정규칙일련번호"];
@@ -974,6 +1001,8 @@ export function listResponse<T>(items: T[], searchScopeNote: string) {
 
 export const ORDINANCE_NOTE =
   "국가법령정보센터(법제처)에서 자치법규 이름에 검색어가 들어간 조례·규칙을 찾은 결과예요. 결과가 없다고 해당 자치법규가 없다는 뜻은 아니에요.";
+export const LAW_NOTE =
+  "국가법령정보센터(법제처)에서 이름에 검색어가 들어간 현행 법령(법률·대통령령·총리령·부령 등)을 찾은 결과예요. 정식 이름을 몰라도 낱말 일부로 찾을 수 있어요. 결과가 없다고 해당 법령이 없다는 뜻은 아니에요.";
 export const ADMIN_RULE_NOTE =
   "국가법령정보센터(법제처)에서 이름에 검색어가 들어간 현행 행정규칙(고시·훈령·예규)을 찾은 결과예요.";
 export const CITING_NOTE =

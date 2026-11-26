@@ -1,4 +1,4 @@
-// 사건 진행 (F-016, DEC-053)의 Claude 호출 — 서류 읽기(Haiku 비전) · 쟁점 정리(검색 → 답변 → 인용 검증) · 요약(Haiku) · 자동 정리(Haiku, DEC-070).
+// 사건 진행 (F-016, DEC-053)의 Claude 호출 — 서류 읽기(Haiku 비전) · 쟁점 정리(검색 → 답변 → 인용 검증) · 요약(Haiku) · 자동 정리(Haiku, DEC-073).
 // 정리 도구다: 서류에 적힌 것을 옮기고 묶을 뿐, 승패·유불리·책임을 판단하지 않는다 (절대 규칙 2).
 // - 서류 읽기: 사진은 동의한 요청의 이 호출 한 번에만 그대로 보낸다 (DEC-052의 예외를 따른다). 저장·로그 없음.
 //   읽은 결과 속 법령 조문·사건번호는 법제처 재조회로 실존이 확인된 것만 남긴다 (절대 규칙 1, checkReadingCitations).
@@ -10,6 +10,8 @@ import { ApiError } from "@/lib/api/errors";
 import { hasCitation, isJudging, type CaseImage, type CaseText } from "@/lib/casefile/policy";
 import { documentBlocks } from "./casefile";
 import { verifyDraft } from "@/lib/citations/verify";
+import { claimsInText } from "@/lib/citations/policy";
+import { EvidenceSet } from "@/lib/search/evidence";
 import {
   MATTER_AUTO_SCHEMA,
   MATTER_READING_SCHEMA,
@@ -40,7 +42,7 @@ import {
 import { runDeepAnalysis } from "./deep";
 import { buildDeepMap } from "./deep-policy";
 import type { TierId } from "./models";
-import { isAssertive } from "./policy";
+import { OffTopicQuestion, isAssertive } from "./policy";
 
 // 2026-11-24b: 판독 시험(사진 5장)에서 틀린 곳 — "동일 기한"을 "명시 없음"으로 바꿈, 통지 대리 회사를 other로 둠 — 을 지시문에 반영
 // 2026-11-24c: 문서 글(한글·워드 등)의 [이름n] 가림 표시를 그대로 옮기고 이름을 짐작하지 않게 (legal-reviewer 권고)
@@ -241,7 +243,16 @@ export async function organizeIssues(
     onCost?: (usd: number) => void;
   } = {},
 ): Promise<OrganizeIssuesOutput> {
-  const analysis = await (deps.run ?? runDeepAnalysis)({ maskedText }, { tier: deps.tier });
+  const analysis = await (deps.run ?? runDeepAnalysis)({ maskedText }, { tier: deps.tier }).catch(
+    (e: unknown) => {
+      // 사건 구조화가 법률 무관으로 보면(DEC-072) 오류 500 대신 OFF_TOPIC으로 알린다. 쓴 금액은 runMatterAi가 정산한다
+      if (e instanceof OffTopicQuestion) {
+        deps.onCost?.(e.costUsd);
+        throw new ApiError("OFF_TOPIC", { reason: "model" });
+      }
+      throw e;
+    },
+  );
   deps.onCost?.(analysis.costUsd);
   const verified = await (deps.verify ?? verifyDraft)(analysis.draft, analysis.evidence, {
     screened: analysis.dropped.length,
@@ -261,7 +272,18 @@ export async function organizeIssues(
     const ref = p ? refOf(p.source) : null;
     // 출처를 응답 목록에서 찾지 못한 문단은 내지 않는다 (절대 규칙 1)
     // 인용 구절이 원문과 맞지 않은 문단(quote_mismatch)도 내지 않는다 — 확인된 근거만 붙인다
-    return p && ref && p.check === "verified" ? [{ text: p.text, ...ref }] : [];
+    if (p && ref && p.check === "verified") return [{ text: p.text, ...ref }];
+    // 답변 먼저(DEC-071): 모델 문단은 본문 인용이 모두 법제처에서 있다고 확인되고(법령을 정하지 못한 조문도 없고)
+    // 원문 주소가 있을 때만 붙인다 — 확인되지 않은 인용이 확인된 근거 옆에 섞여 보이지 않게
+    if (p?.check !== "model" || !p.confirmed?.length) return [];
+    const inText = claimsInText(p.text, new EvidenceSet());
+    const confirmed = new Set(p.confirmed.map((c) => c.label));
+    const allConfirmed =
+      inText.unresolved.length === 0 &&
+      inText.claims.length > 0 &&
+      inText.claims.every((c) => confirmed.has(c.citation));
+    const hit = p.confirmed.find((c) => c.url);
+    return allConfirmed && hit?.url ? [{ text: p.text, label: hit.label, url: hit.url }] : [];
   };
 
   if (!analysis.struct) {
@@ -342,7 +364,7 @@ export async function summarizeText(
   }
 }
 
-// --- 자동 정리 (DEC-070): 사건 제목·법 분야·한 줄 요약 ---------------------------------------
+// --- 자동 정리 (DEC-073): 사건 제목·법 분야·한 줄 요약 ---------------------------------------
 // 화면을 위해 AI가 알아서 만드는 정리는 언제나 Haiku로 한다 (사용자 절대 규칙 2026-11-27). 단계 선택을 따르지 않는다.
 
 const AUTO_SYSTEM = `당신은 한국 법률 정보 서비스 "햄찌법원"의 사건 정리 도우미입니다. 법률 자문을 하지 않습니다.

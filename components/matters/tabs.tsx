@@ -661,7 +661,7 @@ export function IssuesTab({ matterId, data, update }: TabProps & { matterId: str
               </span>
             </div>
             {i.points.length > 0 && (
-              <Fold summary={`법제처에서 확인한 근거 ${i.points.length}`} open>
+              <Fold summary={`법제처에서 있다고 확인된 인용 ${i.points.length}`} open>
                 <ul className="space-y-2">
                   {i.points.map((p, k) => (
                     <li key={k} className="text-ink text-[14px] leading-relaxed">

@@ -34,6 +34,7 @@ import { userMessage } from "./message";
 import { tierOf, type TierId } from "./models";
 import {
   AnswerZ,
+  OffTopicQuestion,
   STEP_MESSAGES,
   UNDERSTAND_SCHEMA,
   UnderstandZ,
@@ -55,7 +56,7 @@ import { GENERAL_ANSWER_ADDON, LITE_ANSWER_SYSTEM, UNDERSTAND_SYSTEM } from "./p
 
 import { runWebRefs, type WebRef } from "./web-refs";
 
-export const LITE_PROMPT_VERSION = "lite-2026-11-27-answer-first-general";
+export const LITE_PROMPT_VERSION = "lite-2026-11-27c-off-topic";
 
 /** 근거 원문 길이 (전체 파이프라인의 900·1,600자보다 짧게) */
 const LITE_ARTICLE_CHARS = 600;
@@ -75,6 +76,8 @@ export const UNDERSTAND_MODEL = "claude-haiku-5-5";
 export type LiteAnalysisOutput = {
   draft: DemoDraft;
   evidence: EvidenceSet;
+  /** 답변 모델이 실제로 본 근거 (DEC-071 — 사용자가 고른 판례뿐). 본문 조문의 법령을 이것으로만 짐작한다 */
+  answerEvidence?: EvidenceSet;
   dropped: DropReason[];
   usage: Usage;
   model: string;
@@ -150,6 +153,11 @@ export async function runLiteAnalysis(
      * 분야별 비서 (DEC-057): 답변 지시문 뒤에 붙는 비서 지시문과, 그 요청에서 법제처로 다시 가져올 사례 판례 일련번호.
      * 판례는 근거 모음에 더해질 뿐 검증(verifyDraft)은 다른 근거와 같다. promptTag는 프롬프트 버전 뒤에 붙는다
      */
+    /**
+     * 판례 아카이브 질문창(DEC-070): 사용자가 보고 있던 판례의 법제처 일련번호. 비서 사례 판례와 같이 그 요청에서 다시 가져와
+     * 근거 모음 앞에 더할 뿐, 검증은 다른 근거와 같다. 가져오지 못하면 빠진다
+     */
+    focusCaseIds?: string[];
     assistant?: {
       persona: string;
       pinnedCaseIds: string[];
@@ -208,6 +216,9 @@ export async function runLiteAnalysis(
         throw e;
     }
 
+  // 남용 막기 (DEC-072, 절대 규칙 9): 질문 해석이 법률과 상관없는 요청으로 보면 답변 모델·검색을 부르지 않고 멈춘다
+  if (understood?.kind === "off_topic") throw new OffTopicQuestion(model.spentUsd());
+
   // 비서 대화 한마디(Haiku)는 검색과 함께 돌린다 — 같은 질문 1건 상한 안이고 실패해도 답변은 그대로 간다
   const talkRun = deps.assistant ? runTalk(model, deps.assistant.talkSystem, input) : null;
   // 일반 법률 질문(2026-11-27): 법제처 검색과 함께 법제처 밖 참고 자료를 웹 검색으로 찾는다 (따로 상한, 실패해도 답변은 그대로)
@@ -217,27 +228,34 @@ export async function runLiteAnalysis(
     general && tier.id !== "light" && deps.reserveWebRefs && (await deps.reserveWebRefs())
       ? runWebRefs(input.maskedText)
       : null;
-  const found = deps.noEvidence
-    ? { articles: [], cases: [], searches: [] }
-    : await freeSearch(input.maskedText, {
+  // 답변 먼저 (DEC-071, 2026-11-27 사용자 결정): 법제처 검색은 답변과 함께 돌리되 답변에는 넘기지 않는다.
+  // 답변이 끝난 뒤 그 결과로 근거 목록을 채우고, 답변 속 조문·사건번호를 법제처에서 확인한다(verifyDraft).
+  // 검색이 실패해도 답변은 그대로 나간다
+  const EMPTY = { articles: [], cases: [], searches: [] } as Awaited<ReturnType<typeof freeSearch>>;
+  const searchRun = deps.noEvidence
+    ? Promise.resolve(EMPTY)
+    : freeSearch(input.maskedText, {
         lawSource: source,
-        onStep: deps.onStep,
         caseHint: deps.caseHint,
         lawHints: deps.lawHints,
         wide: deps.deep,
         lawQuery: understood?.lawQuery,
         caseQueries: understood?.caseQueries,
-      });
-
-  const evidence = new EvidenceSet();
-  for (const a of found.articles) evidence.addArticle(a);
-  // 비서 사례 판례(DEC-057)는 검색 결과보다 앞에 둔다 — 답변에 넘기는 판례 수가 정해져 있어 뒤에 두면 잘린다.
-  // 이 요청에서 법제처로 다시 가져온 것만 쓰고(DEC-009), 가져오지 못하면 빠진다
-  const pinned = await Promise.all(
-    (deps.assistant?.pinnedCaseIds ?? []).map((id) => source.getCase(id).catch(() => null)),
+      }).catch(() => EMPTY);
+  // 비서 사례 판례(DEC-057)도 이 요청에서 법제처로 다시 가져와 근거 목록에만 넣는다. 가져오지 못하면 빠진다
+  const pinnedRun = Promise.all(
+    (deps.assistant?.pinnedCaseIds ?? [])
+      .filter((id) => !(deps.focusCaseIds ?? []).includes(id))
+      .map((id) => source.getCase(id).catch(() => null)),
   );
-  for (const c of pinned) if (c) evidence.addCase(c);
-  for (const c of found.cases) evidence.addCase(c);
+  // 판례 아카이브에서 사용자가 '이 판례를 근거에 넣기'로 고른 판례(DEC-070)는 질문의 대상이라 답변 전에 가져와
+  // 답변에 넘긴다 — 답변 먼저(DEC-071)의 유일한 예외. 그 요청에서 법제처로 다시 가져온 것만 쓰고(DEC-009), 못 가져오면 빠진다
+  const focused = await Promise.all(
+    [...new Set(deps.focusCaseIds ?? [])].map((id) => source.getCase(id).catch(() => null)),
+  );
+  // 답변 호출에 넘기는 근거는 사용자가 고른 판례뿐이다 — 그 밖의 문단은 모델이 아는 법령·판례로 쓴 문단(MODEL_SOURCE)이다
+  const answerEvidence = new EvidenceSet();
+  for (const c of focused) if (c) answerEvidence.addCase(c);
   // 대화 한마디는 답변 호출 전에 끝낸다 — 두 호출이 같은 상한을 동시에 재지 않게
   const talkOut = talkRun ? await talkRun : null;
   if (talkOut?.res) usage = addUsage(usage, talkOut.res);
@@ -248,7 +266,7 @@ export async function runLiteAnalysis(
   let costCapped = false;
   let spent = 0;
 
-  let keys = liteEvidenceKeys(evidence, deps.deep ? DEEP_EVIDENCE : undefined);
+  let keys = liteEvidenceKeys(answerEvidence, deps.deep ? DEEP_EVIDENCE : undefined);
   // DEC-055: 법제처 근거가 없어도 모델이 아는 판례·조문으로 답한다 (출처 MODEL_SOURCE)
   {
     deps.onStep?.({ stage: "answer", message: STEP_MESSAGES.answer });
@@ -281,7 +299,7 @@ export async function runLiteAnalysis(
                 role: "user",
                 content: [
                   userMessage(input.maskedText, context, materials),
-                  `<근거_목록>\n${liteDigest(evidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
+                  `<근거_목록>\n${liteDigest(answerEvidence, keys) || NO_EVIDENCE}\n</근거_목록>`,
                   `출처로 쓸 수 있는 값: ${sourceEnum(keys).join(", ")}`,
                   materialsInstruction(materials.length),
                 ]
@@ -297,7 +315,7 @@ export async function runLiteAnalysis(
         const json: unknown = JSON.parse(textOf(res));
         const parsed = AnswerZ.safeParse(json);
         if (parsed.success) {
-          ({ kept: points, dropped } = screenPoints(parsed.data.points, evidence));
+          ({ kept: points, dropped } = screenPoints(parsed.data.points, answerEvidence));
           materialRefs = materialRefsOf(json, materials.length);
         } else costCapped = true;
         break;
@@ -321,6 +339,14 @@ export async function runLiteAnalysis(
   }
   spent = model.spentUsd();
   const refsOut = refsRun ? await refsRun : null;
+  // 답변 뒤 법제처 확인 단계: 검색 결과로 근거 목록을 채운다 (진행 표시는 답변 → 법제처 순서)
+  if (!deps.noEvidence) deps.onStep?.({ stage: "search", message: STEP_MESSAGES.search });
+  const [found, pinned] = await Promise.all([searchRun, pinnedRun]);
+  const evidence = new EvidenceSet();
+  for (const a of found.articles) evidence.addArticle(a);
+  for (const c of focused) if (c) evidence.addCase(c);
+  for (const c of pinned) if (c) evidence.addCase(c);
+  for (const c of found.cases) evidence.addCase(c);
 
   const draft = assembleDraft({
     maskedText: input.maskedText,
@@ -342,6 +368,7 @@ export async function runLiteAnalysis(
   return {
     draft,
     evidence,
+    answerEvidence,
     dropped,
     usage,
     model: tier.model,

@@ -96,8 +96,8 @@ PK `(case_id, raw_ref)`, 인덱스 `(statute_id)`.
 | sensitive_consent_at | timestamptz null | 민감정보 별도 동의(F-007 AC2) |
 | structured | jsonb | `{facts[], inferred[], to_confirm[], issues[], case_type}` `[PII-M]` |
 | user_edited | bool | F-002 AC1 수정 여부 |
-| saved | bool | 로그인 사용자가 "내 기록에 남기기"로 보낸 질문 (DEC-039, 기본 false). 마이페이지 목록에만 쓴다 — 보유 기간은 그대로. 내 세션에서 빼면(DEC-070) false로 돌아간다 |
-| session_title | text null | `[PII-S]` 내 세션에 보이는 이름 (DEC-070, 1~60자 check). 사용자가 바꾼 이름의 마스킹본(scanInput). 마이그레이션 `20261126194918_inquiry_session_title.sql` |
+| saved | bool | 로그인 사용자가 "내 기록에 남기기"로 보낸 질문 (DEC-039, 기본 false). 마이페이지 목록에만 쓴다 — 보유 기간은 그대로. 내 세션에서 빼면(DEC-073) false로 돌아간다 |
+| session_title | text null | `[PII-S]` 내 세션에 보이는 이름 (DEC-073, 1~60자 check). 사용자가 바꾼 이름의 마스킹본(scanInput). 마이그레이션 `20261126194918_inquiry_session_title.sql` |
 | materials | jsonb | `[PII-M]` 질문에 붙인 자료 사진의 판독 정리 `[{kind, summary, details[], gaps[]}]` (F-017, DEC-058, 기본 `[]`). 서버가 저장 전에 다시 가린 것만 — **사진·판독 원문은 저장하지 않는다**. 30개·40,000바이트까지(체크 제약, `20261124210000_inquiry_materials.sql`). 보유·삭제는 질문 행과 같다 |
 | status | enum(`draft`,`need_info`,`analyzed`,`failed`) | |
 | analysis_started_at | timestamptz null | 분석 잠금 (DEC-065, `20261126070613_analysis_lock.sql`). 분석 라우트가 조건부 update로 잡고(비었거나 320초보다 오래된 때만), 실패하면 비운다. 이미 잡혀 있으면 analyze는 `409 INVALID_STATE {reason: in_progress}` |
@@ -249,8 +249,8 @@ DB 함수 `reserve_ai_budget(bucket, 기간 시작, 상한, 금액)` · `settle_
 |---|---|---|
 | id | uuid PK | |
 | user_id | uuid FK | 로그인 계정. 계정이 삭제되면 함께 삭제 |
-| title | text | `[PII-S]` 사용자가 붙인 사건 이름 (80자 이하). 비워 만들면 "새 사건"이고 자동 정리(DEC-070)가 지은 이름으로 바뀐다 |
-| data | jsonb | `[PII-S]` 사건 자료: 서류에서 읽은 사실·당사자 이름·관계·요구·조항, 쟁점, 노트(조사·메모). 600KB 이하. **이름은 가리지 않는다**(본인 사건 정리, DEC-006의 예외). 연락처·등록번호·계좌·주소 꼴은 서버가 저장 전에 가리고, 서류 사진은 담지 않는다. `auto`(DEC-070: 법 분야·AI 한 줄 요약·자료 지문)·`titleAuto`(이름을 비워 만든 사건)는 선택 키라 마이그레이션이 없다 |
+| title | text | `[PII-S]` 사용자가 붙인 사건 이름 (80자 이하). 비워 만들면 "새 사건"이고 자동 정리(DEC-073)가 지은 이름으로 바뀐다 |
+| data | jsonb | `[PII-S]` 사건 자료: 서류에서 읽은 사실·당사자 이름·관계·요구·조항, 쟁점, 노트(조사·메모). 600KB 이하. **이름은 가리지 않는다**(본인 사건 정리, DEC-006의 예외). 연락처·등록번호·계좌·주소 꼴은 서버가 저장 전에 가리고, 서류 사진은 담지 않는다. `auto`(DEC-073: 법 분야·AI 한 줄 요약·자료 지문)·`titleAuto`(이름을 비워 만든 사건)는 선택 키라 마이그레이션이 없다 |
 | created_at · updated_at | timestamptz | |
 
 인덱스 `(user_id, updated_at desc)`. 서버 전용(RLS 켬, 정책 없음) — 모든 질의에 `user_id`를 건다(lib/matters/store.ts). 보유: 사용자가 지울 때까지(계정이 삭제되면 함께 삭제). 마이그레이션 `20261124180000_matters.sql`.

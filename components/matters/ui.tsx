@@ -142,7 +142,7 @@ export function SectionTitle({
 }
 
 /** 사건 목록의 한 칸 (내 사건·가상 사건 공통). 숫자는 담긴 항목 수다 */
-/** 사건 목록 (2026-11-27 사용자 요청, DEC-070): 카드 대신 한 줄씩 — 제목·법 분야, 한 줄 요약, 담긴 자료 수·고친 날 */
+/** 사건 목록 (2026-11-27 사용자 요청, DEC-073): 카드 대신 한 줄씩 — 제목·법 분야, 한 줄 요약, 담긴 자료 수·고친 날 */
 export function MatterList({ children, testId }: { children: ReactNode; testId?: string }) {
   return (
     <ul className={`${card} divide-line mt-3 divide-y overflow-hidden`} data-testid={testId}>

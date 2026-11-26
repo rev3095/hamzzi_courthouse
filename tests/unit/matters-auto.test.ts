@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-070 사건 자동 정리 — POST /api/v1/matters/auto 와 거르기 규칙. 저장소·모델은 모두 가짜다 (절대 규칙 8). 이름은 가상이다.
+// DEC-073 사건 자동 정리 — POST /api/v1/matters/auto 와 거르기 규칙. 저장소·모델은 모두 가짜다 (절대 규칙 8). 이름은 가상이다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { MATTER_SUMMARY_WEIGHT } from "@/lib/ai/models";
 import { AI_NOTICE } from "@/lib/api/respond";
@@ -79,7 +79,7 @@ beforeEach(() => {
   });
 });
 
-describe("DEC-070 자동 정리 경로", () => {
+describe("DEC-073 자동 정리 경로", () => {
   test("이름을 가린 글만 Haiku 경로로 보내고, 제목·분야·요약을 고친 시각 조건으로 저장한다", async () => {
     const res = await auto(req({ matterId: ID }), undefined);
     expect(res.status).toBe(200);
@@ -180,7 +180,7 @@ describe("DEC-070 자동 정리 경로", () => {
   });
 });
 
-describe("DEC-070 자동 정리 거르기 (절대 규칙 1·2·4)", () => {
+describe("DEC-073 자동 정리 거르기 (절대 규칙 1·2·4)", () => {
   test("판정·단정·조문·가림 표시가 든 제목·요약은 버리고, 목록 밖 분야는 기타", () => {
     expect(
       screenAuto({ title: "임대인이 반드시 이기는 사건", field: "lease", gist: "x" }).title,

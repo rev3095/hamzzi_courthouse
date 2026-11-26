@@ -38,7 +38,7 @@ export type AutoResult = {
   ai: AiState<Common | "empty" | "unchanged" | "sensitive">;
   notice: string | null;
 };
-/** 자동 정리 (DEC-070): 제목(이름을 비워 만든 사건만)·법 분야·한 줄 요약. 자료가 그대로면 서버가 모델을 부르지 않는다 */
+/** 자동 정리 (DEC-073): 제목(이름을 비워 만든 사건만)·법 분야·한 줄 요약. 자료가 그대로면 서버가 모델을 부르지 않는다 */
 export const autoMatter = (matterId: string) =>
   post<AutoResult>("/api/v1/matters/auto", { matterId });
 

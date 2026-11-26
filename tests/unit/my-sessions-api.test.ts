@@ -1,5 +1,5 @@
 // @vitest-environment node
-// DEC-070 ② 내 세션 — 이름 바꾸기·목록에서 빼기(PATCH·DELETE /me/inquiries/{id}), 사건 이름을 바꾸면 자동 제목을 멈춤,
+// DEC-073 ② 내 세션 — 이름 바꾸기·목록에서 빼기(PATCH·DELETE /me/inquiries/{id}), 사건 이름을 바꾸면 자동 제목을 멈춤,
 // 비로그인 목록(localStorage) 순수 규칙. 저장소는 가짜다 (절대 규칙 8). 이름은 가상이다.
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
@@ -52,7 +52,7 @@ beforeEach(() => {
   matters.saveMatter.mockResolvedValue({ id: ID, updatedAt: "t2" });
 });
 
-describe("DEC-070 내 세션 이름·빼기", () => {
+describe("DEC-073 내 세션 이름·빼기", () => {
   test("비로그인은 401", async () => {
     auth.getActor.mockResolvedValue(null);
     expect((await mine.PATCH(req("PATCH", { title: "x" }), ctx(ID))).status).toBe(401);
@@ -153,7 +153,7 @@ describe("DEC-070 내 세션 이름·빼기", () => {
   });
 });
 
-describe("DEC-070 비로그인 내 세션 (이 브라우저)", () => {
+describe("DEC-073 비로그인 내 세션 (이 브라우저)", () => {
   const s = (id: string) => ({ id, text: "가린 문장", at: "2026-11-27T00:00:00Z", title: null });
 
   test("모양이 다른 값은 버리고, 새 세션은 앞에 하나만", () => {

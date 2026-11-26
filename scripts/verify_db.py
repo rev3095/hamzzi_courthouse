@@ -583,7 +583,7 @@ def analysis_lock(conn) -> None:
 
 
 def session_title(conn) -> None:
-    print("[12] 내 세션 이름 (DEC-070)")
+    print("[12] 내 세션 이름 (DEC-073)")
     owner = make_user(conn)
     iid = scalar(conn, "insert into public.inquiries (user_id, masked_text, saved) values (%s, '[검증] 마스킹본', true) returning id", (owner,))
     check(scalar(conn, "select session_title is null from public.inquiries where id = %s", (iid,)) is True,

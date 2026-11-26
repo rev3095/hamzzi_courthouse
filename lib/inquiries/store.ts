@@ -74,6 +74,34 @@ export type InquiryRow = {
 
 const SENSITIVE_PURPOSE = "법률 정보 분석을 위한 민감정보 처리";
 
+/** 같은 질문을 다시 보내도 새로 분석하지 않는 시간 (DEC-072) */
+export const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
+/**
+ * 같은 요청자가 DUPLICATE_WINDOW_MS 안에 분석을 마친, 가린 문장이 똑같은 질문 (DEC-072 — 같은 글을 되풀이해 보내 토큰을 쓰는 것 막기).
+ * 있으면 그 질문 번호. 비로그인은 세션, 로그인은 계정 기준이고, 이어 묻기는 앞 질문까지 같아야 한다
+ */
+export async function findRecentDuplicate(
+  owner: Owner,
+  maskedText: string,
+  parentInquiryId: string | null = null,
+): Promise<string | null> {
+  let q = createServiceClient()
+    .from("inquiries")
+    .select("id")
+    .eq("masked_text", maskedText)
+    .eq("status", "analyzed")
+    .gte("created_at", new Date(Date.now() - DUPLICATE_WINDOW_MS).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+  q = owner.kind === "user" ? q.eq("user_id", owner.userId) : q.eq("anon_session_id", owner.anonSessionId);
+  // 이어 묻기는 같은 앞 질문에 단 것만 같은 질문으로 본다 ("그럼 어떻게 해요?"가 다른 흐름의 결과로 가지 않게)
+  q = parentInquiryId ? q.eq("parent_inquiry_id", parentInquiryId) : q.is("parent_inquiry_id", null);
+  const { data, error } = await q;
+  if (error) return null; // 읽지 못하면 막지 않는다
+  return (data?.[0] as { id: string } | undefined)?.id ?? null;
+}
+
 /** 비로그인 세션이 오늘(한국 시간) 쓴 질문 수 (F-001 AC3, DEC-024). 세션이 없거나 다른 날 센 값이면 0 */
 export async function getAnonQuestionsUsed(anonSessionId: string): Promise<number> {
   const { data, error } = await createServiceClient()
@@ -457,7 +485,7 @@ export type SavedInquiry = {
   status: InquiryRow["status"];
   createdAt: string;
   followup: boolean;
-  /** 사용자가 바꾼 세션 이름 (DEC-070, 마스킹본). 없으면 null — 화면은 가린 질문 문장을 보인다 */
+  /** 사용자가 바꾼 세션 이름 (DEC-073, 마스킹본). 없으면 null — 화면은 가린 질문 문장을 보인다 */
   title: string | null;
 };
 
@@ -502,7 +530,7 @@ export async function listSavedInquiries(userId: string): Promise<SavedInquiry[]
   }));
 }
 
-/** 내 세션 이름 바꾸기 (DEC-070). 본인이 남긴 질문만 — 없거나 남의 것이면 404 */
+/** 내 세션 이름 바꾸기 (DEC-073). 본인이 남긴 질문만 — 없거나 남의 것이면 404 */
 export async function renameSavedInquiry(
   userId: string,
   id: string,
@@ -520,7 +548,7 @@ export async function renameSavedInquiry(
 }
 
 /**
- * 내 세션에서 빼기 (DEC-070). 질문·결과는 지우지 않고 '기록에 남기기'만 끈다 — 하루 질문 횟수는 오늘 분석 수로 세므로
+ * 내 세션에서 빼기 (DEC-073). 질문·결과는 지우지 않고 '기록에 남기기'만 끈다 — 하루 질문 횟수는 오늘 분석 수로 세므로
  * 행을 지우면 횟수가 되살아난다. 기록을 모두 지우는 길은 마이페이지 '내 기록 삭제'(DELETE /me/data)다.
  */
 export async function unsaveInquiry(userId: string, id: string): Promise<void> {

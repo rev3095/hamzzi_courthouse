@@ -4,7 +4,7 @@
 // 예전 헤더 버튼(판례 아카이브·사건 진행·서류 분석·커뮤니티)은 이 메뉴로 옮겼다. 서류 분석은 상담(홈 질문창 자료 올리기)과 문서 작성 화면에서 연다.
 // 로그인 버튼은 헤더에 따로 두지 않고 마이페이지에서 Google로만 로그인한다 (DEC-035).
 // 메뉴 아이콘(DEC-051): 소개·기능 가이드·향후 계획·개발자·문의 (components/about/AboutMenu).
-// 맨 왼쪽 내 세션 단추(DEC-070): 왼쪽 서랍으로 대화·사건 세션 목록을 연다 (components/sessions/SessionDrawer).
+// 맨 왼쪽 내 세션 단추(DEC-073): 왼쪽 서랍으로 대화·사건 세션 목록을 연다 (components/sessions/SessionDrawer).
 // 맨 오른쪽 프로필 아이콘 → 마이페이지(/me): Google 로그인·내 세션·설정 (DEC-032·033·056). 로그인하면 아이콘에 점 표시.
 import Link from "next/link";
 import { Suspense, useState } from "react";

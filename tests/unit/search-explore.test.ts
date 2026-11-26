@@ -11,6 +11,7 @@ import {
   delegationChecks,
   diffLines,
   directTarget,
+  lawHits,
   ordinanceDetail,
   ordinanceHits,
   ordinanceLinks,
@@ -37,6 +38,7 @@ const source = vi.hoisted(() => ({
   searchOrdinances: vi.fn(),
   getOrdinance: vi.fn(),
   searchAdminRules: vi.fn(),
+  searchLaws: vi.fn(),
 }));
 vi.mock("@/lib/search/law-source", () => ({ createLawSource: () => source }));
 const rate = vi.hoisted(() => ({ assertRateLimit: vi.fn() }));
@@ -52,6 +54,7 @@ const citingRoute = await import("@/app/api/v1/statutes/[id]/cases/route");
 const lawRoute = await import("@/app/api/v1/laws/[name]/[view]/route");
 const ordinancesRoute = await import("@/app/api/v1/ordinances/route");
 const ordinanceRoute = await import("@/app/api/v1/ordinances/[id]/route");
+const lawsRoute = await import("@/app/api/v1/laws/route");
 
 const ART: ArticleHit = {
   id: "law:주택임대차보호법:제3조",
@@ -382,6 +385,40 @@ describe("별표 · 자치법규 · 연계", () => {
     });
     expect(source.casesCiting).toHaveBeenCalledWith("민법", "제750조", 6);
     expect(rate.assertRateLimit).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("법령 이름 검색 (정식 이름을 몰라도 낱말 일부로)", () => {
+  const LAWS = `<LawSearch><totalCnt>3</totalCnt><law id="1"><법령일련번호>291321</법령일련번호><현행연혁코드>현행</현행연혁코드><법령명한글><![CDATA[의료기기법]]></법령명한글><법령ID>009514</법령ID><공포일자>20261020</공포일자><법령구분명>법률</법령구분명><소관부처명>식품의약품안전처</소관부처명><시행일자>20261020</시행일자><법령상세링크>/DRF/lawService.do?OC=SECRET&amp;target=law</법령상세링크></law><law id="2"><법령일련번호>287221</법령일련번호><현행연혁코드>현행</현행연혁코드><법령명한글><![CDATA[의료기기법 시행령]]></법령명한글><법령구분명>대통령령</법령구분명><시행일자>20260701</시행일자></law><law id="3"><법령일련번호>287221</법령일련번호><법령명한글><![CDATA[의료기기법 시행령]]></법령명한글></law><law id="4"><법령일련번호>100</법령일련번호><현행연혁코드>연혁</현행연혁코드><법령명한글><![CDATA[옛 의료기기법]]></법령명한글></law></LawSearch>`;
+  test("법제처 순서 그대로, 같은 법령은 하나만, 현행만, 인증키 든 /DRF/ 주소는 쓰지 않는다", () => {
+    const hits = lawHits(LAWS);
+    expect(hits.map((h) => h.name)).toEqual(["의료기기법", "의료기기법 시행령"]);
+    expect(hits[0]).toMatchObject({
+      id: "291321",
+      kind: "법률",
+      agency: "식품의약품안전처",
+      effectiveFrom: "2026-10-20",
+      promulgatedAt: "2026-10-20",
+    });
+    expect(hits[0].sourceUrl).toBe(
+      `https://www.law.go.kr/${encodeURIComponent("법령")}/${encodeURIComponent("의료기기법")}`,
+    );
+    expect(JSON.stringify(hits)).not.toContain("SECRET");
+    expect(hits[0]).not.toHaveProperty("score");
+  });
+
+  test("법령 검색 라우트: 검색어 검사·상한·안내 문구, 결과 없음은 200", async () => {
+    rate.assertRateLimit.mockClear();
+    source.searchLaws.mockResolvedValue([]);
+    const res = await lawsRoute.POST(post("/api/v1/laws", { q: "의료기기" }), {} as never);
+    const body = await json(res);
+    expect(res.status).toBe(200);
+    expect(body.data.outcome).toBe("no_result_in_scope");
+    expect(body.data.notice).toBe(SEARCH_NOTICE);
+    expect(source.searchLaws).toHaveBeenCalledWith("의료기기", 30);
+    expect(rate.assertRateLimit).toHaveBeenCalledTimes(1);
+    const empty = await lawsRoute.POST(post("/api/v1/laws", { q: " " }), {} as never);
+    expect(empty.status).toBe(400);
   });
 });
 
