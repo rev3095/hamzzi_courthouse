@@ -2,7 +2,7 @@
 // 재조회가 실패하면 검증할 수 없으므로 결과를 내보내지 않고 SEARCH_UPSTREAM_FAILED를 그대로 올린다 (F-006 AC2).
 import "server-only";
 import { MODEL_SOURCE, type DemoDraft, type StepEvent } from "@/lib/ai/policy";
-import type { EvidenceSet } from "@/lib/search/evidence";
+import { EvidenceSet } from "@/lib/search/evidence";
 import { createLawSource, type LawSource } from "@/lib/search/law-source";
 import type { CitationCheck } from "@/lib/search/types";
 import { assembleResult, claimForKey, claimsInText, uniqueClaims, type Claim } from "./policy";
@@ -12,17 +12,28 @@ export const VERIFY_STEP_MESSAGE = "인용한 법령·판례를 법제처에 다
 export async function verifyDraft(
   draft: DemoDraft,
   evidence: EvidenceSet,
-  deps: { lawSource?: LawSource; onStep?: (e: StepEvent) => void; screened?: number } = {},
+  deps: {
+    lawSource?: LawSource;
+    onStep?: (e: StepEvent) => void;
+    screened?: number;
+    /** 답변 모델이 본 근거 (DEC-071). 주면 본문 조문의 법령을 이것으로만 짐작한다 — 모델이 보지 못한 조문으로 정하지 않게 */
+    claimEvidence?: EvidenceSet;
+  } = {},
 ) {
+  const claimEvidence = deps.claimEvidence ?? evidence;
   const source = deps.lawSource ?? createLawSource({ timeoutMs: 8_000 });
   const sourceClaims: Claim[] = [];
   const textClaims: Claim[] = [];
   for (const p of draft.answer.points) {
-    // 모델이 직접 쓴 문단(DEC-055)은 재조회하지 않는다
-    if (p.source === MODEL_SOURCE) continue;
+    // 답변 먼저(DEC-071): 모델이 쓴 문단도 본문에 적힌 조문·사건번호를 법제처에서 실존 확인한다
+    if (p.source === MODEL_SOURCE) {
+      // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (근거 목록으로 법령을 짐작하지 않는다)
+      textClaims.push(...claimsInText(p.text, new EvidenceSet()).claims);
+      continue;
+    }
     const c = claimForKey(p.source, evidence);
     if (c) sourceClaims.push(c);
-    textClaims.push(...claimsInText(p.text, evidence).claims);
+    textClaims.push(...claimsInText(p.text, claimEvidence).claims);
   }
   const { statutes, cases } = uniqueClaims([...sourceClaims, ...textClaims]);
   if (draft.answer.points.length > 0) {
@@ -37,5 +48,5 @@ export async function verifyDraft(
   const checks = new Map<string, CitationCheck>();
   for (const c of [...statuteChecks, ...caseChecks]) checks.set(c.citation, c);
 
-  return assembleResult({ draft, evidence, checks, screened: deps.screened });
+  return assembleResult({ draft, evidence, checks, screened: deps.screened, claimEvidence });
 }

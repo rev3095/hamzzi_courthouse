@@ -184,7 +184,7 @@ export async function analyzeInquiry(
             tier: tier.id,
             costCapUsd: capUsd,
             long,
-            ...(focusCaseIds.length > 0 && { pinnedCaseIds: focusCaseIds }),
+            ...(focusCaseIds.length > 0 && { focusCaseIds }),
             ...(assistant && {
               persona: assistant.persona,
               ...(({ pinnedCaseIds, promptTag }) => ({ pinnedCaseIds, promptTag }))(
@@ -220,6 +220,7 @@ export async function analyzeInquiry(
     const verified = await verifyDraft(analysis.draft, analysis.evidence, {
       onStep: step,
       screened: analysis.dropped.length,
+      ...(analysis.answerEvidence && { claimEvidence: analysis.answerEvidence }),
     });
     // 예비 답변 (2026-11-27 사용자 결정 — 어떤 경우에도 실제 답변이 나오게): 남은 문단이 하나도 없으면
     // 근거 없이 같은 단계 모델로 한 번 더 답한다. 예산을 따로 잡고, 잡지 못하면 결과 없음 그대로 둔다

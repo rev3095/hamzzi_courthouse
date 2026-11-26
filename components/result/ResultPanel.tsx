@@ -503,11 +503,34 @@ function AnswerTab({ result }: { result: DemoAnalysisResult }) {
   return (
     <ol className="flex flex-col gap-4">
       {result.answer.points.map((p, i) => {
-        // 법제처 근거 없이 모델이 쓴 문단(DEC-055)은 출처 상자 없이 문단만 보인다 (사용자 결정: 따로 표시하지 않음)
+        // 모델이 쓴 문단(DEC-055·070)은 출처 상자 없이 문단만 보인다. 본문 인용 중 법제처에서 있다고 확인된 것만
+        // "법제처 확인" 줄로 원문 링크를 단다(구절 대조가 아니라 실존 확인)
         if (p.check === "model") {
           return (
             <li key={i} className="rounded-card border-line border p-5">
               <p className="text-ink text-base leading-[1.75]">{p.text}</p>
+              {p.confirmed && p.confirmed.length > 0 && (
+                <p className="text-muted mt-3 text-[13px]">
+                  법제처 확인 ·{" "}
+                  {p.confirmed.map((c, j) => (
+                    <span key={c.label}>
+                      {j > 0 && ", "}
+                      {c.url ? (
+                        <a
+                          href={c.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-link underline"
+                        >
+                          {c.label}
+                        </a>
+                      ) : (
+                        c.label
+                      )}
+                    </span>
+                  ))}
+                </p>
+              )}
             </li>
           );
         }
@@ -704,16 +727,21 @@ function VerifyTab({ result }: { result: DemoAnalysisResult }) {
   const mismatched = result.answer.points
     .map((p, i) => ({ p, n: i + 1 }))
     .filter(({ p }) => p.check === "quote_mismatch");
+  // 답변 먼저(DEC-071): 모든 문단이 모델 문단이면 원문 구절 대조는 하지 않고 실존만 확인한다
+  const modelOnly = result.answer.points.every((p) => p.check === "model");
   return (
     <div>
       <p className="text-ink text-[15px] font-semibold">
         {result.mode === "replay"
           ? `예시를 만들 때 인용 ${recheck.items.length}건을 법제처에서 다시 조회했어요`
-          : `인용 ${recheck.items.length}건을 법제처에서 다시 조회했어요`}
+          : modelOnly
+            ? `법제처에서 있다고 확인된 인용 ${recheck.items.filter((it) => it.exists).length}건`
+            : `인용 ${recheck.items.length}건을 법제처에서 다시 조회했어요`}
       </p>
       <p className="text-muted mt-1 text-sm leading-relaxed">
-        두 단계로 확인해요. ① 인용 구절이 그때 가져온 원문과 글자 그대로 같은지 ② 조문·사건번호가
-        법제처에 실제로 있는지(재조회).
+        {modelOnly
+          ? "본문의 조문·사건번호가 법제처에 있는지만 확인해요(원문 구절 대조는 하지 않아요). 없다고 확인된 인용이 든 문단은 뺐고, 확인하지 못한 인용은 표시 없이 남아 있어요."
+          : "두 단계로 확인해요. ① 인용 구절이 그때 가져온 원문과 글자 그대로 같은지 ② 조문·사건번호가 법제처에 실제로 있는지(재조회)."}
       </p>
       <ul className="mt-4 flex flex-col gap-2">
         {recheck.items.map((it) => (

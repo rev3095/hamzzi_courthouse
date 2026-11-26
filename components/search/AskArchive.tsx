@@ -54,8 +54,9 @@ function AskPanel({ focus, onClose }: { focus: AskFocus | null; onClose: () => v
       onClose={onClose}
     >
       <p className="text-muted text-[14px] leading-relaxed">
-        법제처 판례·법령을 먼저 찾아 AI가 답해요. 답변은 Light(Haiku 5.5)로 고정이고, 하루 질문
-        횟수에서 한 번 세요. 이름·전화번호 같은 개인정보는 가린 뒤에 보내요.
+        AI가 먼저 답하고, 답변 속 조문·판례는 법제처에서 확인해요. 근거로 고른 판례는 답변에 함께
+        넘겨요. 답변은 Light(Haiku 5.5)로 고정이고, 하루 질문 횟수에서 한 번 세요. 이름·전화번호
+        같은 개인정보는 가린 뒤에 보내요.
       </p>
       {focus && (
         <label className="text-ink bg-soft mt-3 flex min-h-11 items-start gap-2.5 rounded-[8px] px-3 py-2.5 text-[14px]">
