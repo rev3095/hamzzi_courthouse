@@ -1,4 +1,4 @@
-// GET /api/v1/statutes/{id}/history — 이 조문의 개정 이력 (DEC-072 ⓔ). 법제처 조문 개정 이력(lsJoHstInf)을 날짜·개정 구분·변경 사유 그대로.
+// GET /api/v1/statutes/{id}/history — 이 조문의 개정 이력 (DEC-075 ⓔ). 법제처 조문 개정 이력(lsJoHstInf)을 날짜·개정 구분·변경 사유 그대로.
 // 개정의 영향·중요도는 판단하지 않는다. 법령이 없으면 404.
 import { ApiError } from "@/lib/api/errors";
 import { SEARCH_NOTICE, ok } from "@/lib/api/respond";

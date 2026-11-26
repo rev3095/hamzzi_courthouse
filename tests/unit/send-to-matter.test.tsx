@@ -1,4 +1,4 @@
-// DEC-072 ⓓ 보관함 → 사건 진행 노트: 자료 한 건 = 노트 한 건(법령·판례, AI 아님), 같은 출처는 다시 넣지 않음, 노트 한도.
+// DEC-075 ⓓ 보관함 → 사건 진행 노트: 자료 한 건 = 노트 한 건(법령·판례, AI 아님), 같은 출처는 다시 넣지 않음, 노트 한도.
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { MATTER_LIMITS, emptyMatter, type MatterData } from "@/lib/matters/model";

@@ -120,7 +120,7 @@ export type LawExplorer = {
     query: string,
     filter: CaseFilter,
   ): Promise<{ total: number; items: (CaseHit & { caseType: string | null })[] }>;
-  /** 조문 개정 이력 (DEC-072 ⓔ, 법제처 lsJoHstInf). 법령이 없으면 null */
+  /** 조문 개정 이력 (DEC-075 ⓔ, 법제처 lsJoHstInf). 법령이 없으면 null */
   articleHistory(
     lawName: string,
     articleNo: string,

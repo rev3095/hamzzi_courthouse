@@ -120,7 +120,7 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 �
     expect([...dates].sort().reverse()).toEqual(dates);
   });
 
-  test("조문 개정 이력(DEC-072 ⓔ): 법제처 lsJoHstInf에서 시행일·개정 구분이 온다", async () => {
+  test("조문 개정 이력(DEC-075 ⓔ): 법제처 lsJoHstInf에서 시행일·개정 구분이 온다", async () => {
     const h = await source.articleHistory("주택임대차보호법", "제3조");
     expect(h?.items.length).toBeGreaterThan(0);
     expect(h!.items[0].effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);

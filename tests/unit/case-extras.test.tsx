@@ -1,4 +1,4 @@
-// DEC-072 ⓑ 판례 상세 보강: 참조판례 읽기 · 인용 표기 형식 · 보관함 담기 · 같은 조문 판례. 법제처 응답은 목.
+// DEC-075 ⓑ 판례 상세 보강: 참조판례 읽기 · 인용 표기 형식 · 보관함 담기 · 같은 조문 판례. 법제처 응답은 목.
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 

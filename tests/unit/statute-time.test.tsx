@@ -1,4 +1,4 @@
-// DEC-072 ⓔ 조문 두 날짜 비교·개정 이력: 법제처 연혁의 조문을 줄 단위로 비교하고 개정 이력을 그대로 옮긴다. 법제처는 가짜.
+// DEC-075 ⓔ 조문 두 날짜 비교·개정 이력: 법제처 연혁의 조문을 줄 단위로 비교하고 개정 이력을 그대로 옮긴다. 법제처는 가짜.
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { SEARCH_NOTICE } from "@/lib/api/respond";

@@ -1,4 +1,4 @@
-// GET /api/v1/statutes/{id}/compare?from=YYYY-MM-DD&to=YYYY-MM-DD — 두 날짜에 시행 중이던 같은 번호 조문을 나란히 (DEC-072 ⓔ).
+// GET /api/v1/statutes/{id}/compare?from=YYYY-MM-DD&to=YYYY-MM-DD — 두 날짜에 시행 중이던 같은 번호 조문을 나란히 (DEC-075 ⓔ).
 // 법제처 연혁에서 그날의 시행 버전을 찾아 조문을 가져오고 줄 단위로 비교만 한다. 개정의 영향·유불리 판단 없음, 저장하지 않음.
 import { ApiError } from "@/lib/api/errors";
 import { SEARCH_NOTICE, ok } from "@/lib/api/respond";

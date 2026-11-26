@@ -388,7 +388,7 @@ function Shelf() {
           <h2 className="text-ink text-sm font-bold">보관함 {pins.length}</h2>
           {pins.length > 0 && (
             <span className="flex gap-1 whitespace-nowrap">
-              {/* 폴더·메모·내보내기 (DEC-072 ⓒ) */}
+              {/* 폴더·메모·내보내기 (DEC-075 ⓒ) */}
               <Link
                 href="/research/shelf"
                 className="text-link flex min-h-11 items-center px-1 text-[13px] font-semibold underline-offset-2 hover:underline"

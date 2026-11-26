@@ -214,7 +214,7 @@ export function CaseRoute() {
           판시사항·요지가 없어 개인정보를 가린 본문 일부를 보여 드려요
         </p>
       )}
-      {/* 보관함 담기 · 인용 표기 형식 (DEC-072 ⓑ) */}
+      {/* 보관함 담기 · 인용 표기 형식 (DEC-075 ⓑ) */}
       <CaseActions c={c} />
       <TermsLegend terms={terms} />
       <Sections sections={c.sections} terms={terms} />
@@ -245,7 +245,7 @@ export function CaseRoute() {
           </ul>
         </section>
       )}
-      {/* 참조판례 · 같은 조문이 나오는 판례 (DEC-072 ⓑ): 누를 때만 법제처에 묻는다 */}
+      {/* 참조판례 · 같은 조문이 나오는 판례 (DEC-075 ⓑ): 누를 때만 법제처에 묻는다 */}
       <CitedCases items={c.citedCases ?? []} />
       <SameStatuteCases selfId={c.id} statutes={c.citedStatutes} />
       <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -522,7 +522,7 @@ export function StatuteRoute() {
         </section>
       )}
 
-      {/* 두 날짜 비교·조문 개정 이력 (DEC-072 ⓔ) */}
+      {/* 두 날짜 비교·조문 개정 이력 (DEC-075 ⓔ) */}
       <StatuteTime id={s.id} initialFrom={s.asOf ?? undefined} />
 
       <section className="mt-8" aria-label="법령 도구">

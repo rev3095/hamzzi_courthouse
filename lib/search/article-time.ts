@@ -1,4 +1,4 @@
-// 조문 시점 비교·개정 이력 순수 규칙 (DEC-072 ⓔ). 두 날짜에 시행 중이던 같은 번호 조문을 법제처에서 가져와 줄 단위로 비교하고,
+// 조문 시점 비교·개정 이력 순수 규칙 (DEC-075 ⓔ). 두 날짜에 시행 중이던 같은 번호 조문을 법제처에서 가져와 줄 단위로 비교하고,
 // 법제처 조문 개정 이력(lsJoHstInf)을 날짜·개정 구분·변경 사유 그대로 옮긴다. 개정의 영향·유불리는 판단하지 않는다 (절대 규칙 2).
 import { ApiError } from "@/lib/api/errors";
 import { AT_DATE_NOTES, diffLines, type DiffPart } from "./explore";

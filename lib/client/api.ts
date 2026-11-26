@@ -168,7 +168,7 @@ export type CaseDetailView = CaseRef & {
   sections: { section: string; text: string }[];
   fromBody: boolean;
   citedStatutes: { raw: string; id: string | null }[];
-  /** 참조판례 (DEC-072 ⓑ): 법제처 원문 토막과 그 사건번호 */
+  /** 참조판례 (DEC-075 ⓑ): 법제처 원문 토막과 그 사건번호 */
   citedCases?: { label: string; caseNo: string }[];
   /** 법제처 판결유형 ("판결"·"결정") */
   decisionType?: string | null;
@@ -364,7 +364,7 @@ export const searchAdminRules = (q: string) =>
 export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
-/** 두 날짜 조문 비교 (DEC-072 ⓔ) */
+/** 두 날짜 조문 비교 (DEC-075 ⓔ) */
 export type CompareSideView =
   | {
       date: string;
@@ -390,7 +390,7 @@ export const compareStatute = (id: string, from: string, to: string) =>
   call<StatuteCompareView>(
     `/api/v1/statutes/${encodeURIComponent(id)}/compare?${new URLSearchParams({ from, to })}`,
   );
-/** 조문 개정 이력 (DEC-072 ⓔ, 법제처 값 그대로) */
+/** 조문 개정 이력 (DEC-075 ⓔ, 법제처 값 그대로) */
 export type ArticleRevisionView = {
   mst: string | null;
   promulgatedAt: string | null;

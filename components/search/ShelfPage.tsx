@@ -1,5 +1,5 @@
 "use client";
-// 보관함 정리 /research/shelf (DEC-072 ⓒ): 담아 둔 판례·법령 자료를 폴더로 묶고, 메모를 달고, 인용 목록을 복사하거나 파일로 저장한다.
+// 보관함 정리 /research/shelf (DEC-075 ⓒ): 담아 둔 판례·법령 자료를 폴더로 묶고, 메모를 달고, 인용 목록을 복사하거나 파일로 저장한다.
 // 모두 이 기기(localStorage hz:pins) 안에서만 하고 서버로 보내지 않는다 — 공개 자료의 제목·주소·인용 표기와 사용자가 적은 폴더·메모뿐이다.
 // AI 없음, 관련도·유불리 판단 없음.
 import Link from "next/link";
@@ -262,7 +262,7 @@ export function ShelfPage() {
           </div>
           <aside className="grid h-fit gap-4 lg:sticky lg:top-[86px]">
             <Exporter items={shown} scope={view || "전체"} />
-            {/* 사건 진행 노트로 보내기 (DEC-072 ⓓ, 로그인) */}
+            {/* 사건 진행 노트로 보내기 (DEC-075 ⓓ, 로그인) */}
             <SendToMatter items={shown} scope={view || "전체"} />
           </aside>
         </div>
