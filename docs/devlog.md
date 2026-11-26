@@ -1,6 +1,6 @@
 # devlog — 햄찌법원 개발 아카이브
 
-2026-10-18 ~ 2026-11-27 동안 세션 21개가 남긴 작업 기록 540건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
+2026-10-18 ~ 2026-11-27 동안 세션 21개가 남긴 작업 기록 543건을 날짜 → 세션 계층 순으로 모았다. 결정과 그 이유를 함께 적었고, 사용자 결정은 **[결정]**으로 표시했다.
 
 - 디자인 버전(검색·필터·세션 트리·커밋 색인): [`docs/devlog/index.html`](devlog/index.html) — 그림·데이터를 모두 담은 한 파일이라 이 파일만 내려받아 어느 PC에서나 브라우저로 열 수 있다(글꼴은 인터넷 연결 시 Google Fonts).
 - Claude Code 섹션(VS Code 세션의 답변 전문, 최신순): [`docs/devlog/claude-code.md`](devlog/claude-code.md) — `scripts/build_devlog_claude_code.py`로 만든다.
@@ -50,7 +50,7 @@
   VS Code에서 시작해 lexdiff 기능 범위의 판례·법령 탐색을 독자 구현하고, 문서 작성 검증, 답변 단계 선택, DeepSearch, 예시 답변 확대, 질문 해석 라벨링까지 이어 간 개발 세션.
 - **서류 이미지 분석·사건 진행 (VS Code)** — VS Code (Claude Code) · 2026-11-24 · 기록 11건  
   사용자가 올린 법률 서류 이미지를 Haiku로 읽어 상황·쟁점·당사자 구도를 정리하고 관계도로 보여 주는 이미지 첨부 기능과, 로그인 사용자용 '사건 진행' 화면(변호사의 사건 진행 흐름대로 정보를 쌓아 가는 정리 도구)을 만드는 VS Code 세션.
-- **국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)** — VS Code (Claude Code) · 2026-11-27 · 기록 2건 · PR 73  
+- **국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)** — VS Code (Claude Code) · 2026-11-27 · 기록 5건 · PR 73  
   의료기기법 위주로 국내·해외 법령 검색을 한 번에 하고 국내/해외·나라별로 거르며, 법령 화면은 원문보다 요약·쟁점·실제 판례를 먼저 보여 디지털 문해력이 낮은 사람도 이해하게 한다(DEC-074). 세션 보고 기준.
 
 ---
@@ -77,6 +77,9 @@
 
 - `05:56` **[feature] 국내·해외 법령 통합 검색 (PR 73, 병합 전)** — /search 법령 탭과 GET·POST /world-laws: 법제처와 각국 공식 공개 API(미국 eCFR, 일본 e-Gov, 영국 legislation.gov.uk, 호주 legislation.gov.au)를 실시간으로 함께 찾고, 유럽연합·캐나다·중국은 직접 고른 핵심 법령의 공식 링크만 둔다. 전체/국내/해외/나라별 필터와 국기·나라 이름, 의료기기 핵심 법령 29건, 고정 낱말표로 검색어를 바꾸며(모델 번역 없음) 모델·저장·긁기 없음. 세션 보고 기준. ([`0cdcfb5`](https://github.com/rev3095/hamzzi_courthouse/commit/0cdcfb5), F-004, DEC-074)
 - `05:56` **[feature] 법령 쉬운 설명 (PR 73, 병합 전)** — /laws/[name] 기본 탭: 한눈에 보기 → 누구에게 → 핵심 내용 → 쟁점 → 실제 판례(법제처만) → 해외 공개 기록(의료기기 법령은 FDA 리콜) → 가상 사례 → 원문(접힘). Haiku 1회(건당 상한 $0.004), 조문 전체와 대조해 거르고, 가상 사례는 실제 판례가 2건보다 적을 때만 'AI가 만든 가상 사례 · 실제 판례 아님' 꼬리표와 함께 보인다. 단위 테스트 2,320건·빌드 통과, legal-reviewer 3회 반영, 유료 호출 0건(실제 모델 출력은 아직 확인 안 함). 세션 보고 기준. ([`0cdcfb5`](https://github.com/rev3095/hamzzi_courthouse/commit/0cdcfb5), F-004, DEC-074)
+- `06:14` **[구현] 법령 쉬운 설명 미리 만들기 — 국내 법령 8개 (사용자 승인 유료 1회)** — 법령 탭 목록의 국내 법령 8개(의료기기법·시행령·시행규칙, 체외진단의료기기법, 의료기기산업 육성 및 혁신의료기기 지원법, 디지털의료제품법, 약사법, 첨단재생의료 및 첨단바이오의약품 안전 및 지원에 관한 법률)를 Haiku로 미리 만들어 lib/search/easy/data.json에 넣었다. 금액 상한은 8 × $0.004 = $0.032(실제 금액은 확인 못 함). 이 법령들은 화면을 열어도 모델을 부르지 않는다. legal-reviewer가 지적한 문장 약 20곳을 손으로 다듬고, 근거 조문이 엇갈린 가상 사례 2개를 뺐다. 세션 보고 기준. ([`9043a6a`](https://github.com/rev3095/hamzzi_courthouse/commit/9043a6a), F-004, DEC-074)
+- `06:14` **[결정] 같은 법령 쉬운 설명은 하루 20회 (사용자 결정)** — 같은 네트워크에서 같은 법령을 모델로 만드는 시도는 24시간 창에 20회까지(LAW_EASY_DAILY_LIMIT). 넘으면 오류 없이 모델 없는 조문 제목 정리로 보인다(reason daily_limit). 범위를 '네트워크별'로 해석했고, 사이트 전체 기준인지는 사용자에게 확인 요청 중이다. 세션 보고 기준. ([`9043a6a`](https://github.com/rev3095/hamzzi_courthouse/commit/9043a6a), DEC-074)
+- `06:14` **[확인] main의 DEC-075(판례 검색·리서치 개선)와 합치기** — main을 병합했다. typecheck·eslint·단위 테스트 2,349건·docs:check·빌드 통과. PR 73은 아직 병합 전. 세션 보고 기준. ([`2ddc3cf`](https://github.com/rev3095/hamzzi_courthouse/commit/2ddc3cf), DEC-074, DEC-075)
 
 ### 2026-11-26 (목)
 
@@ -1001,6 +1004,7 @@
 | DEC-071 | 답변 먼저, 인용 확인은 나중 (2026-11-27 사용자 결정) |
 | DEC-072 | 질문 남용 막기 (2026-11-27 사용자 결정, 절대 규칙 9) |
 | DEC-073 | 사건 목록 자동 정리 — 언제나 Haiku (2026-11-27 사용자 요청·결정) |
+| DEC-075 | 판례 검색·리서치 개선 A~E (2026-11-27 사용자 승인) |
 
 ## 끝까지 확인하지 못한 것
 
@@ -1174,17 +1178,27 @@
 
 **국내·해외 법령 통합 검색 + 법령 쉬운 설명 (VS Code)**
 
-- PR 73 병합 전. 미리 만든 쉬운 설명(data.json)이 비어 있어 병합하면 법령 화면을 열 때마다 Haiku 호출(최대 $0.004) — 의료기기 관련 7개 법령을 미리 만들기(최대 약 $0.03)는 사용자 승인 대기.
+- PR 73 병합 전. 미리 만든 쉬운 설명은 국내 법령 8개뿐 — 그 밖의 법령은 화면을 열 때 Haiku 호출(최대 $0.004, 같은 네트워크·같은 법령 하루 20회).
 - 해외 출처를 넓히려면 사용자가 CourtListener 토큰·api.data.gov 키·EUR-Lex 웹서비스 등록·캐나다 대량 XML 색인 승인을 준비해야 한다.
 - 사용자가 말한 해외 DB 목록 사진은 그 세션에서 보이지 않아 공식 출처 기준으로 진행했다.
 - 쉬운 설명의 실제 모델 출력과 e2e(law-text.spec)는 실행하지 않았다.
+- 미리 만든 설명에 저장된 조문 번호와 내용이 서로 맞는지 법제처 원문과 대조하지 않았다(번호가 그 법에 있는지만 실행 때 검사).
+- 하루 20회 한도의 범위(네트워크별인지 사이트 전체인지) 사용자 확인 대기.
 
 ## 커밋 색인
 
-<details><summary>main 커밋 284개 (병합 제외)</summary>
+<details><summary>main 커밋 292개 (병합 제외)</summary>
 
 | 커밋 | 시각 | 제목 |
 |---|---|---|
+| [`ccc5c6e`](https://github.com/rev3095/hamzzi_courthouse/commit/ccc5c6e) | 2026-11-27 06:05 | docs: DEC-072 → DEC-075 번호 바꾸기 (main의 DEC-072~074와 겹침) |
+| [`cd8e114`](https://github.com/rev3095/hamzzi_courthouse/commit/cd8e114) | 2026-11-27 05:59 | feat: F-004 DEC-072 ⓔ 조문 두 날짜 비교·조문 개정 이력 |
+| [`6b23033`](https://github.com/rev3095/hamzzi_courthouse/commit/6b23033) | 2026-11-27 05:58 | docs: devlog에 답변 먼저(DEC-071)·질문 남용 막기(DEC-072)·국내외 법령 통합 검색(DEC-074, PR 73 병합 전) 반영 (세션 21개, 기록 540건) |
+| [`c629429`](https://github.com/rev3095/hamzzi_courthouse/commit/c629429) | 2026-11-27 05:51 | docs: CLAUDE.md 코드와 어긋난 곳 바로잡기 — 긴 질문은 longDeepOf(tier), 기본 단계 Pro, xhigh 금지 (DEC-062·069) |
+| [`8831ce7`](https://github.com/rev3095/hamzzi_courthouse/commit/8831ce7) | 2026-11-27 05:49 | feat: F-003 F-016 DEC-072 ⓓ 보관함 → 사건 진행 노트로 보내기 |
+| [`6380610`](https://github.com/rev3095/hamzzi_courthouse/commit/6380610) | 2026-11-27 05:43 | feat: F-003 DEC-072 ⓒ 보관함 정리 — 폴더·메모·내보내기 (이 기기에만) |
+| [`e771df8`](https://github.com/rev3095/hamzzi_courthouse/commit/e771df8) | 2026-11-27 05:38 | feat: F-003 F-004 DEC-072 ⓑ 판례 상세 보강 — 보관함·인용 형식·참조판례·같은 조문 판례 |
+| [`dfac901`](https://github.com/rev3095/hamzzi_courthouse/commit/dfac901) | 2026-11-27 05:28 | feat: F-003 DEC-072 ⓐ 판례 리서치 법제처 거르기·전체 건수·더 보기·사건 종류 |
 | [`8040d91`](https://github.com/rev3095/hamzzi_courthouse/commit/8040d91) | 2026-11-27 05:27 | feat: F-001 DEC-072 질문 남용 막기 — 법률 무관 요청·같은 글 반복 판별 (절대 규칙 9) |
 | [`b8fbcea`](https://github.com/rev3095/hamzzi_courthouse/commit/b8fbcea) | 2026-11-27 05:19 | fix: DEC-070 ③ 판독 사용자 횟수는 실제로 읽을 때만 세기 · 주석 자리 (legal-reviewer 재검토 참고) |
 | [`097be38`](https://github.com/rev3095/hamzzi_courthouse/commit/097be38) | 2026-11-27 05:16 | fix: DEC-070 ③ legal-reviewer 반영 — 로그인 판독 하루 30회, AI 개요는 서류 요지에만, 일반 사진 질문 길이 맞춤 |
@@ -1542,7 +1556,7 @@
 - [lib/guide — 햄찌 안내 챗봇 고정 문안 (DEC-030)](../lib/guide/README.md) — `lib/guide/README.md` · 수정 2026-11-26
 - [lib/mascot — 햄찌 판사 상태별 그림 (브랜드 가이드 2.3)](../lib/mascot/README.md) — `lib/mascot/README.md` · 수정 2026-11-26
 - [lib/materials — 자료 첨부 (F-017, DEC-058)](../lib/materials/README.md) — `lib/materials/README.md` · 수정 2026-11-26
-- [lib/matters — 사건 진행 (F-016, DEC-053)](../lib/matters/README.md) — `lib/matters/README.md` · 수정 2026-11-26
+- [lib/matters — 사건 진행 (F-016, DEC-053)](../lib/matters/README.md) — `lib/matters/README.md` · 수정 2026-11-27
 - [lib/pii — PII 필터 (F-007)](../lib/pii/README.md) — `lib/pii/README.md` · 수정 2026-11-26
 - [lib/procedure — 절차 안내 (F-014 데모 축소판, DEC-021)](../lib/procedure/README.md) — `lib/procedure/README.md` · 수정 2026-11-26
 - [lib/reader — 오프라인 판독기 (DEC-048)](../lib/reader/README.md) — `lib/reader/README.md` · 수정 2026-11-25
