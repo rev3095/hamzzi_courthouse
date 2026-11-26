@@ -5,6 +5,7 @@
 // 세션마다 이름 바꾸기·삭제가 있다. 질문 삭제는 목록에서 빼기이고(질문·결과는 그대로, 횟수 되살아나지 않음),
 // 사건 삭제는 사건 자료를 지운다(두 번 눌러 확인). 판정·평가 항목은 없다. Figma에 없는 배치라 브랜드 토큰으로 그렸다.
 import Link from "next/link";
+import { AI_NOTICE } from "@/lib/api/respond";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -39,12 +40,14 @@ function SessionRow({
   onRename,
   onDelete,
   deleteLabel,
+  confirmLabel = "한 번 더 누르면 지워요",
 }: {
   row: Row;
   onOpen: () => void;
   onRename: (title: string | null) => Promise<boolean>;
   onDelete: () => Promise<void>;
   deleteLabel: string;
+  confirmLabel?: string;
 }) {
   const [mode, setMode] = useState<"view" | "menu" | "edit" | "confirm">("view");
   const [draft, setDraft] = useState(row.label);
@@ -132,7 +135,7 @@ function SessionRow({
               setMode("view");
             }}
           >
-            {mode === "confirm" ? "한 번 더 누르면 지워요" : deleteLabel}
+            {mode === "confirm" ? confirmLabel : deleteLabel}
           </button>
         </div>
       )}
@@ -238,6 +241,7 @@ export function SessionDrawer({ onClose }: { onClose: () => void }) {
                   key={q.id}
                   row={questionRow(q)}
                   deleteLabel="목록에서 삭제"
+                  confirmLabel="한 번 더 누르면 목록에서 빼요"
                   onOpen={() => openQuestion(q.id, q.text)}
                   onRename={async (title) => {
                     if (!signedIn) {
@@ -324,9 +328,8 @@ export function SessionDrawer({ onClose }: { onClose: () => void }) {
                         setError("이름을 바꾸지 못했어요. 잠시 뒤 다시 해 주세요.");
                         return false;
                       }
-                      setMatters((list) =>
-                        (list ?? []).map((x) => (x.id === m.id ? { ...x, title } : x)),
-                      );
+                      // 서버가 연락처 꼴을 가린 이름으로 다시 읽는다
+                      void load();
                       return true;
                     }}
                     onDelete={async () => {
@@ -338,6 +341,9 @@ export function SessionDrawer({ onClose }: { onClose: () => void }) {
                 ))}
               </ul>
             ))}
+          {mattersOpen && signedIn && matters?.some((m) => m.field) && (
+            <p className="text-muted px-2.5 pt-1 text-[11px]">분야·사건 이름 일부: {AI_NOTICE}</p>
+          )}
           {error && (
             <p role="alert" className="text-warn-text px-2.5 pt-3 text-[13px]">
               {error}
@@ -348,7 +354,7 @@ export function SessionDrawer({ onClose }: { onClose: () => void }) {
         <p className="border-line text-muted border-t px-4 py-3 text-[12px] leading-relaxed">
           {signedIn
             ? "내 계정에 저장된 목록이에요. 질문 삭제는 목록에서만 빼고, 기록을 모두 지우려면 마이페이지 '내 기록'을 써 주세요."
-            : "이 브라우저에만 저장되는 목록이에요(가린 문장만). 로그인하면 '내 기록에 남기기'로 계정에 저장해요."}
+            : "이 브라우저에만 저장되는 목록이에요(가린 질문 문장과 붙인 이름만). 로그인하면 '내 기록에 남기기'로 계정에 저장해요."}
         </p>
       </aside>
     </>

@@ -1,8 +1,9 @@
 // 비로그인 내 세션 (DEC-070 ②, 2026-11-27 사용자 요청): 로그인하지 않은 사람의 질문 세션 목록을 이 브라우저에만 둔다.
 // 쿠키는 크기가 작아(4KB) localStorage를 쓴다(사용자 확인). 서버가 돌려준 가린 질문 문장(마스킹본)·질문 번호·시각·
-// 사용자가 붙인 이름만 담고, 적은 원문은 담지 않는다. 질문·결과 자체는 서버에 그 브라우저의 익명 세션으로 있고,
+// 사용자가 붙인 이름(가린 것)만 담고, 적은 원문은 담지 않는다. 질문·결과 자체는 서버에 그 브라우저의 익명 세션으로 있고,
 // 여기서 지우면 목록에서만 빠진다. 로그인하면 계정의 내 세션(GET /me/inquiries)을 쓴다.
 import { useSyncExternalStore } from "react";
+import { scanInput } from "@/lib/pii";
 
 export const LOCAL_SESSIONS_KEY = "hz:sessions";
 const EVENT = "hz:sessions";
@@ -39,8 +40,10 @@ export function withSession(list: LocalSession[], s: LocalSession): LocalSession
   return [s, ...list.filter((x) => x.id !== s.id)].slice(0, LOCAL_SESSIONS_MAX);
 }
 
+/** 이름도 서버의 세션 이름처럼 이름·연락처 꼴을 가린 뒤 둔다 (절대 규칙 4) */
 export function withTitle(list: LocalSession[], id: string, title: string | null): LocalSession[] {
-  const t = title?.normalize("NFKC").replace(/\s+/g, " ").trim().slice(0, LOCAL_TITLE_MAX) || null;
+  const raw = title?.normalize("NFKC").replace(/\s+/g, " ").trim().slice(0, LOCAL_TITLE_MAX);
+  const t = raw ? scanInput(raw).maskedText.slice(0, LOCAL_TITLE_MAX) : null;
   return list.map((x) => (x.id === id ? { ...x, title: t } : x));
 }
 

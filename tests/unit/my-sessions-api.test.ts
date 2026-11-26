@@ -100,6 +100,39 @@ describe("DEC-070 내 세션 이름·빼기", () => {
     expect(patch.data.titleAuto).toBe(false);
   });
 
+  test("한 번 끈 자동 제목은 옛 자료(titleAuto: true) 저장으로 되살아나지 않는다", async () => {
+    matters.getMatter.mockResolvedValue({
+      id: ID,
+      title: "내가 지은 이름",
+      updatedAt: "t",
+      data: { ...emptyMatter(), titleAuto: false },
+    });
+    await one.PUT(
+      new Request(`http://localhost/api/v1/matters/${ID}`, {
+        method: "PUT",
+        body: JSON.stringify({ data: { ...emptyMatter(), titleAuto: true } }),
+      }),
+      ctx(ID),
+    );
+    expect(matters.saveMatter.mock.calls[0][2].data.titleAuto).toBe(false);
+  });
+
+  test("이름만 바꿀 때는 읽은 뒤 고쳐지지 않았을 때만 자료를 다시 쓰고, 끼어든 저장이 있으면 다시 읽는다", async () => {
+    matters.saveMatter
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: ID, updatedAt: "t3" });
+    await one.PUT(
+      new Request(`http://localhost/api/v1/matters/${ID}`, {
+        method: "PUT",
+        body: JSON.stringify({ title: "새 이름" }),
+      }),
+      ctx(ID),
+    );
+    expect(matters.saveMatter.mock.calls[0][2].ifUpdatedAt).toBe("t");
+    expect(matters.getMatter).toHaveBeenCalledTimes(2);
+    expect(matters.saveMatter.mock.calls[1][2].data.titleAuto).toBe(false);
+  });
+
   test("parseSessionTitle", () => {
     expect(parseSessionTitle(null)).toBeNull();
     expect(parseSessionTitle(" 전세  보증금 ")).toBe("전세 보증금");
@@ -119,5 +152,7 @@ describe("DEC-070 비로그인 내 세션 (이 브라우저)", () => {
   test("이름은 다듬고, 비우면 null", () => {
     expect(withTitle([s("a")], "a", "  새  이름 ")[0].title).toBe("새 이름");
     expect(withTitle([s("a")], "a", " ")[0].title).toBeNull();
+    // 이 브라우저에 둘 때도 연락처 꼴은 가린다
+    expect(withTitle([s("a")], "a", "집주인 010-1234-5678")[0].title).not.toContain("1234-5678");
   });
 });
