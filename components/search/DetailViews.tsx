@@ -2,7 +2,7 @@
 // 판례 상세 /cases/[id] (F-003 AC3) · 조문 /statutes/[id] (F-004) · 결정문 /decisions/[domain]/[id] (DEC-029 제안).
 // 법제처에서 가져온 내용만 보여 준다. 없으면 "찾을 수 없음" — 대체 내용을 만들지 않는다 (API.md 3절 NOT_FOUND).
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   getCaseDetail,
@@ -93,14 +93,51 @@ export function useLoad<T>(key: string, load: () => Promise<ApiResult<T>>) {
   return state?.key === key ? state.r : null;
 }
 
+/**
+ * 상세 화면의 돌아가기 (DEC-067): 리서치·결과 화면에서 왔으면 그 화면으로 돌아가고, 처음부터 이 화면으로 들어왔으면 검색 화면으로 간다.
+ * 이 사이트 안에서 앞 화면이 있는지는 Navigation API(지원 브라우저) → 같은 사이트 referrer 순으로 본다.
+ */
+function BackLink() {
+  const router = useRouter();
+  const [canBack, setCanBack] = useState(false);
+  useEffect(() => {
+    try {
+      const nav = (window as { navigation?: { canGoBack?: boolean } }).navigation;
+      const sameSite =
+        !!document.referrer && new URL(document.referrer).origin === window.location.origin;
+      // 화면을 그린 뒤 브라우저 기록을 한 번 읽는다 (서버 렌더와 맞추려고 처음에는 검색 링크로 그린다)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCanBack(nav?.canGoBack ?? (sameSite && window.history.length > 1));
+    } catch {
+      setCanBack(false);
+    }
+  }, []);
+  return (
+    <Link
+      href="/search"
+      onClick={(e) => {
+        if (!canBack) return;
+        e.preventDefault();
+        // 새 탭으로 열어 앞 기록이 없으면 뒤로 가지 않는다 — 그때는 검색 화면으로 간다
+        const here = window.location.href;
+        window.history.back();
+        window.setTimeout(() => {
+          if (window.location.href === here) router.push("/search");
+        }, 400);
+      }}
+      className="text-link text-sm underline-offset-2 hover:underline"
+    >
+      {canBack ? "← 이전 화면으로" : "← 판례·법령 검색"}
+    </Link>
+  );
+}
+
 export function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
     <div
       className={`mx-auto w-full px-4 py-8 lg:py-12 ${wide ? "max-w-[1120px]" : "max-w-[860px]"}`}
     >
-      <Link href="/search" className="text-link text-sm underline-offset-2 hover:underline">
-        ← 판례·법령 검색
-      </Link>
+      <BackLink />
       <article className="rounded-panel border-line mt-4 border bg-white px-[18px] py-[22px] lg:px-8 lg:py-8">
         {children}
       </article>
