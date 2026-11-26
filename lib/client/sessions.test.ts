@@ -26,6 +26,10 @@ const m = (id: string, updatedAt: string) => ({
   title: "가상 사건",
   updatedAt,
   counts: { docs: 0, parties: 0, issues: 0, notes: 1 },
+  field: null,
+  gist: "",
+  summary: "",
+  stale: false,
 });
 
 describe("DEC-056 내 세션 목록", () => {

@@ -1,7 +1,13 @@
 // 사건 진행 (F-016, DEC-053) — 브라우저에서 부르는 API. 화면(components/matters)은 이 모듈로만 서버를 부른다.
 // 사건 자료는 서버(계정별)에 있고 브라우저 저장소에는 두지 않는다. 사진은 화면 메모리에만 있다.
 import type { CompanyReport } from "@/lib/matters/policy";
-import type { MatterData, MatterReading, MatterSource, MatterSummary } from "@/lib/matters/model";
+import type {
+  MatterAuto,
+  MatterData,
+  MatterReading,
+  MatterSource,
+  MatterSummary,
+} from "@/lib/matters/model";
 import { call } from "./api";
 import { attachmentBody, type BusinessLookup, type PreparedImage } from "./casefile";
 import { readTier } from "./tier";
@@ -25,6 +31,16 @@ export const saveMatter = (id: string, patch: { title?: string; data?: MatterDat
   });
 export const deleteMatter = (id: string) =>
   call<{ deleted: true }>(`/api/v1/matters/${id}`, { method: "DELETE" });
+
+export type AutoResult = {
+  auto: MatterAuto | null;
+  title: string;
+  ai: AiState<Common | "empty" | "unchanged" | "sensitive">;
+  notice: string | null;
+};
+/** 자동 정리 (DEC-073): 제목(이름을 비워 만든 사건만)·법 분야·한 줄 요약. 자료가 그대로면 서버가 모델을 부르지 않는다 */
+export const autoMatter = (matterId: string) =>
+  post<AutoResult>("/api/v1/matters/auto", { matterId });
 
 export type MatterReadResult = {
   reading: MatterReading | null;

@@ -8,6 +8,7 @@ import { getActor } from "@/lib/auth/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   MATTER_LIMITS,
+  autoStale,
   emptyMatter,
   readMatterData,
   type MatterData,
@@ -37,6 +38,10 @@ const summaryOf = (r: Row): MatterSummary => {
       issues: d.issues.length,
       notes: d.notes.length,
     },
+    field: d.auto?.field ?? null,
+    gist: d.auto?.gist ?? "",
+    summary: d.summary,
+    stale: autoStale(d),
   };
 };
 
@@ -116,6 +121,26 @@ export async function saveMatter(
   if (error) throw new Error("matters 저장 실패");
   if (!data) throw new ApiError("NOT_FOUND");
   return { id: data.id, updatedAt: data.updated_at };
+}
+
+/**
+ * 자동 정리(DEC-073) 결과만 붙인다. 사용자가 고친 것이 아니라 목록 순서(updated_at)는 그대로 둔다.
+ * 읽은 때(updatedAt)와 달라졌으면(그 사이 화면이 자료를 저장함) 덮어쓰지 않는다 — 화면이 받은 정리를 다음 저장 때 함께 보낸다.
+ */
+export async function saveMatterAuto(
+  userId: string,
+  id: string,
+  patch: { title: string; data: MatterData; updatedAt: string },
+): Promise<boolean> {
+  const { data, error } = await createServiceClient()
+    .from("matters")
+    .update({ title: patch.title, data: patch.data })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .eq("updated_at", patch.updatedAt)
+    .select("id");
+  if (error) throw new Error("matters 저장 실패");
+  return (data ?? []).length > 0;
 }
 
 export async function deleteMatter(userId: string, id: string): Promise<void> {

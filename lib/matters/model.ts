@@ -107,6 +107,53 @@ export type MatterNote = {
 
 export type MySide = "claimant" | "respondent" | "unknown";
 
+/**
+ * 사건 목록의 자동 정리 (2026-11-27 사용자 요청, DEC-073): 어떤 법 분야인지는 이 고정 목록에서만 고른다 —
+ * 모델이 법령 이름을 지어내지 않게 (절대 규칙 1). 결과(승패·유불리)를 담지 않는다 (절대 규칙 2).
+ */
+export const MATTER_FIELDS = [
+  "lease",
+  "realestate",
+  "labor",
+  "money",
+  "consumer",
+  "family",
+  "inheritance",
+  "criminal",
+  "defamation",
+  "traffic",
+  "medical",
+  "privacy",
+  "admin",
+  "tax",
+  "ip",
+  "business",
+  "other",
+] as const;
+export type MatterField = (typeof MATTER_FIELDS)[number];
+export const MATTER_FIELD_LABEL: Record<MatterField, string> = {
+  lease: "임대차",
+  realestate: "부동산 매매·등기",
+  labor: "노동·임금",
+  money: "돈 거래·계약",
+  consumer: "소비자",
+  family: "가족·이혼",
+  inheritance: "상속",
+  criminal: "형사·고소",
+  defamation: "명예훼손·모욕",
+  traffic: "교통사고",
+  medical: "의료",
+  privacy: "개인정보",
+  admin: "행정·인허가",
+  tax: "세금",
+  ip: "저작권·지식재산",
+  business: "회사·영업",
+  other: "기타",
+};
+
+/** AI(Haiku)가 사건 자료를 읽고 붙인 분야·한 줄 요약. sig = 그때 자료의 지문 (autoSig) — 같으면 다시 부르지 않는다 */
+export type MatterAuto = { field: MatterField; gist: string; sig: string; at: string };
+
 export type MatterData = {
   version: 1;
   /** 사건 한 줄 요약 (사용자가 적는다) */
@@ -120,6 +167,12 @@ export type MatterData = {
   clauses: MatterClause[];
   issues: MatterIssue[];
   notes: MatterNote[];
+  /** 자동 정리 (DEC-073). 없으면 아직 정리 전 */
+  auto?: MatterAuto;
+  /** 이름을 비워 만든 사건 — 자동 정리가 제목도 짓는다 (DEC-073) */
+  titleAuto?: boolean;
+  /** 자동 정리가 실패한(모델 오류·금액 상한·쓸 결과 없음) 자료 지문 — 같은 자료로 다시 부르지 않는다 */
+  autoFailedSig?: string;
 };
 
 export const emptyMatter = (): MatterData => ({
@@ -141,7 +194,72 @@ export type MatterSummary = {
   title: string;
   updatedAt: string;
   counts: { docs: number; parties: number; issues: number; notes: number };
+  /** 자동 정리의 분야·한 줄 요약 (DEC-073). 아직 없으면 null·"" */
+  field: MatterField | null;
+  gist: string;
+  /** 사용자가 적은 사건 한 줄 요약 */
+  summary: string;
+  /** 자료가 바뀌어 자동 정리를 다시 할 때 */
+  stale: boolean;
 };
+
+/** 이름을 비워 만든 사건의 첫 제목 */
+export const NEW_MATTER_TITLE = "새 사건";
+
+const fnv = (s: string) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16);
+};
+
+/**
+ * 자동 정리의 지문: 서류·사실·당사자·쟁점 수와 사건 요약. 글자 하나 고칠 때마다 바뀌지 않게 굵게 잡는다 —
+ * 서류를 더 읽거나 사실·쟁점이 늘 때만 다시 정리한다.
+ */
+export function autoSig(d: MatterData): string {
+  return fnv(
+    [
+      d.docs.map((x) => x.id).join(","),
+      d.facts.length,
+      d.parties.length,
+      d.issues.length,
+      d.demands.length,
+      d.summary.trim(),
+    ].join("|"),
+  );
+}
+
+/** 정리할 거리가 있는지 (서류나 사실이 있거나 요약을 적었을 때) */
+export const hasAutoContent = (d: MatterData) =>
+  d.docs.length > 0 || d.facts.length > 0 || d.summary.trim().length >= 10;
+
+/** 자동 정리를 (다시) 할 때 */
+export const autoStale = (d: MatterData) => {
+  if (!hasAutoContent(d)) return false;
+  const sig = autoSig(d);
+  return d.auto?.sig !== sig && d.autoFailedSig !== sig;
+};
+
+/** 자동 정리에 보낼 글. 서버가 이름·연락처를 가린 뒤 모델에 보낸다 */
+export function composeAutoText(d: MatterData, maxChars = 1_800): string {
+  const lines: string[] = [];
+  if (d.summary.trim()) lines.push(`사건 요약: ${d.summary.trim()}`);
+  for (const x of d.docs.slice(0, 8))
+    lines.push(`서류: ${[x.type, x.title, x.gist].filter(Boolean).join(" · ")}`);
+  for (const f of sortFacts(d.facts).slice(0, 20))
+    lines.push(`사실: ${f.when ? `${f.when} ` : ""}${f.what}`);
+  for (const x of d.demands.slice(0, 6)) lines.push(`요구: ${x.what}`);
+  for (const x of d.issues.slice(0, 6)) lines.push(`살펴볼 점: ${x.title}`);
+  let out = "";
+  for (const l of lines) {
+    if (out.length + l.length + 1 > maxChars) break;
+    out += `${l}\n`;
+  }
+  return out.trim();
+}
 
 /** 서류 한 묶음을 읽은 결과 (POST /matters/read). 저장되지 않고 화면이 사건 자료에 합친다 */
 export type MatterReading = {

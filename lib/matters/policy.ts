@@ -4,7 +4,7 @@
 // - 모델에 보내는 글(쟁점 정리·요약·기업 조사에 붙여 넣은 글)은 이름까지 가린 문장만 쓴다 (절대 규칙 4). 사진만 예외(DEC-052).
 // - 판정 항목이 없다. 단정 표현("반드시"·"무조건"·"100%")이 든 AI 문장은 뺀다 (절대 규칙 2).
 import { z } from "zod";
-import { isAssertive } from "@/lib/ai/policy";
+import { isAssertive, numberTokens } from "@/lib/ai/policy";
 import { ApiError } from "@/lib/api/errors";
 import {
   AGENCY_MARK,
@@ -17,11 +17,14 @@ import {
 import { CASE_NO, MERGED_SERIAL, articlesIn } from "@/lib/citations/patterns";
 import { maskContacts, nameAfterRelation, scanInput } from "@/lib/pii";
 import { statuteUrl } from "@/lib/search/normalize";
+import { LEANING } from "./preset-screen";
 import {
+  MATTER_FIELDS,
   MATTER_KINDS,
   MATTER_LIMITS,
   MATTER_SIDES,
   NOTE_KINDS,
+  composeAutoText,
   emptyMatter,
   type MatterData,
   type MatterReading,
@@ -120,6 +123,17 @@ export const MatterDataZ = z.object({
       }),
     )
     .max(L.notes),
+  // 자동 정리 (DEC-073): 서버가 Haiku로 붙이고 화면이 저장할 때 함께 돌아온다
+  auto: z
+    .object({
+      field: z.enum(MATTER_FIELDS),
+      gist: clean(L.line),
+      sig: z.string().max(40),
+      at: z.string().max(40),
+    })
+    .optional(),
+  titleAuto: z.boolean().optional(),
+  autoFailedSig: z.string().max(40).optional(),
 });
 
 const invalid = (field: string, reason: string) =>
@@ -140,6 +154,9 @@ export function parseMatterData(v: unknown): MatterData {
     const path = r.error.issues[0]?.path.filter((p) => typeof p === "string").join(".") || "data";
     throw invalid(`data.${path}`, "format");
   }
+  // 브라우저가 보낸 자동 정리(DEC-073)도 서버의 거르기(쓸 수 없는 문장·자료에 없는 숫자)를 다시 거친다 — 걸리면 정리를 버린다
+  const gist = r.data.auto?.gist;
+  if (gist && (unusable(gist) || !numbersFrom(gist, composeAutoText(r.data)))) delete r.data.auto;
   if (new TextEncoder().encode(JSON.stringify(r.data)).length > L.dataBytes) {
     throw invalid("data", "too_large");
   }
@@ -829,4 +846,68 @@ export function companyNoteBody(r: CompanyReport): string {
     ...block("기본 정보", r.basics),
     ...block("자료에서 확인하지 못한 것", r.unknowns),
   ].join("\n");
+}
+
+// --- 자동 정리 (DEC-073): 사건 제목·법 분야·한 줄 요약 ------------------------------------------
+
+/** 모델 출력 모양 (json_schema). 분야는 고정 목록에서만 */
+export const MATTER_AUTO_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "field", "gist"],
+  properties: {
+    title: { type: "string" },
+    field: { type: "string", enum: [...MATTER_FIELDS] },
+    gist: { type: "string" },
+  },
+} as const;
+
+const AUTO_TITLE_MAX = 30;
+
+/** 쓸 수 없는 문장: 가림 표시([이름1] 등)·개인정보 꼴·단정·판정·유불리·검증 전 조문·사건번호 (절대 규칙 1·2·4) */
+function unusable(s: string): boolean {
+  return (
+    /\[[^\]]*\d\]/.test(s) ||
+    scanInput(s).findings.length > 0 ||
+    isAssertive(s) ||
+    isJudging(s) ||
+    LEANING.test(s) ||
+    hasCitation(s)
+  );
+}
+
+/**
+ * 요약·제목의 숫자가 보낸 자료에 없으면 쓰지 않는다 (절대 규칙 3 — 모델이 숫자를 만들지 않게).
+ * 숫자는 낱말 단위로 비교하고("2026-10-01"의 10이 "10일"을 허용하지 않게), 한글 수사("두 달")도 자료에 있는 것만.
+ */
+export function numbersFrom(s: string, source: string): boolean {
+  const src = numberTokens(source.replace(/\[[^\]]*\]/g, " "));
+  const digits = new Set(src.digits);
+  const words = new Set(src.words);
+  const t = numberTokens(s);
+  return t.digits.every((d) => digits.has(d)) && t.words.every((w) => words.has(w));
+}
+
+/** 모델 출력 거르기. 쓸 수 없는 제목·요약은 비우고, 분야가 목록 밖이면 기타. source = 모델에 보낸 글 */
+export function screenAuto(
+  raw: unknown,
+  source?: string,
+): {
+  title: string;
+  field: (typeof MATTER_FIELDS)[number];
+  gist: string;
+} {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const tidy = (v: unknown, max: number) =>
+    typeof v === "string" ? v.normalize("NFKC").replace(/\s+/g, " ").trim().slice(0, max) : "";
+  let title = tidy(r.title, AUTO_TITLE_MAX + 10).replace(/^["'“”‘’]+|["'“”‘’.]+$/g, "");
+  if (title.length < 2 || title.length > AUTO_TITLE_MAX || unusable(title)) title = "";
+  if (source !== undefined && title && !numbersFrom(title, source)) title = "";
+  let gist = tidy(r.gist, L.line);
+  if (gist.length < 5 || unusable(gist)) gist = "";
+  if (source !== undefined && gist && !numbersFrom(gist, source)) gist = "";
+  const field = (MATTER_FIELDS as readonly string[]).includes(r.field as string)
+    ? (r.field as (typeof MATTER_FIELDS)[number])
+    : "other";
+  return { title, field, gist };
 }

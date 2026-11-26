@@ -34,6 +34,12 @@ export const BUSINESS_RATE: RateRule = { bucket: "business", limit: 30, windowSe
 
 /** 사건 진행(F-016, DEC-053)의 AI 기능: 로그인 사용자 한 사람이 하루(24시간 창) 30회 — 임시값 */
 export const MATTER_AI_RATE: RateRule = { bucket: "matter_ai", limit: 30, windowSeconds: 86_400 };
+/** 사건 자동 정리(DEC-073, Haiku): 자료가 바뀔 때마다 불러도 된다는 사용자 결정이라 따로 넉넉히 — 로그인 사용자 하루 120회 (임시값) */
+export const MATTER_AUTO_RATE: RateRule = {
+  bucket: "matter_auto",
+  limit: 120,
+  windowSeconds: 86_400,
+};
 
 /**
  * 유료(Claude) 분석 전체 상한 (DEC-026·036). 주간 금액 하나만 둔다(기본 $80, DEC-031 임시 — 하루 상한 없음).
