@@ -23,6 +23,7 @@ import {
   SearchCredit,
   SearchNotice,
   recallSearch,
+  rememberSearch,
   searchErrorText,
 } from "./parts";
 import { useRecordRecent } from "./recent";
@@ -397,12 +398,28 @@ export function StatuteRoute() {
       kind: "조문",
     },
   );
-  if (!s)
+  if (!s) {
+    // 법령 이름이 정식 이름·공식 약칭과 맞지 않으면 조문을 못 찾는다 — 법령 탭에서 이름 일부로 다시 찾게 한다
+    const lawName = statuteId.split(":")[0]?.trim() ?? "";
+    const notFound = r && !r.ok && r.error.code === "NOT_FOUND" && lawName;
     return (
       <Shell>
         <Pending r={r} loading="법제처에서 조문을 불러오고 있어요…" />
+        {notFound && (
+          <p className="text-muted mt-3 text-sm leading-relaxed">
+            법령 이름이 정식 이름과 다르면 조문을 찾지 못해요.{" "}
+            <Link
+              href="/search?from=statute&kind=laws"
+              onClick={() => rememberSearch(lawName)}
+              className="text-link font-semibold underline-offset-2 hover:underline"
+            >
+              &lsquo;{lawName}&rsquo;(이)가 들어간 법령 찾기 →
+            </Link>
+          </p>
+        )}
       </Shell>
     );
+  }
   const at = s.atDate;
   return (
     <Shell>

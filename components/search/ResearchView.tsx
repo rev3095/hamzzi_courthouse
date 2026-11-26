@@ -14,6 +14,7 @@ import {
   searchAdminRules,
   searchCases,
   searchDecisions,
+  searchLaws,
   searchOrdinances,
   type ApiResult,
   type ClientError,
@@ -92,6 +93,27 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Found>> {
           date: c.decidedAt,
           refNo: c.caseNo,
           sourceUrl: c.sourceUrl,
+        })),
+      },
+    };
+  }
+  if (kind === "laws") {
+    const r = await searchLaws(q);
+    if (!r.ok) return r;
+    return {
+      ok: true,
+      data: {
+        notice: r.data.notice,
+        note: r.data.searchScopeNote,
+        rows: r.data.items.map((l) => ({
+          kind,
+          id: l.id,
+          href: `/laws/${encodeURIComponent(l.name)}`,
+          title: l.name,
+          org: l.agency,
+          date: l.effectiveFrom,
+          refNo: l.kind,
+          sourceUrl: l.sourceUrl,
         })),
       },
     };
@@ -187,7 +209,7 @@ async function loadPreview(row: Row): Promise<ApiResult<PreviewData>> {
         }
       : r;
   }
-  if (row.kind === "admin_rules" || !row.href)
+  if (row.kind === "laws" || row.kind === "admin_rules" || !row.href)
     return { ok: true, data: { sections: [], statutes: [] } };
   const r = await getDecision(row.kind, row.id);
   return r.ok ? { ok: true, data: { sections: r.data.sections, statutes: [] } } : r;
@@ -257,7 +279,9 @@ function Preview({ row, terms }: { row: Row; terms: string[] }) {
       )}
       {r?.ok && r.data.sections.length === 0 && (
         <p className="text-muted text-sm">
-          이 자료는 요지 항목이 없어요. 법제처 원문에서 확인해 주세요.
+          {row.kind === "laws"
+            ? "‘전체 보기’에서 조문 전문과 3단 비교·신구 대조·개정 연혁을 볼 수 있어요."
+            : "이 자료는 요지 항목이 없어요. 법제처 원문에서 확인해 주세요."}
         </p>
       )}
       {r?.ok &&
@@ -515,7 +539,7 @@ export function ResearchView() {
             </button>
           </form>
           <div className="mt-4">
-            {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+            {/* 종류 탭: 모바일은 주요 5개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
             <KindTabs
               kinds={KINDS}
               value={tab}

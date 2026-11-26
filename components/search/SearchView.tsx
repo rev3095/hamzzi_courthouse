@@ -5,12 +5,14 @@
 // 검색 패널은 판례 아카이브(DEC-054)에서 간결하게 줄였다: 제목·검색/리서치 전환 → 종류 탭 → 검색창 → 출처 한 줄,
 // 자주 찾는 검색어는 처음 화면에만, 검색 요령은 접어 둔다. 결과 카드(건수·칩·19px 제목)는 F-003 가독성 개편(e08a9e2) 구성.
 // 결과 카드에서 리서치와 같은 보관함(hz:pins)에 바로 담는다 (DEC-054).
+// 법령 탭(2026-11-27): 정식 이름을 몰라도 낱말 일부("의료기기")로 현행 법령을 찾고 /laws/[name]으로 간다.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   searchAdminRules,
   searchCases,
   searchDecisions,
+  searchLaws,
   searchOrdinances,
   type ApiResult,
   type ClientError,
@@ -44,6 +46,7 @@ import { PAGE_TITLE } from "@/components/ui/styles";
 
 const KINDS: { kind: Kind; label: string; placeholder: string }[] = [
   { kind: "cases", label: "판례", placeholder: "예: 임대차 보증금 반환, 민법 750조, 2023다12345" },
+  { kind: "laws", label: "법령", placeholder: "예: 의료기기, 주택임대차, 근로기준" },
   ...DECISION_TABS.map((d) => ({
     kind: d.domain as Kind,
     label: d.label,
@@ -112,6 +115,33 @@ async function run(kind: Kind, q: string): Promise<ApiResult<Result>> {
             date: c.decidedAt,
             refNo: c.caseNo,
             sourceUrl: c.sourceUrl,
+          },
+        })),
+      },
+    };
+  }
+  if (kind === "laws") {
+    const r = await searchLaws(q);
+    if (!r.ok) return r;
+    return {
+      ok: true,
+      data: {
+        ...r.data,
+        items: r.data.items.map((l) => ({
+          key: l.id,
+          href: `/laws/${encodeURIComponent(l.name)}`,
+          title: l.name,
+          tags: tags(l.kind, l.agency, l.effectiveFrom && `시행 ${dotDate(l.effectiveFrom)}`),
+          sourceUrl: l.sourceUrl,
+          row: {
+            kind: "laws",
+            id: l.id,
+            href: `/laws/${encodeURIComponent(l.name)}`,
+            title: l.name,
+            org: l.agency,
+            date: l.effectiveFrom,
+            refNo: l.kind,
+            sourceUrl: l.sourceUrl,
           },
         })),
       },
@@ -279,7 +309,9 @@ export function SearchView() {
   // 라우트 훅 대신 첫 렌더 뒤 주소를 한 번 읽는다 (cacheComponents)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("from") !== "research") return;
+    // ?from=statute: 조문 화면에서 법령 이름이 맞지 않을 때 법령 탭으로 다시 찾기
+    const from = params.get("from");
+    if (from !== "research" && from !== "statute") return;
     const q = recallSearch();
     if (!q) return;
     const kind = params.get("kind");
@@ -316,7 +348,7 @@ export function SearchView() {
           <ArchiveSwitch current="search" searched={state.kind === "done"} kind={tab} />
         </div>
         <div className="mt-4">
-          {/* 종류 탭: 모바일은 주요 4개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
+          {/* 종류 탭: 모바일은 주요 5개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}
           <KindTabs
             kinds={KINDS}
             value={tab}
@@ -507,10 +539,20 @@ export function SearchView() {
                     {c.href && (
                       <Link
                         href={c.href}
-                        aria-label={tab === "cases" ? "판시사항·요지 보기" : "내용 보기"}
+                        aria-label={
+                          tab === "cases"
+                            ? "판시사항·요지 보기"
+                            : tab === "laws"
+                              ? "조문 전문·법령 도구 보기"
+                              : "내용 보기"
+                        }
                         className="text-link inline-flex min-h-11 items-center text-sm underline-offset-2 hover:underline"
                       >
-                        {tab === "cases" ? "판시사항·요지 보기 →" : "내용 보기 →"}
+                        {tab === "cases"
+                          ? "판시사항·요지 보기 →"
+                          : tab === "laws"
+                            ? "조문 전문·법령 도구 보기 →"
+                            : "내용 보기 →"}
                       </Link>
                     )}
                     {c.sourceUrl && <OriginalLink url={c.sourceUrl} />}
