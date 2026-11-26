@@ -52,9 +52,10 @@ function fakeSource(): LawSource {
 const ANSWER = JSON.stringify({
   points: [
     {
-      text: "보증금을 돌려받지 못했다면 임차권등기명령 신청을 검토해 볼 수 있습니다.",
-      source: "law:주택임대차보호법:제3조의3",
-      quote: "임대차가 끝난 후 보증금이 반환되지 아니한 경우",
+      // 답변 먼저(DEC-071): 답변 단계에는 근거 목록이 없어 모든 문단이 모델 인용 문단이다
+      text: "보증금을 돌려받지 못했다면 주택임대차보호법 제3조의3의 임차권등기명령 신청을 검토해 볼 수 있습니다.",
+      source: "model",
+      quote: "",
     },
   ],
 });
@@ -347,6 +348,28 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
     expect(out.draft.answer.points).toHaveLength(1);
   });
 
+  test("DEC-072 질문 해석이 법률 무관(off_topic)으로 보면 검색·답변 모델을 부르지 않고 해석 비용과 함께 멈춘다", async () => {
+    const { OffTopicQuestion } = await import("@/lib/ai/policy");
+    const source = fakeSource();
+    const model = fakeModel({
+      understood: JSON.stringify({
+        section: "none",
+        lawQuery: "",
+        caseQueries: [],
+        kind: "off_topic",
+      }),
+    });
+    const run = runLiteAnalysis(
+      { maskedText: "이런 느낌으로 사이트 하나 만들어 주세요" },
+      { model, lawSource: source, ...HAIKU },
+    );
+    await expect(run).rejects.toBeInstanceOf(OffTopicQuestion);
+    await run.catch((e: { costUsd: number }) => expect(e.costUsd).toBeGreaterThan(0));
+    expect(model.understand).toHaveLength(1);
+    expect(model.calls).toHaveLength(0);
+    expect(source.searchArticles).not.toHaveBeenCalled();
+  });
+
   test("질문 해석이 실패해도 오류로 끝내지 않고 질문 문장으로 찾아 답변한다 — 재시도 없음", async () => {
     for (const understandFail of [
       new ApiError("MODEL_FAILED", { reason: "refusal" }),
@@ -463,8 +486,8 @@ describe("F-017 첨부 자료 (DEC-058)", () => {
       schema: { properties: { points: { items: { required: string[] } } } };
     };
     expect(schema.schema.properties.points.items.required).toContain("materials");
-    // 출처는 여전히 근거 키 (자료는 출처가 될 수 없다)
-    expect(out.draft.answer.points[0].source).toBe("law:주택임대차보호법:제3조의3");
+    // 출처는 모델 인용(답변 먼저, DEC-071) — 자료는 출처가 될 수 없다
+    expect(out.draft.answer.points[0].source).toBe("model");
     expect(out.materialRefs).toEqual([{ text: out.draft.answer.points[0].text, materials: [1] }]);
     expect(out.promptVersion).toContain("materials-");
   });

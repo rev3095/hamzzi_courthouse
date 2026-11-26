@@ -27,7 +27,7 @@ import {
 } from "./client";
 import { CASEFILE_READ_COST_CAP_USD, CASEFILE_READ_TOKENS } from "./cost";
 
-// 2026-11-27: 사진 용도(purpose) 분류를 더함 (DEC-070 ③)
+// 2026-11-27: 사진 용도(purpose) 분류를 더함 (DEC-073 ③)
 export const CASEFILE_PROMPT_VERSION = "casefile-2026-11-27";
 export const CASEFILE_MODEL = "claude-haiku-5-5";
 const TIMEOUT_MS = 45_000;

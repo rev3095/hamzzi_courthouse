@@ -1,4 +1,4 @@
-// DEC-070 ③ 사진 용도 분류와 갈 곳 — 판독 결과 거르기(purpose), 일반 사진 질문 문장, 사건 서류 → 사건 진행 자료.
+// DEC-073 ③ 사진 용도 분류와 갈 곳 — 판독 결과 거르기(purpose), 일반 사진 질문 문장, 사건 서류 → 사건 진행 자료.
 // 모델은 부르지 않는다 (절대 규칙 8). 서류 내용은 직접 쓴 가상 예다.
 import { describe, expect, test } from "vitest";
 import {
@@ -23,7 +23,7 @@ const raw = (extra: Partial<ReadingRaw> = {}): ReadingRaw => ({
   ...extra,
 });
 
-describe("DEC-070 ③ 사진 용도", () => {
+describe("DEC-073 ③ 사진 용도", () => {
   test("판독 형식이 용도를 반드시 고르게 하고, 목록은 case·question 둘뿐", () => {
     expect(READING_SCHEMA.required).toContain("purpose");
     expect(READING_SCHEMA.properties.purpose.enum).toEqual(["case", "question"]);

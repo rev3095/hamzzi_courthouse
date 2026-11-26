@@ -152,7 +152,7 @@ export const ReadingZ = z.object({
   parties: z.array(z.object({ role: Str, side: Str, kind: Str, name: Str })),
   // 가리는 데만 쓰는 목록 — screenReading이 개요·요구·당사자 이름에서 지운 뒤 버린다 (응답·로그에 싣지 않는다)
   personNames: z.array(Str),
-  // 사진 용도 (DEC-070 ③): 녹화된 예전 응답에는 없을 수 있어 선택으로 받는다 — 없으면 사건 서류로 본다
+  // 사진 용도 (DEC-073 ③): 녹화된 예전 응답에는 없을 수 있어 선택으로 받는다 — 없으면 사건 서류로 본다
   purpose: Str.optional(),
 });
 export type ReadingRaw = z.infer<typeof ReadingZ>;

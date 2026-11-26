@@ -142,6 +142,19 @@ export type OrdinanceDetail = OrdinanceHit & {
   articles: { articleNo: string | null; title: string; text: string }[];
 };
 
+/** 현행 법령(법률·대통령령·부령) 이름 검색 결과. 법제처 법령 목록이 준 값만 담는다 */
+export type LawHit = {
+  /** 법령일련번호(MST) */
+  id: string;
+  name: string;
+  /** 법령구분명: 법률·대통령령·총리령·부령 등 */
+  kind: string | null;
+  agency: string | null;
+  promulgatedAt: string | null;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+};
+
 export type AdminRuleHit = {
   id: string;
   name: string;

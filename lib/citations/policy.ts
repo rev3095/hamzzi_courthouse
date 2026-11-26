@@ -9,7 +9,7 @@ import type { AssistantTalk } from "@/lib/assistants/talk";
 import type { MaterialsMap } from "@/lib/materials/map";
 import type { ProcedureHint } from "@/lib/procedure/labels";
 import { MODEL_SOURCE, citableKeys, type DemoDraft, type DraftPoint } from "@/lib/ai/policy";
-import type { EvidenceSet } from "@/lib/search/evidence";
+import { EvidenceSet } from "@/lib/search/evidence";
 import type { CitationCheck } from "@/lib/search/types";
 import { articlesIn, caseNumbersIn } from "./patterns";
 
@@ -95,6 +95,29 @@ export function claimsInText(
   return { claims, unresolved };
 }
 
+/** 확인된 인용의 법제처 원문 주소: 이번 요청에서 법제처로 가져온 근거 목록에 있을 때만 (이름을 짐작해 주소를 만들지 않는다) */
+export function urlForClaim(c: Claim, evidence: EvidenceSet): string | undefined {
+  const norm = (s: string) => s.normalize("NFKC").replace(/\s+/g, "");
+  if (c.kind === "case") {
+    const hit = evidence
+      .list()
+      .find((i) => i.kind === "case" && norm(i.ref.caseNo) === norm(c.citation));
+    return hit && hit.kind === "case" ? hit.ref.sourceUrl : undefined;
+  }
+  const m = c.citation.match(/^(.+?)\s+(제\s*\d+\s*조(?:\s*의\s*\d+)?)/);
+  if (!m) return undefined;
+  const [, lawName, articleNo] = m;
+  const hit = evidence
+    .list()
+    .find(
+      (i) =>
+        i.kind === "statute" &&
+        norm(i.ref.lawName) === norm(lawName) &&
+        norm(i.ref.articleNo) === norm(articleNo),
+    );
+  return hit && hit.kind === "statute" ? hit.ref.sourceUrl : undefined;
+}
+
 /** 재조회할 조문·사건번호를 종류별로 중복 없이 모은다 */
 export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: string[] } {
   const statutes = new Set<string>();
@@ -106,7 +129,14 @@ export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: stri
 // ── 결과 조립 ────────────────────────────────────────────────
 
 /** verified·quote_mismatch = 법제처 근거 문단, model = 법제처 근거 없이 모델이 쓴 문단 (DEC-055, 재조회 안 함) */
-export type CheckedPoint = DraftPoint & { check: "verified" | "quote_mismatch" | "model" };
+export type CheckedPoint = DraftPoint & {
+  check: "verified" | "quote_mismatch" | "model";
+  /**
+   * 답변 먼저(DEC-071): 모델이 쓴 문단 본문의 조문·사건번호 가운데 법제처에서 실존이 확인된 것.
+   * 원문 구절 대조는 하지 않은 "있음 확인"이다. url은 법제처 원문 주소(알 때만)
+   */
+  confirmed?: { label: string; url?: string }[];
+};
 
 /** API.md 4.1 DemoAnalysisResult */
 export type DemoAnalysisResult = Omit<DemoDraft, "answer"> & {
@@ -170,6 +200,8 @@ export function assembleResult(input: {
   checks: Map<string, CitationCheck>;
   /** P3 screenPoints에서 이미 빠진 문단 수 (실패율 집계용) */
   screened?: number;
+  /** 본문 조문의 법령을 짐작할 근거 (답변 모델이 본 근거, DEC-071). 없으면 evidence */
+  claimEvidence?: EvidenceSet;
 }): { result: DemoAnalysisResult; citations: CitationRow[]; stats: VerifyStats } {
   const { draft, evidence, checks } = input;
   const kept: CheckedPoint[] = [];
@@ -185,7 +217,27 @@ export function assembleResult(input: {
 
   for (const p of draft.answer.points) {
     if (p.source === MODEL_SOURCE) {
-      kept.push({ ...p, quote: "", check: "model" });
+      // 답변 먼저(DEC-071): 본문 인용을 법제처에서 확인한다. 없다고 확인된 인용이 있으면 문단을 빼고,
+      // 있다고 확인된 것은 원문 링크와 함께 붙이며, 조회 실패·판정 불가는 그대로 둔다
+      // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (verify.ts와 같은 기준)
+      const inText = claimsInText(p.text, new EvidenceSet()).claims;
+      if (inText.some((c) => checks.get(c.citation)?.exists === false)) {
+        removedBy.not_confirmed += 1;
+        continue;
+      }
+      const confirmed = inText
+        .filter((c) => checks.get(c.citation)?.exists === true)
+        .map((c) => {
+          const url = urlForClaim(c, evidence);
+          return { label: c.citation, ...(url && { url }) };
+        });
+      for (const c of confirmed) confirmedCitations.add(c.label);
+      kept.push({
+        ...p,
+        quote: "",
+        check: "model",
+        ...(confirmed.length > 0 && { confirmed }),
+      });
       continue;
     }
     const sourceClaim = claimForKey(p.source, evidence);
@@ -202,7 +254,7 @@ export function assembleResult(input: {
     // 2026-11-27 사용자 결정: 답변이 나오는 것이 먼저다. 근거 키로 잇지 못했거나 법제처 조회가 실패·판정 불가인 문단은
     // 빼지 않고 모델 인용 문단(DEC-055, 재조회·원문 대조 없음)으로 남긴다. 법제처가 "없다"고 확인한 인용이 든 문단만 뺀다
     const asModel = () => kept.push({ ...p, source: MODEL_SOURCE, quote: "", check: "model" });
-    const inText = claimsInText(p.text, evidence);
+    const inText = claimsInText(p.text, input.claimEvidence ?? evidence);
     const claimed = [...(sourceClaim ? [sourceClaim] : []), ...inText.claims];
     // 법제처가 "없다"고 확인한 인용이 하나라도 있으면 어느 경우든 뺀다
     if (claimed.some((c) => checks.get(c.citation)?.exists === false)) {

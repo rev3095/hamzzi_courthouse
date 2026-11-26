@@ -2,7 +2,7 @@
 // 질문창의 사진 붙이기와 서류 분석 창을 잇는다 (F-015, DEC-052). 홈 질문창과 /casefile이 함께 쓴다.
 // 사진이 붙어 있으면 "물어보기"가 서류 분석 창을 열고, 확인한 사건 개요는 일반 질문 보내기(useAsk.send)로 간다:
 // 민감정보 동의는 창에서 이미 받았으므로 함께 보내고, 분석은 DeepSearch 방식으로 요청한다(쟁점별 근거, DEC-041).
-// 홈 질문창(auto)은 판독(Haiku)이 고른 사진 용도로 갈 곳을 정한다 (DEC-070 ③, 2026-11-27 사용자 요청):
+// 홈 질문창(auto)은 판독(Haiku)이 고른 사진 용도로 갈 곳을 정한다 (DEC-073 ③, 2026-11-27 사용자 요청):
 // 무엇인지 묻는 일반 사진 → 일반 답변, 사건 서류 + 로그인 → 사건 진행의 새 사건, 사건 서류 + 비로그인 → 사건 정리(DeepSearch).
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -52,7 +52,7 @@ export function useCaseFileAsk(ask: {
 
   const close = () => setQuestion(null);
 
-  /** 읽은 사진의 용도로 갈 곳을 정한다. 맡았으면 true (DEC-070 ③) */
+  /** 읽은 사진의 용도로 갈 곳을 정한다. 맡았으면 true (DEC-073 ③) */
   const route = async (reading: CaseReading): Promise<boolean> => {
     if (reading.purpose === "question") {
       const text = composePhotoQuestion(question ?? "", reading.summary, MAX_INPUT_CHARS);

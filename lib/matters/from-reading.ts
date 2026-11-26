@@ -1,4 +1,4 @@
-// 홈에 올린 사건 서류(DEC-070 ③)로 사건 진행의 새 사건을 만든다 — 서류 판독(F-015) 결과를 사건 자료 모양으로 옮기는 순수 함수.
+// 홈에 올린 사건 서류(DEC-073 ③)로 사건 진행의 새 사건을 만든다 — 서류 판독(F-015) 결과를 사건 자료 모양으로 옮기는 순수 함수.
 // 판독 결과에는 개인 이름이 없다(역할로만, DEC-052). 모델을 부르지 않는다. 판정 항목을 만들지 않는다 (절대 규칙 2).
 import type { CaseReading } from "@/lib/casefile/limits";
 import { MATTER_LIMITS, emptyMatter, newId, type MatterData } from "./model";

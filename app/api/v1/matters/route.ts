@@ -20,7 +20,7 @@ export const POST = withRoute(async (req, _ctx, scope) => {
   const user = await requireMatterUser(scope);
   await assertRateLimit(WRITE_RATE, req.headers);
   const body = (await readJson<Record<string, unknown>>(req)) ?? {};
-  // 이름을 비우면 '새 사건'으로 만들고 자동 정리(DEC-070)가 자료를 보고 제목을 짓는다
+  // 이름을 비우면 '새 사건'으로 만들고 자동 정리(DEC-073)가 자료를 보고 제목을 짓는다
   const titleAuto = typeof body.title !== "string" || !body.title.trim();
   const title = titleAuto ? NEW_MATTER_TITLE : parseTitle(body.title);
   // 내보낸 파일을 가져올 때는 자료를 함께 받는다

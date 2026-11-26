@@ -84,12 +84,16 @@ describe("DEC-038 분석 요청", () => {
       tier: null,
       deep: false,
       assistant: null,
+      archive: false,
+      focusCases: [],
     });
     expect(parseAnalyzeRequest(JSON.stringify({ deep: true, tier: "max" }))).toEqual({
       category: null,
       tier: "max",
       deep: true,
       assistant: null,
+      archive: false,
+      focusCases: [],
     });
     expect(() => parseAnalyzeRequest(JSON.stringify({ deep: "yes" }))).toThrow();
     expect(() => parseAnalyzeRequest(JSON.stringify({ tier: "opus" }))).toThrow();

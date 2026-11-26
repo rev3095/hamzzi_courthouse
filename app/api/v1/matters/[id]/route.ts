@@ -32,7 +32,7 @@ export const PUT = withRoute<Ctx>(async (req, ctx, scope) => {
   }
   const title = body.title !== undefined ? parseTitle(body.title) : undefined;
   let data = body.data !== undefined ? parseMatterData(body.data) : undefined;
-  // 사용자가 이름을 바꾸면 자동 정리(DEC-070)가 더는 제목을 짓지 않는다(titleAuto 끔). 한 번 끈 값은
+  // 사용자가 이름을 바꾸면 자동 정리(DEC-073)가 더는 제목을 짓지 않는다(titleAuto 끔). 한 번 끈 값은
   // 다른 화면이 들고 있던 옛 자료(titleAuto: true)로 저장해도 되살아나지 않게 서버 값을 따른다
   let current = await getMatter(user.userId, id);
   const off = (d: MatterData): MatterData => (d.titleAuto ? { ...d, titleAuto: false } : d);

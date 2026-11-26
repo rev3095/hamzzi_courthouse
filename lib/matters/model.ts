@@ -108,7 +108,7 @@ export type MatterNote = {
 export type MySide = "claimant" | "respondent" | "unknown";
 
 /**
- * 사건 목록의 자동 정리 (2026-11-27 사용자 요청, DEC-070): 어떤 법 분야인지는 이 고정 목록에서만 고른다 —
+ * 사건 목록의 자동 정리 (2026-11-27 사용자 요청, DEC-073): 어떤 법 분야인지는 이 고정 목록에서만 고른다 —
  * 모델이 법령 이름을 지어내지 않게 (절대 규칙 1). 결과(승패·유불리)를 담지 않는다 (절대 규칙 2).
  */
 export const MATTER_FIELDS = [
@@ -167,9 +167,9 @@ export type MatterData = {
   clauses: MatterClause[];
   issues: MatterIssue[];
   notes: MatterNote[];
-  /** 자동 정리 (DEC-070). 없으면 아직 정리 전 */
+  /** 자동 정리 (DEC-073). 없으면 아직 정리 전 */
   auto?: MatterAuto;
-  /** 이름을 비워 만든 사건 — 자동 정리가 제목도 짓는다 (DEC-070) */
+  /** 이름을 비워 만든 사건 — 자동 정리가 제목도 짓는다 (DEC-073) */
   titleAuto?: boolean;
   /** 자동 정리가 실패한(모델 오류·금액 상한·쓸 결과 없음) 자료 지문 — 같은 자료로 다시 부르지 않는다 */
   autoFailedSig?: string;
@@ -194,7 +194,7 @@ export type MatterSummary = {
   title: string;
   updatedAt: string;
   counts: { docs: number; parties: number; issues: number; notes: number };
-  /** 자동 정리의 분야·한 줄 요약 (DEC-070). 아직 없으면 null·"" */
+  /** 자동 정리의 분야·한 줄 요약 (DEC-073). 아직 없으면 null·"" */
   field: MatterField | null;
   gist: string;
   /** 사용자가 적은 사건 한 줄 요약 */

@@ -8,7 +8,7 @@ export type QuestionItem = {
   status: string;
   createdAt: string;
   followup: boolean;
-  /** 사용자가 바꾼 세션 이름 (DEC-070) */
+  /** 사용자가 바꾼 세션 이름 (DEC-073) */
   title?: string | null;
 };
 

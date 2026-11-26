@@ -123,7 +123,7 @@ export const MatterDataZ = z.object({
       }),
     )
     .max(L.notes),
-  // 자동 정리 (DEC-070): 서버가 Haiku로 붙이고 화면이 저장할 때 함께 돌아온다
+  // 자동 정리 (DEC-073): 서버가 Haiku로 붙이고 화면이 저장할 때 함께 돌아온다
   auto: z
     .object({
       field: z.enum(MATTER_FIELDS),
@@ -154,7 +154,7 @@ export function parseMatterData(v: unknown): MatterData {
     const path = r.error.issues[0]?.path.filter((p) => typeof p === "string").join(".") || "data";
     throw invalid(`data.${path}`, "format");
   }
-  // 브라우저가 보낸 자동 정리(DEC-070)도 서버의 거르기(쓸 수 없는 문장·자료에 없는 숫자)를 다시 거친다 — 걸리면 정리를 버린다
+  // 브라우저가 보낸 자동 정리(DEC-073)도 서버의 거르기(쓸 수 없는 문장·자료에 없는 숫자)를 다시 거친다 — 걸리면 정리를 버린다
   const gist = r.data.auto?.gist;
   if (gist && (unusable(gist) || !numbersFrom(gist, composeAutoText(r.data)))) delete r.data.auto;
   if (new TextEncoder().encode(JSON.stringify(r.data)).length > L.dataBytes) {
@@ -848,7 +848,7 @@ export function companyNoteBody(r: CompanyReport): string {
   ].join("\n");
 }
 
-// --- 자동 정리 (DEC-070): 사건 제목·법 분야·한 줄 요약 ------------------------------------------
+// --- 자동 정리 (DEC-073): 사건 제목·법 분야·한 줄 요약 ------------------------------------------
 
 /** 모델 출력 모양 (json_schema). 분야는 고정 목록에서만 */
 export const MATTER_AUTO_SCHEMA = {

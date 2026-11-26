@@ -62,7 +62,7 @@ export function CaseFileFlow({
   error?: string | null;
   onAnalyze: (text: string, parties: CaseParty[]) => void;
   /**
-   * 읽은 뒤 갈 곳을 정한다 (DEC-070 ③, auto일 때만): 일반 사진이면 일반 답변, 사건 서류면 로그인 사용자의 사건 진행.
+   * 읽은 뒤 갈 곳을 정한다 (DEC-073 ③, auto일 때만): 일반 사진이면 일반 답변, 사건 서류면 로그인 사용자의 사건 진행.
    * 맡아 처리했으면 true — 아니면 지금처럼 사건 정리(DeepSearch)로 분석한다
    */
   onRoute?: (reading: CaseReading) => Promise<boolean>;

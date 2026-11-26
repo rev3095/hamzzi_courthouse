@@ -90,21 +90,21 @@ export type SavedInquiry = {
   status: string;
   createdAt: string;
   followup: boolean;
-  /** 사용자가 바꾼 세션 이름 (DEC-070). 없으면 null */
+  /** 사용자가 바꾼 세션 이름 (DEC-073). 없으면 null */
   title?: string | null;
 };
 
 /** 내 세션의 질문 (DEC-039·056, 로그인 필요) */
 export const getMyInquiries = () => call<SavedInquiry[]>("/api/v1/me/inquiries");
 
-/** 내 세션 이름 바꾸기 (DEC-070, 로그인 필요). null이면 이름을 지워 가린 질문 문장으로 돌아간다 */
+/** 내 세션 이름 바꾸기 (DEC-073, 로그인 필요). null이면 이름을 지워 가린 질문 문장으로 돌아간다 */
 export const renameMyInquiry = (id: string, title: string | null) =>
   call<{ id: string; title: string | null }>(`/api/v1/me/inquiries/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ title }),
   });
 
-/** 내 세션에서 빼기 (DEC-070, 로그인 필요). 질문·결과는 지우지 않는다 */
+/** 내 세션에서 빼기 (DEC-073, 로그인 필요). 질문·결과는 지우지 않는다 */
 export const removeMyInquiry = (id: string) =>
   call<{ id: string; removed: true }>(`/api/v1/me/inquiries/${id}`, { method: "DELETE" });
 
@@ -134,7 +134,7 @@ export function forgetQuestions() {
     // 이 기기에 둔 조회 이력(DEC-029)도 함께 지운다
     localStorage.removeItem("hz:recent");
     localStorage.removeItem("hz:pins");
-    // 비로그인 내 세션 목록(DEC-070)도 지운다
+    // 비로그인 내 세션 목록(DEC-073)도 지운다
     localStorage.removeItem("hz:sessions");
     window.dispatchEvent(new Event("hz:sessions"));
   } catch {
@@ -330,6 +330,17 @@ export type AdminRuleRef = {
   sourceUrl: string;
 };
 
+/** 현행 법령 이름 검색 결과 (GET·POST /laws) */
+export type LawRef = {
+  id: string;
+  name: string;
+  kind: string | null;
+  agency: string | null;
+  promulgatedAt: string | null;
+  effectiveFrom: string | null;
+  sourceUrl: string;
+};
+
 const post = <T>(path: string, body: unknown) =>
   call<T>(path, { method: "POST", body: JSON.stringify(body) });
 
@@ -345,6 +356,7 @@ export const getOrdinance = (id: string) =>
   call<OrdinanceView>(`/api/v1/ordinances/${encodeURIComponent(id)}`);
 export const searchAdminRules = (q: string) =>
   post<Listed<AdminRuleRef>>("/api/v1/admin-rules", { q });
+export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
 export const getStatuteAt = (id: string, asOf?: string) =>
@@ -390,6 +402,8 @@ export async function analyzeStream(
   extra: { assistant?: string; onPreview?: (p: QuickPreview) => void } = {},
 ): Promise<ApiResult<AnalyzedResult>> {
   const assistant = extra.assistant ?? recallAssistant(id);
+  // 판례 아카이브 질문창(DEC-070)에서 보낸 질문: 단계는 Light 고정(서버도 고정), 보고 있던 판례를 근거로 넘긴다
+  const archive = assistant ? null : recallArchive(id);
   let res: Response;
   try {
     // 홈에서 고른 카테고리(DEC-028)는 무료 판례 검색에 고정 검색어 하나를 더하는 데만 쓴다. 정해진 값만 서버가 받는다
@@ -398,10 +412,12 @@ export async function analyzeStream(
       method: "POST",
       headers: { accept: "text/event-stream", "content-type": "application/json" },
       body: JSON.stringify({
-        tier: readTier(),
+        tier: archive ? "light" : readTier(),
         ...(category && { category }),
         ...(recallDeep(id) && { deep: true }),
         ...(assistant && { assistant }),
+        ...(archive && { archive: true }),
+        ...(archive && archive.focus.length > 0 && { focusCases: archive.focus }),
       }),
       credentials: "same-origin",
     });
@@ -491,6 +507,33 @@ export function rememberAssistant(id: string, assistant: string) {
 export function recallAssistant(id: string): string | null {
   try {
     return sessionStorage.getItem(AKEY(id));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 판례 아카이브 질문창(DEC-070)에서 보낸 질문 표시와, 근거에 넣을 판례 일련번호(공개 자료 번호)만 이 기기에 둔다.
+ * 결과 화면에서 다시 분석해도 같은 조건(Light 고정·같은 판례)으로 간다
+ */
+const ARKEY = (id: string) => `hz:ar:${id}`;
+export function rememberArchive(id: string, focus: string[]) {
+  try {
+    sessionStorage.setItem(ARKEY(id), JSON.stringify({ focus: focus.slice(0, 2) }));
+  } catch {
+    // 저장소를 못 쓰면 고른 단계로 분석된다
+  }
+}
+
+export function recallArchive(id: string): { focus: string[] } | null {
+  try {
+    const raw = sessionStorage.getItem(ARKEY(id));
+    if (!raw) return null;
+    const v = JSON.parse(raw) as { focus?: unknown };
+    const focus = Array.isArray(v.focus)
+      ? v.focus.filter((x): x is string => typeof x === "string" && /^\d{1,12}$/.test(x))
+      : [];
+    return { focus };
   } catch {
     return null;
   }

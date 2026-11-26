@@ -140,7 +140,7 @@ export type CaseParty = {
 };
 
 /**
- * 올린 사진의 용도 (DEC-070 ③, 2026-11-27 사용자 요청): 판독 호출(Haiku)이 함께 고른다.
+ * 올린 사진의 용도 (DEC-073 ③, 2026-11-27 사용자 요청): 판독 호출(Haiku)이 함께 고른다.
  * case = 한 사건의 서류 → 로그인이면 사건 진행으로, 아니면 사건 정리(DeepSearch)로. question = 무엇인지·어떤 법인지 묻는 일반 사진 → 일반 답변.
  */
 export const READING_PURPOSES = ["case", "question"] as const;
@@ -194,7 +194,7 @@ export function composeCaseText(input: {
   return lines.join("\n");
 }
 
-/** 무엇인지 묻는 일반 사진(DEC-070 ③)의 기본 질문 */
+/** 무엇인지 묻는 일반 사진(DEC-073 ③)의 기본 질문 */
 export const DEFAULT_PHOTO_QUESTION = "이 사진이 무엇인지, 관련된 법과 알아 둘 점을 알려 주세요.";
 
 /**

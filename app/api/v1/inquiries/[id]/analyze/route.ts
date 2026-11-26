@@ -8,6 +8,7 @@ import { sseResponse } from "@/lib/api/sse";
 import { ApiError, ERROR_STATUS } from "@/lib/api/errors";
 import { findExampleFor } from "@/lib/demo/policy";
 import { analyzeInquiry } from "@/lib/inquiries/analyze";
+import { assertQuestionAllowed } from "@/lib/inquiries/abuse-guard";
 import {
   assertAnalyzable,
   assertAnonQuota,
@@ -37,7 +38,10 @@ type Ctx = { params: Promise<{ id: string }> };
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
   // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-036)·DeepSearch(DEC-038)·분야별 비서(DEC-057). 검증 실패는 소유자 확인 전에 400
-  const { category, tier, deep, assistant } = parseAnalyzeRequest(await req.text());
+  // 판례 아카이브 질문창(DEC-070): archive면 서버가 Light로 고정하고, focusCases(보고 있던 판례)를 근거에 더한다
+  const { category, tier, deep, assistant, archive, focusCases } = parseAnalyzeRequest(
+    await req.text(),
+  );
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
@@ -59,6 +63,9 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
 
+  // 남용 막기 (DEC-072): 모델을 부르기 전에 경고 한도와 규칙 판별을 다시 본다 (질문을 만든 뒤 바로 분석을 부르는 경로까지)
+  if (!example) await assertQuestionAllowed(inquiry.masked_text, owner, req.headers);
+
   // 분석 잠금 (DEC-065): 같은 질문을 이미 분석 중이면 새로 시작하지 않는다 — 새로고침·재접속으로 유료 분석이 두 번 돌지 않게.
   // 화면은 이 409(reason: in_progress)를 받으면 결과가 저장될 때까지 기다렸다가 읽는다
   if (!(await claimAnalysis(id))) throw new ApiError("INVALID_STATE", { reason: "in_progress" });
@@ -69,6 +76,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
       tier,
       deep,
       assistant,
+      ...(archive && { archive, focusCaseIds: focusCases }),
     });
     return ok({ status: "analyzed", ...out }, scope.requestId);
   }
@@ -82,6 +90,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
         tier,
         deep,
         assistant,
+        ...(archive && { archive, focusCaseIds: focusCases }),
         // 빠른 답 먼저 (DEC-064): 완성된 답보다 먼저 보이는 짧은 요약. 저장하지 않는다
         onPreview: (p) => send("preview", p),
       });
