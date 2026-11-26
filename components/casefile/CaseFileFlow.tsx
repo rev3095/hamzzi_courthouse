@@ -47,6 +47,7 @@ export function CaseFileFlow({
   error,
   auto = false,
   onAnalyze,
+  onRoute,
   onLimit,
   onClose,
 }: {
@@ -60,6 +61,11 @@ export function CaseFileFlow({
   /** 분석 요청이 실패했을 때의 문장 */
   error?: string | null;
   onAnalyze: (text: string, parties: CaseParty[]) => void;
+  /**
+   * 읽은 뒤 갈 곳을 정한다 (DEC-073 ③, auto일 때만): 일반 사진이면 일반 답변, 사건 서류면 로그인 사용자의 사건 진행.
+   * 맡아 처리했으면 true — 아니면 지금처럼 사건 정리(DeepSearch)로 분석한다
+   */
+  onRoute?: (reading: CaseReading) => Promise<boolean>;
   /** 하루 횟수를 다 썼을 때 — 창을 닫고 한도 안내를 띄운다 */
   onLimit: () => void;
   onClose: () => void;
@@ -90,6 +96,20 @@ export function CaseFileFlow({
     if (!r.data.ai.used || !r.data.reading) {
       const reason = r.data.ai.used ? "model_failed" : r.data.ai.reason;
       return setStep({ kind: "stopped", message: READ_UNAVAILABLE[reason] });
+    }
+    if (auto && r.data.reading.summary.trim() && onRoute) {
+      setSent(true);
+      if (await onRoute(r.data.reading)) {
+        // 다른 곳으로 보냈다. 보내기가 실패해 창이 남아 있으면 확인 화면(오류 문장 포함)을 보인다
+        return setStep({
+          kind: "review",
+          reading: r.data.reading,
+          findings: r.data.piiFindings,
+          notice: r.data.notice,
+          dropped: r.data.dropped ?? 0,
+        });
+      }
+      setSent(false);
     }
     if (auto && r.data.reading.summary.trim()) {
       const text = composeCaseText({

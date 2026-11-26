@@ -19,6 +19,7 @@ import {
   CASEFILE_LIMITS,
   CASEFILE_MEDIA_TYPES,
   DOC_TYPES,
+  READING_PURPOSES,
   PARTY_KINDS,
   PARTY_ROLES,
   PARTY_SIDES,
@@ -151,6 +152,8 @@ export const ReadingZ = z.object({
   parties: z.array(z.object({ role: Str, side: Str, kind: Str, name: Str })),
   // 가리는 데만 쓰는 목록 — screenReading이 개요·요구·당사자 이름에서 지운 뒤 버린다 (응답·로그에 싣지 않는다)
   personNames: z.array(Str),
+  // 사진 용도 (DEC-073 ③): 녹화된 예전 응답에는 없을 수 있어 선택으로 받는다 — 없으면 사건 서류로 본다
+  purpose: Str.optional(),
 });
 export type ReadingRaw = z.infer<typeof ReadingZ>;
 
@@ -168,8 +171,14 @@ const LIMITS = {
 export const READING_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["readable", "docTypes", "summary", "claims", "parties", "personNames"],
+  required: ["readable", "purpose", "docTypes", "summary", "claims", "parties", "personNames"],
   properties: {
+    purpose: {
+      type: "string",
+      enum: [...READING_PURPOSES],
+      description:
+        "case: 분쟁·절차가 있는 한 사건의 서류(내용증명·소장·고소장·계약서·지급명령·통지서·당사자 사이의 대화 캡처 등). question: 사건 서류가 아니라 무엇인지·어떤 법인지 묻는 일반 사진(안내문·표지판·법령 조문 화면·상품 표시·빈 양식·뉴스 화면 등). 함께 적은 질문도 보고 고른다",
+    },
     readable: { type: "boolean", description: "서류의 글자를 읽을 수 있었는지" },
     docTypes: {
       type: "array",
@@ -475,6 +484,7 @@ export function screenReading(raw: ReadingRaw): ScreenedReading | null {
 
   return {
     reading: {
+      purpose: raw.purpose === "question" ? "question" : "case",
       docTypes,
       summary,
       claims: maskedClaims,
