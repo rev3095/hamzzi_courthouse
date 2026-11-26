@@ -168,6 +168,10 @@ export type CaseDetailView = CaseRef & {
   sections: { section: string; text: string }[];
   fromBody: boolean;
   citedStatutes: { raw: string; id: string | null }[];
+  /** 참조판례 (DEC-072 ⓑ): 법제처 원문 토막과 그 사건번호 */
+  citedCases?: { label: string; caseNo: string }[];
+  /** 법제처 판결유형 ("판결"·"결정") */
+  decisionType?: string | null;
   notice: string;
 };
 export type StatuteView = {

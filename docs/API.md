@@ -261,6 +261,8 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - `id` = 법제처 판례일련번호(숫자). 전문은 주지 않는다(DEC-007, OQ-DM-05): 판시사항·판결요지, 둘 다 없을 때만 개인정보를 가린 본문 일부.
 - `citedStatutes`는 참조조문 원문에 적힌 "법령명 제N조"만 뽑는다. 같은 쉼표 목록에서 법령명 없이 이어지는 조문만 앞 법령명을 잇는다. "구 법령"·괄호 설명·"부칙"이 끼면 현행 조문과 다를 수 있어 `id: null`(링크 없음)로 원문 그대로 준다. `id`는 `/statutes/{id}` 형식이며 화면은 `?asOf=선고일`로 연다. 상세 1시간 120회(`details.reason: "lookup_hourly"`).
 
+- **참조판례·판결유형 (DEC-072 ⓑ)**: `citedCases: { label: string; caseNo: string }[]` — 법제처 참조판례 원문에서 사건번호가 든 토막만(공보 표기 괄호를 떼고, 자기 자신·중복 제외, 최대 12개). `decisionType: string | null` — 법제처 판결유형("판결"·"결정"). 화면은 참조판례를 누를 때만 그 사건번호로 `/cases`를 한 번 찾고, 인용 표기(기본·짧게·사건명 포함)는 이 값들을 잇기만 한다(`caseCitation`, lib/search/case-refs.ts).
+
 ### GET `/statutes/{id}?asOf=YYYY-MM-DD`
 `200 { ...StatuteRef, articleTitle, body, isCurrent: boolean, asOf?, versionAtDate?: StatuteRef | null, asOfNote?, notice }` — `id` = `법령명:제N조(의M)` (법령명 띄어쓰기 없음, URL 인코딩). 없으면 `404`.
 - `isCurrent` = 시행일이 오늘(한국 시각) 이전.

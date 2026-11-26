@@ -4,6 +4,7 @@
 import { ApiError } from "@/lib/api/errors";
 import { SEARCH_NOTICE } from "@/lib/api/respond";
 import { scanInput } from "@/lib/pii";
+import { citedCasesFrom } from "./case-refs";
 import { normalizeArticleNo } from "./normalize";
 import type { ArticleHit, CaseDetail, CaseHit } from "./types";
 
@@ -114,6 +115,9 @@ export function caseDetailResponse(d: CaseDetail) {
     sections,
     fromBody: d.fromBody,
     citedStatutes: citedStatutesFrom(d.refs),
+    // 참조판례 (DEC-072 ⓑ): 법제처 원문에서 사건번호가 든 토막만. 누르면 그 번호로 법제처에서 다시 찾는다
+    citedCases: citedCasesFrom(d.citedCasesRaw, d.caseNo),
+    decisionType: d.decisionType ?? null,
     notice: SEARCH_NOTICE,
   };
 }

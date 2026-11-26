@@ -495,6 +495,8 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
         holding,
         summary,
         refs: stripHtml(rec["참조조문"]),
+        citedCasesRaw: stripHtml(rec["참조판례"]),
+        decisionType: typeof rec["판결유형"] === "string" ? rec["판결유형"].trim() || null : null,
         fromBody,
         bodyExcerpt: fromBody ? bodyExcerpt(rec["판례내용"]) : null,
       };
