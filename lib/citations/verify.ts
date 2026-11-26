@@ -18,7 +18,7 @@ export async function verifyDraft(
   const sourceClaims: Claim[] = [];
   const textClaims: Claim[] = [];
   for (const p of draft.answer.points) {
-    // 답변 먼저(DEC-070): 모델이 쓴 문단도 본문에 적힌 조문·사건번호를 법제처에서 실존 확인한다
+    // 답변 먼저(DEC-071): 모델이 쓴 문단도 본문에 적힌 조문·사건번호를 법제처에서 실존 확인한다
     if (p.source === MODEL_SOURCE) {
       // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (근거 목록으로 법령을 짐작하지 않는다)
       textClaims.push(...claimsInText(p.text, new EvidenceSet()).claims);

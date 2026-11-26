@@ -220,7 +220,7 @@ export async function runDeepAnalysis(
     };
   }
 
-  // ② 쟁점별 검색 (법제처, 무료). 답변 먼저(DEC-070): 답변과 함께 돌리되 답변에는 넘기지 않고, 답변 뒤 근거 목록과
+  // ② 쟁점별 검색 (법제처, 무료). 답변 먼저(DEC-071): 답변과 함께 돌리되 답변에는 넘기지 않고, 답변 뒤 근거 목록과
   //    인용 확인에만 쓴다. 쟁점의 법률에서 찾은 조문을 앞에 두고, 사연 전체 검색 결과를 뒤에 잇는다
   const EMPTY = { articles: [], cases: [], searches: [] } as Awaited<ReturnType<typeof freeSearch>>;
   const searchRun = Promise.all([

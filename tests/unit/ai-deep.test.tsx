@@ -230,7 +230,7 @@ describe("DEC-041 사건 구조와 시각자료", () => {
   const result = {
     aiNotice: "AI 생성 · 무료 법률 상담",
     deep: map,
-    // 답변 먼저(DEC-070): 모델 문단에 법제처에서 있다고 확인된 인용이 붙는다
+    // 답변 먼저(DEC-071): 모델 문단에 법제처에서 있다고 확인된 인용이 붙는다
     answer: {
       points: [
         { ...kept[1], check: "model", confirmed: [{ label: "2020다12345" }] },

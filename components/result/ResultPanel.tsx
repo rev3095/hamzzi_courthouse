@@ -727,7 +727,7 @@ function VerifyTab({ result }: { result: DemoAnalysisResult }) {
   const mismatched = result.answer.points
     .map((p, i) => ({ p, n: i + 1 }))
     .filter(({ p }) => p.check === "quote_mismatch");
-  // 답변 먼저(DEC-070): 모든 문단이 모델 문단이면 원문 구절 대조는 하지 않고 실존만 확인한다
+  // 답변 먼저(DEC-071): 모든 문단이 모델 문단이면 원문 구절 대조는 하지 않고 실존만 확인한다
   const modelOnly = result.answer.points.every((p) => p.check === "model");
   return (
     <div>

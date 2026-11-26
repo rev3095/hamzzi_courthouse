@@ -211,7 +211,7 @@ describe("F-005 AC2 최종 결과 조립", () => {
     expect(stats.removed).toBe(0);
   });
 
-  test("DEC-070 답변 먼저: 모델 문단의 인용이 있다고 확인되면 법제처 링크를 붙이고, 없다고 확인되면 문단을 뺀다", () => {
+  test("DEC-071 답변 먼저: 모델 문단의 인용이 있다고 확인되면 법제처 링크를 붙이고, 없다고 확인되면 문단을 뺀다", () => {
     const { result, citations, stats } = assembleResult({
       draft: draft([
         {

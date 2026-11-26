@@ -217,7 +217,7 @@ export async function runLiteAnalysis(
     general && tier.id !== "light" && deps.reserveWebRefs && (await deps.reserveWebRefs())
       ? runWebRefs(input.maskedText)
       : null;
-  // 답변 먼저 (DEC-070, 2026-11-27 사용자 결정): 법제처 검색은 답변과 함께 돌리되 답변에는 넘기지 않는다.
+  // 답변 먼저 (DEC-071, 2026-11-27 사용자 결정): 법제처 검색은 답변과 함께 돌리되 답변에는 넘기지 않는다.
   // 답변이 끝난 뒤 그 결과로 근거 목록을 채우고, 답변 속 조문·사건번호를 법제처에서 확인한다(verifyDraft).
   // 검색이 실패해도 답변은 그대로 나간다
   const EMPTY = { articles: [], cases: [], searches: [] } as Awaited<ReturnType<typeof freeSearch>>;

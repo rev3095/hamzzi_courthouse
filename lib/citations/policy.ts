@@ -132,7 +132,7 @@ export function uniqueClaims(claims: Claim[]): { statutes: string[]; cases: stri
 export type CheckedPoint = DraftPoint & {
   check: "verified" | "quote_mismatch" | "model";
   /**
-   * 답변 먼저(DEC-070): 모델이 쓴 문단 본문의 조문·사건번호 가운데 법제처에서 실존이 확인된 것.
+   * 답변 먼저(DEC-071): 모델이 쓴 문단 본문의 조문·사건번호 가운데 법제처에서 실존이 확인된 것.
    * 원문 구절 대조는 하지 않은 "있음 확인"이다. url은 법제처 원문 주소(알 때만)
    */
   confirmed?: { label: string; url?: string }[];
@@ -215,7 +215,7 @@ export function assembleResult(input: {
 
   for (const p of draft.answer.points) {
     if (p.source === MODEL_SOURCE) {
-      // 답변 먼저(DEC-070): 본문 인용을 법제처에서 확인한다. 없다고 확인된 인용이 있으면 문단을 빼고,
+      // 답변 먼저(DEC-071): 본문 인용을 법제처에서 확인한다. 없다고 확인된 인용이 있으면 문단을 빼고,
       // 있다고 확인된 것은 원문 링크와 함께 붙이며, 조회 실패·판정 불가는 그대로 둔다
       // 모델은 근거 목록을 보지 않고 썼으므로 본문에 법령 이름이 적힌 인용만 확인한다 (verify.ts와 같은 기준)
       const inText = claimsInText(p.text, new EvidenceSet()).claims;
