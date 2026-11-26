@@ -153,7 +153,10 @@ export async function runSearchAnswer(input: {
   const m = searchModel();
   try {
     const it = await interpretSearch(m, { query: q, focus });
-    if (!it.ok) return view(null, false, it.reason);
+    if (!it.ok) {
+      rememberMiss(mode, key, it.reason, now);
+      return view(null, false, it.reason);
+    }
     // 짧은 검색어를 모델이 잘못 볼 수 있어 경고는 세지 않고(상담까지 막히지 않게) AI 답만 쉰다. 잠깐 기억해 다시 부르지 않는다
     if (it.interp.offTopic) {
       rememberMiss(mode, key, "off_topic", now);

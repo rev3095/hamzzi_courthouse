@@ -49,12 +49,12 @@ const NOUN_END =
 
 /**
  * 맨 이름 + 낱말 꼴("홍길동 횡령")인지 — 이름 감지(scanInput)는 호칭·조사가 있어야 잡으므로, 저장할 때만 한 번 더 보수적으로 본다.
- * 낱말이 둘 이상이고, 그중 하나가 '성씨로 시작하는 세 글자 한글'이며 법률 낱말 끝 글자로 끝나지 않으면 이름일 수 있다고 본다.
+ * 낱말 하나라도 '성씨로 시작하는 세 글자 한글'이며 법률 낱말 끝 글자로 끝나지 않으면 이름일 수 있다고 본다("홍길동" 하나만 친 것 포함).
+ * 두 글자·네 글자 이름은 법률 낱말과 너무 겹쳐 보지 않는다(검색 API의 scanInput이 호칭·조사 문맥으로 먼저 거른다).
  * 잘못 걸려도 그 검색어를 저장·재사용하지 않을 뿐이다 (답은 그대로 만든다).
  */
 export function looksLikeBareName(n: string): boolean {
   const words = n.split(" ").filter(Boolean);
-  if (words.length < 2) return false;
   return words.some(
     (w) => /^[가-힣]{3}$/.test(w) && SURNAME.includes(w[0]) && !NOUN_END.includes(w[w.length - 1]),
   );

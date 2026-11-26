@@ -61,7 +61,7 @@ describe("DEC-076 저장 키·저장 가능한 검색어", () => {
   });
 
   test("맨 이름 + 낱말 꼴은 저장하지 않는다 — 흔한 법률 낱말은 그대로 저장한다", () => {
-    for (const q of ["홍길동 횡령", "김철수 사기 고소", "박영희 손해배상"])
+    for (const q of ["홍길동 횡령", "김철수 사기 고소", "박영희 손해배상", "홍길동"])
       expect(storableQuery(q), q).toBe(false);
     for (const q of [
       "임대차 보증금",
@@ -73,6 +73,8 @@ describe("DEC-076 저장 키·저장 가능한 검색어", () => {
       "공무원 징계",
       "양육비 이행",
       "변호사 선임",
+      "임대차",
+      "유류분",
     ])
       expect(storableQuery(q), q).toBe(true);
   });
