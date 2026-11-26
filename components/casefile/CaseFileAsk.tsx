@@ -6,8 +6,7 @@ import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { CASEFILE_LIMITS } from "@/lib/casefile/limits";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
-import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
-import { limitCopy } from "../LimitNotice";
+import { dailyLimitLine, limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useQuota } from "../useQuota";
@@ -85,7 +84,7 @@ export function CaseFileAsk({ examples }: { examples?: ReactNode }) {
         <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
           {blocked
             ? limitCopy(signedIn).body
-            : `서류 분석도 질문 1번으로 세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요.`}
+            : `서류 분석도 질문 1번으로 세요. ${dailyLimitLine(signedIn)}`}
         </p>
       )}
 

@@ -1,4 +1,4 @@
-// 전문 에이전트 소개 /assistants (F-018, DEC-057). 헤더 ☰ 메뉴의 "전문 에이전트"가 여기로 온다.
+// 전문 에이전트 소개 /assistants (F-018, DEC-057). 홈 아래 카드·푸터의 "전문 에이전트"가 여기로 온다 (DEC-067로 ☰ 메뉴에서 뺐다).
 // 고정 문안만 쓴다(AI 없음). 모델 이름은 화면에 싣지 않는다(답변 모드 이름만, 2026-11-19 사용자 요청).
 import type { Metadata } from "next";
 import Link from "next/link";

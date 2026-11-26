@@ -29,15 +29,7 @@ describe("헤더 메뉴 (DEC-051)", () => {
     fireEvent.click(button);
     expect(button.getAttribute("aria-expanded")).toBe("true");
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual([
-      "/community",
-      "/assistants",
-      "/about",
-      "/about/features",
-      "/about/roadmap",
-      "/about/developer",
-      "/about/developer#contact",
-    ]);
+    expect(hrefs).toEqual(["/about", "/about/features", "/about/roadmap", "/about/developer"]);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("link")).toBeNull();
   });
