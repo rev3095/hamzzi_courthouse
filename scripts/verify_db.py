@@ -562,6 +562,25 @@ def inquiry_materials(conn) -> None:
     conn.execute("delete from auth.users where id = %s", (owner,))
 
 
+def analysis_lock(conn) -> None:
+    print("[11] 분석 잠금 (DEC-065)")
+    owner = make_user(conn)
+    iid = scalar(conn, "insert into public.inquiries (user_id, masked_text) values (%s, '[검증] 마스킹본') returning id", (owner,))
+    check(scalar(conn, "select analysis_started_at is null from public.inquiries where id = %s", (iid,)) is True,
+          "새 질문은 잠금이 비어 있다")
+    # 서버(store.claimAnalysis)와 같은 조건부 update: 비었거나 320초보다 오래된 잠금만 잡는다
+    claim = ("update public.inquiries set analysis_started_at = now() where id = %s and status in ('draft', 'failed') "
+             "and (analysis_started_at is null or analysis_started_at < now() - interval '320 seconds') returning id")
+    check(conn.execute(claim, (iid,)).fetchone() is not None, "첫 요청은 잠금을 잡는다")
+    check(conn.execute(claim, (iid,)).fetchone() is None, "분석 중에 온 두 번째 요청은 잡지 못한다")
+    conn.execute("update public.inquiries set analysis_started_at = now() - interval '400 seconds' where id = %s", (iid,))
+    check(conn.execute(claim, (iid,)).fetchone() is not None, "오래된 잠금은 다시 잡을 수 있다")
+    conn.execute("update public.inquiries set status = 'analyzed' where id = %s", (iid,))
+    conn.execute("update public.inquiries set analysis_started_at = null where id = %s", (iid,))
+    check(conn.execute(claim, (iid,)).fetchone() is None, "분석을 마친 질문은 잡지 못한다")
+    conn.execute("delete from auth.users where id = %s", (owner,))
+
+
 def main() -> int:
     url = os.environ.get("SUPABASE_DB_URL")
     if not url:
@@ -572,7 +591,7 @@ def main() -> int:
             print(f"Postgres {scalar(conn, 'show server_version')} — 검사 후 ROLLBACK")
             try:
                 with conn.transaction(force_rollback=True):
-                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials):
+                    for step in (schema, grants, gates, anon_quota, rls, citations, finish, ops, matters, inquiry_materials, analysis_lock):
                         try:
                             with conn.transaction():
                                 step(conn)

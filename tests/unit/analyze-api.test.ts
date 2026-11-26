@@ -13,6 +13,7 @@ const store = vi.hoisted(() => ({
   getUserQuestionsUsed: vi.fn(),
   assertAnonIpAvailable: vi.fn(),
   claimInquiryForUser: vi.fn(),
+  claimAnalysis: vi.fn(),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
 const runner = vi.hoisted(() => ({ analyzeInquiry: vi.fn() }));
@@ -76,10 +77,21 @@ beforeEach(() => {
   store.getAnonQuestionsUsed.mockResolvedValue(0);
   store.getUserQuestionsUsed.mockResolvedValue(0);
   store.assertAnonIpAvailable.mockResolvedValue(undefined);
+  store.claimAnalysis.mockResolvedValue(true);
   runner.analyzeInquiry.mockResolvedValue({ resultId: "r-1", result: RESULT });
 });
 
 describe("POST /inquiries/{id}/analyze", () => {
+  test("DEC-065 같은 질문을 이미 분석 중이면 새로 시작하지 않고 409 in_progress", async () => {
+    store.claimAnalysis.mockResolvedValue(false);
+    const res = await call();
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error.code).toBe("INVALID_STATE");
+    expect(body.error.details).toEqual({ reason: "in_progress" });
+    expect(runner.analyzeInquiry).not.toHaveBeenCalled();
+  });
+
   test("F-005 검증된 결과를 AI 고지와 함께 돌려준다 (JSON)", async () => {
     const res = await call();
     const body = await res.json();

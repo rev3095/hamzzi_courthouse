@@ -28,6 +28,7 @@ import {
   finishedResultId,
   initialPiiFindings,
   isOwner,
+  ANALYSIS_LOCK_MS,
 } from "./policy";
 
 export type { Owner } from "./policy";
@@ -335,12 +336,34 @@ export async function finishAnalysis(
 }
 
 /** 분석 실패 표시 (재시도 허용). 실패 처리 중 오류는 원래 오류를 가리지 않게 삼킨다 */
+/**
+ * 분석 잠금 잡기 (DEC-065). 비어 있거나 ANALYSIS_LOCK_MS보다 오래된 잠금만 한 번의 조건부 update로 잡는다 — 동시에 두 요청이 와도 하나만 잡는다.
+ * 잡았으면 true, 다른 요청이 분석 중이면 false. 잠금 컬럼이 아직 없는 DB(마이그레이션 전)에서는 잠금 없이 지금처럼 분석한다.
+ */
+export async function claimAnalysis(inquiryId: string): Promise<boolean> {
+  const now = new Date();
+  const stale = new Date(now.getTime() - ANALYSIS_LOCK_MS).toISOString();
+  const { data, error } = await createServiceClient()
+    .from("inquiries")
+    .update({ analysis_started_at: now.toISOString() })
+    .eq("id", inquiryId)
+    .in("status", ["draft", "failed"])
+    .or(`analysis_started_at.is.null,analysis_started_at.lt.${stale}`)
+    .select("id");
+  if (error) {
+    // 잠금 컬럼이 아직 없는 DB(마이그레이션 전)만 잠금 없이 연다. 그 밖의 DB 오류는 올려 분석을 시작하지 않는다
+    if (error.code === "42703" || error.code === "PGRST204") return true;
+    throw new Error("claimAnalysis 실패");
+  }
+  return (data ?? []).length > 0;
+}
+
 export async function markInquiryFailed(inquiryId: string) {
   try {
-    // 같은 질문의 다른 요청이 이미 analyzed로 마쳤으면 덮어쓰지 않는다
+    // 같은 질문의 다른 요청이 이미 analyzed로 마쳤으면 덮어쓰지 않는다. 잠금을 풀어 바로 다시 시도할 수 있게 한다 (DEC-065)
     await createServiceClient()
       .from("inquiries")
-      .update({ status: "failed" })
+      .update({ status: "failed", analysis_started_at: null })
       .eq("id", inquiryId)
       .neq("status", "analyzed");
   } catch {
