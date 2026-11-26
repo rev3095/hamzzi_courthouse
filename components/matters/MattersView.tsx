@@ -22,6 +22,7 @@ import { MatterBoard } from "./MatterBoard";
 import { PresetWorkspace } from "./PresetWorkspace";
 import type { TabKey } from "./tabs";
 import { Empty, MatterCard, SectionTitle } from "./ui";
+import { PAGE_LEAD, PAGE_TITLE } from "@/components/ui/styles";
 
 type Save = "idle" | "saving" | "saved" | "failed";
 
@@ -48,13 +49,9 @@ export function MattersView() {
 /** 사건 목록 화면의 머리 패널. 로그인하면 여기서 바로 새 사건을 만든다 */
 function HomeHead({ children }: { children?: ReactNode }) {
   return (
-    <section
-      aria-label="사건 진행"
-      className="rounded-panel bg-ink px-[18px] py-[22px] text-white lg:px-8 lg:py-8"
-    >
-      <p className="text-xs font-bold tracking-[0.14em] text-white/70">CASE WORKSPACE</p>
-      <h1 className="font-display mt-1 text-[26px] font-bold">사건 진행</h1>
-      <p className="mt-1 text-sm text-white/75">
+    <section aria-label="사건 진행">
+      <h1 className={PAGE_TITLE}>사건 진행</h1>
+      <p className={PAGE_LEAD}>
         서류를 올리면 사실관계·당사자·쟁점으로 나눠 담는 정리 도구예요. 판단은 하지 않아요.
       </p>
       {children}
@@ -183,7 +180,7 @@ function Workspace() {
         firstTab={firstTab}
         onBack={() => void back()}
         status={
-          <span className="text-[12px] text-white/70" aria-live="polite" data-testid="save-state">
+          <span className="text-muted text-[13px]" aria-live="polite" data-testid="save-state">
             {save === "saving"
               ? "저장 중…"
               : save === "saved"
@@ -222,7 +219,7 @@ function Workspace() {
               }}
             >
               <input
-                className="text-ink placeholder:text-muted/70 min-h-12 w-full rounded-[8px] border border-white bg-white px-4 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                className="text-ink placeholder:text-muted/70 border-line focus-visible:border-ink rounded-button min-h-12 w-full border bg-white px-4 text-[15px] outline-none"
                 value={title}
                 maxLength={80}
                 placeholder="새 사건 이름 (예: 용역 대금 내용증명)"
@@ -231,13 +228,13 @@ function Workspace() {
               />
               <button
                 type="submit"
-                className="text-ink min-h-12 shrink-0 rounded-[8px] bg-white px-5 text-[14px] font-bold whitespace-nowrap disabled:opacity-50"
+                className="bg-ink rounded-button min-h-12 shrink-0 px-5 text-[14px] font-bold whitespace-nowrap text-white disabled:opacity-50"
                 disabled={!title.trim()}
               >
                 사건 만들기
               </button>
             </form>
-            <p className="mt-2 text-[12px] text-white/60">
+            <p className="text-muted mt-2 text-[13px]">
               만들면 바로 서류 올리기로 넘어가요. 사건 자료는 내 계정에 저장돼요.
             </p>
           </HomeHead>

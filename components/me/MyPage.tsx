@@ -16,6 +16,7 @@ import { setGuideBotEnabled, useGuideBotEnabled } from "@/lib/client/prefs";
 import { GoogleLoginButton, LOGIN_MORE_TEXT } from "../LimitNotice";
 import { useQuota } from "../useQuota";
 import { MyWorkspace } from "./MyWorkspace";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 const noSubscribe = () => () => {};
 /** /auth/callback이 실패하면 /me?login=failed로 돌려보낸다 */
@@ -63,7 +64,7 @@ export function MyPage() {
 
   return (
     <div className="mx-auto w-full max-w-[560px] space-y-5 px-4 py-10">
-      <h1 className="font-display text-ink text-[28px] font-bold">마이페이지</h1>
+      <h1 className={PAGE_TITLE}>마이페이지</h1>
 
       <section aria-labelledby="me-profile" className={card}>
         <div className="flex items-center gap-4">

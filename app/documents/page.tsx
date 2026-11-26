@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DOCUMENT_GROUPS } from "@/lib/documents/catalog";
 import { CHECK_NOTICE, DOCUMENT_SPECS } from "@/lib/documents/policy";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 export const metadata: Metadata = { title: "문서 작성 · 햄찌법원" };
 
@@ -12,7 +13,7 @@ export default function DocumentsPage() {
   return (
     <main className="bg-bg flex flex-1 flex-col">
       <div className="mx-auto w-full max-w-[1120px] px-4 py-8 lg:py-12">
-        <h1 className="font-display text-ink text-[30px] font-bold lg:text-[38px]">문서 작성</h1>
+        <h1 className={PAGE_TITLE}>문서 작성</h1>
         <p className="text-muted mt-2 max-w-[720px] text-[15px] leading-relaxed">
           내용증명·소장·고소장 같은 서류를 질문에 답하며 채우고, 한글(HWPX)·워드·PDF로 내려받아요.
           모두 무료이고, 적은 내용은 저장하지 않아요.

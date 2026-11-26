@@ -4,6 +4,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ABOUT_NOTICE, ABOUT_PAGES, type AboutHref, type AboutSection } from "@/lib/about/content";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 export function AboutShell({
   current,
@@ -33,7 +34,7 @@ export function AboutShell({
           </Link>
         ))}
       </nav>
-      <h1 className="font-display text-ink mt-8 text-[28px] leading-tight font-bold">{title}</h1>
+      <h1 className={`${PAGE_TITLE} mt-8`}>{title}</h1>
       {lead && <p className="text-ink mt-3 text-[17px] leading-relaxed">{lead}</p>}
       <div className="text-ink mt-8 flex flex-col gap-10 text-[15px] leading-[1.8]">{children}</div>
       <p className="text-muted border-line mt-12 border-t pt-4 text-[12px]">{ABOUT_NOTICE}</p>

@@ -9,6 +9,7 @@ import { ResearchTab, type ResearchSeed } from "./ResearchTab";
 import { StructureMap } from "./StructureMap";
 import { DocsTab, FactsTab, IssuesTab, NotesTab, OverviewTab, type TabKey } from "./tabs";
 import { btnLine } from "./ui";
+import { pillTab } from "@/components/ui/styles";
 
 /** 진행 단계 묶음. 화면에 보이는 메뉴 글자는 여기 한 곳에서만 관리한다 */
 export const STAGES: { label: string; tabs: { key: TabKey; name: string }[] }[] = [
@@ -92,20 +93,22 @@ export function MatterBoard({
     <div ref={top} className="scroll-mt-4">
       <section
         aria-label="사건"
-        className="rounded-panel bg-ink px-[18px] py-[18px] text-white lg:px-8 lg:py-6"
+        className="rounded-panel border-line border bg-white px-[18px] py-[18px] lg:px-8 lg:py-6"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <button
             type="button"
             onClick={onBack}
-            className="min-h-10 text-[13px] font-semibold text-white/75 underline-offset-4 hover:text-white hover:underline"
+            className="text-muted hover:text-ink min-h-11 text-[14px] font-semibold underline-offset-4 hover:underline"
           >
             ← 사건 목록
           </button>
           {status}
         </div>
-        <h1 className="font-display mt-1 truncate text-[22px] font-bold lg:text-[24px]">{title}</h1>
-        <p className="mt-1 text-[13px] text-white/70">
+        <h1 className="font-display text-ink mt-1 truncate text-[24px] font-bold lg:text-[28px]">
+          {title}
+        </h1>
+        <p className="text-muted mt-1 text-[13px]">
           자료 {data.docs.length} · 사실 {data.facts.length} · 당사자 {data.parties.length} · 쟁점{" "}
           {data.issues.length} · 노트 {data.notes.length}
         </p>
@@ -116,7 +119,7 @@ export function MatterBoard({
         >
           {STAGES.map((s) => (
             <div key={s.label} role="presentation" className="shrink-0">
-              <p className="text-[11px] font-bold tracking-wide text-white/60">{s.label}</p>
+              <p className="text-muted text-[12px] font-bold">{s.label}</p>
               <div role="presentation" className="mt-1.5 flex gap-1.5">
                 {s.tabs.map((t) => (
                   <button
@@ -125,11 +128,7 @@ export function MatterBoard({
                     role="tab"
                     aria-selected={tab === t.key}
                     onClick={() => setTab(t.key)}
-                    className={`min-h-10 rounded-[6px] border px-3.5 text-[13px] font-semibold whitespace-nowrap ${
-                      tab === t.key
-                        ? "text-ink border-white bg-white"
-                        : "border-white/25 text-white hover:border-white"
-                    }`}
+                    className={pillTab(tab === t.key)}
                   >
                     {t.name}
                   </button>

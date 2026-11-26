@@ -1,6 +1,7 @@
 // S-08 정책 · 출처 표기 (/privacy · /terms · /sources). 문구는 초안이며 법무·법제처 이용조건 확인 후 확정한다 (P10).
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { PAGE_TITLE } from "@/components/ui/styles";
 
 const PAGES = [
   { href: "/privacy", label: "개인정보처리방침" },
@@ -36,7 +37,7 @@ export function PolicyPage({
           </Link>
         ))}
       </nav>
-      <h1 className="font-display text-ink mt-8 text-[28px] font-bold">{title}</h1>
+      <h1 className={`${PAGE_TITLE} mt-8`}>{title}</h1>
       {draft && (
         <p className="rounded-card border-note-line bg-note text-warn-text mt-3 border px-4 py-3 text-sm leading-relaxed">
           초안 · 법무 검토 전입니다. 데모 기간에 쓰는 임시 문서이며, 검토 후 내용이 바뀔 수 있어요.
