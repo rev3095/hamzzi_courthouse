@@ -269,6 +269,10 @@ q: string (필수, 공백이면 EMPTY_INPUT, 100자 이하); limit?: number (1~2
 - **그 날짜의 조문 (DEC-029 제안)**: `asOf`가 현행 시행일보다 앞선 과거 날짜면 법제처 연혁에서 그날 시행 중이던 버전의 같은 번호 조문을 가져와 `atDate: { lawName, articleNo, articleTitle, body, effectiveFrom, version: LawVersion, sameAsCurrent, diff: [{ type: "same"|"removed"|"added", text }] }`로 준다(`LawVersion` = `{ mst, lawName, effectiveFrom, promulgatedAt, promulgationNo, revisionType }`, `diff`는 그날 조문 → 현행 조문 줄 단위 비교). 그날 시행 버전이 없거나(제정 전·폐지 후) 같은 번호 조문이 없거나 법제처 조회에 실패하면 만들지 않고 `atDate: null` + `asOfNote`. 조문 번호가 바뀐 경우는 따라가지 않는다.
 - `asOf`가 시행일 이후이고 오늘 이전이며 조문이 지금 시행 중이면 그 시점에도 같은 조문이므로 `versionAtDate` = 현행 ref. 그 밖(시행일 이전·미래 날짜·시행 전 조문)은 시점별 조문을 만들지 않고 `versionAtDate: null` + `asOfNote` (F-004 AC1 — 판결 당시 조문 제공은 OQ로 남김).
 
+### GET `/statutes/{id}/compare?from=YYYY-MM-DD&to=YYYY-MM-DD` · GET `/statutes/{id}/history` (DEC-072 ⓔ)
+- 비교 → `{ lawName, articleNo, from: Side, to: Side, diff: DiffPart[] | null, same: boolean | null, sameVersion: boolean, notice }`. `Side` = 찾았으면 `{ date, found: true, lawName, articleNo, articleTitle, body, version: LawVersion }`, 아니면 `{ date, found: false, note, version: LawVersion | null }`(제정 전·폐지 뒤·조문 없음·불러오지 못함 안내 — 내용을 만들지 않는다). 두 날짜에 시행 중이던 버전을 법제처 연혁에서 찾아 같은 번호 조문을 가져오고, 둘 다 있으면 줄 단위 비교(`diffLines`, from → to)를 싣는다. 날짜 꼴이 틀리거나 `from ≥ to`면 법제처 전에 `400 VALIDATION_ERROR`(`details.field`). 상한은 `LOOKUP_RATE`.
+- 개정 이력 → `{ lawName, articleNo, items: { mst, promulgatedAt, effectiveFrom, revisionType, changeReason }[], notice }` — 법제처 조문 개정 이력(`lsJoHstInf`)의 법령일련번호·공포일·조문 시행일(없으면 법령 시행일)·제개정구분명·변경사유를 그대로, 시행일 내림차순. 법령을 찾지 못하면 `404`. 개정의 영향·중요도는 판단하지 않는다.
+
 ### GET `/statutes/{id}/cases` (DEC-029 제안)
 `200 { items: CaseRef[], outcome, searchScopeNote, notice }` — 판결 본문에 "법령명 제N조"가 나오는 판례(법제처 본문 검색, 최대 6건). 관련도 점수 없음, 느슨한 대체 검색 없음. 상세 상한(`lookup_hourly`)에 함께 센다.
 

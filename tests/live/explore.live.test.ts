@@ -120,6 +120,13 @@ describe.skipIf(!process.env.OPEN_LAW_API_KEY)("법제처 실호출 — 탐색 �
     expect([...dates].sort().reverse()).toEqual(dates);
   });
 
+  test("조문 개정 이력(DEC-072 ⓔ): 법제처 lsJoHstInf에서 시행일·개정 구분이 온다", async () => {
+    const h = await source.articleHistory("주택임대차보호법", "제3조");
+    expect(h?.items.length).toBeGreaterThan(0);
+    expect(h!.items[0].effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(h!.items.some((r) => r.revisionType)).toBe(true);
+  });
+
   test("법령 이름 일부로 찾기: '의료기기' → 의료기기법과 그 시행령·시행규칙", async () => {
     const names = (await source.searchLaws("의료기기")).map((h) => h.name);
     expect(names).toEqual(

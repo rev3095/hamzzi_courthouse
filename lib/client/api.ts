@@ -364,6 +364,44 @@ export const searchAdminRules = (q: string) =>
 export const searchLaws = (q: string) => post<Listed<LawRef>>("/api/v1/laws", { q });
 export const getStatuteCases = (id: string) =>
   call<Listed<CaseRef>>(`/api/v1/statutes/${encodeURIComponent(id)}/cases`);
+/** 두 날짜 조문 비교 (DEC-072 ⓔ) */
+export type CompareSideView =
+  | {
+      date: string;
+      found: true;
+      lawName: string;
+      articleNo: string;
+      articleTitle: string;
+      body: string;
+      version: LawVersionView;
+    }
+  | { date: string; found: false; note: string; version: LawVersionView | null };
+export type StatuteCompareView = {
+  lawName: string;
+  articleNo: string;
+  from: CompareSideView;
+  to: CompareSideView;
+  diff: DiffPart[] | null;
+  same: boolean | null;
+  sameVersion: boolean;
+  notice: string;
+};
+export const compareStatute = (id: string, from: string, to: string) =>
+  call<StatuteCompareView>(
+    `/api/v1/statutes/${encodeURIComponent(id)}/compare?${new URLSearchParams({ from, to })}`,
+  );
+/** 조문 개정 이력 (DEC-072 ⓔ, 법제처 값 그대로) */
+export type ArticleRevisionView = {
+  mst: string | null;
+  promulgatedAt: string | null;
+  effectiveFrom: string | null;
+  revisionType: string | null;
+  changeReason: string | null;
+};
+export const getStatuteHistory = (id: string) =>
+  call<{ lawName: string; articleNo: string; items: ArticleRevisionView[]; notice: string }>(
+    `/api/v1/statutes/${encodeURIComponent(id)}/history`,
+  );
 export const getStatuteAt = (id: string, asOf?: string) =>
   getStatute(id, asOf) as Promise<ApiResult<StatuteTimeView>>;
 

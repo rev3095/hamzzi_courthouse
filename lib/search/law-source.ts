@@ -52,6 +52,7 @@ import {
   parseOldNew,
   threeTier,
 } from "./explore";
+import { articleRevisions, type ArticleRevision } from "./article-time";
 import { precPage, precSearchParams, type CaseFilter } from "./case-filter";
 import type {
   AdminRuleHit,
@@ -119,6 +120,11 @@ export type LawExplorer = {
     query: string,
     filter: CaseFilter,
   ): Promise<{ total: number; items: (CaseHit & { caseType: string | null })[] }>;
+  /** 조문 개정 이력 (DEC-072 ⓔ, 법제처 lsJoHstInf). 법령이 없으면 null */
+  articleHistory(
+    lawName: string,
+    articleNo: string,
+  ): Promise<{ lawName: string; articleNo: string; items: ArticleRevision[] } | null>;
   /** 이름에 검색어가 든 현행 법령 목록 (법제처 부분 일치, 가나다순 그대로) */
   searchLaws(query: string, limit?: number): Promise<LawHit[]>;
 };
@@ -396,6 +402,23 @@ export function createLawSource(options: LawSourceOptions = {}): LawSource & Law
         }),
       );
       return precPage(xml);
+    },
+
+    async articleHistory(lawName, articleNo) {
+      const no = normalizeArticleNo(articleNo);
+      if (!no) return null;
+      const law = await resolveLaw(lawName);
+      if (!law?.lawId) return null;
+      const xml = await call("article_history", () =>
+        client.getArticleHistory({
+          lawId: law.lawId,
+          jo: buildJO(no),
+          fromRegDt: "19480101",
+          toRegDt: "20991231",
+          display: 100,
+        }),
+      );
+      return { lawName: law.lawName, articleNo: no, items: articleRevisions(xml) };
     },
 
     async searchLaws(query, limit = 30) {

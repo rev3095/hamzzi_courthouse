@@ -28,6 +28,7 @@ import {
 } from "./parts";
 import { AskArchive } from "./AskArchive";
 import { CaseActions, CitedCases, SameStatuteCases } from "./CaseExtras";
+import { StatuteTime } from "./StatuteTime";
 import { useRecordRecent } from "./recent";
 
 const noSubscribe = () => () => {};
@@ -520,6 +521,9 @@ export function StatuteRoute() {
           )}
         </section>
       )}
+
+      {/* 두 날짜 비교·조문 개정 이력 (DEC-072 ⓔ) */}
+      <StatuteTime id={s.id} initialFrom={s.asOf ?? undefined} />
 
       <section className="mt-8" aria-label="법령 도구">
         <H2>{s.lawName} 더 살펴보기</H2>
