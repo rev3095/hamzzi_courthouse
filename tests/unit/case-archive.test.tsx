@@ -1,5 +1,5 @@
-// 판례 아카이브 (DEC-054, F-003): 헤더 선택창, 검색 ↔ 리서치 전환(검색어는 주소에 싣지 않음), 같은 보관함.
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+// 판례 아카이브 (DEC-054, F-003): 검색 ↔ 리서치 전환(검색어는 주소에 싣지 않음), 같은 보관함.
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 let search = new URLSearchParams();
@@ -15,7 +15,6 @@ vi.mock("@/lib/client/api", async (orig) => ({
   getCaseDetail: api.getCaseDetail,
 }));
 
-const { ArchiveMenu } = await import("@/components/search/ArchiveMenu");
 const { archiveHref } = await import("@/components/search/ArchiveSwitch");
 const { SearchView, QUICK_QUERIES } = await import("@/components/search/SearchView");
 const { ResearchView } = await import("@/components/search/ResearchView");
@@ -46,19 +45,6 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   window.history.replaceState(null, "", "/");
-});
-
-describe("헤더 판례 아카이브 (DEC-054)", () => {
-  test("누르면 검색·리서치 중 하나를 고른다", () => {
-    render(<ArchiveMenu />);
-    fireEvent.click(screen.getByRole("button", { name: /판례 아카이브/ }));
-    const nav = screen.getByRole("navigation", { name: "판례 아카이브" });
-    expect(
-      within(nav)
-        .getAllByRole("link")
-        .map((a) => a.getAttribute("href")),
-    ).toEqual(["/search", "/research"]);
-  });
 });
 
 describe("검색 ↔ 리서치 전환 (DEC-054)", () => {

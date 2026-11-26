@@ -10,11 +10,10 @@
 import Link from "next/link";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { isQuotaBlocked, isSignedIn } from "@/lib/client/api";
-import { ANON_QUESTION_LIMIT, USER_QUESTION_LIMIT } from "@/lib/inquiries/policy";
 import { CATEGORIES, isCategoryKey, type CategoryKey } from "@/lib/procedure/categories";
 import { AssistantCards } from "../assistants/AssistantCards";
 import { DeepAsk } from "../ask/DeepAsk";
-import { limitCopy } from "../LimitNotice";
+import { dailyLimitLine, limitCopy } from "../LimitNotice";
 import { QuestionBox } from "../ask/QuestionBox";
 import { useAsk } from "../ask/useAsk";
 import { useAttachments } from "../ask/useAttachments";
@@ -178,7 +177,7 @@ export function HomeAsk({ examples }: { examples: GuideExample[] }) {
           <p className="text-muted mt-3 text-center text-[13px] leading-relaxed">
             {blocked
               ? limitCopy(signedIn).body
-              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${signedIn ? "오늘은" : "데모에서는"} 하루 ${signedIn ? USER_QUESTION_LIMIT : ANON_QUESTION_LIMIT}번까지 물어볼 수 있어요. 아래 가이드의 예시 답변은 횟수에 들어가지 않아요.`}
+              : `이름·전화번호 같은 개인정보는 빼고 적어 주세요. ${dailyLimitLine(signedIn)} 아래 가이드의 예시 답변은 횟수에 들어가지 않아요.`}
           </p>
         )}
         <p className="mt-1 text-center text-[13px]">

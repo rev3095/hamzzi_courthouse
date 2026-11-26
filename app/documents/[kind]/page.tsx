@@ -42,7 +42,11 @@ export default async function DocumentPage({
             <Link href="/" className="text-link underline">
               홈
             </Link>{" "}
-            · 절차 안내 · {spec.stepLabel}
+            ·{" "}
+            <Link href="/documents" className="text-link underline">
+              문서 작성
+            </Link>{" "}
+            · {spec.stepLabel}
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <DocTitle title={spec.title} />
