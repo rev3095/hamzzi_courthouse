@@ -206,7 +206,7 @@ const CHECK_LABEL: Record<string, string> = {
   chkKnown: "상대방이 아는 사이인가요?",
   chkPointsToMe: "누가 들어도 나를 가리키는 말이었나요?",
   chkHarmsImage: "그 말이 나에 대한 이미지나 평가를 나쁘게 만들었나요?",
-  chkPublicPlace: "공개된 자리(여러 사람이 있는 채팅·게시판 포함)였나요?",
+  chkPublicPlace: "그 일이 있었던 곳이 공개적인 장소였나요?",
   chkOthersKnew: "그 내용을 다른 사람이 알게 되었나요?",
   chkAlone: "상대방과 단둘이 있는 상황(둘만의 대화·통화·채팅방)이었나요?",
   chkWithdraw: "나중에 원만히 해결되면 고소를 취소할 뜻이 있나요?",
@@ -349,12 +349,12 @@ export const ASSISTANT_SPECS = {
         label: "위 내용이 사실인지",
         type: "choice",
         max: 10,
-        defaultValue: "unknown",
-        help: "욕설처럼 사실 여부를 따질 수 없는 말이면 '모릅니다'로 두세요.",
+        help: "서식에서 묻는 칸이에요. 직접 골라 주세요. 욕설처럼 사실 여부를 따질 수 없는 말이면 표시하지 않을 수 있어요.",
         options: [
           { value: "true", label: "사실입니다" },
           { value: "false", label: "사실이 아닙니다." },
           { value: "unknown", label: "모릅니다." },
+          { value: "none", label: "표시하지 않을게요 (사실 여부를 따질 수 없는 말이에요)" },
         ],
       },
       {
@@ -383,10 +383,11 @@ export const ASSISTANT_SPECS = {
         label: "관련 민사소송이 진행 중인지",
         type: "choice",
         max: 10,
-        defaultValue: "no",
+        defaultValue: "unknown",
         options: [
           { value: "yes", label: "현재 관련 사건에 대한 민사소송 중입니다." },
           { value: "no", label: "민사소송 중에 있지 않습니다." },
+          { value: "unknown", label: "잘 모르겠어요 (표시하지 않고, 낼 때 경찰서에 말할게요)" },
         ],
       },
       {
@@ -570,7 +571,7 @@ export const ASSISTANT_SPECS = {
       ...COMPLAINT_TIPS,
       "받은 내용은 지우지 말고 화면을 그대로 저장해요. 앞뒤 대화도 함께 보관하세요.",
       "받은 내용을 글로 옮기기 어려우면 어떤 내용인지 설명만 적고 화면은 증거로 내도 돼요.",
-      "혼자 진행하기 어렵다면 수사기관이나 지원 기관에 도움을 요청할 수 있어요.",
+      "혼자 진행하기 어렵다면 수사기관이나 피해자 지원 기관에 도움을 요청할 수 있어요.",
     ],
     links: [OFFICIAL.cyberPolice, OFFICIAL.police],
     officialForms: [{ name: "[수사] 고소장", source: POLICE_SOURCE, url: POLICE_FORMS }],
@@ -612,7 +613,7 @@ export const ASSISTANT_SPECS = {
         label: "고소이유 (있었던 일의 경위)",
         type: "textarea",
         max: LONG,
-        help: "상대방을 어떻게 알게 됐는지, 그 전후로 어떤 대화가 있었는지, 그만하라고 했는지를 시간 순서대로 사실만 적어요.",
+        help: "상대방을 어떻게 알게 됐는지, 그 전후로 어떤 대화가 있었는지를 시간 순서대로 사실만 적어요. 그만하라고 한 적이 있다면 그것도 적어요(없어도 괜찮아요).",
       },
       evidence("받은 메시지 화면 캡처\n앞뒤 대화 캡처\n상대방 계정 화면"),
       ...related,
@@ -652,7 +653,8 @@ export const ASSISTANT_SPECS = {
     intro:
       "소장을 받은 피고가 원고의 청구를 받아들일 수 있는지, 원고가 주장한 사실을 인정하는지를 법원에 밝히는 문서예요. 법원 답변서 양식의 항목 순서를 따랐어요.",
     tips: [
-      "소장과 함께 온 법원 안내에 답변서를 낼 기간이 적혀 있어요. 받은 날짜를 먼저 확인하세요.",
+      "소장과 함께 온 법원 안내에 답변서를 낼 기간이 적혀 있어요. 받은 날짜를 먼저 확인하세요. 기간 안에 내지 않으면 원고가 청구한 대로 정해질 수 있어요.",
+      "지급명령이나 이행권고결정을 받았다면 답변서와 따로 이의신청서를 내야 해요. 이의신청서 서식은 따로 있어요.",
       "원고가 주장한 사실을 하나씩 나눠, 인정하는 것과 인정하지 않는 것을 따로 적어요. 인정하지 않는 사실에는 이유를 적어요.",
       "내 말을 보여 주는 자료(대화, 이체 내역, 배송 기록 등)의 사본을 함께 내요.",
       "원고의 수만큼 답변서 부본을 함께 내요.",
@@ -680,7 +682,7 @@ export const ASSISTANT_SPECS = {
         label: "원고의 청구를 받아들일 수 있나요",
         type: "choice",
         max: 10,
-        help: "받아들일 수 없다고 고르면 법원에서 널리 쓰는 기본 문장(청구 기각을 구한다)이 들어가요.",
+        help: "받아들일 수 없다고 고르면 법원에서 널리 쓰는 기본 문장(청구 기각을 구한다)이 들어가요. 모두 인정한다고 적으면 그대로 판결이 날 수 있으니, 그렇게 고르기 전에 전문가 상담을 권해요.",
         options: ANSWER_STANCES,
       },
       {
@@ -738,7 +740,7 @@ export const ASSISTANT_SPECS = {
     officialForms: [
       { name: "[민사] 지급명령에 대한 이의신청서", source: COURT_SOURCE, url: SCOURT_FORMS },
     ],
-    basis: ["민사소송법 제469조(지급명령의 송달)"],
+    basis: ["민사소송법 제469조(지급명령의 송달)·제470조(이의신청의 효력)"],
     draftFields: "",
     officialNotice: {
       text: ORDER_OBJECTION_NOTICE,

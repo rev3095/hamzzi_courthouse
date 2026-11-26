@@ -814,12 +814,25 @@ describe("전문 에이전트 갈래 서식 (공식 양식 기준, 2026-11-26)",
       "피고소인이 모욕(명예훼손)한 내용이 누가 들어도 고소인을 가리키는 말이었나요?  예 ■",
     );
     expect(text).toContain("이미지나 평가를 나쁘게 만들었나요?  예 □ / 아니오 □ / 모름 ■");
+    // 모르는 사실은 서약 아래 확정 진술이 되지 않는다: 민사소송 칸 기본값은 '모름'(둘 다 □), 사실 여부는 직접 고른다
+    expect(initialValues("defamation-complaint").civil).toBe("unknown");
+    expect(initialValues("defamation-complaint").truth).toBeUndefined();
+    expect(text).toContain("□ 사실입니다  □ 사실이 아닙니다.  □ 모릅니다.");
+    const unknownCivil = fill("defamation-complaint", {
+      ...FULL["defamation-complaint"],
+      civil: "unknown",
+    });
+    expect(unknownCivil).toContain(
+      "□ 현재 관련 사건에 대한 민사소송 중입니다.  □ 민사소송 중에 있지 않습니다.",
+    );
   });
 
   test("중고거래 사기 고소장: 고른 사실만 범죄사실에 놓고, 목적·고의 같은 평가 문장을 만들지 않는다", () => {
     const text = fill("trade-fraud-complaint", FULL["trade-fraud-complaint"]);
     expect(text).toContain("고소인은 피고소인을 사기죄로 고소하오니 처벌하여 주시기 바랍니다.");
-    expect(text).toContain("도토리마켓에서 피고소인이 올린 '중고 노트북' 판매 글을 보고");
+    expect(text).toContain(
+      "도토리장터에서 '중고 노트북' 판매 글을 보고 피고소인과 연락하였습니다.",
+    );
     expect(text).toContain("계좌(다람은행 333-22-1111)로 금 850,000원을 보냈습니다.");
     expect(text).toContain("그 뒤 피고소인은 물건을 보내지 않았습니다.");
     expect(text).not.toMatch(/기망|편취|속여|속였|처음부터/);
@@ -836,8 +849,12 @@ describe("전문 에이전트 갈래 서식 (공식 양식 기준, 2026-11-26)",
     expect(text).toContain(
       "성폭력범죄의 처벌 등에 관한 특례법 위반(통신매체이용음란)죄로 고소하오니",
     );
-    expect(text).toContain("메신저을(를) 통하여 고소인에게 다음과 같은 내용을 보냈습니다.");
-    expect(text).not.toMatch(/목적으로|욕망/);
+    expect(text).toContain("고소인에게 다음과 같은 내용을 보냈습니다. (수단: 메신저)");
+    expect(text).not.toMatch(/목적으로|욕망|을\(를\)/);
+    // 전화·음성은 '보냈다'가 아니라 '말하였다'
+    expect(
+      fill("obscenity-complaint", { ...FULL["obscenity-complaint"], medium: "call" }),
+    ).toContain("다음과 같은 말을 하였습니다. (수단: 전화·음성 대화)");
   });
 
   test("답변서: 고른 답변에 따라 청구취지 답변이 달라진다", () => {

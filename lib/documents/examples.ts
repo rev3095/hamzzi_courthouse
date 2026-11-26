@@ -11,7 +11,7 @@ export type DocumentExample = {
 };
 
 export const EXAMPLE_NOTICE =
-  "가상 인물과 가상 사건으로 채운 예시예요. 그대로 베끼지 말고 내가 겪은 사실대로 적어 주세요.";
+  "가상 인물과 가상 사건으로 채운 예시예요. 이름·날짜·기한·금액도 모두 지어낸 값이고, 이렇게 쓰면 같은 결과가 난다는 뜻이 아니에요. 내가 겪은 사실대로 적어 주세요.";
 
 const ME = { name: "김햄찌", address: "해바라기시 씨앗구 볍씨로 7", phone: "010-0000-1234" };
 const OTHER = { name: "이도토리", address: "도토리시 참나무구 밤길 3" };
@@ -35,7 +35,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         howKnown: "saw",
         content:
           "같은 팀 다섯 명이 보는 채팅창에서 제 닉네임 '해씨'를 부르며 부모를 들먹이는 욕설을 여러 번 적었습니다.\n적은 말은 화면 캡처에 그대로 있습니다.",
-        truth: "unknown",
+        truth: "none",
         publicity: "many",
         punish: "yes",
         civil: "no",
@@ -51,7 +51,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         chkFiledBefore: "no",
         chkWithdrewBefore: "no",
         pledge: "agree",
-        policeStation: "해바라기경찰서",
+        policeStation: "볍씨경찰서",
         writtenOn: "2026-10-20",
       },
     },
@@ -88,7 +88,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         chkFiledBefore: "no",
         chkWithdrewBefore: "no",
         pledge: "agree",
-        policeStation: "해바라기경찰서",
+        policeStation: "볍씨경찰서",
         writtenOn: "2026-10-05",
       },
     },
@@ -103,7 +103,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         accusedName: "",
         accusedAddress: "",
         accusedPhone: "",
-        accusedSite: "도토리마켓",
+        accusedSite: "도토리장터",
         accusedId: "acorn77",
         accusedAccount: "다람은행 333-22-1111",
         item: "중고 노트북",
@@ -120,7 +120,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         relatedCriminal: "unknown",
         relatedCivil: "no",
         pledge: "agree",
-        policeStation: "해바라기경찰서",
+        policeStation: "볍씨경찰서",
         writtenOn: "2026-09-10",
       },
     },
@@ -148,7 +148,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         relatedCriminal: "no",
         relatedCivil: "no",
         pledge: "agree",
-        policeStation: "해바라기경찰서",
+        policeStation: "볍씨경찰서",
         writtenOn: "2026-10-08",
       },
     },
@@ -230,7 +230,7 @@ export const DOCUMENT_EXAMPLES: Partial<Record<DocumentKind, DocumentExample[]>>
         facts:
           "본인은 2026년 9월 3일 귀하에게서 중고 노트북을 사기로 하고 850,000원을 보냈습니다.\n귀하는 그 뒤 물건을 보내지 않았습니다.",
         demand: "받은 대금 850,000원을 돌려주시기 바랍니다.",
-        deadline: "이 글을 받으신 날부터 7일 이내",
+        deadline: "이 글을 받으신 날부터 10일 이내",
         writtenOn: "2026-09-12",
       },
     },

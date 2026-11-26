@@ -165,9 +165,7 @@ export function tradeFraudComplaint(v: V): Block[] {
     crime: "사기죄",
     accusedExtra: [p(`계좌번호  ${orBlank(v.accusedAccount)}`)],
     facts: [
-      p(
-        `고소인은 ${when}${where}피고소인이 올린 '${v.item}' 판매 글을 보고 피고소인과 연락하였습니다.`,
-      ),
+      p(`고소인은 ${when}${where}'${v.item}' 판매 글을 보고 피고소인과 연락하였습니다.`),
       p("피고소인은 고소인에게 다음과 같이 말하였습니다."),
       ...lines(v.said),
       p(
@@ -189,7 +187,12 @@ export function obscenityComplaint(v: V): Block[] {
     head: "고    소    장",
     crime: "성폭력범죄의 처벌 등에 관한 특례법 위반(통신매체이용음란)죄",
     facts: [
-      p(`피고소인은 ${when}${medium}을(를) 통하여 고소인에게 다음과 같은 내용을 보냈습니다.`),
+      // 조사("을/를")를 붙이지 않게 수단은 따로 적고, 전화·음성은 '보냈다'가 아니라 '말하였다'로 쓴다
+      p(
+        v.medium === "call"
+          ? `피고소인은 ${when}고소인에게 다음과 같은 말을 하였습니다. (수단: ${medium})`
+          : `피고소인은 ${when}고소인에게 다음과 같은 내용을 보냈습니다. (수단: ${medium})`,
+      ),
       ...lines(v.content),
     ],
   });
