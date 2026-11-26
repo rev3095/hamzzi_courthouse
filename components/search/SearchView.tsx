@@ -29,6 +29,7 @@ import { useAttachments } from "../ask/useAttachments";
 import { MaterialsView } from "../result/MaterialsView";
 import { useQuota } from "../useQuota";
 import { ArchiveSwitch } from "./ArchiveSwitch";
+import { AskArchive } from "./AskArchive";
 import { KindTabs } from "./KindTabs";
 import {
   Highlighted,
@@ -345,7 +346,11 @@ export function SearchView() {
       <section className="rounded-panel border-line border bg-white px-[18px] py-[20px] lg:px-8 lg:py-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className={PAGE_TITLE}>판례·법령 검색</h1>
-          <ArchiveSwitch current="search" searched={state.kind === "done"} kind={tab} />
+          <div className="flex flex-wrap items-center gap-3">
+            {/* 질문창 (DEC-070): 검색 결과는 AI 없이 그대로, 질문만 상담 경로로 (Light 고정) */}
+            <AskArchive />
+            <ArchiveSwitch current="search" searched={state.kind === "done"} kind={tab} />
+          </div>
         </div>
         <div className="mt-4">
           {/* 종류 탭: 모바일은 주요 5개 + 묶음별 '더 보기', 데스크톱은 전체 (시안 A) */}

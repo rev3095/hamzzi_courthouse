@@ -123,9 +123,9 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
   },
   "rules-search": {
     label: "판례 검색도 횟수를 써요?",
-    source: "DEC-017 · lib/auth/rate-limit.ts SEARCH_RATE·LOOKUP_RATE",
+    source: "DEC-017 · DEC-070 · lib/auth/rate-limit.ts SEARCH_RATE·LOOKUP_RATE",
     lines: [
-      "판례·법령 직접 검색은 질문 횟수와 따로 세요.",
+      "판례·법령 직접 검색은 질문 횟수와 따로 세요. 검색·리서치·판례 상세 화면의 '궁금한 점 바로 묻기'로 보낸 질문은 AI가 답하는 상담이라 질문 횟수에서 세요(Light 단계 고정).",
       `같은 네트워크에서 1시간에 목록 검색 ${L.searchHourly}번, 상세 보기 ${L.lookupHourly}번까지 쓸 수 있어요. 검색 결과는 법제처에서 가져온 자료를 AI 없이 보여 드려요(결정문은 요지만).`,
     ],
     links: [{ href: "/search", label: "판례·법령 검색" }],

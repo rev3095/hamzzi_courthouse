@@ -37,7 +37,10 @@ type Ctx = { params: Promise<{ id: string }> };
 export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
   const { id } = await ctx.params;
   // 본문은 선택: 홈 카테고리(DEC-028)·답변 단계(DEC-036)·DeepSearch(DEC-038)·분야별 비서(DEC-057). 검증 실패는 소유자 확인 전에 400
-  const { category, tier, deep, assistant } = parseAnalyzeRequest(await req.text());
+  // 판례 아카이브 질문창(DEC-070): archive면 서버가 Light로 고정하고, focusCases(보고 있던 판례)를 근거에 더한다
+  const { category, tier, deep, assistant, archive, focusCases } = parseAnalyzeRequest(
+    await req.text(),
+  );
   const owner = await resolveOwner(scope, { create: false });
   const inquiry = await getOwnedInquiry(id, owner);
   if (!owner) throw new Error("owner 없음"); // getOwnedInquiry가 이미 403을 낸다
@@ -69,6 +72,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
       tier,
       deep,
       assistant,
+      ...(archive && { archive, focusCaseIds: focusCases }),
     });
     return ok({ status: "analyzed", ...out }, scope.requestId);
   }
@@ -82,6 +86,7 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
         tier,
         deep,
         assistant,
+        ...(archive && { archive, focusCaseIds: focusCases }),
         // 빠른 답 먼저 (DEC-064): 완성된 답보다 먼저 보이는 짧은 요약. 저장하지 않는다
         onPreview: (p) => send("preview", p),
       });
