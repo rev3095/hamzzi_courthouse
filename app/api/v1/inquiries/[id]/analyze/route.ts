@@ -8,6 +8,7 @@ import { sseResponse } from "@/lib/api/sse";
 import { ApiError, ERROR_STATUS } from "@/lib/api/errors";
 import { findExampleFor } from "@/lib/demo/policy";
 import { analyzeInquiry } from "@/lib/inquiries/analyze";
+import { assertQuestionAllowed } from "@/lib/inquiries/abuse-guard";
 import {
   assertAnalyzable,
   assertAnonQuota,
@@ -61,6 +62,9 @@ export const POST = withRoute<Ctx>(async (req, ctx, scope) => {
     // Google 로그인 사용자는 하루 USER_QUESTION_LIMIT회 (DEC-035) — 모델 호출 전에 오늘 분석 수를 본다
     assertUserQuota(await getUserQuestionsUsed(owner.userId));
   }
+
+  // 남용 막기 (DEC-072): 모델을 부르기 전에 경고 한도와 규칙 판별을 다시 본다 (질문을 만든 뒤 바로 분석을 부르는 경로까지)
+  if (!example) await assertQuestionAllowed(inquiry.masked_text, owner, req.headers);
 
   // 분석 잠금 (DEC-065): 같은 질문을 이미 분석 중이면 새로 시작하지 않는다 — 새로고침·재접속으로 유료 분석이 두 번 돌지 않게.
   // 화면은 이 409(reason: in_progress)를 받으면 결과가 저장될 때까지 기다렸다가 읽는다

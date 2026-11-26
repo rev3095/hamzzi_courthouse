@@ -22,7 +22,7 @@ import {
   tierOf,
   type TierId,
 } from "@/lib/ai/models";
-import type { StepEvent } from "@/lib/ai/policy";
+import { OffTopicQuestion, type StepEvent } from "@/lib/ai/policy";
 import { verifyDraft } from "@/lib/citations/verify";
 import { runFreeAnalysis } from "@/lib/demo/free";
 import { CATEGORIES, type CategoryKey } from "@/lib/procedure/categories";
@@ -39,6 +39,7 @@ import {
 } from "./store";
 import { answerTierFor } from "./policy";
 import { procedureHintFor, saveLabelProposal } from "./procedure-hint";
+import { rejectOffTopic } from "./abuse-guard";
 
 /** 라우트 maxDuration(300초, 2026-11-25 Opus high) 안에 검증·저장까지 끝나도록 분석 예산을 잡는다 (DEC-014, 목표 p95 ≤ 90초) */
 export const ANALYSIS_BUDGET_MS = 280_000;
@@ -172,6 +173,12 @@ export async function analyzeInquiry(
           })
           .catch(() => 0)
       : Promise.resolve(0);
+    // 남용 막기 (DEC-072): 질문 해석·구조화가 법률 무관으로 보면 답변 전에 멈춘다 — 쓴 만큼만 정산하고 경고를 센 뒤 거절
+    const offTopic = async (e: unknown): Promise<never> => {
+      if (!(e instanceof OffTopicQuestion)) throw e;
+      await settleAiQuota(weight, e.costUsd + (await quick));
+      return rejectOffTopic(owner, headers);
+    };
     // 일반 질문: 무료 법제처 검색 + 답변 1회 (DEC-020·026·036)
     // DeepSearch: 사건 구조화(Haiku) + 쟁점별 검색 + 쟁점별 답변 1회 (DEC-041). 답변 모델은 둘 다 고른 단계
     const deepRun = deep
@@ -192,7 +199,7 @@ export async function analyzeInquiry(
               ),
             }),
           },
-        )
+        ).catch(offTopic)
       : null;
     const analysis =
       deepRun ??
@@ -212,7 +219,7 @@ export async function analyzeInquiry(
             assistant: assistantLiteOptions(assistant.id, inquiry.masked_text).assistant,
           }),
         },
-      ));
+      ).catch(offTopic));
     // 기간 예산(DEC-040): 먼저 잡아 둔 상한 중 실제로 쓰지 않은 몫을 돌려준다 (주간 규칙일 때는 아무 일도 없다)
     await settleAiQuota(weight, analysis.costUsd + (await quick));
     if ("refsCostUsd" in analysis && analysis.refsCostUsd !== undefined)

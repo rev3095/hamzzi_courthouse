@@ -119,7 +119,18 @@ export const GUIDE_TOPICS: Record<string, GuideTopic> = {
       "햄찌법원 데이터베이스에는 IP 주소 대신 비밀값을 섞어 바꾼 값만 저장해요(웹 서버·데이터베이스 운영 업체의 접속 기록에는 IP 주소가 남을 수 있어요). 이 상한은 데모 기간 임시 값이라 바뀔 수 있어요.",
     ],
     links: [PRIVACY],
-    next: ["rules-examples", "rules-search"],
+    next: ["rules-examples", "rules-search", "rules-abuse"],
+  },
+  "rules-abuse": {
+    label: "법률과 상관없는 질문도 되나요?",
+    source: "DEC-072 · lib/inquiries/abuse.ts",
+    lines: [
+      "햄찌법원은 법률 문제만 상담해요. 음식 추천, 코드·게임·앱 만들기, 그림 만들기, 글짓기·번역 같은 요청은 답하지 않아요.",
+      "같은 글을 여러 번 붙여 넣은 질문도 받지 않아요. 반복을 지우고 한 번만 적어 주세요.",
+      "지시문을 바꾸려는 글이나 AI가 법률과 상관없다고 본 요청이 짧은 시간에 여러 번 쌓이면 잠시 질문을 받지 않아요.",
+      "자료를 붙이지 않은 같은 질문을 방금 분석했다면 새로 분석하지 않고, 웹 질문창에서는 앞의 답변으로 바로 가요.",
+    ],
+    next: ["rules-network", "rules-examples"],
   },
   "rules-search": {
     label: "판례 검색도 횟수를 써요?",

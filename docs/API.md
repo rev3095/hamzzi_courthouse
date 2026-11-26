@@ -39,9 +39,12 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
 | 404 | `NOT_FOUND` | 리소스 없음. **판례·조문 404는 "검증 근거에 없음"을 뜻하며 대체 내용을 생성하지 않음** | F-003 AC3 |
 | 409 | `CONSENT_REQUIRED` | 필요한 동의 없음 (`details.kind`) | F-007 AC2, F-009 AC2, F-015 AC1 |
 | 409 | `INVALID_STATE` | 허용되지 않는 상태 전이 | F-012 AC3 |
+| 409 | `DUPLICATE_QUESTION` | 같은 요청자가 10분 안에 분석을 마친 똑같은 질문 (`details.inquiryId` = 앞의 질문, 화면은 그 결과로 간다) | DEC-072 |
 | 422 | `PII_CONFIRMATION_REQUIRED` | PII 탐지 후 사용자 확인 전 분석 요청 | F-007 AC1 |
 | 422 | `BRIEF_NEEDS_EDIT` | 간접 식별 위험 | F-011 AC2 |
-| 429 | `RATE_LIMITED` | 호출 한도 초과 | — |
+| 422 | `OFF_TOPIC` | 법률과 상관없는 요청·지시문 바꾸기 (`details.reason`: `off_topic`·`instruction`·`model`). 저장하지 않음 | DEC-072 |
+| 422 | `REPETITIVE_INPUT` | 같은 문장·구절을 되풀이해 부풀린 글. 저장하지 않음 | DEC-072 |
+| 429 | `RATE_LIMITED` | 호출 한도 초과. `details.reason: "abuse"`는 거절 경고 한도(DEC-072) | DEC-072 |
 | 500 | `INTERNAL_ERROR` | 예상하지 못한 서버 오류. 메시지는 고정 문구, 예외 내용은 응답·로그에 넣지 않음 | F-007 |
 | 502 | `SEARCH_UPSTREAM_FAILED` | 검색 저장소·외부 데이터 오류, 데모에서는 korean-law-mcp·법제처 호출 실패 (결과 없음과 구분) | F-006 AC2 |
 | 502 | `MODEL_FAILED` | LLM 호출 실패 | F-006 AC2 |
@@ -107,7 +110,7 @@ type Citation = { kind: "case" | "statute"; ref: CaseRef | StatuteRef; status: "
   maskedText: string;
   piiConfirmationRequired: boolean }   // PII가 탐지됐으면 true → pii-confirmation 후 분석
 ```
-에러: `EMPTY_INPUT`, `VALIDATION_ERROR`, `CONSENT_REQUIRED`(민감정보 가능성 + 동의 없음, `details.categories`: `health`/`criminal_record`), `LOGIN_REQUIRED`(익명 세션이 이미 3회 사용), `FORBIDDEN`·`INVALID_STATE`(`parentInquiryId`가 남의 것이거나 분석 전), `RATE_LIMITED`.
+에러: `EMPTY_INPUT`, `VALIDATION_ERROR`, `CONSENT_REQUIRED`(민감정보 가능성 + 동의 없음, `details.categories`: `health`/`criminal_record`), `LOGIN_REQUIRED`(익명 세션이 이미 3회 사용), `FORBIDDEN`·`INVALID_STATE`(`parentInquiryId`가 남의 것이거나 분석 전), `RATE_LIMITED`, `OFF_TOPIC`·`REPETITIVE_INPUT`·`DUPLICATE_QUESTION`(DEC-072 남용 막기 — analyze도 모델 전에 같은 검사를 한다).
 민감정보(건강·범죄경력) 가능성이 있으면 **동의 전에는 저장하지 않는다**: `409 CONSENT_REQUIRED`를 받은 클라이언트가 동의 화면을 보여 준 뒤 같은 입력을 `sensitiveConsent: true`로 다시 보낸다 (DATA_MODEL `[PII-S]` "별도 동의 후 저장").
 원문은 PII 필터 처리 후 즉시 버리며 DB·응답·로그 어디에도 남기지 않는다 — 저장되는 것은 `maskedText`뿐 (DEC-006).
 비로그인 질문은 "가벼운 답변"으로 처리한다: 추가 질문 없이 질문마다 분석 한 번만 제공 (범위 상세는 OQ-API-08).

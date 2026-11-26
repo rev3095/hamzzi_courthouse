@@ -12,8 +12,11 @@ const store = vi.hoisted(() => ({
   markPiiConfirmed: vi.fn(),
   getAnonQuestionsUsed: vi.fn(),
   getUserQuestionsUsed: vi.fn(),
+  findRecentDuplicate: vi.fn(async () => null),
 }));
 vi.mock("@/lib/inquiries/store", () => store);
+// 남용 막기(DEC-072)는 tests/unit/abuse-api.test.ts에서 따로 본다
+vi.mock("@/lib/inquiries/abuse-guard", () => ({ assertQuestionAllowed: vi.fn(), rejectOffTopic: vi.fn() }));
 vi.mock("server-only", () => ({}));
 const rate = vi.hoisted(() => ({ assertRateLimit: vi.fn() }));
 vi.mock("@/lib/auth/rate-limit", async (orig) => ({

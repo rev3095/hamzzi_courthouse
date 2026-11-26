@@ -348,6 +348,28 @@ describe("DEC-033 질문 해석 (검색 전 Haiku 1회: 섹션 라벨 + 검색�
     expect(out.draft.answer.points).toHaveLength(1);
   });
 
+  test("DEC-072 질문 해석이 법률 무관(off_topic)으로 보면 검색·답변 모델을 부르지 않고 해석 비용과 함께 멈춘다", async () => {
+    const { OffTopicQuestion } = await import("@/lib/ai/policy");
+    const source = fakeSource();
+    const model = fakeModel({
+      understood: JSON.stringify({
+        section: "none",
+        lawQuery: "",
+        caseQueries: [],
+        kind: "off_topic",
+      }),
+    });
+    const run = runLiteAnalysis(
+      { maskedText: "이런 느낌으로 사이트 하나 만들어 주세요" },
+      { model, lawSource: source, ...HAIKU },
+    );
+    await expect(run).rejects.toBeInstanceOf(OffTopicQuestion);
+    await run.catch((e: { costUsd: number }) => expect(e.costUsd).toBeGreaterThan(0));
+    expect(model.understand).toHaveLength(1);
+    expect(model.calls).toHaveLength(0);
+    expect(source.searchArticles).not.toHaveBeenCalled();
+  });
+
   test("질문 해석이 실패해도 오류로 끝내지 않고 질문 문장으로 찾아 답변한다 — 재시도 없음", async () => {
     for (const understandFail of [
       new ApiError("MODEL_FAILED", { reason: "refusal" }),
