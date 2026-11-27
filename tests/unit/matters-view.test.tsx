@@ -9,7 +9,12 @@ vi.mock("@/components/useQuota", () => ({
   useQuota: () => quota.value,
   QuotaRouteSync: () => null,
 }));
-const api = vi.hoisted(() => ({ listMatters: vi.fn(), getMatter: vi.fn(), saveMatter: vi.fn() }));
+const api = vi.hoisted(() => ({
+  listMatters: vi.fn(),
+  getMatter: vi.fn(),
+  saveMatter: vi.fn(),
+  createMatter: vi.fn(),
+}));
 vi.mock("@/lib/client/matters", async (orig) => ({
   ...(await orig<typeof import("@/lib/client/matters")>()),
   ...api,
@@ -120,8 +125,74 @@ describe("F-016 AC1 로그인 전용", () => {
     const list = await screen.findByTestId("matter-list");
     expect(within(list).getByRole("button", { name: /가상 사건/ })).toBeTruthy();
     // 사건을 고르기 전에는 새 사건 만들기 하나가 주된 행동이고, 진행 단계 탭은 보이지 않는다
-    expect(screen.getByRole("button", { name: "사건 만들기" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "새 사건 만들기" })).toBeTruthy();
     expect(screen.queryByRole("tab")).toBeNull();
+  });
+
+  test("새 사건 만들기 창: 직접 적은 칸을 사건 자료로 담아 만들고 개요에서 연다 (모델 없음)", async () => {
+    quota.value = {
+      anonymous: false,
+      used: 0,
+      limit: 10,
+      remaining: 10,
+      loginRequired: false,
+      admin: false,
+    };
+    api.listMatters.mockResolvedValue({ ok: true, data: { items: [] } });
+    api.createMatter.mockImplementation(async (title: string, d: MatterData) => ({
+      ok: true,
+      data: { id: "n1", title: title || "새 사건", updatedAt: "t", data: d },
+    }));
+    render(<MattersView />);
+    fireEvent.click(await screen.findByRole("button", { name: "새 사건 만들기" }));
+    const dialog = screen.getByRole("dialog", { name: "새 사건 만들기" });
+    expect(
+      within(dialog)
+        .getByRole("radio", { name: /직접 적어서 시작/ })
+        .getAttribute("aria-checked"),
+    ).toBe("true");
+    fireEvent.click(within(dialog).getByRole("button", { name: "다음" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "예시 채워 보기" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "다음" }));
+    expect(within(dialog).getByTestId("new-matter-review").textContent).toContain(
+      "전세 보증금 반환",
+    );
+    fireEvent.click(within(dialog).getByRole("button", { name: "사건 만들기" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "전세 보증금 반환" })).toBeTruthy();
+    const [title, sent] = api.createMatter.mock.calls[0] as [string, MatterData];
+    expect(title).toBe("전세 보증금 반환");
+    expect(sent.parties).toHaveLength(2);
+    expect(sent.facts.length).toBeGreaterThan(0);
+    expect(sent.issues).toEqual([]);
+    expect(screen.getByRole("tab", { name: "개요" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  test("새 사건 만들기 창: 서류부터 시작하면 이름·입장만 담고 자료 탭에서 연다", async () => {
+    quota.value = {
+      anonymous: false,
+      used: 0,
+      limit: 10,
+      remaining: 10,
+      loginRequired: false,
+      admin: false,
+    };
+    api.listMatters.mockResolvedValue({ ok: true, data: { items: [] } });
+    api.createMatter.mockImplementation(async (title: string, d: MatterData) => ({
+      ok: true,
+      data: { id: "n2", title: title || "새 사건", updatedAt: "t", data: d },
+    }));
+    render(<MattersView />);
+    fireEvent.click(await screen.findByRole("button", { name: "새 사건 만들기" }));
+    const dialog = screen.getByRole("dialog", { name: "새 사건 만들기" });
+    fireEvent.click(within(dialog).getByRole("radio", { name: /서류부터 올리기/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "다음" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "만들고 서류 올리기" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "새 사건" })).toBeTruthy();
+    const [title, sent] = api.createMatter.mock.calls.at(-1) as [string, MatterData];
+    expect(title).toBe("");
+    expect(sent.facts).toEqual([]);
+    expect(screen.getByRole("tab", { name: "자료" }).getAttribute("aria-selected")).toBe("true");
   });
 
   test("사건을 열면 단계가 세 묶음으로 보이고, 개요는 다음 할 일 하나를 먼저 보여 준다", async () => {
