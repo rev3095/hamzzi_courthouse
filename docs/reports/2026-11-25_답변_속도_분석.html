@@ -80,6 +80,23 @@ td{font-variant-numeric:tabular-nums}
 .do li{margin-bottom:8px}
 .note{font-size:13px;color:var(--mute)}
 .tip{position:absolute;pointer-events:none;background:#061a2e;border:1px solid var(--sky);border-radius:8px;padding:6px 9px;font-size:13px;display:none;white-space:nowrap;z-index:2}
+.sim2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:18px;align-items:start;margin-top:8px}
+.fixes{display:grid;gap:4px}
+.fix span{line-height:1.35}
+.fix em{display:block;font-style:normal;font-size:12px;color:var(--mute)}
+.strip{position:relative;height:44px;background:var(--deep);border-radius:10px;margin-top:8px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0;display:flex;align-items:center;padding-left:6px}
+.seg span{font-size:12px;font-weight:700;color:#061a2e;white-space:nowrap;overflow:hidden}
+.flag{position:absolute;top:0;bottom:0;width:3px;background:var(--pink)}
+.stripaxis{position:relative;height:20px;font-size:12px;color:var(--mute);margin-top:4px}
+.stripaxis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.moments{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:8px}
+.moments li{display:grid;grid-template-columns:4.5em minmax(0,1fr);gap:10px;font-size:15px}
+.moments b{font:300 20px/1.2 "Hanken Grotesk",sans-serif;white-space:nowrap;color:var(--sky)}
+td small{color:var(--mute);font-size:12px}
+.toc{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 6px;font-size:14px}
+.toc a{color:var(--sky)}
+@media(max-width:860px){.sim2{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:860px){.sim,.two{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.row,.axis{grid-template-columns:6.5em minmax(0,1fr)}.res{grid-template-columns:minmax(0,1fr)}.fig{height:300px}.f{grid-template-columns:5.5em minmax(0,1fr) 4.2em}}
 @media(prefers-reduced-motion:no-preference){.bar{transition:left .35s,width .35s}}
@@ -88,8 +105,9 @@ td{font-variant-numeric:tabular-nums}
 <body>
 <section class="band">
 <div class="wrap">
+<nav class="toc" aria-label="바로 가기"><a href="#solutions">해결책·사용자 시나리오</a><a href="#data">실측 데이터</a><a href="#why">구글과의 차이</a></nav>
 <h1>답변 시간의 90%는 모델이 글자를 쓰는 시간이에요</h1>
-<p class="lead">햄찌법원 분석 271건(2026-11-01 ~ 11-25, 개발 DB)을 재 보니, Opus DeepSearch는 <b>걸린 시간 ≈ 6.5초 + 출력 1,000토큰마다 8.3초</b>로 거의 정확히 맞아요(R² 0.99). 검색·검증 같은 나머지는 6~7초뿐이고, 나머지는 모델이 생각하고 쓰는 토큰 수가 정합니다. 아래 공정표에서 단계를 바꿔 보며 줄일 방법을 시험해 보세요.</p>
+<p class="lead">햄찌법원 분석 271건(2026-11-01 ~ 11-25, 개발 DB)을 재 보니, Opus DeepSearch는 <b>걸린 시간 ≈ 6.5초 + 출력 1,000토큰마다 8.3초</b>로 거의 정확히 맞아요(R² 0.99). 검색·검증 같은 나머지는 6~7초뿐이고, 나머지는 모델이 생각하고 쓰는 토큰 수가 정합니다. 아래 공정표에서 단계를 바꿔 보며 줄일 방법을 시험해 보세요. 2026-11-26부터 유료 분석은 Haiku "먼저 보는 요약"이 약 4초에 먼저 떠요(DEC-064).</p>
 <div class="kpis" id="kpis"></div>
 
 <div class="sim">
@@ -111,7 +129,7 @@ td{font-variant-numeric:tabular-nums}
 </div>
 </section>
 
-<section class="band" style="background:var(--deep)">
+<section class="band" id="data" style="background:var(--deep)">
 <div class="wrap">
 <h2>실측: 출력 토큰이 늘면 시간이 그만큼 늘어요</h2>
 <p class="lead">점 하나가 분석 1건이에요. 선은 경로별 직선 맞춤입니다. 예시 답변을 만들려고 관리자 모드로 돌린 분석이 많이 섞여 있어요(11-25에 186건).</p>
@@ -124,7 +142,46 @@ td{font-variant-numeric:tabular-nums}
 </div>
 </section>
 
-<section class="band">
+<section class="band" id="solutions" style="background:#0c2c4d">
+<div class="wrap">
+<h2>해결책: 91초를 "기다림"이 아니라 "읽는 시간"으로 바꾸기</h2>
+<p class="lead">사용자가 실제로 겪는 시간을 사람별로 그려 보고, 대안을 켜고 끄며 빈 화면 시간·완성 시간·비용·떠날 위험을 비교해요. 떠날 위험은 아래 가정값으로 계산한 추정이고, 가정은 직접 바꿀 수 있어요.</p>
+
+<div class="kpis" id="facts"></div>
+
+<div class="sim2">
+  <div class="card">
+    <h3>누가 묻나</h3>
+    <div class="presets" id="personas" role="group" aria-label="사용자 시나리오"></div>
+    <p class="note" id="persona-note"></p>
+    <h3 style="margin-top:14px">어떤 대안을 켜나</h3>
+    <div id="fixes" class="fixes"></div>
+    <details style="margin-top:12px">
+      <summary class="note" style="cursor:pointer">떠날 위험 가정값 바꾸기</summary>
+      <div class="ed" id="hz" style="margin-top:10px"></div>
+    </details>
+  </div>
+  <div class="card">
+    <h3 id="view-title">사용자가 보는 화면</h3>
+    <div class="strip" id="strip" aria-live="polite"></div>
+    <div class="stripaxis" id="stripaxis"></div>
+    <div class="legend"><span><i style="background:#3d6a96"></i>진행 단계만 보임(빈 기다림)</span><span><i style="background:var(--amber)"></i>먼저 보는 요약·확인 질문</span><span><i style="background:var(--mint)"></i>검증된 답이 보임</span></div>
+    <div class="res" id="res2"></div>
+    <ol class="moments" id="moments"></ol>
+  </div>
+</div>
+
+<h3 style="margin-top:26px">시나리오 × 대안 비교표</h3>
+<p class="note">같은 질문에서 대안을 하나씩 더했을 때. 떠날 위험은 가정값 기준 추정, 비용은 출력 토큰 정가 기준이에요.</p>
+<div class="scroll"><table id="matrix"></table></div>
+
+<h3 style="margin-top:26px">해결책 목록</h3>
+<div class="scroll"><table class="stack" id="fixtable"></table></div>
+<p class="note" style="margin-top:10px">근거: 응답 시간 10초가 넘으면 사용자는 다른 일로 주의를 돌리고, 그 이상은 진행 표시가 있어야 기다린다는 것이 널리 쓰이는 기준이에요(Nielsen, 응답 시간 한계 0.1초·1초·10초). 이 보고서의 떠날 위험 곡선은 그 기준을 단순화한 가정이며, 실제 값은 단계별 시간(timing)과 함께 이탈을 기록해야 알 수 있어요.</p>
+</div>
+</section>
+
+<section class="band" id="why">
 <div class="wrap">
 <h2>Google AI는 왜 1~2초인가</h2>
 <div class="why">
@@ -330,5 +387,134 @@ editor();
 render();
 }
 </script>
+<script>
+{
+// ── 해결책 시뮬레이터 (사용자 시나리오 × 대안) ──
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const sec = (s) => (s >= 100 ? Math.round(s) : Math.round(s * 10) / 10) + "초";
+const OPUS = 111, HAIKU = 148;
+
+// 개발 DB 실측(2026-11-01~11-25, 질문 279건)
+const FACTS = [
+  ["48%", "100자를 넘는 질문 (지금은 xhigh DeepSearch로 감)"],
+  ["24%", "이어 묻기 질문"],
+  ["91초", "DeepSearch(high) 걸린 시간 중간값"],
+  ["×2", "분석 중 새로고침하면 같은 질문을 처음부터 한 번 더 분석(비용 2배)"],
+];
+$("facts").innerHTML = FACTS.map(([v, l]) => `<div class="kpi"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+
+// 사람별 질문: 경로와 생각·답 토큰(실측 중간값 기반, xhigh는 추정)
+const PERSONAS = {
+  commute: { name: "퇴근길 휴대폰 · 긴 사연", note: "보증금을 못 받은 세입자가 지하철에서 400자 사연을 적어요. 100자 초과라 xhigh DeepSearch로 갑니다. 화면을 계속 들여다보기 어렵고, 기다리다 다른 앱으로 갔다 오거나 새로고침하기 쉬워요.", fixed: 17, think: 11000, out: 2800, issues: 3, refreshProne: 1.4 },
+  desk: { name: "책상 앞 · 서류 첨부", note: "고소장을 받은 사람이 서류 사진과 1,000자 넘는 사정을 정리해 보내요. 기다릴 각오는 있지만 결과가 꼼꼼한지 확인하고 싶어 해요.", fixed: 22, think: 12000, out: 3200, issues: 4, refreshProne: 0.7 },
+  short: { name: "짧은 질문 · 일반 답", note: "\"월세 밀리면 바로 나가야 하나요?\"처럼 50자 안팎. 일반 답(Opus high)으로 약 30초. 검색창처럼 바로 답이 나오길 기대해요.", fixed: 5, think: 1900, out: 700, issues: 1, refreshProne: 1.2 },
+  follow: { name: "이어 묻기", note: "답을 읽은 뒤 \"그럼 내용증명은 언제 보내요?\"를 이어 물어요. 이미 한 번 기다려 봐서 두 번째 기다림에 더 예민해요.", fixed: 5, think: 1900, out: 600, issues: 1, refreshProne: 1.5 },
+};
+
+// 대안. state=적용됨/제안
+const FIXES = [
+  { k: "preview", name: "빠른 답 먼저 (Haiku 요약)", state: "적용됨 · DEC-064", on: true,
+    what: "분석과 동시에 Haiku 요약을 로딩 화면에 먼저 보인다", effect: "의미 있는 첫 내용 약 4초", cost: "+$0.0005", rule: "조문·사건번호·없는 숫자 거름, 저장 안 함" },
+  { k: "lock", name: "분석 잠금·이어받기", state: "제안 · 우선 1",
+    what: "분석 중 상태를 두고, 새로고침·재접속하면 새 분석 대신 진행 중인 분석의 진행·결과를 이어 받는다", effect: "새로고침해도 기다림이 처음부터 다시 시작하지 않음, 이중 과금 0", cost: "0 (오히려 절감)", rule: "DB 상태 값 추가(마이그레이션)" },
+  { k: "parallel", name: "쟁점별 병렬 답변·순서대로 공개", state: "제안 · 우선 2",
+    what: "쟁점마다 답변 호출을 동시에 보내고, 인용 검증을 마친 쟁점부터 화면에 붙인다", effect: "완성 시간 약 40~50% 단축, 첫 검증 답 약 35초", cost: "입력 반복으로 약 +15%", rule: "쟁점별 검증은 그대로" },
+  { k: "effort", name: "긴 질문 effort xhigh → high", state: "제안 · 평가 필요",
+    what: "100자 초과 질문의 생각 단계를 high로 낮춘다", effect: "생각 토큰 약 40% 감소", cost: "약 -35%", rule: "답 질 비교 평가(유료) 뒤 결정" },
+  { k: "checks", name: "기다리는 동안 확인 질문에 답하기", state: "제안",
+    what: "요약의 '먼저 확인할 것'을 예/아니요 버튼으로 바꾸고, 답한 내용은 이어 묻기 맥락으로 붙인다", effect: "기다리는 시간이 할 일이 됨, 다음 답이 더 정확", cost: "0", rule: "응답은 마스킹본 규칙 그대로" },
+  { k: "notify", name: "완료 알림·내 세션 보관", state: "제안",
+    what: "탭 제목·소리 없는 배지로 완료를 알리고, 떠났다 돌아와도 결과가 그대로 있게 한다", effect: "떠나도 잃지 않음(돌아올 확률 가정 60%)", cost: "0", rule: "알림 권한은 사용자가 고름" },
+];
+const state = { persona: "commute", on: Object.fromEntries(FIXES.map((f) => [f.k, !!f.on])) };
+const HZ = { idle: 1.2, idle30: 2.4, preview: 0.35, reading: 0.1, refreshShare: 35, comeBack: 60 };
+const HZ_LABELS = { idle: ["빈 기다림 10~30초 떠날 확률(초당 %)", 0, 5, 0.1], idle30: ["빈 기다림 30초 뒤(초당 %)", 0, 6, 0.1], preview: ["요약을 읽는 중(초당 %)", 0, 3, 0.05], reading: ["검증된 답을 읽는 중(초당 %)", 0, 2, 0.05], refreshShare: ["떠나는 대신 새로고침하는 비율(%)", 0, 80, 1], comeBack: ["완료 알림 시 돌아오는 비율(%)", 0, 100, 1] };
+
+function simulate(p, on) {
+  const think = on.effort && p.think > 5000 ? p.think * 0.6 : p.think;
+  let answerSec = (think + p.out) / OPUS + 0.8;
+  let firstVerified;
+  let cost = ((think + p.out) * 20) / 1e6;
+  if (on.parallel && p.issues > 1) {
+    const per = ((think / p.issues) * 1.3 + p.out / p.issues) / OPUS + 0.8;
+    answerSec = per * 1.25; // 가장 늦은 쟁점
+    firstVerified = p.fixed + per * 0.85 + 2;
+    cost *= 1.15;
+  }
+  const total = p.fixed + answerSec + 3;
+  if (!firstVerified || firstVerified > total) firstVerified = total;
+  const preview = on.preview ? 4.2 : null;
+  if (on.preview) cost += 0.0005;
+  // 초 단위로 떠날 위험을 누적 (남아 있는 사람 비율)
+  let stay = 1, left = 0, refresh = 0;
+  for (let t = 0; t < total; t += 1) {
+    let h;
+    if (t >= firstVerified) h = HZ.reading;
+    else if (preview !== null && t >= preview) h = on.checks ? HZ.reading : HZ.preview;
+    else if (t < 10) h = 0.2;
+    else h = t < 30 ? HZ.idle : HZ.idle30;
+    h = (h / 100) * p.refreshProne;
+    const d = stay * h;
+    stay -= d;
+    refresh += d * (HZ.refreshShare / 100);
+    left += d * (1 - HZ.refreshShare / 100);
+  }
+  // 새로고침: 잠금이 없으면 같은 분석을 한 번 더 돌림(비용·기다림 증가), 잠금이 있으면 이어 받아 남는다
+  let extraCost = 0;
+  if (!on.lock) extraCost = refresh * cost;
+  else { stay += refresh; refresh = 0; }
+  // 완료 알림: 떠난 사람 중 일부가 돌아와 결과를 본다
+  const lost = on.notify ? left * (1 - HZ.comeBack / 100) : left;
+  return { preview, firstVerified, total, cost: cost + extraCost, idle: preview ?? firstVerified, reached: 1 - lost, refresh };
+}
+
+function strip(p, r) {
+  const max = Math.max(30, Math.ceil(r.total / 10) * 10);
+  const seg = (a, b, color, label) => b > a ? `<div class="seg" style="left:${(a / max) * 100}%;width:${((b - a) / max) * 100}%;background:${color}" title="${esc(label)}"><span>${(b - a) / max > 0.12 ? esc(label) : ""}</span></div>` : "";
+  const firstContent = r.preview ?? r.firstVerified;
+  $("strip").innerHTML = seg(0, firstContent, "#3d6a96", "진행 단계만") + (r.preview !== null ? seg(r.preview, r.firstVerified, "var(--amber)", state.on.checks ? "요약 읽고 확인 질문 답하기" : "먼저 보는 요약") : "") + seg(r.firstVerified, r.total, "var(--mint)", r.firstVerified < r.total ? "검증된 답이 쟁점별로 붙음" : "") + `<div class="flag" style="left:${(r.total / max) * 100}%"></div>`;
+  const step = max <= 60 ? 10 : max <= 160 ? 20 : 40;
+  let tk = ""; for (let v = 0; v <= max; v += step) tk += `<span style="left:${(v / max) * 100}%">${v}초</span>`;
+  $("stripaxis").innerHTML = tk;
+}
+
+function moments(p, r) {
+  const m = [];
+  m.push([0, "보내기를 누르면 질문이 보이고 진행 단계가 하나씩 켜져요."]);
+  if (r.preview !== null) m.push([r.preview, state.on.checks ? "먼저 보는 요약이 뜨고, '먼저 확인할 것'에 예/아니요로 답해요. 기다림이 할 일이 됩니다." : "먼저 보는 요약이 떠서 어떤 문제인지, 무엇부터 모을지 읽어요."]);
+  else m.push([10, "10초가 넘도록 진행 표시만 보여요. 이때부터 다른 탭으로 가기 시작해요."]);
+  if (r.preview !== null && r.firstVerified > 45) m.push([40, state.on.checks ? "확인 질문에 답하고 나면 다시 기다려요. 진행 단계와 남은 쟁점 수를 보며 기다리거나 다른 탭으로 가요." : "요약을 다 읽고 나면 다시 빈 기다림이에요. 이때 새로고침하거나 다른 탭으로 가기 쉬워요."]);
+  if (r.firstVerified > 30) m.push([r.preview !== null ? 60 : 30, state.on.lock ? "답답해서 새로고침해도 진행 중인 분석을 그대로 이어 봐요." : "답답해서 새로고침하면 같은 질문이 처음부터 다시 분석돼요(비용 2배, 기다림 다시 시작)."]);
+  if (r.firstVerified < r.total - 1) m.push([r.firstVerified, "첫 쟁점의 검증된 답이 붙어요. 나머지 쟁점은 이어서 채워져요."]);
+  m.push([r.total, state.on.notify ? "완성. 다른 탭에 있었다면 탭 제목의 완료 표시를 보고 돌아와요." : "완성된 답과 7개 탭 정리가 보여요."]);
+  $("moments").innerHTML = m.sort((a, b) => a[0] - b[0]).map(([t, s]) => `<li><b>${sec(t)}</b><span>${esc(s)}</span></li>`).join("");
+}
+
+function render2() {
+  const p = PERSONAS[state.persona];
+  $("personas").innerHTML = Object.entries(PERSONAS).map(([k, x]) => `<button class="pre" type="button" data-p="${k}" aria-pressed="${k === state.persona}">${esc(x.name)}</button>`).join("");
+  $("persona-note").textContent = p.note;
+  $("fixes").innerHTML = FIXES.map((f) => `<label class="tg fix"><input type="checkbox" data-f="${f.k}" ${state.on[f.k] ? "checked" : ""}><span>${esc(f.name)} <em>${esc(f.state)}</em></span></label>`).join("");
+  const r = simulate(p, state.on);
+  const base = simulate(p, { preview: false });
+  strip(p, r);
+  $("res2").innerHTML = `<div class="hot"><b>${sec(r.idle)}</b><span>빈 기다림 (지금 아무 대안 없음 ${sec(base.idle)})</span></div><div><b>${sec(r.total)}</b><span>완성 (없음 ${sec(base.total)})</span></div><div><b>${Math.round(r.reached * 100)}%</b><span>결과까지 보는 사람 추정 (없음 ${Math.round(base.reached * 100)}%)</span></div>`;
+  moments(p, r);
+  // 비교표: 사람 × 대안 누적
+  const steps = [["대안 없음", {}], ["+ 빠른 답 먼저(지금)", { preview: 1 }], ["+ 분석 잠금", { preview: 1, lock: 1 }], ["+ 쟁점별 병렬", { preview: 1, lock: 1, parallel: 1 }], ["+ 확인 질문·알림", { preview: 1, lock: 1, parallel: 1, checks: 1, notify: 1 }], ["+ effort high", { preview: 1, lock: 1, parallel: 1, checks: 1, notify: 1, effort: 1 }]];
+  $("matrix").innerHTML = `<thead><tr><th>사람</th>${steps.map(([n]) => `<th>${esc(n)}</th>`).join("")}</tr></thead><tbody>` + Object.values(PERSONAS).map((x) => `<tr><td>${esc(x.name)}</td>${steps.map(([, on]) => { const s = simulate(x, on); return `<td>${sec(s.idle)} / ${sec(s.total)}<br><small>${Math.round(s.reached * 100)}% · $${s.cost.toFixed(2)}</small></td>`; }).join("")}</tr>`).join("") + `</tbody>`;
+}
+
+$("fixtable").innerHTML = `<thead><tr><th>해결책</th><th>무엇을 바꾸나</th><th>기대 효과</th><th>비용</th><th>지킬 규칙·조건</th><th>상태</th></tr></thead><tbody>` + FIXES.map((f) => `<tr><td><b>${esc(f.name)}</b></td><td>${esc(f.what)}</td><td>${esc(f.effect)}</td><td>${esc(f.cost)}</td><td>${esc(f.rule)}</td><td>${esc(f.state)}</td></tr>`).join("") + `</tbody>`;
+$("hz").innerHTML = Object.entries(HZ_LABELS).map(([k, [lab, min, max, st]]) => `<label class="f"><span>${esc(lab)}</span><input type="range" data-h="${k}" min="${min}" max="${max}" step="${st}" value="${HZ[k]}"><output id="h-${k}">${HZ[k]}</output></label>`).join("");
+
+$("personas").addEventListener("click", (e) => { const k = e.target.closest("[data-p]")?.dataset.p; if (k) { state.persona = k; render2(); } });
+$("fixes").addEventListener("change", (e) => { const k = e.target.dataset.f; if (k) { state.on[k] = e.target.checked; render2(); } });
+$("hz").addEventListener("input", (e) => { const k = e.target.dataset.h; if (k) { HZ[k] = +e.target.value; $("h-" + k).textContent = HZ[k]; render2(); } });
+render2();
+}
+</script>
+
 </body>
 </html>
