@@ -141,13 +141,88 @@ export function SectionTitle({
   );
 }
 
-/** 사건 목록의 한 칸 (내 사건·가상 사건 공통). 숫자는 담긴 항목 수다 */
-/** 사건 목록 (2026-11-27 사용자 요청, DEC-073): 카드 대신 한 줄씩 — 제목·법 분야, 한 줄 요약, 담긴 자료 수·고친 날 */
+/**
+ * 사건 목록 (2026-11-27 사용자 요청, DEC-073): 한 줄씩 — 제목·법 분야, 한 줄 요약, 담긴 자료 수·고친 날.
+ * 같은 날 두 번째 요청으로 줄마다 떨어진 둥근 칸으로 띄우고 여백을 넓혔다 (리스트 꼴은 그대로).
+ */
 export function MatterList({ children, testId }: { children: ReactNode; testId?: string }) {
   return (
-    <ul className={`${card} divide-line mt-3 divide-y overflow-hidden`} data-testid={testId}>
+    <ul className="mt-4 flex flex-col gap-2.5" data-testid={testId}>
       {children}
     </ul>
+  );
+}
+
+/** 목록 위 제목 줄: 제목 + 건수 */
+export function ListHead({
+  title,
+  count,
+  hint,
+  right,
+}: {
+  title: string;
+  count?: number;
+  hint?: ReactNode;
+  right?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="text-ink flex items-center gap-2 text-[18px] font-bold">
+          {title}
+          {count !== undefined && (
+            <span className="bg-soft text-muted rounded-full px-2 py-0.5 text-[12px] font-semibold tabular-nums">
+              {count}
+            </span>
+          )}
+        </h2>
+        {hint && <p className="text-muted mt-1 text-[13px] leading-relaxed">{hint}</p>}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+/** 불러오는 동안 보이는 빈 줄 */
+export function MatterListSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <ul className="mt-4 flex flex-col gap-2.5" aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <li key={i} className={`${card} flex items-center gap-4 px-5 py-4`}>
+          <span className="bg-soft size-11 shrink-0 animate-pulse rounded-[10px]" />
+          <span className="flex-1">
+            <span className="bg-soft block h-4 w-2/5 animate-pulse rounded" />
+            <span className="bg-soft mt-2 block h-3 w-4/5 animate-pulse rounded" />
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FolderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
+      <path
+        d="M3.5 7.5a2 2 0 0 1 2-2h3.6l2 2h7.4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-9Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M3.5 10h17" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function Count({ label, n }: { label: string; n: number }) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-[12px] font-semibold tabular-nums ${
+        n > 0 ? "bg-cream text-ink" : "bg-soft text-muted"
+      }`}
+    >
+      {label} {n}
+    </span>
   );
 }
 
@@ -187,38 +262,59 @@ export function MatterRow({
       <button
         type="button"
         onClick={onClick}
-        className="hover:bg-cream/60 flex w-full items-start gap-3 px-4 py-3 text-left"
+        className={`${card} group/row flex w-full items-center gap-4 px-4 py-4 text-left transition duration-150 hover:-translate-y-px hover:border-[var(--ink)] hover:shadow-[0_6px_18px_rgba(26,34,51,0.08)] focus-visible:border-[var(--ink)] focus-visible:outline-none sm:px-5`}
       >
+        <span className="bg-cream text-ink flex size-11 shrink-0 items-center justify-center rounded-[10px]">
+          <FolderIcon />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-1.5">
-            <span className="text-ink text-[15px] leading-snug font-bold">{title}</span>
-            {field && (
-              <span className="bg-cream text-ink rounded-full px-2 py-0.5 text-[11px] font-semibold">
-                {field}
-              </span>
-            )}
+            <span className="text-ink text-[16px] leading-snug font-bold">{title}</span>
             {tag && (
               <span className="border-line text-muted rounded-[4px] border px-1.5 py-0.5 text-[11px] font-semibold">
                 {tag}
               </span>
             )}
+            {field && (
+              <span className="border-gold-line text-ink rounded-full border bg-white px-2 py-0.5 text-[11px] font-semibold">
+                {field}
+              </span>
+            )}
           </span>
           {gist ? (
-            <span className="text-muted mt-1 line-clamp-2 text-[13px] leading-relaxed">
+            <span className="text-muted mt-1.5 line-clamp-2 text-[13px] leading-relaxed">
               {byAi && <span className="text-label mr-1 text-[11px] font-semibold">AI 요약</span>}
               {gist}
             </span>
           ) : pending ? (
-            <span className="text-muted mt-1 block text-[13px]" aria-live="polite">
-              AI가 사건을 정리하는 중…
+            <span className="mt-2 flex items-center gap-2" aria-live="polite">
+              <span
+                className="bg-soft hidden h-3 w-40 animate-pulse rounded sm:block"
+                aria-hidden="true"
+              />
+              <span className="text-muted text-[12px]">AI가 사건을 정리하는 중…</span>
             </span>
           ) : null}
-        </span>
-        <span className="text-muted shrink-0 text-right text-[12px] leading-relaxed">
-          {updatedAt && <span className="block">{dayOf(updatedAt)}</span>}
-          <span className="block whitespace-nowrap">
-            자료 {counts.docs} · 쟁점 {counts.issues}
+          <span className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:hidden">
+            <Count label="자료" n={counts.docs} />
+            <Count label="쟁점" n={counts.issues} />
+            {updatedAt && <span className="text-muted text-[12px]">{dayOf(updatedAt)}</span>}
           </span>
+        </span>
+        <span className="hidden shrink-0 flex-col items-end gap-1.5 sm:flex">
+          <span className="flex gap-1.5">
+            <Count label="자료" n={counts.docs} />
+            <Count label="쟁점" n={counts.issues} />
+          </span>
+          {updatedAt && (
+            <span className="text-muted text-[12px] tabular-nums">고친 날 {dayOf(updatedAt)}</span>
+          )}
+        </span>
+        <span
+          aria-hidden="true"
+          className="text-muted group-hover/row:text-ink shrink-0 text-xl transition-transform group-hover/row:translate-x-0.5"
+        >
+          ›
         </span>
       </button>
     </li>

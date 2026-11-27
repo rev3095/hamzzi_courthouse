@@ -20,6 +20,7 @@ import {
   type LoadedMatter,
 } from "@/lib/client/matters";
 import { openParam } from "@/lib/client/sessions";
+import type { StartMode } from "@/lib/matters/start";
 import {
   MATTER_FIELD_LABEL,
   autoSig,
@@ -32,7 +33,8 @@ import { CaseSwitch } from "./CaseSwitch";
 import { MatterBoard } from "./MatterBoard";
 import { PresetWorkspace } from "./PresetWorkspace";
 import type { TabKey } from "./tabs";
-import { Empty, MatterList, MatterRow, SectionTitle } from "./ui";
+import { NewMatter } from "./NewMatter";
+import { Empty, ListHead, MatterList, MatterListSkeleton, MatterRow } from "./ui";
 import { PAGE_LEAD, PAGE_TITLE } from "@/components/ui/styles";
 
 type Save = "idle" | "saving" | "saved" | "failed";
@@ -80,7 +82,7 @@ function Workspace() {
   const [list, setList] = useState<MatterSummary[] | null>(null);
   const [matter, setMatter] = useState<LoadedMatter | null>(null);
   const [firstTab, setFirstTab] = useState<TabKey>("overview");
-  const [title, setTitle] = useState("");
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [save, setSave] = useState<Save>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -200,14 +202,15 @@ function Workspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function create() {
+  // 새 사건 만들기 창에서 받은 이름·자료로 만든다. 서류부터 시작하면 자료 탭, 직접 적었으면 개요 탭에서 연다
+  async function create(title: string, data: MatterData, mode: StartMode): Promise<string | null> {
     setError(null);
-    const r = await createMatter(title.trim());
-    if (!r.ok) return setError(matterErrorText(r.error.code, r.error.details?.reason));
-    setTitle("");
-    // 새 사건은 첫 단계(자료)에서 시작한다
-    show(r.data, "docs");
+    const r = await createMatter(title, data);
+    if (!r.ok) return matterErrorText(r.error.code, r.error.details?.reason);
+    setCreating(false);
+    show(r.data, mode === "docs" ? "docs" : "overview");
     void refresh();
+    return null;
   }
 
   async function back() {
@@ -268,44 +271,60 @@ function Workspace() {
       home={
         <>
           <HomeHead>
-            <form
-              className="mt-5 flex max-w-[640px] gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void create();
-              }}
-            >
-              <input
-                className="text-ink placeholder:text-muted/70 border-line focus-visible:border-ink rounded-button min-h-12 w-full border bg-white px-4 text-[15px] outline-none"
-                value={title}
-                maxLength={80}
-                placeholder="사건 이름 (비워 두면 서류를 읽은 뒤 AI가 지어요)"
-                onChange={(e) => setTitle(e.target.value)}
-                aria-label="새 사건 이름"
-              />
+            <div className="rounded-panel border-line mt-6 flex flex-col gap-4 border bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex min-w-0 items-start gap-4">
+                <span
+                  aria-hidden="true"
+                  className="bg-cream text-ink flex size-12 shrink-0 items-center justify-center rounded-[12px] text-2xl leading-none font-bold"
+                >
+                  +
+                </span>
+                <div className="min-w-0">
+                  <p className="text-ink text-[17px] font-bold">새 사건 시작하기</p>
+                  <p className="text-muted mt-1 text-[13px] leading-relaxed">
+                    서류를 올려 AI가 나눠 담게 하거나, 상대방·있었던 일·요구를 칸에 나눠 직접 적어
+                    시작해요. 사건 자료는 내 계정에 저장되고, 목록의 법 분야와 한 줄 요약은
+                    AI(Haiku)가 이름·연락처를 가린 자료로 붙여요.
+                  </p>
+                </div>
+              </div>
               <button
-                type="submit"
-                className="bg-ink rounded-button min-h-12 shrink-0 px-5 text-[14px] font-bold whitespace-nowrap text-white disabled:opacity-50"
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setCreating(true);
+                }}
+                className="bg-ink rounded-button min-h-12 shrink-0 px-6 text-[15px] font-bold whitespace-nowrap text-white"
+                data-testid="new-matter-open"
               >
-                사건 만들기
+                새 사건 만들기
               </button>
-            </form>
-            <p className="text-muted mt-2 text-[13px]">
-              만들면 바로 서류 올리기로 넘어가요. 사건 자료는 내 계정에 저장되고, 목록의 법 분야와
-              한 줄 요약은 AI(Haiku)가 이름·연락처를 가린 자료로 붙여요.
-            </p>
+            </div>
           </HomeHead>
           {alert}
-          <section aria-label="내 사건" className="mt-8">
-            <SectionTitle title="내 사건" />
+          {creating && <NewMatter onCreate={create} onClose={() => setCreating(false)} />}
+          <section aria-label="내 사건" className="mt-10">
+            <ListHead
+              title="내 사건"
+              count={list?.length}
+              hint={
+                list && list.length > 0
+                  ? "누르면 사건 화면이 열려요. 고친 내용은 바로 저장돼요."
+                  : undefined
+              }
+            />
             {list === null ? (
-              <p className="text-muted mt-3 text-[13px]" aria-live="polite">
-                불러오는 중…
-              </p>
+              <>
+                <p className="sr-only" aria-live="polite">
+                  불러오는 중…
+                </p>
+                <MatterListSkeleton rows={2} />
+              </>
             ) : list.length === 0 ? (
-              <div className="mt-3">
+              <div className="mt-4">
                 <Empty>
-                  아직 사건이 없어요. 위에서 사건을 만들거나, 아래 가상 사건을 열어 먼저 둘러보세요.
+                  아직 사건이 없어요. 위에서 새 사건을 만들거나, 아래 가상 사건을 열어 먼저
+                  둘러보세요.
                 </Empty>
               </div>
             ) : (

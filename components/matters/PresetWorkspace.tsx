@@ -10,7 +10,7 @@ import type { MatterData } from "@/lib/matters/model";
 import { MATTER_PRESETS, PRESET_NOTICE } from "@/lib/matters/presets";
 import { GoogleLoginButton } from "../LimitNotice";
 import { MatterBoard } from "./MatterBoard";
-import { MatterList, MatterRow, SectionTitle, btn } from "./ui";
+import { ListHead, MatterList, MatterRow, btn } from "./ui";
 
 export function PresetWorkspace({
   signedIn = false,
@@ -34,9 +34,10 @@ export function PresetWorkspace({
     return (
       <div>
         {home}
-        <section aria-label="가상 사건" className="mt-8">
-          <SectionTitle
+        <section aria-label="가상 사건" className="mt-12">
+          <ListHead
             title="가상 사건으로 둘러보기"
+            count={MATTER_PRESETS.length}
             hint={
               signedIn
                 ? "지어낸 사건으로 기능을 먼저 살펴보고, 마음에 들면 내 사건으로 가져올 수 있어요."
